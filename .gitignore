@@ -1,0 +1,96 @@
+# Xcode
+*.pbxuser
+!default.pbxuser
+*.mode1v3
+!default.mode1v3
+*.mode2v3
+!default.mode2v3
+*.perspectivev3
+!default.perspectivev3
+xcuserdata/
+*.moved-aside
+*.xccheckout
+*.xcscmblueprint
+
+# Build products
+build/
+DerivedData/
+*.build/
+*.xcscmblueprint
+
+# Swift Package Manager
+.build/
+Packages/
+Package.pdsproj
+Package.resolved
+
+# CocoaPods
+Pods/
+
+# Carthage
+Carthage/Build/
+
+# SwiftLint cache
+.swiftlintcache
+
+# Firebase
+GoogleService-Info.plist
+
+# Environment files
+.env
+.env.local
+.env.production
+
+# macOS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+*.temp
+
+# Archives
+*.zip
+*.tar.gz
+
+# Firebase crashlytics
+crashlytics-build.properties
+
+# Fastlane
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots/**/*.png
+fastlane/test_output
+
+# CocoaPods artifacts
+Pods/
+
+# SwiftGen
+*.generated.swift
+
+# R.swift
+R.generated.swift
+
+# Sourcery
+*.generated.*
+
+# SwiftLint
+.swiftlint.yml
+
+# Local development
+APIClient.o
