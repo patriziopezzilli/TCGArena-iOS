@@ -1,0 +1,83 @@
+name: iOS CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  build-and-test:
+    name: Build and Test
+    runs-on: macos-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Xcode
+      uses: maxim-lobanov/setup-xcode@v1
+      with:
+        xcode-version: latest-stable
+
+    - name: Cache CocoaPods
+      uses: actions/cache@v3
+      with:
+        path: |
+          Pods
+          ~/.cocoapods
+        key: ${{ runner.os }}-pods-${{ hashFiles('**/Podfile.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-pods-
+
+    - name: Install CocoaPods
+      run: |
+        if [ -f "Podfile" ]; then
+          pod install
+        fi
+
+    - name: Build project
+      run: |
+        xcodebuild clean build \
+          -workspace "TCG Arena.xcworkspace" \
+          -scheme "TCG Arena" \
+          -configuration Debug \
+          -destination "platform=iOS Simulator,name=iPhone 15,OS=latest" \
+          -sdk iphonesimulator \
+          CODE_SIGN_IDENTITY="" \
+          CODE_SIGNING_REQUIRED=NO \
+          CODE_SIGNING_ALLOWED=NO
+
+    - name: Run tests
+      run: |
+        xcodebuild test \
+          -workspace "TCG Arena.xcworkspace" \
+          -scheme "TCG Arena" \
+          -configuration Debug \
+          -destination "platform=iOS Simulator,name=iPhone 15,OS=latest" \
+          -sdk iphonesimulator \
+          CODE_SIGN_IDENTITY="" \
+          CODE_SIGNING_REQUIRED=NO \
+          CODE_SIGNING_ALLOWED=NO
+
+  lint:
+    name: SwiftLint
+    runs-on: macos-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Xcode
+      uses: maxim-lobanov/setup-xcode@v1
+      with:
+        xcode-version: latest-stable
+
+    - name: Install SwiftLint
+      run: |
+        brew install swiftlint
+
+    - name: Run SwiftLint
+      run: |
+        swiftlint --strict --config .swiftlint.yml
+      continue-on-error: true
