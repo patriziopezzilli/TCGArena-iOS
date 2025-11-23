@@ -1,0 +1,135 @@
+//
+//  Card.swift
+//  TCG Arena
+//
+//  Created by TCG Arena Team on 11/5/25.
+//
+
+import Foundation
+import SwiftUI
+
+struct Card: Identifiable, Codable {
+    let id: Int64?
+    let templateId: Int64
+    let name: String
+    let rarity: Rarity
+    let condition: CardCondition
+    let imageURL: String?
+    let isFoil: Bool
+    let quantity: Int
+    let ownerId: Int64
+    let createdAt: Date
+    let updatedAt: Date
+    
+    enum TCGType: String, CaseIterable, Codable {
+        case pokemon = "Pokemon"
+        case onePiece = "One Piece"
+        case magic = "Magic: The Gathering"
+        case yugioh = "Yu-Gi-Oh!"
+        case digimon = "Digimon"
+        
+        var displayName: String {
+            return self.rawValue
+        }
+        
+        var themeColor: Color {
+            switch self {
+            case .pokemon:
+                return Color.orange
+            case .onePiece:
+                return Color.red
+            case .magic:
+                return Color.blue
+            case .yugioh:
+                return Color.purple
+            case .digimon:
+                return Color.cyan
+            }
+        }
+        
+        var systemIcon: String {
+            switch self {
+            case .pokemon:
+                return "bolt.fill"
+            case .onePiece:
+                return "sailboat.fill"
+            case .magic:
+                return "flame.fill"
+            case .yugioh:
+                return "eye.fill"
+            case .digimon:
+                return "shield.fill"
+            }
+        }
+    }
+    
+    enum Rarity: String, CaseIterable, Codable {
+        case common = "Common"
+        case uncommon = "Uncommon"
+        case rare = "Rare"
+        case ultraRare = "Ultra Rare"
+        case secretRare = "Secret Rare"
+        case mythic = "Mythic"
+        case legendary = "Legendary"
+        
+        var displayName: String {
+            return self.rawValue
+        }
+    }
+    
+    enum CardCondition: String, CaseIterable, Codable {
+        case mint = "Mint"
+        case nearMint = "Near Mint"
+        case lightlyPlayed = "Lightly Played"
+        case moderatelyPlayed = "Moderately Played"
+        case heavilyPlayed = "Heavily Played"
+        case damaged = "Damaged"
+    }
+    
+    enum GradeService: String, CaseIterable, Codable {
+        case psa = "PSA"
+        case pca = "PCA"
+        case cgc = "CGC"
+        case bgs = "BGS"
+    }
+    
+    init(name: String, tcgType: TCGType, set: String, expansion: Expansion? = nil, rarity: Rarity, cardNumber: String, description: String, imageURL: String? = nil, manaCost: Int? = nil, condition: CardCondition = .nearMint, ownerID: String, deckID: String? = nil) {
+        self.name = name
+        self.tcgType = tcgType
+        self.set = set
+        self.expansion = expansion
+        self.rarity = rarity
+        self.cardNumber = cardNumber
+        self.description = description
+        self.imageURL = imageURL
+        self.marketPrice = nil
+        self.manaCost = manaCost
+        self.condition = condition
+        self.isGraded = false
+        self.gradeService = nil
+        self.gradeScore = nil
+        self.dateAdded = Date()
+        self.ownerID = ownerID
+        self.deckID = deckID
+    }
+    
+    // Helper method to create a copy with updated values
+    func copy(name: String? = nil, condition: CardCondition? = nil, deckID: String? = nil) -> Card {
+        var copy = Card(
+            name: name ?? self.name,
+            tcgType: self.tcgType,
+            set: self.set,
+            expansion: self.expansion,
+            rarity: self.rarity,
+            cardNumber: self.cardNumber,
+            description: self.description,
+            imageURL: self.imageURL,
+            manaCost: self.manaCost,
+            condition: condition ?? self.condition,
+            ownerID: self.ownerID,
+            deckID: deckID ?? self.deckID
+        )
+        copy.id = self.id
+        return copy
+    }
+}

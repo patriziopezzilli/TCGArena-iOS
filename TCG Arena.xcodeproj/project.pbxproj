@@ -1,0 +1,847 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		7A1CC91D2ED1EC3B00A61395 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1CC91C2ED1EC3B00A61395 /* OnboardingView.swift */; };
+		7A1CC9292ED238D500A61395 /* CardModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1CC9202ED238D500A61395 /* CardModels.swift */; };
+		7A1CC92A2ED238D500A61395 /* ImageModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1CC9222ED238D500A61395 /* ImageModels.swift */; };
+		7A1CC92B2ED238D500A61395 /* RewardModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1CC9252ED238D500A61395 /* RewardModels.swift */; };
+		7A1CC92C2ED238D500A61395 /* AuthModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1CC91F2ED238D500A61395 /* AuthModels.swift */; };
+		7A1CC92E2ED238D500A61395 /* AchievementModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1CC91E2ED238D500A61395 /* AchievementModels.swift */; };
+		7A1CC92F2ED238D500A61395 /* UserActivity.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1CC9272ED238D500A61395 /* UserActivity.swift */; };
+		7A1CC9302ED238D500A61395 /* NotificationModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1CC9232ED238D500A61395 /* NotificationModels.swift */; };
+		7A1CC9312ED238D500A61395 /* ProDeck.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1CC9242ED238D500A61395 /* ProDeck.swift */; };
+		7A1CC9322ED238D500A61395 /* UserStats.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1CC9282ED238D500A61395 /* UserStats.swift */; };
+		7A1CC9332ED238D500A61395 /* TournamentParticipant.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1CC9262ED238D500A61395 /* TournamentParticipant.swift */; };
+		7A1CC9372ED238E800A61395 /* AchievementView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1CC9342ED238E800A61395 /* AchievementView.swift */; };
+		7A1CC9382ED238E800A61395 /* NotificationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1CC9362ED238E800A61395 /* NotificationView.swift */; };
+		7A1CC9392ED238E800A61395 /* LeaderboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1CC9352ED238E800A61395 /* LeaderboardView.swift */; };
+		7A1CC9422ED2392C00A61395 /* RewardsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1CC9402ED2392C00A61395 /* RewardsService.swift */; };
+		7A1CC9432ED2392C00A61395 /* UserService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1CC9412ED2392C00A61395 /* UserService.swift */; };
+		7A1CC9442ED2392C00A61395 /* AchievementService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1CC93C2ED2392C00A61395 /* AchievementService.swift */; };
+		7A1CC9452ED2392C00A61395 /* ImageService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1CC93E2ED2392C00A61395 /* ImageService.swift */; };
+		7A1CC9462ED2392C00A61395 /* APIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1CC93D2ED2392C00A61395 /* APIClient.swift */; };
+		7A1CC9472ED2392C00A61395 /* NotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1CC93F2ED2392C00A61395 /* NotificationService.swift */; };
+		7A1CC9492ED2753B00A61395 /* TournamentDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1CC9482ED2753B00A61395 /* TournamentDetailView.swift */; };
+		7A1CC94B2ED2756B00A61395 /* TournamentMapDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1CC94A2ED2756B00A61395 /* TournamentMapDetailView.swift */; };
+		7A7DF3DC2EBB938A00331A52 /* CollectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A7DF3DB2EBB938A00331A52 /* CollectionView.swift */; };
+		7A7DF3DD2EBB938A00331A52 /* CardDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A7DF3DA2EBB938A00331A52 /* CardDetailView.swift */; };
+		7A7DF3DF2EBB940300331A52 /* DeckService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A7DF3DE2EBB940300331A52 /* DeckService.swift */; };
+		7A7DF4152EBB943D00331A52 /* DeckBuilderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A7DF4092EBB943D00331A52 /* DeckBuilderView.swift */; };
+		7A7DF4172EBB943D00331A52 /* CommunityView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A7DF4032EBB943D00331A52 /* CommunityView.swift */; };
+		7A7DF41B2EBB943D00331A52 /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A7DF40E2EBB943D00331A52 /* ProfileView.swift */; };
+		7A7DF4222EBBA1A100331A52 /* TCGTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A7DF4212EBBA1A100331A52 /* TCGTheme.swift */; };
+		7A7DF4242EBBAD5000331A52 /* ViewHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A7DF4232EBBAD5000331A52 /* ViewHelpers.swift */; };
+		7A817B8B2EC7692500500F32 /* Shop.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A817B8A2EC7692500500F32 /* Shop.swift */; };
+		7A817B8F2EC7693C00500F32 /* ShopView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A817B8D2EC7693C00500F32 /* ShopView.swift */; };
+		7A817B902EC7693C00500F32 /* ShopDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A817B8C2EC7693C00500F32 /* ShopDetailView.swift */; };
+		7A817B922EC7694400500F32 /* ShopService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A817B912EC7694400500F32 /* ShopService.swift */; };
+		7A817B942EC76A1C00500F32 /* LocationInputView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A817B932EC76A1C00500F32 /* LocationInputView.swift */; };
+		7A817B962EC76B0800500F32 /* TCGTypeBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A817B952EC76B0800500F32 /* TCGTypeBadge.swift */; };
+		7A817B9A2EC76EDF00500F32 /* ShopNews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A817B992EC76EDF00500F32 /* ShopNews.swift */; };
+		7A817B9C2EC77F6D00500F32 /* SimpleProCardDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A817B9B2EC77F6D00500F32 /* SimpleProCardDetailView.swift */; };
+		7A8B2E792EC1E375004F6826 /* NewAddCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A8B2E782EC1E375004F6826 /* NewAddCardView.swift */; };
+		7A8B2E7A2EC1E375004F6826 /* CardScanView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A8B2E762EC1E375004F6826 /* CardScanView.swift */; };
+		7A8B2E7B2EC1E375004F6826 /* ManualAddCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A8B2E772EC1E375004F6826 /* ManualAddCardView.swift */; };
+		7A8B2E7C2EC1E375004F6826 /* CardScanResultView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A8B2E752EC1E375004F6826 /* CardScanResultView.swift */; };
+		7A8B2E7E2EC1ECC3004F6826 /* LoadingComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A8B2E7D2EC1ECC3004F6826 /* LoadingComponents.swift */; };
+		7A8B2E802EC1EE9F004F6826 /* NewDeckView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A8B2E7F2EC1EE9F004F6826 /* NewDeckView.swift */; };
+		7A8B2E862EC1F2E8004F6826 /* DiscoverModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A8B2E852EC1F2E8004F6826 /* DiscoverModels.swift */; };
+		7A8B2E882EC1F2FA004F6826 /* SharedComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A8B2E872EC1F2FA004F6826 /* SharedComponents.swift */; };
+		7A8B2E8A2EC1F308004F6826 /* DiscoverService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A8B2E892EC1F308004F6826 /* DiscoverService.swift */; };
+		7A8B2E942EC1F32A004F6826 /* UserProfileDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A8B2E932EC1F32A004F6826 /* UserProfileDetailView.swift */; };
+		7A8B2E952EC1F32A004F6826 /* DiscoverComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A8B2E912EC1F32A004F6826 /* DiscoverComponents.swift */; };
+		7A8B2E962EC1F32A004F6826 /* DiscoverView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A8B2E922EC1F32A004F6826 /* DiscoverView.swift */; };
+		7A8B2E982EC21F61004F6826 /* CreateTournamentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A8B2E972EC21F61004F6826 /* CreateTournamentView.swift */; };
+		7A8B2E9A2EC22ED8004F6826 /* ExpansionComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A8B2E992EC22ED8004F6826 /* ExpansionComponents.swift */; };
+		7A8B2E9C2EC22EE0004F6826 /* ExpansionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A8B2E9B2EC22EE0004F6826 /* ExpansionService.swift */; };
+		7A8B2E9E2EC22EFD004F6826 /* ExpansionDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A8B2E9D2EC22EFD004F6826 /* ExpansionDetailView.swift */; };
+		7A8B2EA02EC22FCC004F6826 /* Expansion.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A8B2E9F2EC22FCC004F6826 /* Expansion.swift */; };
+		7A8B2EA22EC23DA1004F6826 /* SettingsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A8B2EA12EC23DA1004F6826 /* SettingsService.swift */; };
+		7AA785852EBC8A4A00A11D94 /* TournamentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AA785842EBC8A4A00A11D94 /* TournamentView.swift */; };
+		7AA785882EBCA2AD00A11D94 /* MarketModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AA785872EBCA2AD00A11D94 /* MarketModels.swift */; };
+		7AA7858A2EBCA42200A11D94 /* TCGCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AA785892EBCA42200A11D94 /* TCGCardView.swift */; };
+		7AA785922EBCA4D300A11D94 /* CollectionCardWithPrice.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AA7858F2EBCA4D300A11D94 /* CollectionCardWithPrice.swift */; };
+		7AA785932EBCA4D300A11D94 /* PortfolioCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AA785902EBCA4D300A11D94 /* PortfolioCard.swift */; };
+		7AA785952EBCAA6200A11D94 /* DeckModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AA785942EBCAA6200A11D94 /* DeckModels.swift */; };
+		7AA785982EBCAA6C00A11D94 /* ProDeckListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AA785972EBCAA6C00A11D94 /* ProDeckListView.swift */; };
+		7AA785992EBCAA6C00A11D94 /* DeckListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AA785962EBCAA6C00A11D94 /* DeckListView.swift */; };
+		7AA7859C2EBCC5CC00A11D94 /* UserDeckListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AA7859B2EBCC5CC00A11D94 /* UserDeckListView.swift */; };
+		7AA7859D2EBCC5CC00A11D94 /* ProDecksListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AA7859A2EBCC5CC00A11D94 /* ProDecksListView.swift */; };
+		7AAF9FDD2ECE12E0008221E9 /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AAF9FD82ECE12E0008221E9 /* LoginView.swift */; };
+		7AAF9FDE2ECE12E0008221E9 /* RegisterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AAF9FDB2ECE12E0008221E9 /* RegisterView.swift */; };
+		7AAF9FDF2ECE12E0008221E9 /* WelcomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AAF9FDC2ECE12E0008221E9 /* WelcomeView.swift */; };
+		7AAF9FE02ECE12E0008221E9 /* ForgotPasswordView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AAF9FD72ECE12E0008221E9 /* ForgotPasswordView.swift */; };
+		7AAF9FE12ECE12E0008221E9 /* MainAppView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AAF9FD92ECE12E0008221E9 /* MainAppView.swift */; };
+		7AAF9FE22ECE12E0008221E9 /* ReadOnlyContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AAF9FDA2ECE12E0008221E9 /* ReadOnlyContentView.swift */; };
+		7AE3FF8F2EC89051004EE982 /* DeckDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AE3FF8E2EC89051004EE982 /* DeckDetailView.swift */; };
+		7AE3FF912EC89098004EE982 /* DeckRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AE3FF902EC89098004EE982 /* DeckRowView.swift */; };
+		7AE3FF942EC8FFE6004EE982 /* RewardsMainView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AE3FF922EC8FFE6004EE982 /* RewardsMainView.swift */; };
+		7AE3FF952EC8FFE6004EE982 /* RewardsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AE3FF932EC8FFE6004EE982 /* RewardsView.swift */; };
+		7AE3FF972EC900A4004EE982 /* HowToGetPointsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AE3FF962EC900A4004EE982 /* HowToGetPointsView.swift */; };
+		7AE3FF992EC90409004EE982 /* Set.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AE3FF982EC90409004EE982 /* Set.swift */; };
+		7AFBD61F2EBCF99F0023B5D2 /* EditCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AFBD61E2EBCF99F0023B5D2 /* EditCardView.swift */; };
+		A1000001 /* TCGArenaApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000001 /* TCGArenaApp.swift */; };
+		A1000002 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000002 /* ContentView.swift */; };
+		A1000003 /* Card.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000003 /* Card.swift */; };
+		A1000004 /* User.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000004 /* User.swift */; };
+		A1000005 /* Tournament.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000005 /* Tournament.swift */; };
+		A1000006 /* Deck.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000006 /* Deck.swift */; };
+		A1000007 /* AuthService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000007 /* AuthService.swift */; };
+		A1000008 /* CardService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000008 /* CardService.swift */; };
+		A1000009 /* TournamentService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000009 /* TournamentService.swift */; };
+		A1000010 /* TournamentMapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000010 /* TournamentMapView.swift */; };
+		A1000012 /* CardScannerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000012 /* CardScannerView.swift */; };
+		A1000013 /* AddCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000013 /* AddCardView.swift */; };
+		A1000014 /* TCGButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000014 /* TCGButton.swift */; };
+		A1000015 /* CardRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000015 /* CardRowView.swift */; };
+		A1000016 /* TournamentCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000016 /* TournamentCardView.swift */; };
+		A1000017 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A2000017 /* Assets.xcassets */; };
+		A1000018 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A2000018 /* Preview Assets.xcassets */; };
+		A1000019 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = A2000019 /* GoogleService-Info.plist */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		7A1CC91C2ED1EC3B00A61395 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
+		7A1CC91E2ED238D500A61395 /* AchievementModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AchievementModels.swift; sourceTree = "<group>"; };
+		7A1CC91F2ED238D500A61395 /* AuthModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthModels.swift; sourceTree = "<group>"; };
+		7A1CC9202ED238D500A61395 /* CardModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardModels.swift; sourceTree = "<group>"; };
+		7A1CC9222ED238D500A61395 /* ImageModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageModels.swift; sourceTree = "<group>"; };
+		7A1CC9232ED238D500A61395 /* NotificationModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationModels.swift; sourceTree = "<group>"; };
+		7A1CC9242ED238D500A61395 /* ProDeck.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProDeck.swift; sourceTree = "<group>"; };
+		7A1CC9252ED238D500A61395 /* RewardModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RewardModels.swift; sourceTree = "<group>"; };
+		7A1CC9262ED238D500A61395 /* TournamentParticipant.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TournamentParticipant.swift; sourceTree = "<group>"; };
+		7A1CC9272ED238D500A61395 /* UserActivity.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserActivity.swift; sourceTree = "<group>"; };
+		7A1CC9282ED238D500A61395 /* UserStats.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserStats.swift; sourceTree = "<group>"; };
+		7A1CC9342ED238E800A61395 /* AchievementView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AchievementView.swift; sourceTree = "<group>"; };
+		7A1CC9352ED238E800A61395 /* LeaderboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LeaderboardView.swift; sourceTree = "<group>"; };
+		7A1CC9362ED238E800A61395 /* NotificationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationView.swift; sourceTree = "<group>"; };
+		7A1CC93C2ED2392C00A61395 /* AchievementService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AchievementService.swift; sourceTree = "<group>"; };
+		7A1CC93D2ED2392C00A61395 /* APIClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIClient.swift; sourceTree = "<group>"; };
+		7A1CC93E2ED2392C00A61395 /* ImageService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageService.swift; sourceTree = "<group>"; };
+		7A1CC93F2ED2392C00A61395 /* NotificationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationService.swift; sourceTree = "<group>"; };
+		7A1CC9402ED2392C00A61395 /* RewardsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RewardsService.swift; sourceTree = "<group>"; };
+		7A1CC9412ED2392C00A61395 /* UserService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserService.swift; sourceTree = "<group>"; };
+		7A1CC9482ED2753B00A61395 /* TournamentDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TournamentDetailView.swift; sourceTree = "<group>"; };
+		7A1CC94A2ED2756B00A61395 /* TournamentMapDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TournamentMapDetailView.swift; sourceTree = "<group>"; };
+		7A7DF3DA2EBB938A00331A52 /* CardDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardDetailView.swift; sourceTree = "<group>"; };
+		7A7DF3DB2EBB938A00331A52 /* CollectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CollectionView.swift; sourceTree = "<group>"; };
+		7A7DF3DE2EBB940300331A52 /* DeckService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeckService.swift; sourceTree = "<group>"; };
+		7A7DF4032EBB943D00331A52 /* CommunityView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommunityView.swift; sourceTree = "<group>"; };
+		7A7DF4092EBB943D00331A52 /* DeckBuilderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeckBuilderView.swift; sourceTree = "<group>"; };
+		7A7DF40E2EBB943D00331A52 /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
+		7A7DF4212EBBA1A100331A52 /* TCGTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TCGTheme.swift; sourceTree = "<group>"; };
+		7A7DF4232EBBAD5000331A52 /* ViewHelpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewHelpers.swift; sourceTree = "<group>"; };
+		7A817B8A2EC7692500500F32 /* Shop.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Shop.swift; sourceTree = "<group>"; };
+		7A817B8C2EC7693C00500F32 /* ShopDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShopDetailView.swift; sourceTree = "<group>"; };
+		7A817B8D2EC7693C00500F32 /* ShopView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShopView.swift; sourceTree = "<group>"; };
+		7A817B912EC7694400500F32 /* ShopService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShopService.swift; sourceTree = "<group>"; };
+		7A817B932EC76A1C00500F32 /* LocationInputView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationInputView.swift; sourceTree = "<group>"; };
+		7A817B952EC76B0800500F32 /* TCGTypeBadge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TCGTypeBadge.swift; sourceTree = "<group>"; };
+		7A817B992EC76EDF00500F32 /* ShopNews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShopNews.swift; sourceTree = "<group>"; };
+		7A817B9B2EC77F6D00500F32 /* SimpleProCardDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimpleProCardDetailView.swift; sourceTree = "<group>"; };
+		7A8B2E752EC1E375004F6826 /* CardScanResultView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardScanResultView.swift; sourceTree = "<group>"; };
+		7A8B2E762EC1E375004F6826 /* CardScanView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardScanView.swift; sourceTree = "<group>"; };
+		7A8B2E772EC1E375004F6826 /* ManualAddCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ManualAddCardView.swift; sourceTree = "<group>"; };
+		7A8B2E782EC1E375004F6826 /* NewAddCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewAddCardView.swift; sourceTree = "<group>"; };
+		7A8B2E7D2EC1ECC3004F6826 /* LoadingComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoadingComponents.swift; sourceTree = "<group>"; };
+		7A8B2E7F2EC1EE9F004F6826 /* NewDeckView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewDeckView.swift; sourceTree = "<group>"; };
+		7A8B2E852EC1F2E8004F6826 /* DiscoverModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiscoverModels.swift; sourceTree = "<group>"; };
+		7A8B2E872EC1F2FA004F6826 /* SharedComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedComponents.swift; sourceTree = "<group>"; };
+		7A8B2E892EC1F308004F6826 /* DiscoverService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiscoverService.swift; sourceTree = "<group>"; };
+		7A8B2E912EC1F32A004F6826 /* DiscoverComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiscoverComponents.swift; sourceTree = "<group>"; };
+		7A8B2E922EC1F32A004F6826 /* DiscoverView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DiscoverView.swift; sourceTree = "<group>"; };
+		7A8B2E932EC1F32A004F6826 /* UserProfileDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserProfileDetailView.swift; sourceTree = "<group>"; };
+		7A8B2E972EC21F61004F6826 /* CreateTournamentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateTournamentView.swift; sourceTree = "<group>"; };
+		7A8B2E992EC22ED8004F6826 /* ExpansionComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExpansionComponents.swift; sourceTree = "<group>"; };
+		7A8B2E9B2EC22EE0004F6826 /* ExpansionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExpansionService.swift; sourceTree = "<group>"; };
+		7A8B2E9D2EC22EFD004F6826 /* ExpansionDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExpansionDetailView.swift; sourceTree = "<group>"; };
+		7A8B2E9F2EC22FCC004F6826 /* Expansion.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Expansion.swift; sourceTree = "<group>"; };
+		7A8B2EA12EC23DA1004F6826 /* SettingsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsService.swift; sourceTree = "<group>"; };
+		7AA785842EBC8A4A00A11D94 /* TournamentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TournamentView.swift; sourceTree = "<group>"; };
+		7AA785872EBCA2AD00A11D94 /* MarketModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarketModels.swift; sourceTree = "<group>"; };
+		7AA785892EBCA42200A11D94 /* TCGCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TCGCardView.swift; sourceTree = "<group>"; };
+		7AA7858F2EBCA4D300A11D94 /* CollectionCardWithPrice.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CollectionCardWithPrice.swift; sourceTree = "<group>"; };
+		7AA785902EBCA4D300A11D94 /* PortfolioCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PortfolioCard.swift; sourceTree = "<group>"; };
+		7AA785942EBCAA6200A11D94 /* DeckModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeckModels.swift; sourceTree = "<group>"; };
+		7AA785962EBCAA6C00A11D94 /* DeckListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeckListView.swift; sourceTree = "<group>"; };
+		7AA785972EBCAA6C00A11D94 /* ProDeckListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProDeckListView.swift; sourceTree = "<group>"; };
+		7AA7859A2EBCC5CC00A11D94 /* ProDecksListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProDecksListView.swift; sourceTree = "<group>"; };
+		7AA7859B2EBCC5CC00A11D94 /* UserDeckListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserDeckListView.swift; sourceTree = "<group>"; };
+		7AAF9FD72ECE12E0008221E9 /* ForgotPasswordView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ForgotPasswordView.swift; sourceTree = "<group>"; };
+		7AAF9FD82ECE12E0008221E9 /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
+		7AAF9FD92ECE12E0008221E9 /* MainAppView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainAppView.swift; sourceTree = "<group>"; };
+		7AAF9FDA2ECE12E0008221E9 /* ReadOnlyContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadOnlyContentView.swift; sourceTree = "<group>"; };
+		7AAF9FDB2ECE12E0008221E9 /* RegisterView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RegisterView.swift; sourceTree = "<group>"; };
+		7AAF9FDC2ECE12E0008221E9 /* WelcomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeView.swift; sourceTree = "<group>"; };
+		7AE3FF8E2EC89051004EE982 /* DeckDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeckDetailView.swift; sourceTree = "<group>"; };
+		7AE3FF902EC89098004EE982 /* DeckRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeckRowView.swift; sourceTree = "<group>"; };
+		7AE3FF922EC8FFE6004EE982 /* RewardsMainView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RewardsMainView.swift; sourceTree = "<group>"; };
+		7AE3FF932EC8FFE6004EE982 /* RewardsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RewardsView.swift; sourceTree = "<group>"; };
+		7AE3FF962EC900A4004EE982 /* HowToGetPointsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HowToGetPointsView.swift; sourceTree = "<group>"; };
+		7AE3FF982EC90409004EE982 /* Set.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Set.swift; sourceTree = "<group>"; };
+		7AFBD61E2EBCF99F0023B5D2 /* EditCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditCardView.swift; sourceTree = "<group>"; };
+		A2000001 /* TCGArenaApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TCGArenaApp.swift; sourceTree = "<group>"; };
+		A2000002 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		A2000003 /* Card.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Card.swift; sourceTree = "<group>"; };
+		A2000004 /* User.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = User.swift; sourceTree = "<group>"; };
+		A2000005 /* Tournament.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Tournament.swift; sourceTree = "<group>"; };
+		A2000006 /* Deck.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Deck.swift; sourceTree = "<group>"; };
+		A2000007 /* AuthService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthService.swift; sourceTree = "<group>"; };
+		A2000008 /* CardService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardService.swift; sourceTree = "<group>"; };
+		A2000009 /* TournamentService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TournamentService.swift; sourceTree = "<group>"; };
+		A2000010 /* TournamentMapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TournamentMapView.swift; sourceTree = "<group>"; };
+		A2000012 /* CardScannerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardScannerView.swift; sourceTree = "<group>"; };
+		A2000013 /* AddCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddCardView.swift; sourceTree = "<group>"; };
+		A2000014 /* TCGButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TCGButton.swift; sourceTree = "<group>"; };
+		A2000015 /* CardRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CardRowView.swift; sourceTree = "<group>"; };
+		A2000016 /* TournamentCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TournamentCardView.swift; sourceTree = "<group>"; };
+		A2000017 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		A2000018 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
+		A2000019 /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
+		A2000020 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		A3000001 /* TCG Arena.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "TCG Arena.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		A4000001 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		7A7DF4042EBB943D00331A52 /* Community */ = {
+			isa = PBXGroup;
+			children = (
+				7A8B2E912EC1F32A004F6826 /* DiscoverComponents.swift */,
+				7A8B2E922EC1F32A004F6826 /* DiscoverView.swift */,
+				7A8B2E932EC1F32A004F6826 /* UserProfileDetailView.swift */,
+				7A7DF4032EBB943D00331A52 /* CommunityView.swift */,
+			);
+			path = Community;
+			sourceTree = "<group>";
+		};
+		7A7DF40A2EBB943D00331A52 /* Deck */ = {
+			isa = PBXGroup;
+			children = (
+				7AE3FF8E2EC89051004EE982 /* DeckDetailView.swift */,
+				7A817B9B2EC77F6D00500F32 /* SimpleProCardDetailView.swift */,
+				7A8B2E7F2EC1EE9F004F6826 /* NewDeckView.swift */,
+				7AA7859A2EBCC5CC00A11D94 /* ProDecksListView.swift */,
+				7AA7859B2EBCC5CC00A11D94 /* UserDeckListView.swift */,
+				7AA785962EBCAA6C00A11D94 /* DeckListView.swift */,
+				7AA785972EBCAA6C00A11D94 /* ProDeckListView.swift */,
+				7A7DF4092EBB943D00331A52 /* DeckBuilderView.swift */,
+			);
+			path = Deck;
+			sourceTree = "<group>";
+		};
+		7A7DF40F2EBB943D00331A52 /* Profile */ = {
+			isa = PBXGroup;
+			children = (
+				7A7DF40E2EBB943D00331A52 /* ProfileView.swift */,
+			);
+			path = Profile;
+			sourceTree = "<group>";
+		};
+		7A7DF41F2EBBA0DE00331A52 /* Utils */ = {
+			isa = PBXGroup;
+			children = (
+				7A7DF4232EBBAD5000331A52 /* ViewHelpers.swift */,
+				7A7DF4212EBBA1A100331A52 /* TCGTheme.swift */,
+			);
+			path = Utils;
+			sourceTree = "<group>";
+		};
+		7A817B8E2EC7693C00500F32 /* Shop */ = {
+			isa = PBXGroup;
+			children = (
+				7A817B8C2EC7693C00500F32 /* ShopDetailView.swift */,
+				7A817B8D2EC7693C00500F32 /* ShopView.swift */,
+			);
+			path = Shop;
+			sourceTree = "<group>";
+		};
+		7AA785862EBC8A5600A11D94 /* Tournament */ = {
+			isa = PBXGroup;
+			children = (
+				7A1CC9482ED2753B00A61395 /* TournamentDetailView.swift */,
+				7A8B2E972EC21F61004F6826 /* CreateTournamentView.swift */,
+				7AA785842EBC8A4A00A11D94 /* TournamentView.swift */,
+			);
+			path = Tournament;
+			sourceTree = "<group>";
+		};
+		7AA785912EBCA4D300A11D94 /* Components */ = {
+			isa = PBXGroup;
+			children = (
+				7AA7858F2EBCA4D300A11D94 /* CollectionCardWithPrice.swift */,
+				7AA785902EBCA4D300A11D94 /* PortfolioCard.swift */,
+			);
+			path = Components;
+			sourceTree = "<group>";
+		};
+		A5000001 = {
+			isa = PBXGroup;
+			children = (
+				A5000002 /* TCG Arena */,
+				A5000003 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		A5000002 /* TCG Arena */ = {
+			isa = PBXGroup;
+			children = (
+				A2000001 /* TCGArenaApp.swift */,
+				A2000002 /* ContentView.swift */,
+				7AA785912EBCA4D300A11D94 /* Components */,
+				7A7DF41F2EBBA0DE00331A52 /* Utils */,
+				A5000004 /* Models */,
+				A5000005 /* Views */,
+				A5000006 /* Services */,
+				A2000017 /* Assets.xcassets */,
+				A2000019 /* GoogleService-Info.plist */,
+				A2000020 /* Info.plist */,
+				A5000007 /* Preview Content */,
+			);
+			path = "TCG Arena";
+			sourceTree = "<group>";
+		};
+		A5000003 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				A3000001 /* TCG Arena.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		A5000004 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				7A1CC91E2ED238D500A61395 /* AchievementModels.swift */,
+				7A1CC91F2ED238D500A61395 /* AuthModels.swift */,
+				7A1CC9202ED238D500A61395 /* CardModels.swift */,
+				7A1CC9222ED238D500A61395 /* ImageModels.swift */,
+				7A1CC9232ED238D500A61395 /* NotificationModels.swift */,
+				7A1CC9242ED238D500A61395 /* ProDeck.swift */,
+				7A1CC9252ED238D500A61395 /* RewardModels.swift */,
+				7A1CC9262ED238D500A61395 /* TournamentParticipant.swift */,
+				7A1CC9272ED238D500A61395 /* UserActivity.swift */,
+				7A1CC9282ED238D500A61395 /* UserStats.swift */,
+				7AE3FF982EC90409004EE982 /* Set.swift */,
+				7A817B992EC76EDF00500F32 /* ShopNews.swift */,
+				7A817B8A2EC7692500500F32 /* Shop.swift */,
+				7A8B2E9F2EC22FCC004F6826 /* Expansion.swift */,
+				7A8B2E852EC1F2E8004F6826 /* DiscoverModels.swift */,
+				7AA785942EBCAA6200A11D94 /* DeckModels.swift */,
+				7AA785872EBCA2AD00A11D94 /* MarketModels.swift */,
+				A2000003 /* Card.swift */,
+				A2000004 /* User.swift */,
+				A2000005 /* Tournament.swift */,
+				A2000006 /* Deck.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		A5000005 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				7A1CC9342ED238E800A61395 /* AchievementView.swift */,
+				7A1CC9352ED238E800A61395 /* LeaderboardView.swift */,
+				7A1CC9362ED238E800A61395 /* NotificationView.swift */,
+				7A1CC91C2ED1EC3B00A61395 /* OnboardingView.swift */,
+				7AAF9FD72ECE12E0008221E9 /* ForgotPasswordView.swift */,
+				7AAF9FD82ECE12E0008221E9 /* LoginView.swift */,
+				7AAF9FD92ECE12E0008221E9 /* MainAppView.swift */,
+				7AAF9FDA2ECE12E0008221E9 /* ReadOnlyContentView.swift */,
+				7AAF9FDB2ECE12E0008221E9 /* RegisterView.swift */,
+				7AAF9FDC2ECE12E0008221E9 /* WelcomeView.swift */,
+				7AE3FF962EC900A4004EE982 /* HowToGetPointsView.swift */,
+				7AE3FF922EC8FFE6004EE982 /* RewardsMainView.swift */,
+				7AE3FF932EC8FFE6004EE982 /* RewardsView.swift */,
+				7A817B8E2EC7693C00500F32 /* Shop */,
+				7AA785862EBC8A5600A11D94 /* Tournament */,
+				7A7DF4042EBB943D00331A52 /* Community */,
+				7A7DF40A2EBB943D00331A52 /* Deck */,
+				7A7DF40F2EBB943D00331A52 /* Profile */,
+				A5000008 /* Map */,
+				A5000009 /* Collection */,
+				A5000010 /* Components */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		A5000006 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				7A1CC93C2ED2392C00A61395 /* AchievementService.swift */,
+				7A1CC93D2ED2392C00A61395 /* APIClient.swift */,
+				7A1CC93E2ED2392C00A61395 /* ImageService.swift */,
+				7A1CC93F2ED2392C00A61395 /* NotificationService.swift */,
+				7A1CC9402ED2392C00A61395 /* RewardsService.swift */,
+				7A1CC9412ED2392C00A61395 /* UserService.swift */,
+				7A817B912EC7694400500F32 /* ShopService.swift */,
+				7A8B2EA12EC23DA1004F6826 /* SettingsService.swift */,
+				7A8B2E9B2EC22EE0004F6826 /* ExpansionService.swift */,
+				7A8B2E892EC1F308004F6826 /* DiscoverService.swift */,
+				7A7DF3DE2EBB940300331A52 /* DeckService.swift */,
+				A2000007 /* AuthService.swift */,
+				A2000008 /* CardService.swift */,
+				A2000009 /* TournamentService.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		A5000007 /* Preview Content */ = {
+			isa = PBXGroup;
+			children = (
+				A2000018 /* Preview Assets.xcassets */,
+			);
+			path = "Preview Content";
+			sourceTree = "<group>";
+		};
+		A5000008 /* Map */ = {
+			isa = PBXGroup;
+			children = (
+				7A1CC94A2ED2756B00A61395 /* TournamentMapDetailView.swift */,
+				A2000010 /* TournamentMapView.swift */,
+			);
+			path = Map;
+			sourceTree = "<group>";
+		};
+		A5000009 /* Collection */ = {
+			isa = PBXGroup;
+			children = (
+				7A8B2E9D2EC22EFD004F6826 /* ExpansionDetailView.swift */,
+				7A8B2E752EC1E375004F6826 /* CardScanResultView.swift */,
+				7A8B2E762EC1E375004F6826 /* CardScanView.swift */,
+				7A8B2E772EC1E375004F6826 /* ManualAddCardView.swift */,
+				7A8B2E782EC1E375004F6826 /* NewAddCardView.swift */,
+				7AFBD61E2EBCF99F0023B5D2 /* EditCardView.swift */,
+				7A7DF3DA2EBB938A00331A52 /* CardDetailView.swift */,
+				7A7DF3DB2EBB938A00331A52 /* CollectionView.swift */,
+				A2000012 /* CardScannerView.swift */,
+				A2000013 /* AddCardView.swift */,
+			);
+			path = Collection;
+			sourceTree = "<group>";
+		};
+		A5000010 /* Components */ = {
+			isa = PBXGroup;
+			children = (
+				7AE3FF902EC89098004EE982 /* DeckRowView.swift */,
+				7A817B952EC76B0800500F32 /* TCGTypeBadge.swift */,
+				7A817B932EC76A1C00500F32 /* LocationInputView.swift */,
+				7A8B2E992EC22ED8004F6826 /* ExpansionComponents.swift */,
+				7A8B2E872EC1F2FA004F6826 /* SharedComponents.swift */,
+				7A8B2E7D2EC1ECC3004F6826 /* LoadingComponents.swift */,
+				7AA785892EBCA42200A11D94 /* TCGCardView.swift */,
+				A2000014 /* TCGButton.swift */,
+				A2000015 /* CardRowView.swift */,
+				A2000016 /* TournamentCardView.swift */,
+			);
+			path = Components;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		A6000001 /* TCG Arena */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A7000001 /* Build configuration list for PBXNativeTarget "TCG Arena" */;
+			buildPhases = (
+				A8000001 /* Sources */,
+				A4000001 /* Frameworks */,
+				A9000001 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "TCG Arena";
+			packageProductDependencies = (
+			);
+			productName = "TCG Arena";
+			productReference = A3000001 /* TCG Arena.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		AA000001 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1610;
+				LastUpgradeCheck = 1610;
+				TargetAttributes = {
+					A6000001 = {
+						CreatedOnToolsVersion = 16.1;
+					};
+				};
+			};
+			buildConfigurationList = AA000002 /* Build configuration list for PBXProject "TCG Arena" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = A5000001;
+			packageReferences = (
+			);
+			productRefGroup = A5000003 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				A6000001 /* TCG Arena */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		A9000001 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A1000018 /* Preview Assets.xcassets in Resources */,
+				A1000017 /* Assets.xcassets in Resources */,
+				A1000019 /* GoogleService-Info.plist in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		A8000001 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				7AA785952EBCAA6200A11D94 /* DeckModels.swift in Sources */,
+				A1000001 /* TCGArenaApp.swift in Sources */,
+				7AE3FF992EC90409004EE982 /* Set.swift in Sources */,
+				7AFBD61F2EBCF99F0023B5D2 /* EditCardView.swift in Sources */,
+				7A8B2EA02EC22FCC004F6826 /* Expansion.swift in Sources */,
+				A1000002 /* ContentView.swift in Sources */,
+				7A817B962EC76B0800500F32 /* TCGTypeBadge.swift in Sources */,
+				A1000003 /* Card.swift in Sources */,
+				7AE3FF942EC8FFE6004EE982 /* RewardsMainView.swift in Sources */,
+				7AE3FF952EC8FFE6004EE982 /* RewardsView.swift in Sources */,
+				7AE3FF912EC89098004EE982 /* DeckRowView.swift in Sources */,
+				7AA785852EBC8A4A00A11D94 /* TournamentView.swift in Sources */,
+				7A8B2E9A2EC22ED8004F6826 /* ExpansionComponents.swift in Sources */,
+				7A8B2E882EC1F2FA004F6826 /* SharedComponents.swift in Sources */,
+				A1000004 /* User.swift in Sources */,
+				A1000005 /* Tournament.swift in Sources */,
+				7A817B922EC7694400500F32 /* ShopService.swift in Sources */,
+				A1000006 /* Deck.swift in Sources */,
+				A1000007 /* AuthService.swift in Sources */,
+				7AA785982EBCAA6C00A11D94 /* ProDeckListView.swift in Sources */,
+				7AA785992EBCAA6C00A11D94 /* DeckListView.swift in Sources */,
+				7AAF9FDD2ECE12E0008221E9 /* LoginView.swift in Sources */,
+				7AAF9FDE2ECE12E0008221E9 /* RegisterView.swift in Sources */,
+				7AAF9FDF2ECE12E0008221E9 /* WelcomeView.swift in Sources */,
+				7AAF9FE02ECE12E0008221E9 /* ForgotPasswordView.swift in Sources */,
+				7AAF9FE12ECE12E0008221E9 /* MainAppView.swift in Sources */,
+				7AAF9FE22ECE12E0008221E9 /* ReadOnlyContentView.swift in Sources */,
+				7A7DF4222EBBA1A100331A52 /* TCGTheme.swift in Sources */,
+				A1000008 /* CardService.swift in Sources */,
+				7A8B2E862EC1F2E8004F6826 /* DiscoverModels.swift in Sources */,
+				7A8B2E9E2EC22EFD004F6826 /* ExpansionDetailView.swift in Sources */,
+				A1000009 /* TournamentService.swift in Sources */,
+				7A8B2E942EC1F32A004F6826 /* UserProfileDetailView.swift in Sources */,
+				7A8B2E952EC1F32A004F6826 /* DiscoverComponents.swift in Sources */,
+				7A817B9A2EC76EDF00500F32 /* ShopNews.swift in Sources */,
+				7A8B2E962EC1F32A004F6826 /* DiscoverView.swift in Sources */,
+				7AA785882EBCA2AD00A11D94 /* MarketModels.swift in Sources */,
+				7A8B2E792EC1E375004F6826 /* NewAddCardView.swift in Sources */,
+				7AE3FF8F2EC89051004EE982 /* DeckDetailView.swift in Sources */,
+				7A8B2E7A2EC1E375004F6826 /* CardScanView.swift in Sources */,
+				7A8B2E7B2EC1E375004F6826 /* ManualAddCardView.swift in Sources */,
+				7A8B2E7C2EC1E375004F6826 /* CardScanResultView.swift in Sources */,
+				7A1CC9292ED238D500A61395 /* CardModels.swift in Sources */,
+				7A1CC92A2ED238D500A61395 /* ImageModels.swift in Sources */,
+				7A1CC92B2ED238D500A61395 /* RewardModels.swift in Sources */,
+				7A1CC92C2ED238D500A61395 /* AuthModels.swift in Sources */,
+				7A1CC92E2ED238D500A61395 /* AchievementModels.swift in Sources */,
+				7A1CC92F2ED238D500A61395 /* UserActivity.swift in Sources */,
+				7A1CC9302ED238D500A61395 /* NotificationModels.swift in Sources */,
+				7A1CC9312ED238D500A61395 /* ProDeck.swift in Sources */,
+				7A1CC9372ED238E800A61395 /* AchievementView.swift in Sources */,
+				7A1CC9382ED238E800A61395 /* NotificationView.swift in Sources */,
+				7A1CC9422ED2392C00A61395 /* RewardsService.swift in Sources */,
+				7A1CC9432ED2392C00A61395 /* UserService.swift in Sources */,
+				7A1CC9442ED2392C00A61395 /* AchievementService.swift in Sources */,
+				7A1CC9452ED2392C00A61395 /* ImageService.swift in Sources */,
+				7A1CC9462ED2392C00A61395 /* APIClient.swift in Sources */,
+				7A1CC94B2ED2756B00A61395 /* TournamentMapDetailView.swift in Sources */,
+				7A1CC9472ED2392C00A61395 /* NotificationService.swift in Sources */,
+				7A1CC9392ED238E800A61395 /* LeaderboardView.swift in Sources */,
+				7A1CC9322ED238D500A61395 /* UserStats.swift in Sources */,
+				7A1CC9332ED238D500A61395 /* TournamentParticipant.swift in Sources */,
+				7A8B2E8A2EC1F308004F6826 /* DiscoverService.swift in Sources */,
+				7A1CC9492ED2753B00A61395 /* TournamentDetailView.swift in Sources */,
+				A1000010 /* TournamentMapView.swift in Sources */,
+				7A817B9C2EC77F6D00500F32 /* SimpleProCardDetailView.swift in Sources */,
+				7A7DF4152EBB943D00331A52 /* DeckBuilderView.swift in Sources */,
+				7A7DF4172EBB943D00331A52 /* CommunityView.swift in Sources */,
+				7A7DF41B2EBB943D00331A52 /* ProfileView.swift in Sources */,
+				A1000012 /* CardScannerView.swift in Sources */,
+				7A7DF3DF2EBB940300331A52 /* DeckService.swift in Sources */,
+				7A8B2E982EC21F61004F6826 /* CreateTournamentView.swift in Sources */,
+				A1000013 /* AddCardView.swift in Sources */,
+				7AE3FF972EC900A4004EE982 /* HowToGetPointsView.swift in Sources */,
+				7A7DF4242EBBAD5000331A52 /* ViewHelpers.swift in Sources */,
+				7A817B8F2EC7693C00500F32 /* ShopView.swift in Sources */,
+				7A817B902EC7693C00500F32 /* ShopDetailView.swift in Sources */,
+				7AA7859C2EBCC5CC00A11D94 /* UserDeckListView.swift in Sources */,
+				7A8B2E7E2EC1ECC3004F6826 /* LoadingComponents.swift in Sources */,
+				7AA7859D2EBCC5CC00A11D94 /* ProDecksListView.swift in Sources */,
+				A1000014 /* TCGButton.swift in Sources */,
+				7A7DF3DC2EBB938A00331A52 /* CollectionView.swift in Sources */,
+				7AA785922EBCA4D300A11D94 /* CollectionCardWithPrice.swift in Sources */,
+				7A1CC91D2ED1EC3B00A61395 /* OnboardingView.swift in Sources */,
+				7A817B942EC76A1C00500F32 /* LocationInputView.swift in Sources */,
+				7A8B2EA22EC23DA1004F6826 /* SettingsService.swift in Sources */,
+				7A8B2E802EC1EE9F004F6826 /* NewDeckView.swift in Sources */,
+				7AA785932EBCA4D300A11D94 /* PortfolioCard.swift in Sources */,
+				7AA7858A2EBCA42200A11D94 /* TCGCardView.swift in Sources */,
+				7A7DF3DD2EBB938A00331A52 /* CardDetailView.swift in Sources */,
+				7A8B2E9C2EC22EE0004F6826 /* ExpansionService.swift in Sources */,
+				7A817B8B2EC7692500500F32 /* Shop.swift in Sources */,
+				A1000015 /* CardRowView.swift in Sources */,
+				A1000016 /* TournamentCardView.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		A7000002 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "\"TCG Arena/Preview Content\"";
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "TCG Arena/Info.plist";
+				INFOPLIST_KEY_NSCameraUsageDescription = "TCG Arena needs camera access to scan trading cards";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "TCG Arena needs location access to show nearby tournaments";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.6;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.tcgarena.app;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		A7000003 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "\"TCG Arena/Preview Content\"";
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "TCG Arena/Info.plist";
+				INFOPLIST_KEY_NSCameraUsageDescription = "TCG Arena needs camera access to scan trading cards";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "TCG Arena needs location access to show nearby tournaments";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.6;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.tcgarena.app;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		AA000003 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.6;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		AA000004 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.6;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		A7000001 /* Build configuration list for PBXNativeTarget "TCG Arena" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A7000002 /* Debug */,
+				A7000003 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		AA000002 /* Build configuration list for PBXProject "TCG Arena" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AA000003 /* Debug */,
+				AA000004 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = AA000001 /* Project object */;
+}

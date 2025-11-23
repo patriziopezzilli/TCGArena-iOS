@@ -1,0 +1,270 @@
+//
+//  LoginView.swift
+//  TCG Arena
+//
+//  Created by TCG Arena Team on 11/19/25.
+//
+
+import SwiftUI
+
+struct LoginView: View {
+    @Environment(\.dismiss) private var dismiss
+    @StateObject private var authService = AuthService()
+    @State private var email = ""
+    @State private var password = ""
+    @State private var showForgotPassword = false
+    @State private var isLoading = false
+    @State private var showError = false
+    @State private var errorMessage = ""
+
+    var body: some View {
+        ZStack {
+            // Clean white background
+            Color(.systemBackground)
+                .ignoresSafeArea()
+
+            VStack(spacing: 0) {
+                // Close button
+                HStack {
+                    Spacer()
+                    Button(action: {
+                        dismiss()
+                    }) {
+                        Image(systemName: "xmark")
+                            .font(.system(size: 17, weight: .medium))
+                            .foregroundColor(.secondary)
+                            .frame(width: 44, height: 44)
+                    }
+                }
+                .padding(.top, 20)
+                .padding(.trailing, 20)
+
+                Spacer()
+
+                // Clean header
+                VStack(spacing: 24) {
+                    ZStack {
+                        Circle()
+                            .fill(Color(.systemGray6))
+                            .frame(width: 80, height: 80)
+
+                        Image(systemName: "person.circle.fill")
+                            .font(.system(size: 32, weight: .medium))
+                            .foregroundColor(.primary)
+                    }
+
+                    VStack(spacing: 12) {
+                        Text("Welcome Back")
+                            .font(.system(size: 28, weight: .bold))
+                            .foregroundColor(.primary)
+
+                        Text("Sign in to your TCG Arena account")
+                            .font(.system(size: 17, weight: .regular))
+                            .foregroundColor(.secondary)
+                            .multilineTextAlignment(.center)
+                    }
+                }
+                .padding(.horizontal, 40)
+
+                Spacer()
+
+                // Clean login form
+                VStack(spacing: 24) {
+                    VStack(spacing: 20) {
+                        // Email field
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text("Email")
+                                .font(.system(size: 15, weight: .semibold))
+                                .foregroundColor(.primary)
+
+                            TextField("Enter your email", text: $email)
+                                .font(.system(size: 17))
+                                .keyboardType(.emailAddress)
+                                .autocapitalization(.none)
+                                .disableAutocorrection(true)
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 14)
+                                .background(Color(.systemGray6))
+                                .clipShape(RoundedRectangle(cornerRadius: 12))
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 12)
+                                        .stroke(Color(.systemGray4), lineWidth: 1)
+                                )
+                        }
+
+                        // Password field
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text("Password")
+                                .font(.system(size: 15, weight: .semibold))
+                                .foregroundColor(.primary)
+
+                            SecureField("Enter your password", text: $password)
+                                .font(.system(size: 17))
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 14)
+                                .background(Color(.systemGray6))
+                                .clipShape(RoundedRectangle(cornerRadius: 12))
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 12)
+                                        .stroke(Color(.systemGray4), lineWidth: 1)
+                                )
+                        }
+                    }
+                    .padding(.horizontal, 40)
+
+                    // Forgot password
+                    HStack {
+                        Spacer()
+                        Button(action: {
+                            showForgotPassword = true
+                        }) {
+                            Text("Forgot Password?")
+                                .font(.system(size: 15, weight: .medium))
+                                .foregroundColor(.primary)
+                        }
+                    }
+                    .padding(.horizontal, 40)
+
+                    // Login button
+                    Button(action: login) {
+                        if isLoading {
+                            ProgressView()
+                                .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                        } else {
+                            Text("Sign In")
+                                .font(.system(size: 18, weight: .semibold))
+                                .foregroundColor(.white)
+                        }
+                    }
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 56)
+                    .background(Color.blue)
+                    .clipShape(RoundedRectangle(cornerRadius: 28))
+                    .shadow(color: Color.blue.opacity(0.3), radius: 8, x: 0, y: 4)
+                    .padding(.horizontal, 32)
+                    .disabled(isLoading || email.isEmpty || password.isEmpty)
+                    .opacity((isLoading || email.isEmpty || password.isEmpty) ? 0.6 : 1.0)
+                }
+
+                Spacer()
+
+                // Skip option
+                VStack(spacing: 16) {
+                    Text("or")
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundColor(.secondary)
+
+                    Button(action: {
+                        // Skip login - continue as guest
+                        UserDefaults.standard.set(true, forKey: "hasCompletedOnboarding")
+                        dismiss()
+                    }) {
+                        Text("Continue as Guest")
+                            .font(.system(size: 16, weight: .medium))
+                            .foregroundColor(.secondary)
+                            .underline()
+                    }
+                }
+                .padding(.bottom, 40)
+            }
+        }
+        .alert("Login Error", isPresented: $showError) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(errorMessage)
+        }
+        .sheet(isPresented: $showForgotPassword) {
+            ForgotPasswordView()
+        }
+    }
+
+    private func login() {
+        guard !email.isEmpty, !password.isEmpty else { return }
+
+        isLoading = true
+
+        Task {
+            do {
+                try await authService.signIn(email: email, password: password)
+                UserDefaults.standard.set(true, forKey: "hasCompletedOnboarding")
+                dismiss()
+            } catch {
+                errorMessage = error.localizedDescription
+                showError = true
+            }
+            isLoading = false
+        }
+    }
+}
+
+                    // Login button
+                    Button(action: login) {
+                        if isLoading {
+                            ProgressView()
+                                .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                        } else {
+                            Text("Sign In")
+                                .font(.system(size: 18, weight: .semibold))
+                                .foregroundColor(.white)
+                        }
+                    }
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 56)
+                    .background(Color.blue)
+                    .clipShape(RoundedRectangle(cornerRadius: 28))
+                    .shadow(color: Color.blue.opacity(0.3), radius: 8, x: 0, y: 4)
+                    .padding(.horizontal, 32)
+                    .disabled(isLoading || email.isEmpty || password.isEmpty)
+                    .opacity((isLoading || email.isEmpty || password.isEmpty) ? 0.6 : 1.0)
+                }
+
+                Spacer()
+
+                // Skip option
+                VStack(spacing: 16) {
+                    Text("or")
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundColor(.secondary)
+
+                    Button(action: {
+                        // Skip login - continue as guest
+                        UserDefaults.standard.set(true, forKey: "hasCompletedOnboarding")
+                        dismiss()
+                    }) {
+                        Text("Continue as Guest")
+                            .font(.system(size: 16, weight: .medium))
+                            .foregroundColor(.secondary)
+                            .underline()
+                    }
+                }
+                .padding(.bottom, 40)
+            }
+        }
+        .alert("Login Error", isPresented: $showError) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(errorMessage)
+        }
+        .sheet(isPresented: $showForgotPassword) {
+            ForgotPasswordView()
+        }
+    }
+
+    private func login() {
+        guard !email.isEmpty, !password.isEmpty else { return }
+
+        isLoading = true
+
+        Task {
+            do {
+                try await authService.signIn(email: email, password: password)
+                UserDefaults.standard.set(true, forKey: "hasCompletedOnboarding")
+                dismiss()
+            } catch {
+                errorMessage = error.localizedDescription
+                showError = true
+            }
+            isLoading = false
+        }
+    }
+}
