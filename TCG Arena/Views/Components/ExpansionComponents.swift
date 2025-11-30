@@ -16,7 +16,7 @@ struct ExpansionCard: View {
         Button(action: action) {
             VStack(spacing: 12) {
                 // Expansion Image
-                AsyncImage(url: URL(string: expansion.imageUrl ?? "")) { image in
+                AsyncImage(url: URL(string: expansion.sets.first(where: { $0.logoUrl != nil })?.logoUrl ?? "")) { image in
                     image
                         .resizable()
                         .aspectRatio(contentMode: .fit)
@@ -37,6 +37,33 @@ struct ExpansionCard: View {
                 }
                 .frame(height: 100)
                 .clipShape(RoundedRectangle(cornerRadius: 12))
+                
+                // Recent Cards Preview
+                let allCards: [CardTemplate] = expansion.sets.compactMap { $0.cards }.flatMap { $0 }
+                let recentCards = Array(allCards.prefix(5))
+                
+                if !recentCards.isEmpty {
+                    HStack(spacing: 4) {
+                        ForEach(recentCards) { card in
+                            AsyncImage(url: URL(string: card.fullImageUrl ?? "")) { image in
+                                image
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fit)
+                            } placeholder: {
+                                RoundedRectangle(cornerRadius: 4)
+                                    .fill(Color.gray.opacity(0.3))
+                                    .overlay(
+                                        SwiftUI.Image(systemName: "photo")
+                                            .font(.system(size: 8))
+                                            .foregroundColor(.gray)
+                                    )
+                            }
+                            .frame(width: 20, height: 28)
+                            .clipShape(RoundedRectangle(cornerRadius: 4))
+                        }
+                    }
+                    .frame(height: 32)
+                }
                 
                 // Expansion Info
                 VStack(spacing: 4) {
@@ -80,85 +107,89 @@ struct ExpansionCard: View {
 struct ExpansionRow: View {
     let expansion: Expansion
     let showCards: Bool
+    let isButton: Bool
     let action: () -> Void
     
-    init(expansion: Expansion, showCards: Bool = true, action: @escaping () -> Void) {
+    init(expansion: Expansion, showCards: Bool = true, isButton: Bool = true, action: @escaping () -> Void) {
         self.expansion = expansion
         self.showCards = showCards
+        self.isButton = isButton
         self.action = action
     }
     
     var body: some View {
-        Button(action: action) {
-            HStack(spacing: 16) {
-                // Expansion Image
-                AsyncImage(url: URL(string: expansion.imageUrl ?? "")) { image in
-                    image
-                        .resizable()
-                        .aspectRatio(contentMode: .fit)
-                } placeholder: {
-                    RoundedRectangle(cornerRadius: 8)
-                        .fill(expansion.tcgType.themeColor.opacity(0.2))
-                        .overlay(
-                            SwiftUI.Image(systemName: expansion.tcgType.systemIcon)
-                                .font(.system(size: 20, weight: .bold))
-                                .foregroundColor(expansion.tcgType.themeColor)
-                        )
-                }
-                .frame(width: 60, height: 60)
-                .clipShape(RoundedRectangle(cornerRadius: 8))
-                
-                // Expansion Details
-                VStack(alignment: .leading, spacing: 6) {
-                    Text(expansion.title)
-                        .font(.system(size: 16, weight: .semibold))
-                        .foregroundColor(.primary)
-                        .lineLimit(1)
-                    
-                    HStack(spacing: 8) {
-                        Circle()
-                            .fill(expansion.tcgType.themeColor)
-                            .frame(width: 8, height: 8)
-                        
-                        Text(expansion.tcgType.displayName)
-                            .font(.system(size: 14, weight: .medium))
+        content
+            .conditionalButton(isButton: isButton, action: action)
+    }
+    
+    private var content: some View {
+        HStack(spacing: 16) {
+            // Expansion Image
+            AsyncImage(url: URL(string: expansion.imageUrl ?? "")) { image in
+                image
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+            } placeholder: {
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(expansion.tcgType.themeColor.opacity(0.2))
+                    .overlay(
+                        SwiftUI.Image(systemName: expansion.tcgType.systemIcon)
+                            .font(.system(size: 20, weight: .bold))
                             .foregroundColor(expansion.tcgType.themeColor)
-                    }
+                        )
+            }
+            .frame(width: 60, height: 60)
+            .clipShape(RoundedRectangle(cornerRadius: 8))
+            
+            // Expansion Details
+            VStack(alignment: .leading, spacing: 6) {
+                Text(expansion.title)
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundColor(.primary)
+                    .lineLimit(1)
+                
+                HStack(spacing: 8) {
+                    Circle()
+                        .fill(expansion.tcgType.themeColor)
+                        .frame(width: 8, height: 8)
                     
-                    HStack(spacing: 12) {
-                        Text(expansion.formattedReleaseDate)
-                            .font(.system(size: 12, weight: .medium))
-                            .foregroundColor(.secondary)
-                        
-                        if showCards {
-                            HStack(spacing: 4) {
-                                SwiftUI.Image(systemName: "square.stack.3d.up.fill")
-                                    .font(.system(size: 10))
-                                    .foregroundColor(.secondary)
-                                
-                                Text("\(expansion.cardCount) cards")
-                                    .font(.system(size: 12, weight: .medium))
-                                    .foregroundColor(.secondary)
-                            }
+                    Text(expansion.tcgType.displayName)
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundColor(expansion.tcgType.themeColor)
+                }
+                
+                HStack(spacing: 12) {
+                    Text(expansion.formattedReleaseDate)
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundColor(.secondary)
+                    
+                    if showCards {
+                        HStack(spacing: 4) {
+                            SwiftUI.Image(systemName: "square.stack.3d.up.fill")
+                                .font(.system(size: 10))
+                                .foregroundColor(.secondary)
+                            
+                            Text("\(expansion.cardCount) cards")
+                                .font(.system(size: 12, weight: .medium))
+                                .foregroundColor(.secondary)
                         }
                     }
                 }
-                
-                Spacer()
-                
-                // Arrow indicator
-                SwiftUI.Image(systemName: "chevron.right")
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundColor(.secondary)
             }
-            .padding(16)
-            .background(
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(Color(.systemBackground))
-                    .shadow(color: .black.opacity(0.08), radius: 4, x: 0, y: 2)
-            )
+            
+            Spacer()
+            
+            // Arrow indicator
+            SwiftUI.Image(systemName: "chevron.right")
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundColor(.secondary)
         }
-        .buttonStyle(PlainButtonStyle())
+        .padding(16)
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(Color(.systemBackground))
+                .shadow(color: .black.opacity(0.08), radius: 4, x: 0, y: 2)
+        )
     }
 }
 
@@ -235,5 +266,20 @@ struct ExpansionBadge: View {
             )
         }
         .buttonStyle(PlainButtonStyle())
+    }
+}
+
+// MARK: - View Extensions
+extension View {
+    @ViewBuilder
+    func conditionalButton(isButton: Bool, action: @escaping () -> Void) -> some View {
+        if isButton {
+            Button(action: action) {
+                self
+            }
+            .buttonStyle(PlainButtonStyle())
+        } else {
+            self
+        }
     }
 }

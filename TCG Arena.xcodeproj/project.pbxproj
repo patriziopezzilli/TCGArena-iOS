@@ -7,6 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		784090482EDA2CD700CC6B9A /* SetDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 784090472EDA2CD700CC6B9A /* SetDetailView.swift */; };
+		7840904A2EDB96F800CC6B9A /* ImageCacheManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 784090492EDB96F800CC6B9A /* ImageCacheManager.swift */; };
+		7840904C2EDB98F000CC6B9A /* DeckSelectionModal.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7840904B2EDB98F000CC6B9A /* DeckSelectionModal.swift */; };
+		7840904E2EDB9DCB00CC6B9A /* SearchCardResultView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7840904D2EDB9DCB00CC6B9A /* SearchCardResultView.swift */; };
 		7A1CC91D2ED1EC3B00A61395 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1CC91C2ED1EC3B00A61395 /* OnboardingView.swift */; };
 		7A1CC9292ED238D500A61395 /* CardModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1CC9202ED238D500A61395 /* CardModels.swift */; };
 		7A1CC92A2ED238D500A61395 /* ImageModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1CC9222ED238D500A61395 /* ImageModels.swift */; };
@@ -107,6 +111,10 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		784090472EDA2CD700CC6B9A /* SetDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SetDetailView.swift; sourceTree = "<group>"; };
+		784090492EDB96F800CC6B9A /* ImageCacheManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageCacheManager.swift; sourceTree = "<group>"; };
+		7840904B2EDB98F000CC6B9A /* DeckSelectionModal.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeckSelectionModal.swift; sourceTree = "<group>"; };
+		7840904D2EDB9DCB00CC6B9A /* SearchCardResultView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchCardResultView.swift; sourceTree = "<group>"; };
 		7A1CC91C2ED1EC3B00A61395 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
 		7A1CC91E2ED238D500A61395 /* AchievementModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AchievementModels.swift; sourceTree = "<group>"; };
 		7A1CC91F2ED238D500A61395 /* AuthModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthModels.swift; sourceTree = "<group>"; };
@@ -256,6 +264,7 @@
 		7A7DF41F2EBBA0DE00331A52 /* Utils */ = {
 			isa = PBXGroup;
 			children = (
+				784090492EDB96F800CC6B9A /* ImageCacheManager.swift */,
 				7A7DF4232EBBAD5000331A52 /* ViewHelpers.swift */,
 				7A7DF4212EBBA1A100331A52 /* TCGTheme.swift */,
 			);
@@ -421,6 +430,7 @@
 		A5000009 /* Collection */ = {
 			isa = PBXGroup;
 			children = (
+				784090472EDA2CD700CC6B9A /* SetDetailView.swift */,
 				7A8B2E9D2EC22EFD004F6826 /* ExpansionDetailView.swift */,
 				7A8B2E752EC1E375004F6826 /* CardScanResultView.swift */,
 				7A8B2E762EC1E375004F6826 /* CardScanView.swift */,
@@ -438,6 +448,8 @@
 		A5000010 /* Components */ = {
 			isa = PBXGroup;
 			children = (
+				7840904D2EDB9DCB00CC6B9A /* SearchCardResultView.swift */,
+				7840904B2EDB98F000CC6B9A /* DeckSelectionModal.swift */,
 				7AE3FF902EC89098004EE982 /* DeckRowView.swift */,
 				7A817B952EC76B0800500F32 /* TCGTypeBadge.swift */,
 				7A817B932EC76A1C00500F32 /* LocationInputView.swift */,
@@ -540,6 +552,7 @@
 				7AE3FF912EC89098004EE982 /* DeckRowView.swift in Sources */,
 				7AA785852EBC8A4A00A11D94 /* TournamentView.swift in Sources */,
 				7A8B2E9A2EC22ED8004F6826 /* ExpansionComponents.swift in Sources */,
+				7840904C2EDB98F000CC6B9A /* DeckSelectionModal.swift in Sources */,
 				7A8B2E882EC1F2FA004F6826 /* SharedComponents.swift in Sources */,
 				A1000004 /* User.swift in Sources */,
 				A1000005 /* Tournament.swift in Sources */,
@@ -579,6 +592,7 @@
 				7A1CC9312ED238D500A61395 /* ProDeck.swift in Sources */,
 				7A1CC9372ED238E800A61395 /* AchievementView.swift in Sources */,
 				7A1CC9382ED238E800A61395 /* NotificationView.swift in Sources */,
+				7840904E2EDB9DCB00CC6B9A /* SearchCardResultView.swift in Sources */,
 				7A1CC9422ED2392C00A61395 /* RewardsService.swift in Sources */,
 				7A1CC9432ED2392C00A61395 /* UserService.swift in Sources */,
 				7A1CC9442ED2392C00A61395 /* AchievementService.swift in Sources */,
@@ -592,8 +606,10 @@
 				7A8B2E8A2EC1F308004F6826 /* DiscoverService.swift in Sources */,
 				7A1CC9492ED2753B00A61395 /* TournamentDetailView.swift in Sources */,
 				A1000010 /* TournamentMapView.swift in Sources */,
+				784090482EDA2CD700CC6B9A /* SetDetailView.swift in Sources */,
 				7A817B9C2EC77F6D00500F32 /* SimpleProCardDetailView.swift in Sources */,
 				7A7DF4152EBB943D00331A52 /* DeckBuilderView.swift in Sources */,
+				7840904A2EDB96F800CC6B9A /* ImageCacheManager.swift in Sources */,
 				7A7DF4172EBB943D00331A52 /* CommunityView.swift in Sources */,
 				7A7DF41B2EBB943D00331A52 /* ProfileView.swift in Sources */,
 				A1000012 /* CardScannerView.swift in Sources */,

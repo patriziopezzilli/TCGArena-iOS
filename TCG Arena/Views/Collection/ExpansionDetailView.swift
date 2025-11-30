@@ -9,88 +9,59 @@ import SwiftUI
 
 struct ExpansionDetailView: View {
     let expansion: Expansion
-    @StateObject private var expansionService = ExpansionService()
-    @Environment(\.presentationMode) var presentationMode
-    @State private var cards: [CardTemplate] = []
-    @State private var isLoading = true
+    @EnvironmentObject private var expansionService: ExpansionService
+    @State private var isLoadingExpansion = false
+    @State private var loadedExpansion: Expansion? = nil
+    
+    init(expansion: Expansion) {
+        self.expansion = expansion
+        print("🆕 [ExpansionDetailView] View initialized for expansion: \(expansion.title) (ID: \(expansion.id))")
+    }
+    
+    private var currentExpansion: Expansion {
+        loadedExpansion ?? expansion
+    }
     
     var body: some View {
-        NavigationView {
-            ScrollView {
-                VStack(spacing: 20) {
-                    // Header Section
-                    expansionHeaderSection
-                    
-                    // Sets Section
-                    expansionSetsSection
-                    
-                    // Cards Section
-                    cardsSection
-                }
-                .padding(.horizontal, 20)
-                .padding(.vertical, 16)
+        ScrollView {
+            VStack(spacing: 20) {
+                // Header Section
+                expansionHeaderSection
+                
+                // Sets Section
+                expansionSetsSection
             }
-            .background(Color(.systemBackground))
-            .navigationTitle(expansion.title)
-            .navigationBarTitleDisplayMode(.large)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Done") {
-                        presentationMode.wrappedValue.dismiss()
-                    }
-                    .foregroundColor(.blue)
-                }
-            }
+            .padding(.horizontal, 20)
+            .padding(.vertical, 16)
         }
+        .background(Color(.systemBackground))
         .task {
-            await loadCards()
+            await loadExpansionIfNeeded()
+        }
+        .onAppear {
+            print("👁️ [ExpansionDetailView] View appeared for expansion: \(expansion.title)")
         }
     }
     
     // MARK: - Header Section
     private var expansionHeaderSection: some View {
         VStack(spacing: 16) {
-            // Expansion Image
-            AsyncImage(url: URL(string: expansion.imageUrl ?? "")) { image in
-                image
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-            } placeholder: {
-                RoundedRectangle(cornerRadius: 16)
-                    .fill(expansion.tcgType.themeColor.opacity(0.2))
-                    .overlay(
-                        VStack(spacing: 8) {
-                            SwiftUI.Image(systemName: expansion.tcgType.systemIcon)
-                                .font(.system(size: 40, weight: .bold))
-                                .foregroundColor(expansion.tcgType.themeColor)
-                            
-                            Text(expansion.title)
-                                .font(.system(size: 16, weight: .bold))
-                                .foregroundColor(expansion.tcgType.themeColor)
-                                .multilineTextAlignment(.center)
-                        }
-                    )
-            }
-            .frame(height: 180)
-            .clipShape(RoundedRectangle(cornerRadius: 16))
-            .shadow(color: expansion.tcgType.themeColor.opacity(0.3), radius: 8, x: 0, y: 4)
-            
             // Expansion Info
             VStack(spacing: 12) {
                 HStack {
                     VStack(alignment: .leading, spacing: 4) {
-                        Text(expansion.title)
+                        Text(currentExpansion.title)
                             .font(.system(size: 28, weight: .bold))
                             .foregroundColor(.primary)
                         
                         HStack(spacing: 8) {
                             Circle()
-                                .fill(expansion.tcgType.themeColor)
+                                .fill(currentExpansion.tcgType.themeColor)
                                 .frame(width: 8, height: 8)
                             
-                            Text(expansion.tcgType.displayName)
+                            Text(currentExpansion.tcgType.displayName)
                                 .font(.system(size: 16, weight: .semibold))
-                                .foregroundColor(expansion.tcgType.themeColor)
+                                .foregroundColor(currentExpansion.tcgType.themeColor)
                         }
                     }
                     
@@ -101,7 +72,7 @@ struct ExpansionDetailView: View {
                             .font(.system(size: 12, weight: .medium))
                             .foregroundColor(.secondary)
                         
-                        Text(expansion.sets.first?.formattedReleaseDate ?? "Unknown")
+                        Text(currentExpansion.sets.first?.formattedReleaseDate ?? "Unknown")
                             .font(.system(size: 14, weight: .semibold))
                             .foregroundColor(.primary)
                     }
@@ -122,8 +93,24 @@ struct ExpansionDetailView: View {
                 .font(.system(size: 20, weight: .bold))
                 .foregroundColor(.primary)
             
-            ForEach(expansion.sets) { set in
-                SetDetailCard(set: set)
+            if currentExpansion.sets.isEmpty {
+                // Show loading state if no sets are available
+                VStack(spacing: 16) {
+                    ProgressView()
+                        .scaleEffect(1.5)
+                    Text("Loading sets...")
+                        .font(.system(size: 16, weight: .medium))
+                        .foregroundColor(.secondary)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 40)
+            } else {
+                ForEach(currentExpansion.sets) { set in
+                    NavigationLink(destination: SetDetailView(set: set)) {
+                        SetDetailCard(set: set)
+                    }
+                    .buttonStyle(PlainButtonStyle())
+                }
             }
         }
     }
@@ -152,112 +139,44 @@ struct ExpansionDetailView: View {
         )
     }
     
-    // MARK: - Cards Section
-    private var cardsSection: some View {
-        VStack(alignment: .leading, spacing: 24) {
-            Text("Featured Cards")
-                .font(.system(size: 20, weight: .bold))
-                .foregroundColor(.primary)
-            
-            if cards.isEmpty && !isLoading {
-                emptyCardsView
-            } else {
-                // Group cards by set - temporarily disabled due to SwiftUI binding issue
-                Text("Cards section coming soon")
-                    .foregroundColor(.secondary)
-                    .padding(.vertical, 20)
-            }
-        }
-    }
-    
-    private var emptyCardsView: some View {
-        VStack(spacing: 16) {
-            SwiftUI.Image(systemName: "square.stack.3d.up.slash")
-                .font(.system(size: 40, weight: .medium))
-                .foregroundColor(.secondary)
-            
-            Text("No cards available")
-                .font(.system(size: 16, weight: .medium))
-                .foregroundColor(.secondary)
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 40)
-    }
-    
     // MARK: - Actions
-    private func loadCards() async {
-        isLoading = true
-        cards = await expansionService.loadCards(for: expansion)
-        isLoading = false
-    }
-}
-
-// MARK: - Expansion Card View
-struct ExpansionCardView: View {
-    let card: Card
-    
-    var body: some View {
-        VStack(spacing: 12) {
-            // Card Image
-            AsyncImage(url: URL(string: card.imageURL ?? "")) { image in
-                image
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-            } placeholder: {
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(card.tcgType.themeColor.opacity(0.2))
-                    .overlay(
-                        VStack(spacing: 4) {
-                            SwiftUI.Image(systemName: card.tcgType.systemIcon)
-                                .font(.system(size: 24, weight: .bold))
-                                .foregroundColor(card.tcgType.themeColor)
-                            
-                            Text(card.cardNumber ?? "N/A")
-                                .font(.system(size: 10, weight: .semibold))
-                                .foregroundColor(card.tcgType.themeColor)
-                        }
-                    )
+    private func loadExpansionIfNeeded() async {
+        print("🔍 [ExpansionDetailView] Checking expansion: \(expansion.title) (ID: \(expansion.id))")
+        print("📊 [ExpansionDetailView] Expansion has \(expansion.sets.count) sets")
+        
+        // If expansion already has sets, no need to reload
+        if !expansion.sets.isEmpty {
+            print("✅ Expansion \(expansion.title) already has \(expansion.sets.count) sets loaded")
+            // Debug: print set details
+            for (index, set) in expansion.sets.enumerated() {
+                print("   Set \(index + 1): \(set.name) (\(set.setCode)) - \(set.cardCount) cards")
             }
-            .frame(height: 120)
-            .clipShape(RoundedRectangle(cornerRadius: 12))
-            
-            // Card Info
-            VStack(spacing: 6) {
-                Text(card.name)
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundColor(.primary)
-                    .lineLimit(2)
-                    .multilineTextAlignment(.center)
-                
-                Text(card.rarity.displayName)
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundColor(rarityColor(card.rarity))
-                
-                if let price = card.marketPrice {
-                    Text("$\(price, specifier: "%.2f")")
-                        .font(.system(size: 12, weight: .semibold))
-                        .foregroundColor(.green)
+            return
+        }
+        
+        print("🔄 Expansion \(expansion.title) has no sets, loading details from API...")
+        isLoadingExpansion = true
+        
+        // Load complete expansion details from API
+        await withCheckedContinuation { continuation in
+            expansionService.getExpansionById(expansion.id) { result in
+                DispatchQueue.main.async {
+                    switch result {
+                    case .success(let detailedExpansion):
+                        print("✅ Loaded expansion details with \(detailedExpansion.sets.count) sets")
+                        // Debug: print loaded set details
+                        for (index, set) in detailedExpansion.sets.enumerated() {
+                            print("   Loaded Set \(index + 1): \(set.name) (\(set.setCode)) - \(set.cardCount) cards")
+                        }
+                        self.loadedExpansion = detailedExpansion
+                    case .failure(let error):
+                        print("❌ Failed to load expansion details: \(error.localizedDescription)")
+                        // Keep original expansion as fallback
+                    }
+                    self.isLoadingExpansion = false
+                    continuation.resume()
                 }
             }
-        }
-        .padding(12)
-        .background(
-            RoundedRectangle(cornerRadius: 16)
-                .fill(Color(.systemGray6))
-        )
-    }
-    
-    private func rarityColor(_ rarity: Rarity) -> Color {
-        switch rarity {
-        case .common: return .secondary
-        case .uncommon: return .green
-        case .rare: return .blue
-        case .ultraRare: return .purple
-        case .secretRare: return .orange
-        case .holographic: return .cyan
-        case .promo: return .mint
-        case .mythic: return .yellow
-        case .legendary: return .pink
         }
     }
 }
@@ -276,7 +195,7 @@ struct SetDetailCard: View {
         HStack(spacing: 16) {
             // Set Image/Icon
             ZStack {
-                AsyncImage(url: URL(string: set.imageURL ?? "")) { image in
+                AsyncImage(url: URL(string: set.logoUrl ?? "")) { image in
                     image
                         .resizable()
                         .aspectRatio(contentMode: .fill)
@@ -356,12 +275,23 @@ struct SetDetailCard: View {
 }
 
 #Preview {
+    let mockSet = TCGSet(
+        id: 1,
+        name: "Mock Set",
+        setCode: "MST",
+        imageURL: nil,
+        releaseDateString: "2023-01-01T00:00:00Z",
+        cardCount: 100,
+        description: "A mock set for testing",
+        cards: []
+    )
     let mockExpansion = Expansion(
         id: 1,
         title: "Mock Expansion",
         tcgType: .magic,
         imageUrl: nil,
-        sets: []
+        sets: [mockSet]
     )
     ExpansionDetailView(expansion: mockExpansion)
+        .environmentObject(ExpansionService())
 }

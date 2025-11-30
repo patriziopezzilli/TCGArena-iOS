@@ -9,7 +9,7 @@ import SwiftUI
 
 struct OnboardingView: View {
     @Environment(\.dismiss) private var dismiss
-    @StateObject private var authService = AuthService()
+    @EnvironmentObject private var authService: AuthService
     @State private var email = ""
     @State private var isLoading = false
     @State private var showLogin = false
@@ -75,7 +75,7 @@ struct OnboardingView: View {
                                             .font(.system(size: 30, weight: .medium))
                                             .foregroundColor(selectedTCG == tcg ? .white : tcg.themeColor)
 
-                                        Text(tcg.rawValue)
+                                        Text(tcg.displayName)
                                             .font(.system(size: 14, weight: .medium))
                                             .foregroundColor(selectedTCG == tcg ? .white : .black)
                                     }
@@ -130,10 +130,12 @@ struct OnboardingView: View {
             .padding(.vertical, 40)
         }
         .sheet(isPresented: $showLogin) {
-            LoginView(email: email)
+            LoginView()
+                .environmentObject(authService)
         }
         .sheet(isPresented: $showRegister) {
-            RegisterView(email: email, selectedTCG: selectedTCG)
+            RegisterView(selectedTCG: selectedTCG)
+                .environmentObject(authService)
         }
     }
 

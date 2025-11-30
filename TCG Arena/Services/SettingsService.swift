@@ -11,7 +11,6 @@ class SettingsService: ObservableObject {
     @Published var isDarkMode: Bool {
         didSet {
             UserDefaults.standard.set(isDarkMode, forKey: "darkModeEnabled")
-            print("Dark mode changed to: \(isDarkMode)")
         }
     }
     
@@ -24,7 +23,5 @@ class SettingsService: ObservableObject {
     init() {
         self.isDarkMode = UserDefaults.standard.bool(forKey: "darkModeEnabled")
         self.showMarketValues = UserDefaults.standard.bool(forKey: "showMarketValues")
-        
-        print("SettingsService initialized - Dark mode: \(isDarkMode)")
     }
 }

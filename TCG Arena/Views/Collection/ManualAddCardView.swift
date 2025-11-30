@@ -6,397 +6,414 @@
 //
 
 import SwiftUI
-import PhotosUI
 
 struct ManualAddCardView: View {
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject var cardService: CardService
     @EnvironmentObject var deckService: DeckService
+    @EnvironmentObject var authService: AuthService
     
-    @State private var cardName = ""
-    @State private var selectedTCG: TCGType = .pokemon
-    @State private var cardSet = ""
-    @State private var selectedRarity: Rarity = .common
-    @State private var cardNumber = ""
-    @State private var cardDescription = ""
-    @State private var selectedCondition: Card.CardCondition = .nearMint
-    @State private var isGraded = false
-    @State private var selectedGradeService: GradeService = .psa
-    @State private var gradeScore = 10
-    @State private var selectedPhoto: PhotosPickerItem?
-    @State private var cardImage: UIImage?
-    @State private var isSaving = false
-    @State private var showSuccess = false
-    @State private var selectedDeckID: Int64?
+    @State private var searchText = ""
+    @State private var searchResults: [CardTemplate] = []
+    @State private var isSearching = false
+    @State private var searchTask: Task<Void, Never>?
+    @State private var selectedDeckId: Int64?
+    @State private var tappedCardId: Int64?
+    @State private var showSuccessToast = false
+    @State private var addedCardName = ""
+    @State private var isAddingCard = false
     
-    private var headerView: some View {
-        VStack(spacing: 12) {
-            ZStack {
-                Circle()
-                    .fill(Color.purple)
-                    .frame(width: 60, height: 60)
-                
-                SwiftUI.Image(systemName: "keyboard")
-                    .font(.system(size: 28, weight: .medium))
-                    .foregroundColor(.white)
-            }
-            
-            VStack(spacing: 4) {
-                Text("Add Manually")
-                    .font(.system(size: 24, weight: .bold))
-                    .foregroundColor(.primary)
-                
-                Text("Fill in your card details")
-                    .font(.system(size: 14, weight: .medium))
-                    .foregroundColor(.secondary)
-            }
-        }
-        .padding(.top, 16)
-    }
-    
-    private var cardInformationView: some View {
-        VStack(spacing: 16) {
-            SectionHeaderView(title: "Card Information", subtitle: "Enter card details")
-            
-            VStack(spacing: 12) {
-                // Card Name + Photo Row
-                HStack(spacing: 12) {
-                    VStack {
-                        ModernTextField(
-                            title: "Card Name *",
-                            text: $cardName,
-                            icon: "textformat"
-                        )
-                    }
-                    .frame(maxWidth: .infinity)
-                    
-                    // Compact Photo Selector
-                    VStack(spacing: 6) {
-                        Text("Photo (Optional)")
-                            .font(.system(size: 12, weight: .semibold))
-                            .foregroundColor(.secondary)
-                        
-                        PhotosPicker(selection: $selectedPhoto, matching: .images) {
-                            if let cardImage = cardImage {
-                                SwiftUI.Image(uiImage: cardImage)
-                                    .resizable()
-                                    .aspectRatio(contentMode: .fill)
-                                    .frame(width: 60, height: 84)
-                                    .clipShape(RoundedRectangle(cornerRadius: 8))
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: 8)
-                                            .stroke(Color.purple.opacity(0.4), lineWidth: 1.5)
-                                    )
-                            } else {
-                                ZStack {
-                                    RoundedRectangle(cornerRadius: 8)
-                                        .fill(Color(.systemGray6))
-                                        .frame(width: 60, height: 84)
-                                    
-                                    VStack(spacing: 4) {
-                                        SwiftUI.Image(systemName: "camera.fill")
-                                            .font(.system(size: 14, weight: .medium))
-                                            .foregroundColor(.purple)
-                                        
-                                        Text("Tap")
-                                            .font(.system(size: 9, weight: .medium))
-                                            .foregroundColor(.purple)
-                                    }
-                                }
-                            }
-                        }
-                        .buttonStyle(PlainButtonStyle())
-                    }
-                }
-                
-                ModernPickerField(
-                    title: "TCG Type *",
-                    selection: $selectedTCG,
-                    options: TCGType.allCases,
-                    icon: "gamecontroller"
-                ) { tcg in
-                    tcg.displayName
-                }
-                
-                HStack(spacing: 10) {
-                    ModernTextField(
-                        title: "Set (Optional)",
-                        text: $cardSet,
-                        icon: "folder"
-                    )
-                    
-                    ModernTextField(
-                        title: "Card Number (Optional)",
-                        text: $cardNumber,
-                        icon: "number"
-                    )
-                }
-                
-                ModernPickerField(
-                    title: "Rarity (Optional)",
-                    selection: $selectedRarity,
-                    options: Rarity.allCases,
-                    icon: "star"
-                ) { rarity in
-                    rarity.rawValue
-                }
-            }
-            
-            // Description (Optional)
-            VStack(alignment: .leading, spacing: 6) {
-                Text("Description (Optional)")
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundColor(.primary)
-                
-                TextField("Add card notes or description...", text: $cardDescription, axis: .vertical)
-                    .lineLimit(2...4)
-                    .padding(10)
-                    .background(
-                        RoundedRectangle(cornerRadius: 12)
-                            .fill(Color(.systemGray6))
-                    )
-            }
-        }
-        .padding(.horizontal, 20)
-    }
-    
-    private var conditionSectionView: some View {
-        VStack(spacing: 16) {
-            SectionHeaderView(title: "Condition & Grading", subtitle: "Optional details")
-            
-            VStack(spacing: 12) {
-                ModernPickerField(
-                    title: "Condition (Optional)",
-                    selection: $selectedCondition,
-                    options: Card.CardCondition.allCases,
-                    icon: "shield"
-                ) { condition in
-                    condition.rawValue
-                }
-                
-                ModernToggleField(
-                    title: "Graded Card",
-                    subtitle: "Professionally graded?",
-                    isOn: $isGraded,
-                    icon: "award"
-                )
-                
-                if isGraded {
-                    VStack(spacing: 10) {
-                        ModernPickerField(
-                            title: "Grading Service",
-                            selection: $selectedGradeService,
-                            options: GradeService.allCases,
-                            icon: "building.2"
-                        ) { service in
-                            service.rawValue
-                        }
-                        
-                        GradeScoreView(score: $gradeScore)
-                    }
-                }
-            }
-        }
-        .padding(.horizontal, 20)
-    }
-    
-    private var deckSelectionView: some View {
-        VStack(spacing: 16) {
-            SectionHeaderView(title: "Deck Assignment", subtitle: "Choose which deck to add this card to")
-            
-            VStack(spacing: 12) {
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Deck *")
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundColor(.primary)
-                    
-                    Picker("Select Deck", selection: $selectedDeckID) {
-                        ForEach(deckService.userDecks, id: \.id) { deck in
-                            Text(deck.name).tag(deck.id)
-                        }
-                    }
-                    .pickerStyle(.menu)
-                    .padding(12)
-                    .background(
-                        RoundedRectangle(cornerRadius: 12)
-                            .fill(Color(.systemGray6))
-                    )
-                }
-            }
-        }
-        .padding(.horizontal, 20)
-    }
-    
-    private var saveButtonView: some View {
-        LoadingButton(
-            title: "Add to Collection",
-            loadingTitle: "Adding Card...",
-            isLoading: isSaving,
-            isDisabled: cardName.isEmpty,
-            color: .purple,
-            action: saveCard
-        )
-        .padding(.horizontal, 20)
-        .padding(.bottom, 24)
-    }
+    @AppStorage("hasSeenManualAddTip") private var hasSeenTip = false
+    @State private var showTip = false
     
     var body: some View {
         NavigationView {
-            ScrollView {
-                VStack(spacing: 20) {
-                    headerView
+            ZStack(alignment: .bottom) {
+                VStack(spacing: 0) {
+                    // Deck Selection
+                    if !deckService.userDecks.isEmpty {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Add to List")
+                                .font(.system(size: 14, weight: .semibold))
+                                .foregroundColor(.secondary)
+                                .padding(.horizontal, 16)
+                            
+                            Menu {
+                                ForEach(deckService.userDecks) { deck in
+                                    Button(action: {
+                                        selectedDeckId = deck.id
+                                    }) {
+                                        HStack {
+                                            Text(deck.name)
+                                            if selectedDeckId == deck.id {
+                                                Spacer()
+                                                SwiftUI.Image(systemName: "checkmark")
+                                            }
+                                        }
+                                    }
+                                }
+                            } label: {
+                                HStack {
+                                    if let selectedDeck = deckService.userDecks.first(where: { $0.id == selectedDeckId }) {
+                                        Text(selectedDeck.name)
+                                            .font(.system(size: 16, weight: .medium))
+                                            .foregroundColor(.primary)
+                                    } else {
+                                        Text("Select a list")
+                                            .font(.system(size: 16))
+                                            .foregroundColor(.secondary)
+                                    }
+                                    Spacer()
+                                    SwiftUI.Image(systemName: "chevron.down")
+                                        .foregroundColor(.secondary)
+                                        .font(.system(size: 14, weight: .medium))
+                                }
+                                .padding(12)
+                                .background(Color(.systemGray6))
+                                .cornerRadius(12)
+                            }
+                            .padding(.horizontal, 16)
+                        }
+                        .padding(.top, 8)
+                    }
                     
-                    cardInformationView
+                    // Search Bar
+                    HStack(spacing: 12) {
+                        SwiftUI.Image(systemName: "magnifyingglass")
+                            .foregroundColor(.secondary)
+                        
+                        TextField("Search card by name...", text: $searchText)
+                            .font(.system(size: 16))
+                            .onChange(of: searchText) { newValue in
+                                performSearch(query: newValue)
+                            }
+                        
+                        if !searchText.isEmpty {
+                            Button(action: { searchText = "" }) {
+                                SwiftUI.Image(systemName: "xmark.circle.fill")
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                    }
+                    .padding(12)
+                    .background(Color(.systemGray6))
+                    .cornerRadius(12)
+                    .padding()
                     
-                    conditionSectionView
+                    // Tip View
+                    if showTip {
+                        HStack(spacing: 12) {
+                            SwiftUI.Image(systemName: "hand.tap.fill")
+                                .font(.system(size: 20))
+                                .foregroundColor(.blue)
+                            
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Quick Add")
+                                    .font(.system(size: 14, weight: .bold))
+                                Text("Double tap to add instantly!")
+                                    .font(.system(size: 12))
+                                    .foregroundColor(.secondary)
+                            }
+                            
+                            Spacer()
+                            
+                            Button(action: {
+                                withAnimation {
+                                    showTip = false
+                                    hasSeenTip = true
+                                }
+                            }) {
+                                SwiftUI.Image(systemName: "xmark")
+                                    .foregroundColor(.secondary)
+                                    .font(.system(size: 12))
+                            }
+                        }
+                        .padding()
+                        .background(Color.blue.opacity(0.1))
+                        .cornerRadius(12)
+                        .padding(.horizontal)
+                        .padding(.bottom, 8)
+                    }
                     
-                    deckSelectionView
-                    
-                    saveButtonView
+                    // Results List
+                    if isSearching {
+                        Spacer()
+                        ProgressView()
+                        Spacer()
+                    } else if searchResults.isEmpty && !searchText.isEmpty {
+                        Spacer()
+                        VStack(spacing: 12) {
+                            SwiftUI.Image(systemName: "magnifyingglass")
+                                .font(.system(size: 40))
+                                .foregroundColor(.secondary)
+                            Text("No cards found")
+                                .foregroundColor(.secondary)
+                        }
+                        Spacer()
+                    } else if searchResults.isEmpty {
+                        Spacer()
+                        VStack(spacing: 12) {
+                            SwiftUI.Image(systemName: "text.magnifyingglass")
+                                .font(.system(size: 40))
+                                .foregroundColor(.secondary)
+                            Text("Search for a card")
+                                .foregroundColor(.secondary)
+                        }
+                        Spacer()
+                    } else {
+                        ScrollView {
+                            LazyVStack(spacing: 12) {
+                                ForEach(searchResults) { card in
+                                    ManualAddCardRow(
+                                        card: card,
+                                        isTapped: tappedCardId == card.id,
+                                        isAdding: isAddingCard && tappedCardId == card.id
+                                    )
+                                    .onTapGesture(count: 2) {
+                                        // Double tap: Add directly
+                                        addCardToDeck(card)
+                                    }
+                                    .onTapGesture(count: 1) {
+                                        // Single tap: Show "tap again" animation
+                                        handleSingleTap(card)
+                                    }
+                                }
+                            }
+                            .padding(.horizontal)
+                            .padding(.top, 8)
+                        }
+                    }
+                }
+                
+                // Success Toast
+                if showSuccessToast {
+                    VStack {
+                        HStack {
+                            SwiftUI.Image(systemName: "checkmark.circle.fill")
+                                .foregroundColor(.green)
+                            Text("\(addedCardName) added!")
+                                .font(.system(size: 14, weight: .semibold))
+                        }
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 12)
+                        .background(Material.thinMaterial)
+                        .cornerRadius(20)
+                        .shadow(radius: 4)
+                    }
+                    .padding(.bottom, 40)
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
                 }
             }
             .navigationTitle("Add Card")
             .navigationBarTitleDisplayMode(.inline)
-            .overlay {
-                if isSaving {
-                    LoadingOverlay(message: "Adding card to your collection...")
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button("Done") {
+                        dismiss()
+                    }
                 }
             }
-            .overlay {
-                if showSuccess {
-                    SuccessAnimation()
+            .onAppear {
+                // Select first deck by default
+                if selectedDeckId == nil, let firstDeck = deckService.userDecks.first {
+                    selectedDeckId = firstDeck.id
                 }
-            }
-        }
-        .onChange(of: selectedPhoto) { newItem in
-            Task {
-                if let data = try? await newItem?.loadTransferable(type: Data.self),
-                   let image = UIImage(data: data) {
-                    cardImage = image
+                
+                if !hasSeenTip {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                        withAnimation {
+                            showTip = true
+                        }
+                    }
                 }
             }
         }
     }
     
-    private func saveCard() {
-        isSaving = true
-        
-        Task {
-            var imageURL: String? = nil
-            
-            // Upload image if available
-            if let cardImage = cardImage,
-               let imageData = cardImage.jpegData(compressionQuality: 0.8) {
-                imageURL = await cardService.uploadCardImage(imageData)
+    private func handleSingleTap(_ card: CardTemplate) {
+        if tappedCardId == card.id {
+            // Second tap - add to deck
+            addCardToDeck(card)
+        } else {
+            // First tap - show "tap again" state
+            withAnimation {
+                tappedCardId = card.id
             }
             
-            // Create card
-            let card = Card(
-                id: nil,
-                templateId: 1, // Mock template ID
-                name: cardName,
-                rarity: selectedRarity,
-                condition: selectedCondition,
-                imageURL: imageURL,
-                isFoil: false,
-                quantity: 1,
-                ownerId: 1 as Int64, // Mock owner ID
-                createdAt: Date(),
-                updatedAt: Date(),
-                tcgType: selectedTCG,
-                set: cardSet,
-                cardNumber: cardNumber,
-                expansion: nil,
-                marketPrice: nil
-            )
+            // Reset after 3 seconds
+            DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+                if tappedCardId == card.id {
+                    withAnimation {
+                        tappedCardId = nil
+                    }
+                }
+            }
+        }
+    }
+    
+    private func performSearch(query: String) {
+        searchTask?.cancel()
+        
+        guard query.count >= 2 else {
+            searchResults = []
+            isSearching = false
+            return
+        }
+        
+        isSearching = true
+        searchTask = Task {
+            try? await Task.sleep(nanoseconds: 500_000_000) // Debounce
             
-            // For mock purposes, add to array
-            await MainActor.run {
-                cardService.userCards.append(card)
-                isSaving = false
+            guard !Task.isCancelled else { return }
+            
+            // Use real search API
+            cardService.searchCardTemplates(query: query) { result in
+                Task { @MainActor in
+                    isSearching = false
+                    switch result {
+                    case .success(let cards):
+                        searchResults = cards
+                    case .failure:
+                        searchResults = []
+                    }
+                }
+            }
+        }
+    }
+    
+    private func addCardToDeck(_ template: CardTemplate) {
+        guard let deckId = selectedDeckId else {
+            // Show error - no deck selected
+            return
+        }
+        
+        guard let userId = authService.currentUserId else {
+            // Show error - not authenticated
+            return
+        }
+        
+        guard !isAddingCard else { return }
+        
+        isAddingCard = true
+        tappedCardId = template.id
+        
+        // Call the API to add card template to deck
+        deckService.addCardTemplateToDeck(deckId: deckId, templateId: template.id, userId: userId) { result in
+            Task { @MainActor in
+                isAddingCard = false
                 
-                // Show success animation
-                showSuccess = true
-                
-                // Auto dismiss after success animation
-                DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-                    dismiss()
+                switch result {
+                case .success:
+                    // Show success feedback
+                    addedCardName = template.name
+                    withAnimation {
+                        showSuccessToast = true
+                        tappedCardId = nil
+                    }
+                    
+                    // Haptic feedback
+                    let generator = UINotificationFeedbackGenerator()
+                    generator.notificationOccurred(.success)
+                    
+                    // Hide toast after delay
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                        withAnimation {
+                            showSuccessToast = false
+                        }
+                    }
+                    
+                case .failure(let error):
+                    print("Error adding card: \(error.localizedDescription)")
+                    tappedCardId = nil
                 }
             }
         }
     }
 }
 
-// MARK: - Grade Score View
-struct GradeScoreView: View {
-    @Binding var score: Int
+struct ManualAddCardRow: View {
+    let card: CardTemplate
+    let isTapped: Bool
+    let isAdding: Bool
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("Grade Score")
-                .font(.system(size: 14, weight: .semibold))
-                .foregroundColor(.primary)
-            
-            VStack(spacing: 12) {
-                HStack {
-                    Text("Score: \(score)")
-                        .font(.system(size: 18, weight: .bold))
-                        .foregroundColor(.primary)
-                    
-                    Spacer()
-                    
-                    Text(scoreDescription(score))
-                        .font(.system(size: 12, weight: .medium))
-                        .foregroundColor(scoreColor(score))
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                        .background(
-                            Capsule()
-                                .fill(scoreColor(score).opacity(0.2))
+        HStack(spacing: 16) {
+            // Card Image
+            CachedAsyncImage(url: URL(string: card.fullImageUrl ?? "")) { phase in
+                switch phase {
+                case .success(let image):
+                    image.resizable().aspectRatio(contentMode: .fit)
+                case .failure, .empty:
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(Color.gray.opacity(0.2))
+                        .overlay(
+                            SwiftUI.Image(systemName: "photo")
+                                .foregroundColor(.secondary)
                         )
+                @unknown default:
+                    EmptyView()
                 }
-                
-                Slider(value: .init(
-                    get: { Double(score) },
-                    set: { score = Int($0) }
-                ), in: 1...10, step: 1)
-                .accentColor(.purple)
             }
-            .padding(12)
-            .background(
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(Color(.systemGray6))
-            )
+            .frame(width: 50, height: 70)
+            .cornerRadius(8)
+            .shadow(color: Color.black.opacity(0.1), radius: 2, x: 0, y: 1)
+            
+            VStack(alignment: .leading, spacing: 6) {
+                Text(card.name)
+                    .font(.system(size: 17, weight: .semibold))
+                    .foregroundColor(.primary)
+                
+                if isTapped && !isAdding {
+                    Text("Tap again to add")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundColor(.blue)
+                        .transition(.opacity.combined(with: .scale))
+                } else {
+                    HStack(spacing: 8) {
+                        Text(card.setCode)
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundColor(.secondary)
+                        
+                        Text("•")
+                            .font(.system(size: 12))
+                            .foregroundColor(.secondary)
+                        
+                        Text(card.rarity.displayName)
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundColor(card.rarity.color)
+                    }
+                }
+            }
+            
+            Spacer()
+            
+            // Visual cue for interaction
+            if isAdding {
+                ProgressView()
+                    .scaleEffect(0.8)
+            } else if isTapped {
+                SwiftUI.Image(systemName: "hand.tap.fill")
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundColor(.blue)
+                    .padding(8)
+                    .background(Color.blue.opacity(0.2))
+                    .clipShape(Circle())
+                    .transition(.scale)
+            } else {
+                SwiftUI.Image(systemName: "plus")
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundColor(.blue)
+                    .padding(8)
+                    .background(Color.blue.opacity(0.1))
+                    .clipShape(Circle())
+            }
         }
+        .padding(12)
+        .background(isTapped ? Color.blue.opacity(0.05) : Color(.systemBackground))
+        .cornerRadius(16)
+        .shadow(color: Color.black.opacity(isTapped ? 0.1 : 0.05), radius: isTapped ? 8 : 5, x: 0, y: 2)
+        .scaleEffect(isTapped ? 1.02 : 1.0)
+        .animation(.spring(response: 0.3, dampingFraction: 0.6), value: isTapped)
+        .contentShape(Rectangle())
     }
-    
-    private func scoreDescription(_ score: Int) -> String {
-        switch score {
-        case 10: return "Gem Mint"
-        case 9: return "Mint"
-        case 8: return "Near Mint"
-        case 7: return "Very Fine"
-        case 6: return "Fine"
-        case 5: return "Very Good"
-        case 4: return "Good"
-        case 3: return "Fair"
-        case 2: return "Poor"
-        default: return "Authentic"
-        }
-    }
-    
-    private func scoreColor(_ score: Int) -> Color {
-        switch score {
-        case 9...10: return .green
-        case 7...8: return .blue
-        case 5...6: return .orange
-        default: return .red
-        }
-    }
-}
-
-#Preview {
-    ManualAddCardView()
-        .environmentObject(CardService())
-        .environmentObject(DeckService())
 }

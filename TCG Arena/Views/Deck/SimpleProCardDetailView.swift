@@ -15,13 +15,13 @@ struct SimpleProCardDetailView: View {
             VStack(spacing: 24) {
                 // Card Image Placeholder
                 RoundedRectangle(cornerRadius: 16)
-                    .fill(deckCard.cardTemplate.tcgType.themeColor.opacity(0.2))
+                    .fill((deckCard.cardTemplate.tcgType?.themeColor ?? Color.gray).opacity(0.2))
                     .frame(height: 400)
                     .overlay(
                         VStack(spacing: 16) {
-                            SwiftUI.Image(systemName: deckCard.cardTemplate.tcgType.systemIcon)
+                            SwiftUI.Image(systemName: deckCard.cardTemplate.tcgType?.systemIcon ?? "questionmark.circle")
                                 .font(.system(size: 80, weight: .semibold))
-                                .foregroundColor(deckCard.cardTemplate.tcgType.themeColor)
+                                .foregroundColor(deckCard.cardTemplate.tcgType?.themeColor ?? Color.gray)
                             
                             Text(deckCard.cardTemplate.name)
                                 .font(.title2)
@@ -92,12 +92,12 @@ struct SimpleProCardDetailView: View {
                         Text("\(deckCard.quantity)")
                             .font(.title3)
                             .fontWeight(.bold)
-                            .foregroundColor(deckCard.cardTemplate.tcgType.themeColor)
+                            .foregroundColor(deckCard.cardTemplate.tcgType?.themeColor ?? Color.gray)
                     }
                     .padding()
                     .background(
                         RoundedRectangle(cornerRadius: 12)
-                            .fill(deckCard.cardTemplate.tcgType.themeColor.opacity(0.1))
+                            .fill((deckCard.cardTemplate.tcgType?.themeColor ?? Color.gray).opacity(0.1))
                     )
                     
                     // Market Price

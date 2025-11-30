@@ -25,9 +25,10 @@ struct ContentView: View {
             CollectionView()
                 .environmentObject(cardService)
                 .environmentObject(deckService)
+                .environmentObject(authService)
                 .tabItem {
                     SwiftUI.Image(systemName: "rectangle.stack")
-                    Text("Decks")
+                    Text("Cards")
                 }
                 .tag(0)
             

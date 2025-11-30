@@ -9,13 +9,16 @@ import SwiftUI
 
 struct DiscoverView: View {
     @StateObject private var discoverService = DiscoverService()
+    @StateObject private var expansionService = ExpansionService()
+    @StateObject private var cardService = CardService()
     @State private var selectedLeaderboardType: LeaderboardType = .tournaments
     @State private var showingUserProfile: UserProfile?
     
     var body: some View {
         NavigationView {
-            ScrollView {
-                LazyVStack(spacing: 16) {
+            VStack(spacing: 0) {
+                ScrollView {
+                    LazyVStack(spacing: 16) {
                     // Featured Users Section
                     VStack(alignment: .leading, spacing: 12) {
                         HStack {
@@ -28,11 +31,16 @@ struct DiscoverView: View {
                         
                         ScrollView(.horizontal, showsIndicators: false) {
                             HStack(spacing: 16) {
-                                ForEach(discoverService.featuredUsers) { userProfile in
-                                    FeaturedUserCard(user: userProfile.toUserProfile()) {
-                                        showingUserProfile = userProfile.toUserProfile()
+                                if discoverService.featuredUsers.isEmpty {
+                                    EmptyStateCard(message: "Nessun giocatore top disponibile")
+                                        .frame(width: 140, height: 180)
+                                } else {
+                                    ForEach(discoverService.featuredUsers) { userProfile in
+                                        FeaturedUserCard(user: userProfile.toUserProfile()) {
+                                            showingUserProfile = userProfile.toUserProfile()
+                                        }
+                                        .frame(width: 140, height: 180)
                                     }
-                                    .frame(width: 140, height: 180)
                                 }
                             }
                             .padding(.horizontal, 20)
@@ -70,9 +78,13 @@ struct DiscoverView: View {
                         
                         // Leaderboard List
                         VStack(spacing: 8) {
-                            ForEach(Array((discoverService.leaderboards[selectedLeaderboardType] ?? []).prefix(5).enumerated()), id: \.element.id) { index, entry in
-                                DiscoverLeaderboardRow(entry: entry, position: index + 1) {
-                                    showingUserProfile = entry.userProfile
+                            if discoverService.leaderboards[selectedLeaderboardType]?.isEmpty ?? true {
+                                EmptyStateRow(message: "Nessuna classifica disponibile")
+                            } else {
+                                ForEach(Array((discoverService.leaderboards[selectedLeaderboardType] ?? []).prefix(5).enumerated()), id: \.element.id) { index, entry in
+                                    DiscoverLeaderboardRow(entry: entry, position: index + 1) {
+                                        showingUserProfile = entry.userProfile
+                                    }
                                 }
                             }
                         }
@@ -90,9 +102,13 @@ struct DiscoverView: View {
                         .padding(.horizontal, 20)
                         
                         VStack(spacing: 12) {
-                            ForEach(Array(discoverService.recentActivities.prefix(4))) { activity in
-                                ActivityCard(activity: activity) {
-                                    showingUserProfile = activity.userProfile
+                            if discoverService.recentActivities.isEmpty {
+                                EmptyStateRow(message: "Nessuna attività recente")
+                            } else {
+                                ForEach(Array(discoverService.recentActivities.prefix(4))) { activity in
+                                    ActivityCard(activity: activity) {
+                                        showingUserProfile = activity.userProfile
+                                    }
                                 }
                             }
                         }
@@ -111,30 +127,63 @@ struct DiscoverView: View {
                         
                         ScrollView(.horizontal, showsIndicators: false) {
                             HStack(spacing: 12) {
-                                ForEach(discoverService.newUsers.prefix(5), id: \.id) { user in
-                                    NewUserCard(user: user.toUserProfile()) {
-                                        showingUserProfile = user.toUserProfile()
+                                if discoverService.newUsers.isEmpty {
+                                    EmptyStateCard(message: "Nessun nuovo membro")
+                                        .frame(width: 100)
+                                } else {
+                                    ForEach(discoverService.newUsers.prefix(5), id: \.id) { user in
+                                        NewUserCard(user: user.toUserProfile()) {
+                                            showingUserProfile = user.toUserProfile()
+                                        }
                                     }
                                 }
                             }
                             .padding(.horizontal, 20)
                         }
                     }
-                }
-                .padding(.vertical, 8)
+                    
+                    // New Cards Section
+                    VStack(alignment: .leading, spacing: 12) {
+                        HStack {
+                            Text("New Cards")
+                                .font(.system(size: 18, weight: .bold))
+                                .foregroundColor(.primary)
+                            Spacer()
+                        }
+                        .padding(.horizontal, 20)
+                        
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack(spacing: 12) {
+                                if expansionService.expansions.isEmpty {
+                                    EmptyStateCard(message: "Nessuna espansione disponibile")
+                                        .frame(width: 140)
+                                } else {
+                                    ForEach(expansionService.expansions.prefix(5)) { expansion in
+                                        ExpansionCard(expansion: expansion, action: {
+                                            // For now, just show expansion, could navigate to expansion detail
+                                        })
+                                        .frame(width: 180, height: 220)
+                                    }
+                                }
+                            }
+                            .padding(.horizontal, 20)
+                        }
+                    }
+                    .padding(.vertical, 8)
+                        }
             }
-            .navigationBarHidden(true)
-            .refreshable {
-                // Refresh data
+        }
             }
+        .navigationBarHidden(true)
+        .refreshable {
+            // Refresh data
         }
         .sheet(item: $showingUserProfile) { (user: UserProfile) in
             UserProfileDetailView(userProfile: user)
         }
+        }
     }
-}
-
-// MARK: - Hero Header View
+    
 struct HeroHeaderView: View {
     let title: String
     let subtitle: String
@@ -280,6 +329,8 @@ struct LeaderboardTypeButton: View {
     }
 }
 
-#Preview {
-    DiscoverView()
+struct DiscoverView_Previews: PreviewProvider {
+    static var previews: some View {
+        DiscoverView()
+    }
 }

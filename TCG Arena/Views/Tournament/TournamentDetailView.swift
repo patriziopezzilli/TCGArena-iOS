@@ -195,7 +195,7 @@ struct TournamentDetailView: View {
     }
 
     private func registerForTournament() {
-        guard let userId = authService.currentUser?.id,
+        guard let userId = authService.currentUserId,
               let tournamentId = tournament.id else { return }
 
         isRegistering = true

@@ -356,7 +356,7 @@ struct CreateTournamentView: View {
             maxParticipants: maxParticipants,
             entryFee: entryFee,
             prizePool: Double(prizePool) ?? 0.0,
-            organizerId: Int64(authService.currentUser?.id ?? 0),
+            organizerId: Int64(authService.currentUserId ?? 0),
             location: Tournament.TournamentLocation(
                 name: locationName,
                 address: locationAddress,

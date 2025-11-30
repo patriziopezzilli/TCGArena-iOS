@@ -35,23 +35,93 @@ struct User: Identifiable, Codable {
     }
     
     // Custom decoder per gestire la conversione da LocalDateTime a Date
+    // Custom decoder per gestire la conversione da LocalDateTime a Date
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         
         id = try container.decode(Int64.self, forKey: .id)
         email = try container.decode(String.self, forKey: .email)
         username = try container.decode(String.self, forKey: .username)
-        displayName = try container.decode(String.self, forKey: .displayName)
-        profileImageUrl = try container.decodeIfPresent(String.self, forKey: .profileImageUrl)
-        isPremium = try container.decode(Bool.self, forKey: .isPremium)
-        isMerchant = try container.decode(Bool.self, forKey: .isMerchant)
-        shopId = try container.decodeIfPresent(Int64.self, forKey: .shopId)
-        favoriteGame = try container.decodeIfPresent(TCGType.self, forKey: .favoriteGame)
-        location = try container.decodeIfPresent(UserLocation.self, forKey: .location)
         
-        // Gestisci la conversione della data
+        // Il backend può restituire sia "displayName" che "display_name"
+        if let name = try? container.decode(String.self, forKey: .displayName) {
+            displayName = name
+        } else if let jsonContainer = try? decoder.container(keyedBy: DynamicCodingKeys.self),
+                  let name = try? jsonContainer.decode(String.self, forKey: DynamicCodingKeys(stringValue: "displayName")!) {
+            displayName = name
+        } else {
+            displayName = username // fallback
+        }
+        
+        // Gestisci profileImageUrl (può essere "profileImageUrl" o "profile_image_url")
+        if let url = try? container.decodeIfPresent(String.self, forKey: .profileImageUrl) {
+            profileImageUrl = url
+        } else if let jsonContainer = try? decoder.container(keyedBy: DynamicCodingKeys.self),
+                  let url = try? jsonContainer.decodeIfPresent(String.self, forKey: DynamicCodingKeys(stringValue: "profileImageUrl")!) {
+            profileImageUrl = url
+        } else {
+            profileImageUrl = nil
+        }
+        
+        // Gestisci isPremium (può essere "isPremium" o "is_premium")
+        if let premium = try? container.decode(Bool.self, forKey: .isPremium) {
+            isPremium = premium
+        } else if let jsonContainer = try? decoder.container(keyedBy: DynamicCodingKeys.self),
+                  let premium = try? jsonContainer.decode(Bool.self, forKey: DynamicCodingKeys(stringValue: "isPremium")!) {
+            isPremium = premium
+        } else {
+            isPremium = false
+        }
+        
+        // Gestisci isMerchant (può essere "isMerchant" o "is_merchant")
+        if let merchant = try? container.decode(Bool.self, forKey: .isMerchant) {
+            isMerchant = merchant
+        } else if let jsonContainer = try? decoder.container(keyedBy: DynamicCodingKeys.self),
+                  let merchant = try? jsonContainer.decode(Bool.self, forKey: DynamicCodingKeys(stringValue: "isMerchant")!) {
+            isMerchant = merchant
+        } else {
+            isMerchant = false
+        }
+        
+        // Gestisci shopId (può essere "shopId" o "shop_id")
+        if let shop = try? container.decodeIfPresent(Int64.self, forKey: .shopId) {
+            shopId = shop
+        } else if let jsonContainer = try? decoder.container(keyedBy: DynamicCodingKeys.self),
+                  let shop = try? jsonContainer.decodeIfPresent(Int64.self, forKey: DynamicCodingKeys(stringValue: "shopId")!) {
+            shopId = shop
+        } else {
+            shopId = nil
+        }
+        
+        // Gestisci favoriteGame (può essere "favoriteGame" o "favorite_game")
+        if let game = try? container.decodeIfPresent(TCGType.self, forKey: .favoriteGame) {
+            favoriteGame = game
+        } else if let jsonContainer = try? decoder.container(keyedBy: DynamicCodingKeys.self),
+                  let game = try? jsonContainer.decodeIfPresent(TCGType.self, forKey: DynamicCodingKeys(stringValue: "favoriteGame")!) {
+            favoriteGame = game
+        } else {
+            favoriteGame = nil
+        }
+        
+        // Gestisci location
+        if let loc = try? container.decodeIfPresent(UserLocation.self, forKey: .location) {
+            location = loc
+        } else if let jsonContainer = try? decoder.container(keyedBy: DynamicCodingKeys.self),
+                  let loc = try? jsonContainer.decodeIfPresent(UserLocation.self, forKey: DynamicCodingKeys(stringValue: "location")!) {
+            location = loc
+        } else {
+            location = nil
+        }
+        
+        // Gestisci la conversione della data (può essere "dateJoined" o "date_joined")
         if let dateString = try? container.decode(String.self, forKey: .dateJoined) {
             let formatter = ISO8601DateFormatter()
+            formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+            dateJoined = formatter.date(from: dateString) ?? Date()
+        } else if let jsonContainer = try? decoder.container(keyedBy: DynamicCodingKeys.self),
+                  let dateString = try? jsonContainer.decode(String.self, forKey: DynamicCodingKeys(stringValue: "dateJoined")!) {
+            let formatter = ISO8601DateFormatter()
+            formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
             dateJoined = formatter.date(from: dateString) ?? Date()
         } else {
             dateJoined = Date()
@@ -97,5 +167,21 @@ struct User: Identifiable, Codable {
             followingCount: 0,
             isFollowedByCurrentUser: false
         )
+    }
+}
+
+// Helper per decodificare chiavi dinamiche
+struct DynamicCodingKeys: CodingKey {
+    var stringValue: String
+    var intValue: Int?
+    
+    init?(stringValue: String) {
+        self.stringValue = stringValue
+        self.intValue = nil
+    }
+    
+    init?(intValue: Int) {
+        self.stringValue = "\(intValue)"
+        self.intValue = intValue
     }
 }

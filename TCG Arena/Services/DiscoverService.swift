@@ -161,8 +161,8 @@ class DiscoverService: ObservableObject {
             case .success(let activities):
                 self.recentActivities = activities
             case .failure(let error):
-                print("Error loading activities: \(error)")
-                // Keep empty or mock if needed
+                // Handle error silently
+                break
             }
         }
     }

@@ -61,7 +61,6 @@ struct EditCardView: View {
                 dismiss()
             case .failure(let error):
                 // Handle error, perhaps show alert
-                print("Error updating card: \(error)")
                 dismiss()
             }
         }
@@ -79,26 +78,4 @@ extension Card.CardCondition {
         case .damaged: return "Damaged"
         }
     }
-}
-
-#Preview {
-    EditCardView(card: Card(
-        id: 1,
-        templateId: 1,
-        name: "Pikachu",
-        rarity: .rare,
-        condition: .nearMint,
-        imageURL: nil,
-        isFoil: false,
-        quantity: 1,
-        ownerId: 1,
-        createdAt: Date(),
-        updatedAt: Date(),
-        tcgType: .pokemon,
-        set: "Base Set",
-        cardNumber: "1/102",
-        expansion: nil,
-        marketPrice: nil
-    ))
-    .environmentObject(CardService())
 }

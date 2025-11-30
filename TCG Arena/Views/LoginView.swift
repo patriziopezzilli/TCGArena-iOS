@@ -9,8 +9,8 @@ import SwiftUI
 
 struct LoginView: View {
     @Environment(\.dismiss) private var dismiss
-    @StateObject private var authService = AuthService()
-    @State private var email: String
+    @EnvironmentObject private var authService: AuthService
+    @State private var username: String
     @State private var password = ""
     @State private var showForgotPassword = false
     @State private var showRegister = false
@@ -18,8 +18,8 @@ struct LoginView: View {
     @State private var showError = false
     @State private var errorMessage = ""
 
-    init(email: String = "") {
-        _email = State(initialValue: email)
+    init(username: String = "") {
+        _username = State(initialValue: username)
     }
     @State private var isAnimating = false
 
@@ -58,13 +58,12 @@ struct LoginView: View {
                 VStack(spacing: 24) {
                     VStack(spacing: 20) {
                         VStack(alignment: .leading, spacing: 8) {
-                            Text("Email")
+                            Text("Username")
                                 .font(.system(size: 14, weight: .semibold))
                                 .foregroundColor(.gray)
 
-                            TextField("Enter your email", text: $email)
+                            TextField("Enter your username", text: $username)
                                 .font(.system(size: 16))
-                                .keyboardType(.emailAddress)
                                 .autocapitalization(.none)
                                 .disableAutocorrection(true)
                                 .padding(.horizontal, 16)
@@ -131,8 +130,8 @@ struct LoginView: View {
                     .background(Color.blue)
                     .clipShape(RoundedRectangle(cornerRadius: 25))
                     .padding(.horizontal, 24)
-                    .disabled(isLoading || email.isEmpty || password.isEmpty)
-                    .opacity((isLoading || email.isEmpty || password.isEmpty) ? 0.6 : 1.0)
+                    .disabled(isLoading || username.isEmpty || password.isEmpty)
+                    .opacity((isLoading || username.isEmpty || password.isEmpty) ? 0.6 : 1.0)
                 }
 
                 Spacer()
@@ -159,22 +158,23 @@ struct LoginView: View {
             ForgotPasswordView()
         }
         .sheet(isPresented: $showRegister) {
-            RegisterView(email: email)
+            RegisterView()
+                .environmentObject(authService)
         }
     }
 
     private func login() {
-        guard !email.isEmpty, !password.isEmpty else { return }
+        guard !username.isEmpty, !password.isEmpty else { return }
 
         isLoading = true
 
         Task {
-            do {
-                try await authService.signIn(email: email, password: password)
+            await authService.signIn(email: username, password: password)
+            if authService.isAuthenticated {
                 UserDefaults.standard.set(true, forKey: "hasCompletedOnboarding")
                 dismiss()
-            } catch {
-                errorMessage = error.localizedDescription
+            } else if let error = authService.errorMessage {
+                errorMessage = error
                 showError = true
             }
             isLoading = false

@@ -14,18 +14,39 @@ struct CollectionCardWithPrice: View {
     var body: some View {
         VStack(spacing: 0) {
             // Immagine della carta
-            AsyncImage(url: card.imageURL.flatMap { URL(string: $0) }) { image in
-                image
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-            } placeholder: {
-                RoundedRectangle(cornerRadius: 8)
-                    .fill(Color(.systemGray5))
-                    .overlay(
-                        SwiftUI.Image(systemName: "photo")
-                            .foregroundColor(.secondary)
-                    )
+            CachedAsyncImage(url: card.fullImageURL.flatMap { URL(string: $0) }) { phase in
+                switch phase {
+                case .empty:
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(Color(.systemGray5))
+                        .aspectRatio(2.5/3.5, contentMode: .fit)
+                        .overlay(
+                            SwiftUI.Image(systemName: "photo")
+                                .foregroundColor(.secondary)
+                        )
+                case .success(let image):
+                    image
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                case .failure(_):
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(Color(.systemGray5))
+                        .aspectRatio(2.5/3.5, contentMode: .fit)
+                        .overlay(
+                            SwiftUI.Image(systemName: "photo")
+                                .foregroundColor(.secondary)
+                        )
+                @unknown default:
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(Color(.systemGray5))
+                        .aspectRatio(2.5/3.5, contentMode: .fit)
+                        .overlay(
+                            SwiftUI.Image(systemName: "photo")
+                                .foregroundColor(.secondary)
+                        )
+                }
             }
+            .aspectRatio(2.5/3.5, contentMode: .fit) // Proporzioni reali delle carte TCG
             .frame(height: 120)
             .clipShape(RoundedRectangle(cornerRadius: 8))
             

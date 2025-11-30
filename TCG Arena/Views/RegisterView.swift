@@ -9,8 +9,8 @@ import SwiftUI
 
 struct RegisterView: View {
     @Environment(\.dismiss) private var dismiss
-    @StateObject private var authService = AuthService()
-    @State private var email: String
+    @EnvironmentObject private var authService: AuthService
+    @State private var email = ""
     @State private var username = ""
     @State private var password = ""
     @State private var confirmPassword = ""
@@ -20,8 +20,7 @@ struct RegisterView: View {
     @State private var agreedToTerms = false
     @State private var selectedTCG: TCGType?
 
-    init(email: String = "", selectedTCG: TCGType? = nil) {
-        _email = State(initialValue: email)
+    init(selectedTCG: TCGType? = nil) {
         _selectedTCG = State(initialValue: selectedTCG)
     }
 
@@ -137,36 +136,38 @@ struct RegisterView: View {
                                     .foregroundColor(.black)
                             }
 
-                            // TCG Selection if not selected
-                            if selectedTCG == nil {
-                                VStack(alignment: .leading, spacing: 12) {
-                                    Text("Choose your favorite TCG")
-                                        .font(.system(size: 14, weight: .semibold))
-                                        .foregroundColor(.gray)
+                            // TCG Selection
+                            VStack(alignment: .leading, spacing: 12) {
+                                Text("Choose your favorite TCG")
+                                    .font(.system(size: 14, weight: .semibold))
+                                    .foregroundColor(.gray)
 
-                                    LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 2), spacing: 12) {
-                                        ForEach(TCGType.allCases.filter { $0 != .digimon }, id: \.self) { tcg in
-                                            Button(action: {
-                                                selectedTCG = tcg
-                                            }) {
-                                                VStack(spacing: 6) {
-                                                    SwiftUI.Image(systemName: "star.fill")
-                                                        .font(.system(size: 20, weight: .medium))
-                                                        .foregroundColor(.yellow)
+                                LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 2), spacing: 12) {
+                                    ForEach(TCGType.allCases.filter { $0 != .digimon }, id: \.self) { tcg in
+                                        Button(action: {
+                                            selectedTCG = tcg
+                                        }) {
+                                            VStack(spacing: 6) {
+                                                SwiftUI.Image(systemName: "star.fill")
+                                                    .font(.system(size: 20, weight: .medium))
+                                                    .foregroundColor(.yellow)
 
-                                                    Text(tcg.rawValue)
-                                                        .font(.system(size: 12, weight: .medium))
-                                                        .foregroundColor(.black)
-                                                }
-                                                .frame(maxWidth: .infinity)
-                                                .frame(height: 60)
-                                                .background(Color.gray.opacity(0.1))
-                                                .clipShape(RoundedRectangle(cornerRadius: 8))
-                                                .overlay(
-                                                    RoundedRectangle(cornerRadius: 8)
-                                                        .stroke(Color.gray.opacity(0.3), lineWidth: 1)
-                                                )
+                                                Text(tcg.displayName)
+                                                    .font(.system(size: 12, weight: .medium))
+                                                    .foregroundColor(.black)
                                             }
+                                            .frame(maxWidth: .infinity)
+                                            .frame(height: 60)
+                                            .background(Color.gray.opacity(0.1))
+                                            .clipShape(RoundedRectangle(cornerRadius: 8))
+                                            .overlay(
+                                                RoundedRectangle(cornerRadius: 8)
+                                                    .stroke(selectedTCG == tcg ? Color.blue : Color.gray.opacity(0.3), lineWidth: selectedTCG == tcg ? 2 : 1)
+                                            )
+                                            .background(
+                                                RoundedRectangle(cornerRadius: 8)
+                                                    .fill(selectedTCG == tcg ? Color.blue.opacity(0.1) : Color.clear)
+                                            )
                                         }
                                     }
                                 }
@@ -272,18 +273,18 @@ struct RegisterView: View {
         isLoading = true
 
         Task {
-            do {
-                try await authService.signUp(
-                    email: email,
-                    password: password,
-                    username: username,
-                    displayName: username, // Per ora usa username come displayName
-                    favoriteGame: selectedTCG
-                )
+            await authService.signUp(
+                email: email,
+                password: password,
+                username: username,
+                displayName: username,
+                favoriteGame: selectedTCG
+            )
+            if authService.isAuthenticated {
                 UserDefaults.standard.set(true, forKey: "hasCompletedOnboarding")
                 dismiss()
-            } catch {
-                errorMessage = error.localizedDescription
+            } else if let error = authService.errorMessage {
+                errorMessage = error
                 showError = true
             }
             isLoading = false

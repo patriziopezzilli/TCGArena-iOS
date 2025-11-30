@@ -28,6 +28,15 @@ struct RegisterRequest: Codable {
         case password
         case favoriteGame = "favorite_game"
     }
+    
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(email, forKey: .email)
+        try container.encode(username, forKey: .username)
+        try container.encode(displayName, forKey: .displayName)
+        try container.encode(password, forKey: .password)
+        try container.encodeIfPresent(favoriteGame, forKey: .favoriteGame)
+    }
 }
 
 // Modello per la risposta di autenticazione

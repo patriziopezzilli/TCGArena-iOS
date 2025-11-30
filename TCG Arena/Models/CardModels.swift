@@ -12,7 +12,7 @@ import SwiftUI
 struct CardTemplate: Identifiable, Codable {
     let id: Int64
     let name: String
-    let tcgType: TCGType
+    let tcgType: TCGType?  // Temporaneamente opzionale per debug
     let setCode: String
     let expansion: Expansion?
     let rarity: Rarity
@@ -26,16 +26,58 @@ struct CardTemplate: Identifiable, Codable {
     enum CodingKeys: String, CodingKey {
         case id
         case name
-        case tcgType = "tcg_type"
-        case setCode = "set_code"
+        case tcgType
+        case setCode
         case expansion
         case rarity
-        case cardNumber = "card_number"
+        case cardNumber
         case description
-        case imageUrl = "image_url"
-        case marketPrice = "market_price"
-        case manaCost = "mana_cost"
-        case dateCreated = "date_created"
+        case imageUrl
+        case marketPrice
+        case manaCost
+        case dateCreated
+    }
+    
+    // Computed property per ottenere l'URL completo dell'immagine
+    var fullImageUrl: String? {
+        guard let baseUrl = imageUrl else { return nil }
+        // Aggiungi qualità "high" e formato "webp" come raccomandato
+        return "\(baseUrl)/high.webp"
+    }
+    
+    // Versione con parametri personalizzabili
+    func imageUrl(quality: String = "high", format: String = "webp") -> String? {
+        guard let baseUrl = imageUrl else { return nil }
+        return "\(baseUrl)/\(quality).\(format)"
+    }
+    
+    // Public initializer for creating mock instances
+    init(
+        id: Int64,
+        name: String,
+        tcgType: TCGType?,  // Aggiornato per accettare opzionale
+        setCode: String,
+        expansion: Expansion?,
+        rarity: Rarity,
+        cardNumber: String,
+        description: String?,
+        imageUrl: String?,
+        marketPrice: Double?,
+        manaCost: Int?,
+        dateCreated: Date
+    ) {
+        self.id = id
+        self.name = name
+        self.tcgType = tcgType
+        self.setCode = setCode
+        self.expansion = expansion
+        self.rarity = rarity
+        self.cardNumber = cardNumber
+        self.description = description
+        self.imageUrl = imageUrl
+        self.marketPrice = marketPrice
+        self.manaCost = manaCost
+        self.dateCreated = dateCreated
     }
     
     init(from decoder: Decoder) throws {
@@ -43,7 +85,7 @@ struct CardTemplate: Identifiable, Codable {
         
         id = try container.decode(Int64.self, forKey: .id)
         name = try container.decode(String.self, forKey: .name)
-        tcgType = try container.decode(TCGType.self, forKey: .tcgType)
+        tcgType = try container.decodeIfPresent(TCGType.self, forKey: .tcgType)
         setCode = try container.decode(String.self, forKey: .setCode)
         expansion = try container.decodeIfPresent(Expansion.self, forKey: .expansion)
         rarity = try container.decode(Rarity.self, forKey: .rarity)
@@ -60,6 +102,29 @@ struct CardTemplate: Identifiable, Codable {
         } else {
             dateCreated = Date()
         }
+    }
+    
+    // Helper method to convert CardTemplate to Card for discover flow
+    func toCard() -> Card {
+        return Card(
+            id: nil,  // No ID for discovered cards
+            templateId: self.id,
+            name: self.name,
+            rarity: self.rarity,
+            condition: .nearMint,  // Default condition for discovered cards
+            imageURL: self.imageUrl,
+            isFoil: false,
+            quantity: 1,
+            ownerId: 0,  // Default owner ID for discovered cards
+            createdAt: self.dateCreated,
+            updatedAt: self.dateCreated,
+            tcgType: self.tcgType ?? .pokemon,  // Default to pokemon if not set
+            set: self.setCode,
+            cardNumber: self.cardNumber,
+            expansion: self.expansion,
+            marketPrice: self.marketPrice,
+            description: self.description
+        )
     }
 }
 
@@ -212,4 +277,38 @@ enum GradeService: String, Codable, CaseIterable {
     case bgs = "BGS"
     case cgc = "CGC"
     case beckett = "BECKETT"
+}
+
+// Modello per risposta API paginata
+struct PagedResponse<T: Codable>: Codable {
+    let content: [T]
+    let pageable: PageableInfo
+    let totalPages: Int
+    let totalElements: Int
+    let last: Bool
+    let numberOfElements: Int
+    let first: Bool
+    let size: Int
+    let number: Int
+    let sort: SortInfo
+    let empty: Bool
+    
+    enum CodingKeys: String, CodingKey {
+        case content, pageable, totalPages, totalElements, last, numberOfElements, first, size, number, sort, empty
+    }
+}
+
+struct PageableInfo: Codable {
+    let pageNumber: Int
+    let pageSize: Int
+    let sort: SortInfo
+    let offset: Int
+    let paged: Bool
+    let unpaged: Bool
+}
+
+struct SortInfo: Codable {
+    let sorted: Bool
+    let unsorted: Bool
+    let empty: Bool
 }

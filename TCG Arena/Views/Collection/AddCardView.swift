@@ -190,7 +190,8 @@ struct AddCardView: View {
                 set: cardSet,
                 cardNumber: cardNumber,
                 expansion: nil,
-                marketPrice: nil
+                marketPrice: nil,
+                description: nil
             )
             
             // For mock purposes, just add to the array

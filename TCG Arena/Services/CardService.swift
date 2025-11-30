@@ -185,6 +185,36 @@ class CardService: ObservableObject {
         }
     }
 
+    func searchCardTemplates(query: String, completion: @escaping (Result<[CardTemplate], Error>) -> Void) {
+        // Validate minimum query length
+        guard query.count >= 2 else {
+            completion(.failure(NSError(domain: "CardService", code: -1, userInfo: [NSLocalizedDescriptionKey: "Search query must be at least 2 characters"])))
+            return
+        }
+        
+        // URL encode the query
+        guard let encodedQuery = query.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) else {
+            completion(.failure(NSError(domain: "CardService", code: -1, userInfo: [NSLocalizedDescriptionKey: "Invalid search query"])))
+            return
+        }
+        
+        let endpoint = "/api/cards/templates/search?q=\(encodedQuery)"
+        
+        apiClient.request(endpoint: endpoint, method: .get) { result in
+            switch result {
+            case .success(let data):
+                do {
+                    let cards = try JSONDecoder().decode([CardTemplate].self, from: data)
+                    completion(.success(cards))
+                } catch {
+                    completion(.failure(error))
+                }
+            case .failure(let error):
+                completion(.failure(error))
+            }
+        }
+    }
+
     func removeCardFromCollection(userCardId: Int64, completion: @escaping (Result<Void, Error>) -> Void) {
         apiClient.request(endpoint: "/api/cards/collection/\(userCardId)", method: .delete) { result in
             switch result {
@@ -218,7 +248,8 @@ class CardService: ObservableObject {
             set: originalCard.set,
             cardNumber: originalCard.cardNumber,
             expansion: originalCard.expansion,
-            marketPrice: originalCard.marketPrice
+            marketPrice: originalCard.marketPrice,
+            description: originalCard.description
         )
         
         do {

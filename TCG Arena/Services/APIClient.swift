@@ -9,24 +9,45 @@ import Foundation
 
 class APIClient: NSObject {
     static let shared = APIClient()
-    private let baseURL = "https://tcgarena-be.onrender.com/api"
+    private let baseURL = "http://localhost:8080"
     
-    // URLSession che ignora la validazione SSL per problemi con proxy aziendale
-    // TODO: Rimuovere in produzione e usare certificati validi
+    // URLSession con configurazione basata sulla modalità (debug/disabilita cache)
     private lazy var urlSession: URLSession = {
-        let config = URLSessionConfiguration.default
-        config.requestCachePolicy = .reloadIgnoringLocalCacheData
-        config.urlCache = nil
+        let configuration = URLSessionConfiguration.default
         
-        return URLSession(configuration: config, delegate: self, delegateQueue: nil)
+        #if DEBUG
+        // In modalità debug, disabilita completamente la cache per vedere sempre i dati più recenti
+        configuration.requestCachePolicy = .reloadIgnoringLocalCacheData
+        configuration.urlCache = nil
+        print("🔧 APIClient: Cache disabilitata per modalità debug")
+        #endif
+        
+        return URLSession(configuration: configuration)
     }()
     
+    private var _jwtToken: String?
+    
     var jwtToken: String? {
-        get { UserDefaults.standard.string(forKey: "jwtToken") }
-        set { UserDefaults.standard.set(newValue, forKey: "jwtToken") }
+        get {
+            if _jwtToken == nil {
+                _jwtToken = UserDefaults.standard.string(forKey: "jwtToken")
+            }
+            return _jwtToken
+        }
+        set {
+            _jwtToken = newValue
+            if let token = newValue {
+                UserDefaults.standard.set(token, forKey: "jwtToken")
+            } else {
+                UserDefaults.standard.removeObject(forKey: "jwtToken")
+            }
+            UserDefaults.standard.synchronize() // Force save
+        }
     }
     
-    private override init() {}
+    private override init() {
+        super.init()
+    }
     
     func request<T: Decodable>(
         _ endpoint: String,
@@ -34,6 +55,52 @@ class APIClient: NSObject {
         body: Encodable? = nil,
         headers: [String: String] = [:]
     ) async throws -> T {
+        let bodyData = body != nil ? try JSONEncoder().encode(body!) : nil
+        let data = try await rawRequest(endpoint, method: method, body: bodyData, headers: headers)
+        
+        do {
+            let decoder = JSONDecoder()
+            decoder.dateDecodingStrategy = .custom { decoder in
+                let container = try decoder.singleValueContainer()
+                let dateString = try container.decode(String.self)
+                
+                // Java LocalDateTime format: "2025-11-26T21:55:29.218488"
+                let formatter = DateFormatter()
+                formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSSSS"
+                formatter.locale = Locale(identifier: "en_US_POSIX")
+                formatter.timeZone = TimeZone(secondsFromGMT: 0)
+                
+                if let date = formatter.date(from: dateString) {
+                    return date
+                }
+                
+                throw DecodingError.dataCorruptedError(in: container, debugDescription: "Cannot decode date string \(dateString)")
+            }
+            let decoded = try decoder.decode(T.self, from: data)
+            return decoded
+        } catch {
+            throw error
+        }
+    }
+    
+    // Versione con completion handler per compatibilità
+    func request(endpoint: String, method: HTTPMethod, body: Data? = nil, headers: [String: String] = [:], completion: @escaping (Result<Data, Error>) -> Void) {
+        Task {
+            do {
+                let data = try await rawRequest(endpoint, method: method.rawValue, body: body, headers: headers)
+                completion(.success(data))
+            } catch {
+                completion(.failure(error))
+            }
+        }
+    }
+    
+    private func rawRequest(
+        _ endpoint: String,
+        method: String = "GET",
+        body: Data? = nil,
+        headers: [String: String] = [:]
+    ) async throws -> Data {
         guard let url = URL(string: baseURL + endpoint) else {
             throw APIError.invalidURL
         }
@@ -54,7 +121,7 @@ class APIClient: NSObject {
         
         // Aggiungi body se presente
         if let body = body {
-            request.httpBody = try JSONEncoder().encode(body)
+            request.httpBody = body
         }
         
         let (data, response) = try await urlSession.data(for: request)
@@ -66,25 +133,13 @@ class APIClient: NSObject {
         guard (200...299).contains(httpResponse.statusCode) else {
             if httpResponse.statusCode == 401 {
                 // Token scaduto, logout
-                jwtToken = nil
+                // jwtToken = nil  // Commented out to prevent clearing valid token
                 throw APIError.unauthorized
             }
             throw APIError.serverError(httpResponse.statusCode)
         }
         
-        return try JSONDecoder().decode(T.self, from: data)
-    }
-    
-    // Versione con completion handler per compatibilità
-    func request(endpoint: String, method: HTTPMethod, body: Data? = nil, headers: [String: String] = [:], completion: @escaping (Result<Data, Error>) -> Void) {
-        Task {
-            do {
-                let data: Data = try await request(endpoint, method: method.rawValue, body: body, headers: headers)
-                completion(.success(data))
-            } catch {
-                completion(.failure(error))
-            }
-        }
+        return data
     }
     
     func setJWTToken(_ token: String) {
@@ -109,18 +164,4 @@ enum APIError: Error {
     case unauthorized
     case serverError(Int)
     case decodingError
-}
-
-// MARK: - URLSessionDelegate per gestire SSL
-extension APIClient: URLSessionDelegate {
-    func urlSession(_ session: URLSession, didReceive challenge: URLAuthenticationChallenge, completionHandler: @escaping (URLSession.AuthChallengeDisposition, URLCredential?) -> Void) {
-        // Accetta tutti i certificati SSL (temporaneo per proxy aziendale)
-        // TODO: Rimuovere in produzione per sicurezza
-        if challenge.protectionSpace.authenticationMethod == NSURLAuthenticationMethodServerTrust {
-            let credential = URLCredential(trust: challenge.protectionSpace.serverTrust!)
-            completionHandler(.useCredential, credential)
-        } else {
-            completionHandler(.performDefaultHandling, nil)
-        }
-    }
 }

@@ -241,7 +241,7 @@ struct ProfileView: View {
     }
     
     private func loadUserData() {
-        guard let userId = authService.currentUser?.id else { return }
+        guard let userId = authService.currentUserId else { return }
         
         // Load activities
         isLoadingActivities = true
@@ -249,7 +249,7 @@ struct ProfileView: View {
             do {
                 userActivities = try await UserService.shared.getUserActivities(userId: userId)
             } catch {
-                print("Failed to load user activities: \(error)")
+                // Handle error silently
             }
             isLoadingActivities = false
         }
@@ -260,7 +260,7 @@ struct ProfileView: View {
             do {
                 userStats = try await UserService.shared.getUserStats(userId: userId)
             } catch {
-                print("Failed to load user stats: \(error)")
+                // Handle error silently
             }
             isLoadingStats = false
         }
@@ -1170,28 +1170,24 @@ struct StatCard: View {
                                 ImageService.shared.uploadProfileImage(imageData: imageData, filename: "profile.jpg") { result in
                                     switch result {
                                     case .success(let image):
-                                        print("Profile image uploaded successfully: \(image.url)")
-                                        
                                         // Update user profile image URL via API
                                         let updateData = ["profileImageUrl": image.url]
-                                        APIClient.shared.request(endpoint: "/api/users/\(authService.currentUser?.id ?? 0)/profile-image", 
+                                        APIClient.shared.request(endpoint: "/api/users/\(authService.currentUserId ?? 0)/profile-image", 
                                                                method: .put, 
                                                                body: image.url.data(using: .utf8), 
                                                                headers: ["Content-Type": "text/plain"]) { result in
                                             switch result {
                                             case .success(_):
-                                                print("Profile image URL updated successfully")
                                                 // Refresh user data
                                                 Task {
                                                     await authService.refreshCurrentUser()
                                                 }
                                             case .failure(let error):
-                                                print("Failed to update profile image URL: \(error.localizedDescription)")
+                                                break
                                             }
                                             isUploadingImage = false
                                         }
                                     case .failure(let error):
-                                        print("Failed to upload profile image: \(error.localizedDescription)")
                                         isUploadingImage = false
                                     }
                                 }

@@ -313,12 +313,33 @@ struct CardScanResultView: View {
                 set: cardSet,
                 cardNumber: cardNumber,
                 expansion: nil,
-                marketPrice: nil
+                marketPrice: nil,
+                description: nil
             )
             
-            // For mock purposes, add to the array
+            // Add card to collection
             await MainActor.run {
                 cardService.userCards.append(card)
+                
+                // If a deck is selected, add the card to that deck
+                if let selectedDeckIdString = selectedDeckID,
+                   let selectedDeckId = Int64(selectedDeckIdString) {
+                    // For mock purposes, update the deck locally
+                    if let deckIndex = deckService.userDecks.firstIndex(where: { $0.id == selectedDeckId }) {
+                        let newDeckCard = Deck.DeckCard(
+                            id: Int64(deckService.userDecks[deckIndex].cards.count + 1),
+                            cardId: Int64(cardService.userCards.count), // Mock card ID
+                            quantity: 1,
+                            cardName: cardName,
+                            cardImageUrl: imageURL
+                        )
+                        deckService.userDecks[deckIndex].cards.append(newDeckCard)
+                        deckService.userDecks[deckIndex].dateModified = Date()
+                        // Save updated decks to cache
+                        deckService.saveUserDecksToCache(deckService.userDecks)
+                    }
+                }
+                
                 isSaving = false
                 
                 // Show success animation

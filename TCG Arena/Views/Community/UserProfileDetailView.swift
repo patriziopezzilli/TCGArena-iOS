@@ -680,6 +680,17 @@ struct MockCard {
     let image: String
     let imageURL: String?
     let estimatedValue: Double?
+    
+    // Computed property per ottenere l'URL completo dell'immagine
+    var fullImageURL: String? {
+        guard let baseUrl = imageURL else { return nil }
+        // Se l'URL è già completo (contiene "/high.webp"), restituiscilo così com'è
+        if baseUrl.contains("/high.webp") {
+            return baseUrl
+        }
+        // Altrimenti, aggiungi qualità "high" e formato "webp"
+        return "\(baseUrl)/high.webp"
+    }
 }
 
 struct TCGFilterButton: View {
@@ -710,7 +721,7 @@ struct CardListItemView: View {
     var body: some View {
         HStack(spacing: 16) {
             // Card image placeholder with realistic aspect ratio
-            AsyncImage(url: URL(string: card.imageURL ?? "")) { image in
+            AsyncImage(url: URL(string: card.fullImageURL ?? "")) { image in
                 image
                     .resizable()
                     .aspectRatio(contentMode: .fill)

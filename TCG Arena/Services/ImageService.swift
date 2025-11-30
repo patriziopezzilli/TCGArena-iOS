@@ -109,7 +109,7 @@ class ImageService: ObservableObject {
     func uploadProfileImage(imageData: Data, filename: String, completion: @escaping (Result<Image, Error>) -> Void) {
         // For profile images, use entityType "user" and current user ID
         Task {
-            let userId = await MainActor.run { AuthService.shared.currentUser?.id }
+            let userId = await MainActor.run { AuthService.shared.currentUserId }
             guard let userId = userId else {
                 completion(.failure(NSError(domain: "ImageService", code: -1, userInfo: [NSLocalizedDescriptionKey: "User not authenticated"])))
                 return
