@@ -280,26 +280,6 @@ struct TournamentOverviewTab: View {
     }
 }
 
-// MARK: - Detail Row
-struct DetailRow: View {
-    let label: String
-    let value: String
-    
-    var body: some View {
-        HStack {
-            Text(label)
-                .font(.system(size: 14, weight: .medium))
-                .foregroundColor(.secondary)
-            
-            Spacer()
-            
-            Text(value)
-                .font(.system(size: 14, weight: .semibold))
-                .foregroundColor(.primary)
-        }
-    }
-}
-
 // MARK: - Participants Tab
 struct TournamentParticipantsTab: View {
     @EnvironmentObject var tournamentService: TournamentService

@@ -53,7 +53,10 @@ class InventoryService: ObservableObject {
                 switch result {
                 case .success(let data):
                     do {
-                        let cards = try JSONDecoder().decode([InventoryCard].self, from: data)
+                        let decoder = JSONDecoder()
+                        decoder.keyDecodingStrategy = .convertFromSnakeCase
+                        decoder.dateDecodingStrategy = .iso8601
+                        let cards = try decoder.decode([InventoryCard].self, from: data)
                         Task { @MainActor in
                             self.inventory = cards
                         }
@@ -111,6 +114,7 @@ class InventoryService: ObservableObject {
                     do {
                         let decoder = JSONDecoder()
                         decoder.keyDecodingStrategy = .convertFromSnakeCase
+                        decoder.dateDecodingStrategy = .iso8601
                         let card = try decoder.decode(InventoryCard.self, from: data)
                         
                         Task { @MainActor in
@@ -151,6 +155,7 @@ class InventoryService: ObservableObject {
                     do {
                         let decoder = JSONDecoder()
                         decoder.keyDecodingStrategy = .convertFromSnakeCase
+                        decoder.dateDecodingStrategy = .iso8601
                         let card = try decoder.decode(InventoryCard.self, from: data)
                         
                         Task { @MainActor in
@@ -217,6 +222,7 @@ class InventoryService: ObservableObject {
                     do {
                         let decoder = JSONDecoder()
                         decoder.keyDecodingStrategy = .convertFromSnakeCase
+                        decoder.dateDecodingStrategy = .iso8601
                         let card = try decoder.decode(InventoryCard.self, from: data)
                         
                         Task { @MainActor in
