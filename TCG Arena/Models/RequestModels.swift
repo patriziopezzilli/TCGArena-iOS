@@ -182,9 +182,6 @@ struct RequestMessage: Identifiable, Codable, Hashable {
     }
 }
 
-// MARK: - Hashable/Equatable conformance
-extension RequestMessage: Hashable, Equatable {}
-
 // MARK: - Request DTOs
 struct CreateRequestRequest: Codable {
     let merchantId: String

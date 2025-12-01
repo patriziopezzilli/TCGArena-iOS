@@ -644,11 +644,11 @@ struct UserCardCollectionView: View {
                     // TCG Filter
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 12) {
-                            TCGFilterButton(tcg: nil, selectedTCG: $selectedTCG, title: "All")
-                            TCGFilterButton(tcg: .pokemon, selectedTCG: $selectedTCG, title: "Pokémon")
-                            TCGFilterButton(tcg: .onePiece, selectedTCG: $selectedTCG, title: "One Piece")
-                            TCGFilterButton(tcg: .magic, selectedTCG: $selectedTCG, title: "Magic")
-                            TCGFilterButton(tcg: .yugioh, selectedTCG: $selectedTCG, title: "Yu-Gi-Oh!")
+                            CollectionTCGFilterButton(tcg: nil, selectedTCG: $selectedTCG, title: "All")
+                            CollectionTCGFilterButton(tcg: .pokemon, selectedTCG: $selectedTCG, title: "Pokémon")
+                            CollectionTCGFilterButton(tcg: .onePiece, selectedTCG: $selectedTCG, title: "One Piece")
+                            CollectionTCGFilterButton(tcg: .magic, selectedTCG: $selectedTCG, title: "Magic")
+                            CollectionTCGFilterButton(tcg: .yugioh, selectedTCG: $selectedTCG, title: "Yu-Gi-Oh!")
                         }
                         .padding(.horizontal, 20)
                     }
@@ -682,7 +682,7 @@ struct MockCard {
     let estimatedValue: Double?
 }
 
-struct TCGFilterButton: View {
+struct CollectionTCGFilterButton: View {
     let tcg: TCGType?
     @Binding var selectedTCG: TCGType?
     let title: String
