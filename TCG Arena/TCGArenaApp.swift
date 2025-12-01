@@ -47,6 +47,11 @@ struct TCGArenaApp: App {
     @StateObject private var settingsService = SettingsService()
     @StateObject private var authService = AuthService()
     
+    // Shop/Merchant Services
+    @StateObject private var inventoryService = InventoryService()
+    @StateObject private var reservationService = ReservationService()
+    @StateObject private var requestService = RequestService()
+    
     var body: some Scene {
         WindowGroup {
             if hasCompletedOnboarding() {
@@ -54,6 +59,9 @@ struct TCGArenaApp: App {
                 MainAppView()
                     .environmentObject(settingsService)
                     .environmentObject(authService)
+                    .environmentObject(inventoryService)
+                    .environmentObject(reservationService)
+                    .environmentObject(requestService)
                     .preferredColorScheme(settingsService.isDarkMode ? .dark : .light)
             } else {
                 // First time user - show welcome/onboarding

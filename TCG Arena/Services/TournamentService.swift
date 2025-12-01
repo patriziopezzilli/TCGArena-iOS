@@ -308,4 +308,227 @@ class TournamentService: ObservableObject {
             }
         }
     }
+    
+    // MARK: - Tournament Management (Merchant)
+    
+    /// Start tournament and generate first round pairings
+    func startTournament(tournamentId: String, completion: @escaping (Result<TournamentRound, Error>) -> Void) {
+        let request = StartTournamentRequest(tournamentId: tournamentId)
+        do {
+            let encoder = JSONEncoder()
+            encoder.keyEncodingStrategy = .convertToSnakeCase
+            let body = try encoder.encode(request)
+            
+            apiClient.request(endpoint: "/api/tournaments/\(tournamentId)/start", method: .post, body: body) { result in
+                switch result {
+                case .success(let data):
+                    do {
+                        let decoder = JSONDecoder()
+                        decoder.keyDecodingStrategy = .convertFromSnakeCase
+                        decoder.dateDecodingStrategy = .iso8601
+                        let round = try decoder.decode(TournamentRound.self, from: data)
+                        completion(.success(round))
+                    } catch {
+                        completion(.failure(error))
+                    }
+                case .failure(let error):
+                    completion(.failure(error))
+                }
+            }
+        } catch {
+            completion(.failure(error))
+        }
+    }
+    
+    /// Create next round with matchmaking
+    func createNextRound(tournamentId: String, completion: @escaping (Result<TournamentRound, Error>) -> Void) {
+        let request = CreateRoundRequest(tournamentId: tournamentId)
+        do {
+            let encoder = JSONEncoder()
+            encoder.keyEncodingStrategy = .convertToSnakeCase
+            let body = try encoder.encode(request)
+            
+            apiClient.request(endpoint: "/api/tournaments/\(tournamentId)/round/matchmaking", method: .post, body: body) { result in
+                switch result {
+                case .success(let data):
+                    do {
+                        let decoder = JSONDecoder()
+                        decoder.keyDecodingStrategy = .convertFromSnakeCase
+                        decoder.dateDecodingStrategy = .iso8601
+                        let round = try decoder.decode(TournamentRound.self, from: data)
+                        completion(.success(round))
+                    } catch {
+                        completion(.failure(error))
+                    }
+                case .failure(let error):
+                    completion(.failure(error))
+                }
+            }
+        } catch {
+            completion(.failure(error))
+        }
+    }
+    
+    /// Submit match result
+    func submitMatchResult(matchId: String, result: Match.MatchResult, score: String?, completion: @escaping (Result<Match, Error>) -> Void) {
+        let request = CreateMatchResultRequest(matchId: matchId, result: result, score: score)
+        do {
+            let encoder = JSONEncoder()
+            encoder.keyEncodingStrategy = .convertToSnakeCase
+            let body = try encoder.encode(request)
+            
+            apiClient.request(endpoint: "/api/matches/\(matchId)/result", method: .post, body: body) { result in
+                switch result {
+                case .success(let data):
+                    do {
+                        let decoder = JSONDecoder()
+                        decoder.keyDecodingStrategy = .convertFromSnakeCase
+                        decoder.dateDecodingStrategy = .iso8601
+                        let match = try decoder.decode(Match.self, from: data)
+                        completion(.success(match))
+                    } catch {
+                        completion(.failure(error))
+                    }
+                case .failure(let error):
+                    completion(.failure(error))
+                }
+            }
+        } catch {
+            completion(.failure(error))
+        }
+    }
+    
+    // MARK: - Tournament Player Actions
+    
+    /// Register for tournament with optional decklist
+    func registerWithCheckin(tournamentId: String, decklistUrl: String?, completion: @escaping (Result<TournamentRegistration, Error>) -> Void) {
+        let request = CheckInRequest(decklistUrl: decklistUrl)
+        do {
+            let encoder = JSONEncoder()
+            encoder.keyEncodingStrategy = .convertToSnakeCase
+            let body = try encoder.encode(request)
+            
+            apiClient.request(endpoint: "/api/tournaments/\(tournamentId)/register", method: .post, body: body) { result in
+                switch result {
+                case .success(let data):
+                    do {
+                        let decoder = JSONDecoder()
+                        decoder.keyDecodingStrategy = .convertFromSnakeCase
+                        decoder.dateDecodingStrategy = .iso8601
+                        let registration = try decoder.decode(TournamentRegistration.self, from: data)
+                        completion(.success(registration))
+                    } catch {
+                        completion(.failure(error))
+                    }
+                case .failure(let error):
+                    completion(.failure(error))
+                }
+            }
+        } catch {
+            completion(.failure(error))
+        }
+    }
+    
+    /// Drop from tournament
+    func dropFromTournament(tournamentId: String, reason: String?, completion: @escaping (Result<Void, Error>) -> Void) {
+        let request = DropFromTournamentRequest(reason: reason)
+        do {
+            let encoder = JSONEncoder()
+            encoder.keyEncodingStrategy = .convertToSnakeCase
+            let body = try encoder.encode(request)
+            
+            apiClient.request(endpoint: "/api/tournaments/\(tournamentId)/drop", method: .post, body: body) { result in
+                switch result {
+                case .success:
+                    completion(.success(()))
+                case .failure(let error):
+                    completion(.failure(error))
+                }
+            }
+        } catch {
+            completion(.failure(error))
+        }
+    }
+    
+    // MARK: - Tournament Data
+    
+    /// Get tournament detail with all data
+    func getTournamentDetail(tournamentId: String, completion: @escaping (Result<TournamentDetailResponse, Error>) -> Void) {
+        apiClient.request(endpoint: "/api/tournaments/\(tournamentId)/detail", method: .get) { result in
+            switch result {
+            case .success(let data):
+                do {
+                    let decoder = JSONDecoder()
+                    decoder.keyDecodingStrategy = .convertFromSnakeCase
+                    decoder.dateDecodingStrategy = .iso8601
+                    let detail = try decoder.decode(TournamentDetailResponse.self, from: data)
+                    completion(.success(detail))
+                } catch {
+                    completion(.failure(error))
+                }
+            case .failure(let error):
+                completion(.failure(error))
+            }
+        }
+    }
+    
+    /// Get current user's match pairing
+    func getUserPairing(tournamentId: String, completion: @escaping (Result<MatchPairingResponse, Error>) -> Void) {
+        apiClient.request(endpoint: "/api/tournaments/\(tournamentId)/my-match", method: .get) { result in
+            switch result {
+            case .success(let data):
+                do {
+                    let decoder = JSONDecoder()
+                    decoder.keyDecodingStrategy = .convertFromSnakeCase
+                    decoder.dateDecodingStrategy = .iso8601
+                    let pairing = try decoder.decode(MatchPairingResponse.self, from: data)
+                    completion(.success(pairing))
+                } catch {
+                    completion(.failure(error))
+                }
+            case .failure(let error):
+                completion(.failure(error))
+            }
+        }
+    }
+    
+    /// Get tournament standings
+    func getStandings(tournamentId: String, completion: @escaping (Result<StandingsResponse, Error>) -> Void) {
+        apiClient.request(endpoint: "/api/tournaments/\(tournamentId)/standings", method: .get) { result in
+            switch result {
+            case .success(let data):
+                do {
+                    let decoder = JSONDecoder()
+                    decoder.keyDecodingStrategy = .convertFromSnakeCase
+                    decoder.dateDecodingStrategy = .iso8601
+                    let standings = try decoder.decode(StandingsResponse.self, from: data)
+                    completion(.success(standings))
+                } catch {
+                    completion(.failure(error))
+                }
+            case .failure(let error):
+                completion(.failure(error))
+            }
+        }
+    }
+    
+    /// Get tournament bracket (for single elimination)
+    func getBracket(tournamentId: String, completion: @escaping (Result<[TournamentRound], Error>) -> Void) {
+        apiClient.request(endpoint: "/api/tournaments/\(tournamentId)/bracket", method: .get) { result in
+            switch result {
+            case .success(let data):
+                do {
+                    let decoder = JSONDecoder()
+                    decoder.keyDecodingStrategy = .convertFromSnakeCase
+                    decoder.dateDecodingStrategy = .iso8601
+                    let bracket = try decoder.decode([TournamentRound].self, from: data)
+                    completion(.success(bracket))
+                } catch {
+                    completion(.failure(error))
+                }
+            case .failure(let error):
+                completion(.failure(error))
+            }
+        }
+    }
 }
