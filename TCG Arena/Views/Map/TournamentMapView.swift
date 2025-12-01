@@ -261,7 +261,7 @@ struct TournamentRowView: View {
                         .lineLimit(1)
                     
                     HStack {
-                        Text(tournament.location?.name ?? "Unknown Location")
+                        Text(tournament.location?.venueName ?? "Unknown Location")
                             .font(.caption)
                             .foregroundColor(.secondary)
                         
@@ -342,7 +342,7 @@ struct MinimalTournamentCard: View {
                         .foregroundColor(.primary)
                         .lineLimit(2)
                     
-                    Text(tournament.location?.name ?? "Unknown Location")
+                    Text(tournament.location?.venueName ?? "Unknown Location")
                         .font(.system(size: 13, weight: .medium))
                         .foregroundColor(.secondary)
                         .lineLimit(1)

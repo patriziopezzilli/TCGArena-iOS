@@ -28,7 +28,7 @@ class ShopService: ObservableObject {
     // MARK: - API Methods
     
     func getAllShops(completion: @escaping (Result<[Shop], Error>) -> Void) {
-        apiClient.request(endpoint: "/api/shops", method: .get) { result in
+        apiClient.request(endpoint: "/shops", method: .get) { result in
             switch result {
             case .success(let data):
                 do {
@@ -44,7 +44,7 @@ class ShopService: ObservableObject {
     }
     
     func getShopById(_ id: Int64, completion: @escaping (Result<Shop, Error>) -> Void) {
-        apiClient.request(endpoint: "/api/shops/\(id)", method: .get) { result in
+        apiClient.request(endpoint: "/shops/\(id)", method: .get) { result in
             switch result {
             case .success(let data):
                 do {
@@ -62,7 +62,7 @@ class ShopService: ObservableObject {
     func createShop(_ shop: Shop, completion: @escaping (Result<Shop, Error>) -> Void) {
         do {
             let data = try JSONEncoder().encode(shop)
-            apiClient.request(endpoint: "/api/shops", method: .post, body: data) { result in
+            apiClient.request(endpoint: "/shops", method: .post, body: data) { result in
                 switch result {
                 case .success(let data):
                     do {
@@ -83,7 +83,7 @@ class ShopService: ObservableObject {
     func updateShop(_ id: Int64, _ shop: Shop, completion: @escaping (Result<Shop, Error>) -> Void) {
         do {
             let data = try JSONEncoder().encode(shop)
-            apiClient.request(endpoint: "/api/shops/\(id)", method: .put, body: data) { result in
+            apiClient.request(endpoint: "/shops/\(id)", method: .put, body: data) { result in
                 switch result {
                 case .success(let data):
                     do {
@@ -102,7 +102,7 @@ class ShopService: ObservableObject {
     }
     
     func deleteShop(_ id: Int64, completion: @escaping (Result<Void, Error>) -> Void) {
-        apiClient.request(endpoint: "/api/shops/\(id)", method: .delete) { result in
+        apiClient.request(endpoint: "/shops/\(id)", method: .delete) { result in
             switch result {
             case .success:
                 completion(.success(()))
@@ -165,6 +165,38 @@ class ShopService: ObservableObject {
         }
     }
     
+    // Async version for SwiftUI tasks
+    @MainActor
+    func loadNearbyShops(userLocation: CLLocation, radius: Double = 50000) async {
+        isLoading = true
+        errorMessage = nil
+        
+        do {
+            let shops: [Shop] = try await apiClient.request("/shops", method: "GET")
+            
+            // Filter shops within radius (only those with valid coordinates)
+            self.nearbyShops = shops.compactMap { shop in
+                guard let latitude = shop.latitude, let longitude = shop.longitude else { return nil }
+                let shopLocation = CLLocation(latitude: latitude, longitude: longitude)
+                let distance = userLocation.distance(from: shopLocation)
+                return distance <= radius ? shop : nil
+            }.sorted { shop1, shop2 in
+                guard let lat1 = shop1.latitude, let lon1 = shop1.longitude,
+                      let lat2 = shop2.latitude, let lon2 = shop2.longitude else { return false }
+                let location1 = CLLocation(latitude: lat1, longitude: lon1)
+                let location2 = CLLocation(latitude: lat2, longitude: lon2)
+                return userLocation.distance(from: location1) < userLocation.distance(from: location2)
+            }
+            
+            print("Loaded \(self.nearbyShops.count) nearby shops")
+        } catch {
+            self.errorMessage = error.localizedDescription
+            print("Error loading nearby shops: \(error)")
+        }
+        
+        isLoading = false
+    }
+    
     // MARK: - Shop News (Mock for now - backend may not have this endpoint)
     
     func loadShopNews() {
@@ -204,14 +236,20 @@ class ShopService: ObservableObject {
             latitude: 45.4773,
             longitude: 9.1815,
             phoneNumber: "+39 02 1234 5678",
+            email: "info@magiccastlegames.it",
             websiteUrl: "www.magiccastlegames.it",
+            instagramUrl: "@magiccastlegames",
+            facebookUrl: "facebook.com/magiccastlegames",
+            twitterUrl: "@magiccastlegames",
             type: .localStore,
             isVerified: true,
+            active: true,
             ownerId: 1,
             openingHours: "10:00-20:00",
             openingDays: "Mon-Sun",
             tcgTypes: [.pokemon, .yugioh, .magic],
-            services: ["Card Sales", "Buy Cards", "Tournaments", "Play Area", "Accessories", "Pre-orders"]
+            services: ["Card Sales", "Buy Cards", "Tournaments", "Play Area", "Accessories", "Pre-orders"],
+            inventory: nil
         )
         
         var shop2 = Shop(
@@ -222,14 +260,20 @@ class ShopService: ObservableObject {
             latitude: 45.4794,
             longitude: 9.2038,
             phoneNumber: "+39 02 9876 5432",
+            email: "contact@tcghubmilano.com",
             websiteUrl: "www.tcghubmilano.com",
+            instagramUrl: "@tcghubmilano",
+            facebookUrl: "facebook.com/tcghubmilano",
+            twitterUrl: "@tcghubmilano",
             type: .localStore,
             isVerified: true,
+            active: true,
             ownerId: 2,
             openingHours: "10:00-20:00",
             openingDays: "Mon-Sat",
             tcgTypes: [.pokemon, .yugioh],
-            services: ["Card Sales", "Buy Cards", "Grading", "Accessories", "Online Store"]
+            services: ["Card Sales", "Buy Cards", "Grading", "Accessories", "Online Store"],
+            inventory: nil
         )
         
         var shop3 = Shop(
@@ -240,14 +284,20 @@ class ShopService: ObservableObject {
             latitude: 45.4628,
             longitude: 9.1859,
             phoneNumber: "+39 02 5555 4444",
+            email: "info@giochidicarte.it",
             websiteUrl: nil,
+            instagramUrl: nil,
+            facebookUrl: nil,
+            twitterUrl: nil,
             type: .localStore,
             isVerified: false,
+            active: true,
             ownerId: 3,
             openingHours: "09:30-19:30",
             openingDays: "Mon-Sat",
             tcgTypes: [.pokemon, .yugioh, .magic, .onePiece],
-            services: ["Card Sales", "Buy Cards", "Accessories"]
+            services: ["Card Sales", "Buy Cards", "Accessories"],
+            inventory: nil
         )
         
         var shop4 = Shop(
@@ -258,14 +308,20 @@ class ShopService: ObservableObject {
             latitude: 45.4898,
             longitude: 9.2061,
             phoneNumber: "+39 02 3333 2222",
+            email: "contact@dragonslairgaming.it",
             websiteUrl: "www.dragonslairgaming.it",
+            instagramUrl: "@dragonslairgaming",
+            facebookUrl: "facebook.com/dragonslairgaming",
+            twitterUrl: "@dragonslairgaming",
             type: .localStore,
             isVerified: true,
+            active: true,
             ownerId: 4,
             openingHours: "10:00-24:00",
             openingDays: "Mon-Sun",
             tcgTypes: [.pokemon, .yugioh, .magic, .onePiece, .digimon],
-            services: ["Card Sales", "Tournaments", "Play Area", "Accessories", "Pre-orders"]
+            services: ["Card Sales", "Tournaments", "Play Area", "Accessories", "Pre-orders"],
+            inventory: nil
         )
         
         shops = [shop1, shop2, shop3, shop4]

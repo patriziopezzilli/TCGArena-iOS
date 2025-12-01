@@ -18,11 +18,13 @@ struct RegisterView: View {
     @State private var showError = false
     @State private var errorMessage = ""
     @State private var agreedToTerms = false
-    @State private var selectedTCG: TCGType?
+    @State private var selectedTCGs: Set<TCGType> = []
 
     init(email: String = "", selectedTCG: TCGType? = nil) {
         _email = State(initialValue: email)
-        _selectedTCG = State(initialValue: selectedTCG)
+        if let tcg = selectedTCG {
+            _selectedTCGs = State(initialValue: [tcg])
+        }
     }
 
     var body: some View {
@@ -182,49 +184,68 @@ struct RegisterView: View {
                                     .font(.system(size: 16))
                             }
 
-                            // TCG Selection with icon
+                            // TCG Selection with icon - Multiple selection
                             VStack(alignment: .leading, spacing: 8) {
                                 HStack(spacing: 8) {
                                     SwiftUI.Image(systemName: "gamecontroller")
                                         .foregroundColor(AdaptiveColors.brandPrimary)
                                         .frame(width: 20, height: 20)
-                                    Text("Favorite TCG")
+                                    Text("Favorite TCGs")
                                         .font(.system(size: 14, weight: .semibold, design: .rounded))
                                         .foregroundColor(AdaptiveColors.brandPrimary)
+                                    
+                                    if !selectedTCGs.isEmpty {
+                                        Text("(\(selectedTCGs.count) selected)")
+                                            .font(.system(size: 12, weight: .regular, design: .rounded))
+                                            .foregroundColor(AdaptiveColors.neutralDark.opacity(0.6))
+                                    }
                                 }
 
-                                Menu {
+                                VStack(spacing: 12) {
                                     ForEach(TCGType.allCases, id: \.self) { tcg in
-                                        Button(action: { selectedTCG = tcg }) {
-                                            HStack {
-                                                Text(tcg.rawValue.capitalized)
-                                                if selectedTCG == tcg {
-                                                    SwiftUI.Image(systemName: "checkmark")
-                                                }
+                                        Button(action: {
+                                            if selectedTCGs.contains(tcg) {
+                                                selectedTCGs.remove(tcg)
+                                            } else {
+                                                selectedTCGs.insert(tcg)
                                             }
+                                        }) {
+                                            HStack {
+                                                // Checkbox
+                                                ZStack {
+                                                    RoundedRectangle(cornerRadius: 6)
+                                                        .stroke(selectedTCGs.contains(tcg) ? AdaptiveColors.brandPrimary : AdaptiveColors.neutralLight, lineWidth: 2)
+                                                        .frame(width: 24, height: 24)
+                                                    
+                                                    if selectedTCGs.contains(tcg) {
+                                                        RoundedRectangle(cornerRadius: 6)
+                                                            .fill(AdaptiveColors.brandPrimary)
+                                                            .frame(width: 24, height: 24)
+                                                        
+                                                        SwiftUI.Image(systemName: "checkmark")
+                                                            .font(.system(size: 14, weight: .bold))
+                                                            .foregroundColor(.white)
+                                                    }
+                                                }
+                                                
+                                                Text(tcg.rawValue.capitalized)
+                                                    .font(.system(size: 16))
+                                                    .foregroundColor(AdaptiveColors.neutralDark)
+                                                
+                                                Spacer()
+                                            }
+                                            .padding(.horizontal, 16)
+                                            .padding(.vertical, 12)
+                                            .background(
+                                                RoundedRectangle(cornerRadius: 12)
+                                                    .fill(selectedTCGs.contains(tcg) ? AdaptiveColors.brandPrimary.opacity(0.05) : Color.white.opacity(0.9))
+                                                    .overlay(
+                                                        RoundedRectangle(cornerRadius: 12)
+                                                            .stroke(selectedTCGs.contains(tcg) ? AdaptiveColors.brandPrimary : AdaptiveColors.neutralLight, lineWidth: 1)
+                                                    )
+                                            )
                                         }
                                     }
-                                } label: {
-                                    HStack {
-                                        Text(selectedTCG?.rawValue.capitalized ?? "Choose your favorite TCG")
-                                            .foregroundColor(selectedTCG == nil ? AdaptiveColors.neutralDark.opacity(0.6) : AdaptiveColors.neutralDark)
-                                            .font(.system(size: 16))
-                                        Spacer()
-                                        SwiftUI.Image(systemName: "chevron.down")
-                                            .foregroundColor(AdaptiveColors.neutralDark.opacity(0.6))
-                                            .font(.system(size: 14))
-                                    }
-                                    .padding(.horizontal, 16)
-                                    .padding(.vertical, 14)
-                                    .background(
-                                        RoundedRectangle(cornerRadius: 12)
-                                            .fill(Color.white.opacity(0.9))
-                                            .overlay(
-                                                RoundedRectangle(cornerRadius: 12)
-                                                    .stroke(AdaptiveColors.neutralLight, lineWidth: 1)
-                                            )
-                                            .shadow(color: Color.black.opacity(0.05), radius: 4, x: 0, y: 2)
-                                    )
                                 }
                             }
                         }
@@ -402,7 +423,7 @@ struct RegisterView: View {
                     password: password,
                     username: username,
                     displayName: username, // Per ora usa username come displayName
-                    favoriteGame: selectedTCG
+                    favoriteGames: Array(selectedTCGs)
                 )
                 UserDefaults.standard.set(true, forKey: "hasCompletedOnboarding")
                 dismiss()

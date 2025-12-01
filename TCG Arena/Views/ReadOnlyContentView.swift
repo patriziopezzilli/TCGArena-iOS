@@ -91,7 +91,9 @@ struct ReadOnlyContentView: View {
 struct ReadOnlyCollectionView: View {
     @EnvironmentObject var cardService: CardService
     @EnvironmentObject var deckService: DeckService
+    @StateObject private var expansionService = ExpansionService()
     @State private var showLoginPrompt = false
+    @State private var selectedExpansion: Expansion?
 
     var body: some View {
         NavigationView {
@@ -103,7 +105,7 @@ struct ReadOnlyCollectionView: View {
                             .font(.system(size: 28, weight: .bold))
                             .foregroundColor(.primary)
 
-                        Text("Browse collections and decks")
+                        Text("Browse expansions and discover cards")
                             .font(.system(size: 16, weight: .medium))
                             .foregroundColor(.secondary)
                     }
@@ -120,7 +122,7 @@ struct ReadOnlyCollectionView: View {
                             .foregroundColor(.primary)
                             .multilineTextAlignment(.center)
 
-                        Text("Browse public decks and discover new cards")
+                        Text("Track your cards and build custom decks")
                             .font(.system(size: 14, weight: .medium))
                             .foregroundColor(.secondary)
                             .multilineTextAlignment(.center)
@@ -142,46 +144,119 @@ struct ReadOnlyCollectionView: View {
                     .clipShape(RoundedRectangle(cornerRadius: 16))
                     .padding(.horizontal, 20)
 
-                    // Public content preview
+                    // Expansions List
                     VStack(alignment: .leading, spacing: 16) {
-                        Text("Explore Public Content")
+                        Text("Browse Expansions")
                             .font(.system(size: 20, weight: .bold))
                             .foregroundColor(.primary)
                             .padding(.horizontal, 20)
 
-                        // Recent expansions preview
-                        Text("Recent Expansions")
-                            .font(.system(size: 16, weight: .semibold))
-                            .foregroundColor(.primary)
-                            .padding(.horizontal, 20)
-
-                        ScrollView(.horizontal, showsIndicators: false) {
-                            HStack(spacing: 16) {
-                                ForEach(0..<3) { _ in
-                                    RoundedRectangle(cornerRadius: 12)
-                                        .fill(Color.gray.opacity(0.2))
-                                        .frame(width: 160, height: 100)
-                                        .overlay(
-                                            VStack {
-                                                SwiftUI.Image(systemName: "photo")
-                                                    .foregroundColor(.gray)
-                                                Text("Preview")
-                                                    .font(.system(size: 12))
-                                                    .foregroundColor(.gray)
-                                            }
-                                        )
+                        if expansionService.isLoading {
+                            HStack {
+                                Spacer()
+                                ProgressView()
+                                    .padding(.vertical, 40)
+                                Spacer()
+                            }
+                        } else if expansionService.expansions.isEmpty {
+                            VStack(spacing: 12) {
+                                SwiftUI.Image(systemName: "square.stack.3d.up.slash")
+                                    .font(.system(size: 40))
+                                    .foregroundColor(.secondary)
+                                Text("No expansions available")
+                                    .font(.system(size: 16))
+                                    .foregroundColor(.secondary)
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 40)
+                        } else {
+                            VStack(spacing: 12) {
+                                ForEach(expansionService.expansions) { expansion in
+                                    Button(action: {
+                                        selectedExpansion = expansion
+                                    }) {
+                                        PublicExpansionCard(expansion: expansion)
+                                    }
                                 }
                             }
                             .padding(.horizontal, 20)
                         }
                     }
                 }
+                .padding(.bottom, 24)
             }
             .navigationBarHidden(true)
         }
         .sheet(isPresented: $showLoginPrompt) {
-            LoginView()
+            WelcomeFlowView()
         }
+        .sheet(item: $selectedExpansion) { expansion in
+            ExpansionDetailView(expansion: expansion)
+        }
+    }
+}
+
+// MARK: - Public Expansion Card
+struct PublicExpansionCard: View {
+    let expansion: Expansion
+    
+    var body: some View {
+        HStack(spacing: 16) {
+            // Expansion Image
+            AsyncImage(url: URL(string: expansion.imageUrl ?? "")) { image in
+                image
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+            } placeholder: {
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(expansion.tcgType.themeColor.opacity(0.2))
+                    .overlay(
+                        SwiftUI.Image(systemName: expansion.tcgType.icon)
+                            .font(.system(size: 28, weight: .bold))
+                            .foregroundColor(expansion.tcgType.themeColor)
+                    )
+            }
+            .frame(width: 80, height: 80)
+            .clipShape(RoundedRectangle(cornerRadius: 12))
+            
+            // Expansion Info
+            VStack(alignment: .leading, spacing: 6) {
+                Text(expansion.title)
+                    .font(.system(size: 17, weight: .semibold))
+                    .foregroundColor(.primary)
+                    .lineLimit(2)
+                
+                HStack(spacing: 8) {
+                    Circle()
+                        .fill(expansion.tcgType.themeColor)
+                        .frame(width: 8, height: 8)
+                    
+                    Text(expansion.tcgType.displayName)
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundColor(expansion.tcgType.themeColor)
+                }
+                
+                HStack(spacing: 12) {
+                    Label("\(expansion.sets.count) sets", systemImage: "square.stack.3d.up.fill")
+                        .font(.system(size: 13))
+                        .foregroundColor(.secondary)
+                    
+                    Label("\(expansion.cardCount) cards", systemImage: "rectangle.stack")
+                        .font(.system(size: 13))
+                        .foregroundColor(.secondary)
+                }
+            }
+            
+            Spacer()
+            
+            SwiftUI.Image(systemName: "chevron.right")
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundColor(.secondary)
+        }
+        .padding(16)
+        .background(Color(.systemBackground))
+        .clipShape(RoundedRectangle(cornerRadius: 16))
+        .shadow(color: Color.black.opacity(0.05), radius: 8, x: 0, y: 2)
     }
 }
 
@@ -389,10 +464,10 @@ struct LoginPromptView: View {
             .padding(.horizontal, 32)
         }
         .fullScreenCover(isPresented: $showLogin) {
-            LoginView()
+            WelcomeFlowView()
         }
         .fullScreenCover(isPresented: $showRegister) {
-            RegisterView()
+            WelcomeFlowView()
         }
     }
 }

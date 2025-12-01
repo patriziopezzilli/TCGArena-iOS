@@ -27,7 +27,7 @@ class DiscoverService: ObservableObject {
     // MARK: - API Methods
     
     func getAllUsers(completion: @escaping (Result<[User], Error>) -> Void) {
-        apiClient.request(endpoint: "/api/users", method: .get) { result in
+        apiClient.request(endpoint: "/users", method: .get) { result in
             switch result {
             case .success(let data):
                 do {
@@ -43,7 +43,7 @@ class DiscoverService: ObservableObject {
     }
     
     func getUserLeaderboard(completion: @escaping (Result<[User], Error>) -> Void) {
-        apiClient.request(endpoint: "/api/users/leaderboard", method: .get) { result in
+        apiClient.request(endpoint: "/users/leaderboard", method: .get) { result in
             switch result {
             case .success(let data):
                 do {
@@ -59,7 +59,7 @@ class DiscoverService: ObservableObject {
     }
     
     func getRecentActivities(completion: @escaping (Result<[UserActivity], Error>) -> Void) {
-        apiClient.request(endpoint: "/api/user-activities/recent/global", method: .get) { result in
+        apiClient.request(endpoint: "/user-activities/recent/global", method: .get) { result in
             switch result {
             case .success(let data):
                 do {

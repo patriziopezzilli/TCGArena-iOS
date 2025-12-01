@@ -18,84 +18,107 @@ struct ShopView: View {
     @State private var userLocationText = "Milano, Italy"
     @State private var hasLoadedInitialData = false
     
+    // Custom colors
+    private let bgGradient = LinearGradient(
+        gradient: Gradient(colors: [Color(.systemBackground), Color(.secondarySystemBackground)]),
+        startPoint: .top,
+        endPoint: .bottom
+    )
+    
     var body: some View {
         NavigationView {
-            VStack(spacing: 0) {
-                // Clean Header
-                HStack {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("Stores")
-                            .font(.system(size: UIConstants.headerFontSize, weight: .bold))
-                            .foregroundColor(.primary)
+            ZStack(alignment: .top) {
+                // Background
+                Color(.systemGroupedBackground)
+                    .ignoresSafeArea()
+                
+                VStack(spacing: 0) {
+                    // Modern Header
+                    VStack(spacing: 16) {
+                        // Top Bar with Location
+                        HStack {
+                            Text("Discover")
+                                .font(.system(size: 34, weight: .bold))
+                                .foregroundColor(.primary)
+                            
+                            Spacer()
+                            
+                            // Location Pill
+                            Button(action: { showingLocationInput = true }) {
+                                HStack(spacing: 6) {
+                                    SwiftUI.Image(systemName: "mappin.and.ellipse")
+                                        .font(.system(size: 14))
+                                        .foregroundColor(.blue)
+                                    
+                                    Text(userLocationText)
+                                        .font(.system(size: 14, weight: .medium))
+                                        .foregroundColor(.primary)
+                                        .lineLimit(1)
+                                    
+                                    SwiftUI.Image(systemName: "chevron.down")
+                                        .font(.system(size: 10, weight: .bold))
+                                        .foregroundColor(.secondary)
+                                }
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 8)
+                                .background(
+                                    Capsule()
+                                        .fill(Color(.systemBackground))
+                                        .shadow(color: Color.black.opacity(0.05), radius: 4, x: 0, y: 2)
+                                )
+                            }
+                        }
+                        .padding(.horizontal, 20)
+                        .padding(.top, 10)
                         
-                        Text(selectedSection == 0 ? "\(shopService.nearbyShops.count) nearby" : "\(tournamentService.nearbyTournaments.count) events")
-                            .font(.system(size: UIConstants.subheaderFontSize, weight: .medium))
-                            .foregroundColor(.secondary)
+                        // Custom Segmented Control
+                        HStack(spacing: 0) {
+                            SegmentButton(title: "Stores", isSelected: selectedSection == 0) {
+                                withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                                    selectedSection = 0
+                                }
+                            }
+                            
+                            SegmentButton(title: "Events", isSelected: selectedSection == 1) {
+                                withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                                    selectedSection = 1
+                                }
+                            }
+                        }
+                        .background(
+                            Capsule()
+                                .fill(Color(.tertiarySystemFill))
+                        )
+                        .padding(.horizontal, 20)
+                        .padding(.bottom, 10)
                     }
-                    
-                    Spacer()
-                    
-                    // Location Chip in top right
-                    HStack(spacing: 6) {
-                        SwiftUI.Image(systemName: "location.fill")
-                            .font(.system(size: 12))
-                            .foregroundColor(.blue)
-                        
-                        Text(userLocationText)
-                            .font(.system(size: 13, weight: .medium))
-                            .foregroundColor(.primary)
-                            .lineLimit(1)
-                        
-                        SwiftUI.Image(systemName: "chevron.down")
-                            .font(.system(size: 10, weight: .semibold))
-                            .foregroundColor(.secondary)
-                    }
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 6)
                     .background(
-                        Capsule()
-                            .fill(Color.blue.opacity(0.1))
+                        Rectangle()
+                            .fill(Color(.systemBackground))
+                            .shadow(color: Color.black.opacity(0.03), radius: 8, x: 0, y: 4)
                     )
-                    .onTapGesture {
-                        showingLocationInput = true
+                    .zIndex(1)
+                    
+                    // Content
+                    if selectedSection == 0 {
+                        ShopListView()
+                            .transition(.opacity)
+                    } else {
+                        EventListView()
+                            .transition(.opacity)
                     }
-                }
-                .padding(.horizontal, 20)
-                .padding(.top, 20)
-                .padding(.bottom, 16)
-                
-                // Section Segmented Control
-                Picker("Section", selection: $selectedSection) {
-                    Text("Stores").tag(0)
-                    Text("Events").tag(1)
-                }
-                .pickerStyle(SegmentedPickerStyle())
-                .padding(.horizontal, 20)
-                .padding(.bottom, 16)
-                
-                // Content based on selected section
-                if selectedSection == 0 {
-                    ShopListView()
-                } else {
-                    EventListView()
                 }
             }
-            .background(Color(.systemBackground))
             .navigationTitle("")
             .navigationBarHidden(true)
             .task {
-                // Only load data once on first appearance
                 guard !hasLoadedInitialData else { return }
                 hasLoadedInitialData = true
-                
-                // Load tournaments
                 await tournamentService.loadTournaments()
                 
-                // Use current location for tournaments, but shops are already loaded with all items
                 if let userLocation = locationManager.location {
                     await tournamentService.loadNearbyTournaments(userLocation: userLocation)
                 } else {
-                    // Load nearby tournaments with Milano center for demo
                     let milanoCenter = CLLocation(latitude: 45.4642, longitude: 9.1900)
                     await tournamentService.loadNearbyTournaments(userLocation: milanoCenter)
                 }
@@ -107,13 +130,58 @@ struct ShopView: View {
     }
 }
 
+// MARK: - Custom Segment Button
+struct SegmentButton: View {
+    let title: String
+    let isSelected: Bool
+    let action: () -> Void
+    
+    var body: some View {
+        Button(action: action) {
+            Text(title)
+                .font(.system(size: 15, weight: isSelected ? .semibold : .medium))
+                .foregroundColor(isSelected ? .primary : .secondary)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 8)
+                .background(
+                    ZStack {
+                        if isSelected {
+                            Capsule()
+                                .fill(Color(.systemBackground))
+                                .shadow(color: Color.black.opacity(0.1), radius: 2, x: 0, y: 1)
+                                .matchedGeometryEffect(id: "TAB", in: NamespaceWrapper.shared.namespace)
+                        }
+                    }
+                )
+        }
+        .padding(2)
+    }
+}
+
+// Helper for matched geometry in separate views if needed, though here it's local
+class NamespaceWrapper {
+    static let shared = NamespaceWrapper()
+    @Namespace var namespace
+}
+
 // MARK: - Shop List View
 struct ShopListView: View {
     @EnvironmentObject var shopService: ShopService
+    @StateObject private var locationManager = LocationManager()
     
     var body: some View {
         ScrollView {
-            LazyVStack(spacing: 12) {
+            LazyVStack(spacing: 20) {
+                // Summary Text
+                HStack {
+                    Text("\(shopService.nearbyShops.count) stores nearby")
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundColor(.secondary)
+                    Spacer()
+                }
+                .padding(.horizontal, 20)
+                .padding(.top, 16)
+                
                 ForEach(shopService.nearbyShops) { shop in
                     NavigationLink(destination: ShopDetailView(shop: shop)
                         .environmentObject(shopService)) {
@@ -123,7 +191,15 @@ struct ShopListView: View {
                 }
             }
             .padding(.horizontal, 20)
-            .padding(.vertical, 12)
+            .padding(.bottom, 20)
+        }
+        .refreshable {
+            if let userLocation = locationManager.location {
+                await shopService.loadNearbyShops(userLocation: userLocation)
+            } else {
+                let milanoCenter = CLLocation(latitude: 45.4642, longitude: 9.1900)
+                await shopService.loadNearbyShops(userLocation: milanoCenter)
+            }
         }
     }
 }
@@ -131,53 +207,105 @@ struct ShopListView: View {
 // MARK: - Event List View
 struct EventListView: View {
     @EnvironmentObject var tournamentService: TournamentService
+    @EnvironmentObject var authService: AuthService
+    @StateObject private var locationManager = LocationManager()
     @State private var showingCreateEvent = false
+    @State private var registeringTournamentId: Int64?
     
     var body: some View {
-        VStack(spacing: 0) {
-            // Create Event Button
-            HStack {
-                Spacer()
-                
-                Button(action: { showingCreateEvent = true }) {
-                    HStack(spacing: 6) {
-                        SwiftUI.Image(systemName: "plus")
-                            .font(.system(size: 14, weight: .bold))
-                        
-                        Text("Create Event")
-                            .font(.system(size: 14, weight: .semibold))
-                    }
-                    .foregroundColor(.white)
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 10)
-                    .background(
-                        RoundedRectangle(cornerRadius: 20)
-                            .fill(Color.blue)
-                    )
-                }
-            }
-            .padding(.horizontal, 20)
-            .padding(.bottom, 12)
-            
+        ZStack(alignment: .bottomTrailing) {
             ScrollView {
-                LazyVStack(spacing: 12) {
+                LazyVStack(spacing: 20) {
+                    // Summary Text
+                    HStack {
+                        Text("\(tournamentService.nearbyTournaments.count) upcoming events")
+                            .font(.system(size: 14, weight: .medium))
+                            .foregroundColor(.secondary)
+                        Spacer()
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.top, 16)
+                    
                     ForEach(tournamentService.nearbyTournaments) { tournament in
-                        NavigationLink(destination: TournamentDetailView(tournament: tournament)) {
+                        NavigationLink(destination: TournamentDetailView(tournament: tournament)
+                            .environmentObject(tournamentService)
+                            .environmentObject(authService)) {
                             TournamentCardView(
                                 tournament: tournament,
-                                isUserRegistered: false,
-                                onRegisterTap: {}
+                                isUserRegistered: isUserRegistered(for: tournament),
+                                onRegisterTap: {
+                                    handleRegisterTap(for: tournament)
+                                }
                             )
                         }
                         .buttonStyle(PlainButtonStyle())
                     }
                 }
                 .padding(.horizontal, 20)
-                .padding(.vertical, 12)
+                .padding(.bottom, 80) // Space for FAB
             }
+            .refreshable {
+                await tournamentService.loadTournaments()
+                
+                if let userLocation = locationManager.location {
+                    await tournamentService.loadNearbyTournaments(userLocation: userLocation)
+                } else {
+                    let milanoCenter = CLLocation(latitude: 45.4642, longitude: 9.1900)
+                    await tournamentService.loadNearbyTournaments(userLocation: milanoCenter)
+                }
+            }
+            
+            // Floating Action Button
+            Button(action: { showingCreateEvent = true }) {
+                SwiftUI.Image(systemName: "plus")
+                    .font(.system(size: 24, weight: .semibold))
+                    .foregroundColor(.white)
+                    .frame(width: 56, height: 56)
+                    .background(
+                        Circle()
+                            .fill(Color.blue)
+                            .shadow(color: Color.blue.opacity(0.3), radius: 8, x: 0, y: 4)
+                    )
+            }
+            .padding(20)
         }
         .sheet(isPresented: $showingCreateEvent) {
             CreateTournamentView()
+        }
+    }
+    
+    private func isUserRegistered(for tournament: Tournament) -> Bool {
+        guard let currentUserId = authService.currentUser?.id else { return false }
+        return tournament.tournamentParticipants.contains { $0.userId == currentUserId }
+    }
+    
+    private func handleRegisterTap(for tournament: Tournament) {
+        guard let tournamentId = tournament.id else { return }
+        
+        // Check if already registered
+        if isUserRegistered(for: tournament) {
+            print("User is already registered for this tournament")
+            return
+        }
+        
+        registeringTournamentId = tournamentId
+        
+        Task {
+            do {
+                let _ = try await tournamentService.registerForTournament(tournamentId: tournamentId)
+                
+                // Refresh tournaments to update UI
+                await tournamentService.loadTournaments()
+                
+                await MainActor.run {
+                    registeringTournamentId = nil
+                }
+            } catch {
+                await MainActor.run {
+                    registeringTournamentId = nil
+                    print("Registration failed: \(error.localizedDescription)")
+                }
+            }
         }
     }
 }
@@ -187,90 +315,114 @@ struct ShopCardView: View {
     let shop: Shop
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            // Header with verification
-            HStack(alignment: .top) {
-                VStack(alignment: .leading, spacing: 4) {
-                    HStack(spacing: 6) {
-                        Text(shop.name)
-                            .font(.system(size: 18, weight: .bold))
-                            .foregroundColor(.primary)
-                        
-                        if shop.isVerified {
-                            SwiftUI.Image(systemName: "checkmark.seal.fill")
-                                .font(.system(size: 14))
-                                .foregroundColor(.blue)
-                        }
+        VStack(alignment: .leading, spacing: 0) {
+            // Card Image / Map Placeholder
+            ZStack(alignment: .topTrailing) {
+                // Placeholder Gradient or Image
+                Rectangle()
+                    .fill(
+                        LinearGradient(
+                            gradient: Gradient(colors: [Color.blue.opacity(0.1), Color.purple.opacity(0.1)]),
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+                    .frame(height: 140)
+                    .overlay(
+                        SwiftUI.Image(systemName: "storefront.fill")
+                            .font(.system(size: 40))
+                            .foregroundColor(Color.blue.opacity(0.2))
+                    )
+                
+                // Verified Badge
+                if shop.isVerified {
+                    HStack(spacing: 4) {
+                        SwiftUI.Image(systemName: "checkmark.seal.fill")
+                            .font(.system(size: 12))
+                        Text("VERIFIED")
+                            .font(.system(size: 10, weight: .bold))
                     }
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(
+                        Capsule()
+                            .fill(Color.blue)
+                    )
+                    .padding(12)
+                }
+            }
+            
+            VStack(alignment: .leading, spacing: 12) {
+                // Title and Address
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(shop.name)
+                        .font(.system(size: 20, weight: .bold))
+                        .foregroundColor(.primary)
                     
                     HStack(spacing: 4) {
-                        SwiftUI.Image(systemName: "mappin.circle.fill")
+                        SwiftUI.Image(systemName: "mappin.and.ellipse")
                             .font(.system(size: 12))
                             .foregroundColor(.secondary)
                         
                         Text(shop.address)
-                            .font(.system(size: 13, weight: .medium))
+                            .font(.system(size: 13))
                             .foregroundColor(.secondary)
+                            .lineLimit(1)
                     }
                 }
                 
-                Spacer()
-            }
-            
-            // Description
-            Text(shop.description ?? "")
-                .font(.system(size: 14))
-                .foregroundColor(.secondary)
-                .lineLimit(2)
-            
-            // TCG Types
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 8) {
-                    ForEach(shop.tcgTypes ?? [], id: \.self) { tcg in
-                        TCGTypeBadge(tcgType: tcg)
+                // Tags
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 8) {
+                        ForEach(shop.tcgTypes ?? [], id: \.self) { tcg in
+                            TCGTypeBadge(tcgType: tcg)
+                        }
+                        
+                        ForEach((shop.services ?? []).prefix(3), id: \.self) { service in
+                            Text(service)
+                                .font(.system(size: 11, weight: .medium))
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 4)
+                                .background(Color(.systemGray6))
+                                .cornerRadius(6)
+                                .foregroundColor(.secondary)
+                        }
                     }
                 }
-            }
-            
-            // Services
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 8) {
-                    ForEach((shop.services ?? []).prefix(4), id: \.self) { service in
-                        Text(service)
-                            .font(.system(size: 12))
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 4)
-                            .background(Color.blue.opacity(0.1))
-                            .cornerRadius(8)
+                
+                Divider()
+                    .padding(.vertical, 4)
+                
+                // Footer Info
+                HStack {
+                    // Status (Open/Closed) - Mock data for now
+                    HStack(spacing: 4) {
+                        Circle()
+                            .fill(Color.green)
+                            .frame(width: 8, height: 8)
+                        Text("Open Now")
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundColor(.green)
                     }
                     
-                    if (shop.services ?? []).count > 4 {
-                        Text("+\((shop.services ?? []).count - 4)")
-                            .font(.system(size: 11, weight: .semibold))
-                            .foregroundColor(.secondary)
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 4)
-                            .background(
-                                Capsule()
-                                    .fill(Color(.systemGray5))
-                            )
+                    Spacer()
+                    
+                    // Distance - Mock
+                    HStack(spacing: 4) {
+                        SwiftUI.Image(systemName: "location")
+                            .font(.system(size: 12))
+                        Text("1.2 km")
+                            .font(.system(size: 12, weight: .medium))
                     }
+                    .foregroundColor(.secondary)
                 }
             }
-            
-            // Opening Hours
-            // TODO: Add opening hours display
+            .padding(16)
         }
-        .padding(16)
-        .background(
-            RoundedRectangle(cornerRadius: 16)
-                .fill(Color(.secondarySystemGroupedBackground))
-                .shadow(color: Color.black.opacity(0.08), radius: 10, x: 0, y: 3)
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 16)
-                .stroke(Color(.separator).opacity(0.3), lineWidth: 1)
-        )
+        .background(Color(.systemBackground))
+        .cornerRadius(16)
+        .shadow(color: Color.black.opacity(0.08), radius: 12, x: 0, y: 4)
     }
 }
 

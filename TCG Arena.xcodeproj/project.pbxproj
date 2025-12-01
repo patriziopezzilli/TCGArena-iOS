@@ -7,6 +7,11 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		7883DF812EDE4BBC007D1C51 /* OnBoardingKit in Frameworks */ = {isa = PBXBuildFile; productRef = 7883DF802EDE4BBC007D1C51 /* OnBoardingKit */; };
+		7883DF862EDE4C9B007D1C51 /* WelcomeFlowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7883DF842EDE4C9B007D1C51 /* WelcomeFlowView.swift */; };
+		7883DF872EDE4C9B007D1C51 /* TCGArenaOnBoarding.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7883DF832EDE4C9B007D1C51 /* TCGArenaOnBoarding.swift */; };
+		7883DF882EDE4C9B007D1C51 /* ModernAuthView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7883DF822EDE4C9B007D1C51 /* ModernAuthView.swift */; };
+		7883DF8A2EDE53E8007D1C51 /* ButtonStyles.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7883DF892EDE53E8007D1C51 /* ButtonStyles.swift */; };
 		7A000AB32ED61E1D00A7E572 /* AdaptiveColors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A000AB12ED61E1D00A7E572 /* AdaptiveColors.swift */; };
 		7A1CC91D2ED1EC3B00A61395 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1CC91C2ED1EC3B00A61395 /* OnboardingView.swift */; };
 		7A1CC9292ED238D500A61395 /* CardModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1CC9202ED238D500A61395 /* CardModels.swift */; };
@@ -116,6 +121,10 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		7883DF822EDE4C9B007D1C51 /* ModernAuthView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModernAuthView.swift; sourceTree = "<group>"; };
+		7883DF832EDE4C9B007D1C51 /* TCGArenaOnBoarding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TCGArenaOnBoarding.swift; sourceTree = "<group>"; };
+		7883DF842EDE4C9B007D1C51 /* WelcomeFlowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeFlowView.swift; sourceTree = "<group>"; };
+		7883DF892EDE53E8007D1C51 /* ButtonStyles.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ButtonStyles.swift; sourceTree = "<group>"; };
 		7A000AB12ED61E1D00A7E572 /* AdaptiveColors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdaptiveColors.swift; sourceTree = "<group>"; };
 		7A1CC91C2ED1EC3B00A61395 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
 		7A1CC91E2ED238D500A61395 /* AchievementModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AchievementModels.swift; sourceTree = "<group>"; };
@@ -231,12 +240,23 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				7883DF812EDE4BBC007D1C51 /* OnBoardingKit in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		7883DF852EDE4C9B007D1C51 /* Auth */ = {
+			isa = PBXGroup;
+			children = (
+				7883DF822EDE4C9B007D1C51 /* ModernAuthView.swift */,
+				7883DF832EDE4C9B007D1C51 /* TCGArenaOnBoarding.swift */,
+				7883DF842EDE4C9B007D1C51 /* WelcomeFlowView.swift */,
+			);
+			path = Auth;
+			sourceTree = "<group>";
+		};
 		7A000AB22ED61E1D00A7E572 /* Helpers */ = {
 			isa = PBXGroup;
 			children = (
@@ -387,6 +407,7 @@
 		A5000005 /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				7883DF852EDE4C9B007D1C51 /* Auth */,
 				7A1CC9342ED238E800A61395 /* AchievementView.swift */,
 				7A1CC9352ED238E800A61395 /* LeaderboardView.swift */,
 				7A1CC9362ED238E800A61395 /* NotificationView.swift */,
@@ -473,6 +494,7 @@
 		A5000010 /* Components */ = {
 			isa = PBXGroup;
 			children = (
+				7883DF892EDE53E8007D1C51 /* ButtonStyles.swift */,
 				7AE3FF902EC89098004EE982 /* DeckRowView.swift */,
 				7A817B952EC76B0800500F32 /* TCGTypeBadge.swift */,
 				7A817B932EC76A1C00500F32 /* LocationInputView.swift */,
@@ -504,6 +526,7 @@
 			);
 			name = "TCG Arena";
 			packageProductDependencies = (
+				7883DF802EDE4BBC007D1C51 /* OnBoardingKit */,
 			);
 			productName = "TCG Arena";
 			productReference = A3000001 /* TCG Arena.app */;
@@ -534,6 +557,7 @@
 			);
 			mainGroup = A5000001;
 			packageReferences = (
+				7883DF7F2EDE4BBC007D1C51 /* XCRemoteSwiftPackageReference "OnBoardingKit" */,
 			);
 			productRefGroup = A5000003 /* Products */;
 			projectDirPath = "";
@@ -613,6 +637,9 @@
 				7A000AB32ED61E1D00A7E572 /* AdaptiveColors.swift in Sources */,
 				7A1CC92B2ED238D500A61395 /* RewardModels.swift in Sources */,
 				7A1CC92C2ED238D500A61395 /* AuthModels.swift in Sources */,
+				7883DF862EDE4C9B007D1C51 /* WelcomeFlowView.swift in Sources */,
+				7883DF872EDE4C9B007D1C51 /* TCGArenaOnBoarding.swift in Sources */,
+				7883DF882EDE4C9B007D1C51 /* ModernAuthView.swift in Sources */,
 				7A1CC92E2ED238D500A61395 /* AchievementModels.swift in Sources */,
 				7A1CC92F2ED238D500A61395 /* UserActivity.swift in Sources */,
 				7A1CC9302ED238D500A61395 /* NotificationModels.swift in Sources */,
@@ -636,6 +663,7 @@
 				7A7DF4152EBB943D00331A52 /* DeckBuilderView.swift in Sources */,
 				7A7DF4172EBB943D00331A52 /* CommunityView.swift in Sources */,
 				7A7DF41B2EBB943D00331A52 /* ProfileView.swift in Sources */,
+				7883DF8A2EDE53E8007D1C51 /* ButtonStyles.swift in Sources */,
 				A1000012 /* CardScannerView.swift in Sources */,
 				7A7DF3DF2EBB940300331A52 /* DeckService.swift in Sources */,
 				7A8B2E982EC21F61004F6826 /* CreateTournamentView.swift in Sources */,
@@ -888,6 +916,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		7883DF7F2EDE4BBC007D1C51 /* XCRemoteSwiftPackageReference "OnBoardingKit" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/mlbonniec/OnBoardingKit";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.1.3;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		7883DF802EDE4BBC007D1C51 /* OnBoardingKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 7883DF7F2EDE4BBC007D1C51 /* XCRemoteSwiftPackageReference "OnBoardingKit" */;
+			productName = OnBoardingKit;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = AA000001 /* Project object */;
 }

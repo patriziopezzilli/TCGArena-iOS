@@ -36,7 +36,7 @@ class InventoryService: ObservableObject {
         
         defer { isLoading = false }
         
-        var endpoint = "/api/inventory/merchant/\(merchantId)"
+        var endpoint = "/inventory/merchant/\(merchantId)"
         
         if let filters = filters {
             let queryParams = filters.queryParameters
@@ -80,7 +80,7 @@ class InventoryService: ObservableObject {
     // MARK: - Get Card by ID
     func getCard(id: String) async throws -> InventoryCard {
         return try await withCheckedThrowingContinuation { continuation in
-            apiClient.request(endpoint: "/api/inventory/\(id)", method: .get) { result in
+            apiClient.request(endpoint: "/inventory/\(id)", method: .get) { result in
                 switch result {
                 case .success(let data):
                     do {
@@ -108,7 +108,7 @@ class InventoryService: ObservableObject {
         let body = try encoder.encode(request)
         
         return try await withCheckedThrowingContinuation { continuation in
-            apiClient.request(endpoint: "/api/inventory", method: .post, body: body) { result in
+            apiClient.request(endpoint: "/inventory", method: .post, body: body) { result in
                 switch result {
                 case .success(let data):
                     do {
@@ -149,7 +149,7 @@ class InventoryService: ObservableObject {
         let body = try encoder.encode(request)
         
         return try await withCheckedThrowingContinuation { continuation in
-            apiClient.request(endpoint: "/api/inventory/\(id)", method: .patch, body: body) { result in
+            apiClient.request(endpoint: "/inventory/\(id)", method: .patch, body: body) { result in
                 switch result {
                 case .success(let data):
                     do {
@@ -188,7 +188,7 @@ class InventoryService: ObservableObject {
         defer { isLoading = false }
         
         return try await withCheckedThrowingContinuation { continuation in
-            apiClient.request(endpoint: "/api/inventory/\(id)", method: .delete) { result in
+            apiClient.request(endpoint: "/inventory/\(id)", method: .delete) { result in
                 switch result {
                 case .success:
                     Task { @MainActor in
@@ -216,7 +216,7 @@ class InventoryService: ObservableObject {
         let body = try JSONEncoder().encode(update)
         
         return try await withCheckedThrowingContinuation { continuation in
-            apiClient.request(endpoint: "/api/inventory/\(cardId)/quantity", method: .post, body: body) { result in
+            apiClient.request(endpoint: "/inventory/\(cardId)/quantity", method: .post, body: body) { result in
                 switch result {
                 case .success(let data):
                     do {

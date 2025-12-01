@@ -358,14 +358,12 @@ struct CreateTournamentView: View {
             prizePool: Double(prizePool) ?? 0.0,
             organizerId: Int64(authService.currentUser?.id ?? 0),
             location: Tournament.TournamentLocation(
-                name: locationName,
+                venueName: locationName,
                 address: locationAddress,
                 city: "Milano", // Default for demo
                 country: "Italy",
                 latitude: 45.4642,
-                longitude: 9.1900,
-                phoneNumber: nil,
-                website: nil
+                longitude: 9.1900
             ),
             rules: rules
         )

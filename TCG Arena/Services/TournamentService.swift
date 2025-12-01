@@ -8,6 +8,9 @@
 import Foundation
 import CoreLocation
 
+// Empty response for DELETE operations
+struct EmptyResponse: Codable {}
+
 class TournamentService: ObservableObject {
     static let shared = TournamentService()
     private let apiClient = APIClient.shared
@@ -25,7 +28,7 @@ class TournamentService: ObservableObject {
     // MARK: - Tournament Operations
     
     func getAllTournaments(completion: @escaping (Result<[Tournament], Error>) -> Void) {
-        apiClient.request(endpoint: "/api/tournaments", method: .get) { result in
+        apiClient.request(endpoint: "/tournaments", method: .get) { result in
             switch result {
             case .success(let data):
                 do {
@@ -41,7 +44,7 @@ class TournamentService: ObservableObject {
     }
     
     func getTournamentById(_ id: Int64, completion: @escaping (Result<Tournament, Error>) -> Void) {
-        apiClient.request(endpoint: "/api/tournaments/\(id)", method: .get) { result in
+        apiClient.request(endpoint: "/tournaments/\(id)", method: .get) { result in
             switch result {
             case .success(let data):
                 do {
@@ -57,7 +60,7 @@ class TournamentService: ObservableObject {
     }
     
     func getUpcomingTournaments(completion: @escaping (Result<[Tournament], Error>) -> Void) {
-        apiClient.request(endpoint: "/api/tournaments/upcoming", method: .get) { result in
+        apiClient.request(endpoint: "/tournaments/upcoming", method: .get) { result in
             switch result {
             case .success(let data):
                 do {
@@ -73,7 +76,7 @@ class TournamentService: ObservableObject {
     }
     
     func getNearbyTournaments(latitude: Double, longitude: Double, radiusKm: Double = 50, completion: @escaping (Result<[Tournament], Error>) -> Void) {
-        let endpoint = "/api/tournaments/nearby?latitude=\(latitude)&longitude=\(longitude)&radiusKm=\(radiusKm)"
+        let endpoint = "/tournaments/nearby?latitude=\(latitude)&longitude=\(longitude)&radiusKm=\(radiusKm)"
         apiClient.request(endpoint: endpoint, method: .get) { result in
             switch result {
             case .success(let data):
@@ -92,7 +95,7 @@ class TournamentService: ObservableObject {
     func createTournament(_ tournament: Tournament, completion: @escaping (Result<Tournament, Error>) -> Void) {
         do {
             let data = try JSONEncoder().encode(tournament)
-            apiClient.request(endpoint: "/api/tournaments", method: .post, body: data) { result in
+            apiClient.request(endpoint: "/tournaments", method: .post, body: data) { result in
                 switch result {
                 case .success(let data):
                     do {
@@ -113,7 +116,7 @@ class TournamentService: ObservableObject {
     func updateTournament(_ id: Int64, tournament: Tournament, completion: @escaping (Result<Tournament, Error>) -> Void) {
         do {
             let data = try JSONEncoder().encode(tournament)
-            apiClient.request(endpoint: "/api/tournaments/\(id)", method: .put, body: data) { result in
+            apiClient.request(endpoint: "/tournaments/\(id)", method: .put, body: data) { result in
                 switch result {
                 case .success(let data):
                     do {
@@ -132,7 +135,7 @@ class TournamentService: ObservableObject {
     }
     
     func deleteTournament(_ id: Int64, completion: @escaping (Result<Void, Error>) -> Void) {
-        apiClient.request(endpoint: "/api/tournaments/\(id)", method: .delete) { result in
+        apiClient.request(endpoint: "/tournaments/\(id)", method: .delete) { result in
             switch result {
             case .success:
                 completion(.success(()))
@@ -143,6 +146,25 @@ class TournamentService: ObservableObject {
     }
     
     // MARK: - User Interface Methods
+    
+    // Async/await version for modern SwiftUI views
+    func getTournaments(tcgType: TCGType? = nil, status: Tournament.TournamentStatus? = nil, shopId: Int64? = nil) async throws -> (tournaments: [Tournament], total: Int) {
+        let tournaments: [Tournament] = try await apiClient.request("/tournaments", method: "GET")
+        
+        // Apply filters if provided
+        var filtered = tournaments
+        if let tcgType = tcgType {
+            filtered = filtered.filter { $0.tcgType == tcgType }
+        }
+        if let status = status {
+            filtered = filtered.filter { $0.status == status }
+        }
+        if let shopId = shopId {
+            filtered = filtered.filter { $0.organizerId == shopId }
+        }
+        
+        return (tournaments: filtered, total: filtered.count)
+    }
     
     func loadTournaments() {
         isLoading = true
@@ -161,6 +183,24 @@ class TournamentService: ObservableObject {
         }
     }
     
+    // Async version for SwiftUI tasks
+    @MainActor
+    func loadTournaments() async {
+        isLoading = true
+        errorMessage = nil
+        
+        do {
+            let result = try await getTournaments()
+            self.tournaments = result.tournaments
+            print("Loaded \(result.tournaments.count) tournaments")
+        } catch {
+            self.errorMessage = error.localizedDescription
+            print("Error loading tournaments: \(error)")
+        }
+        
+        isLoading = false
+    }
+    
     func loadNearbyTournaments(userLocation: CLLocation, radius: Double = 50) {
         isLoading = true
         errorMessage = nil
@@ -169,7 +209,13 @@ class TournamentService: ObservableObject {
             DispatchQueue.main.async {
                 switch result {
                 case .success(let tournaments):
-                    self.nearbyTournaments = tournaments
+                    // If nearby returns empty and we have tournaments loaded, use those instead
+                    if tournaments.isEmpty && !self.tournaments.isEmpty {
+                        print("No nearby tournaments with coordinates, showing all tournaments")
+                        self.nearbyTournaments = self.tournaments
+                    } else {
+                        self.nearbyTournaments = tournaments
+                    }
                 case .failure(let error):
                     self.errorMessage = error.localizedDescription
                     // Fallback to all tournaments if nearby fails
@@ -178,6 +224,39 @@ class TournamentService: ObservableObject {
                 self.isLoading = false
             }
         }
+    }
+    
+    // Async version for SwiftUI tasks
+    @MainActor
+    func loadNearbyTournaments(userLocation: CLLocation, radius: Double = 50) async {
+        isLoading = true
+        errorMessage = nil
+        
+        // First ensure we have all tournaments loaded
+        if tournaments.isEmpty {
+            await loadTournaments()
+        }
+        
+        // Then try to get nearby ones
+        do {
+            let nearbyResult = try await apiClient.request("/tournaments/nearby?latitude=\(userLocation.coordinate.latitude)&longitude=\(userLocation.coordinate.longitude)&radiusKm=\(radius)", method: "GET") as [Tournament]
+            
+            // If nearby returns empty but we have tournaments loaded, use those instead
+            if nearbyResult.isEmpty && !self.tournaments.isEmpty {
+                print("No nearby tournaments with coordinates, showing all \(self.tournaments.count) tournaments")
+                self.nearbyTournaments = self.tournaments
+            } else {
+                print("Loaded \(nearbyResult.count) nearby tournaments")
+                self.nearbyTournaments = nearbyResult
+            }
+        } catch {
+            print("Error loading nearby tournaments: \(error), using all tournaments as fallback")
+            self.errorMessage = error.localizedDescription
+            // Fallback to all tournaments if nearby fails
+            self.nearbyTournaments = self.tournaments
+        }
+        
+        isLoading = false
     }
     
     func createTournament(_ tournament: Tournament) {
@@ -200,7 +279,7 @@ class TournamentService: ObservableObject {
     // MARK: - Tournament Registration
     
     func registerForTournament(tournamentId: Int64, completion: @escaping (Result<TournamentParticipant, Error>) -> Void) {
-        apiClient.request(endpoint: "/api/tournaments/\(tournamentId)/register", method: .post) { result in
+        apiClient.request(endpoint: "/tournaments/\(tournamentId)/register", method: .post) { result in
             switch result {
             case .success(let data):
                 do {
@@ -215,8 +294,16 @@ class TournamentService: ObservableObject {
         }
     }
     
+    // Async version for SwiftUI
+    @MainActor
+    func registerForTournament(tournamentId: Int64) async throws -> TournamentParticipant {
+        let participant: TournamentParticipant = try await apiClient.request("/tournaments/\(tournamentId)/register", method: "POST")
+        print("Successfully registered for tournament \(tournamentId)")
+        return participant
+    }
+    
     func unregisterFromTournament(tournamentId: Int64, completion: @escaping (Result<Void, Error>) -> Void) {
-        apiClient.request(endpoint: "/api/tournaments/\(tournamentId)/register", method: .delete) { result in
+        apiClient.request(endpoint: "/tournaments/\(tournamentId)/register", method: .delete) { result in
             switch result {
             case .success:
                 completion(.success(()))
@@ -226,8 +313,15 @@ class TournamentService: ObservableObject {
         }
     }
     
+    // Async version for SwiftUI
+    @MainActor
+    func unregisterFromTournament(tournamentId: Int64) async throws {
+        let _: EmptyResponse = try await apiClient.request("/tournaments/\(tournamentId)/register", method: "DELETE")
+        print("Successfully unregistered from tournament \(tournamentId)")
+    }
+    
     func getTournamentParticipants(tournamentId: Int64, completion: @escaping (Result<[TournamentParticipant], Error>) -> Void) {
-        apiClient.request(endpoint: "/api/tournaments/\(tournamentId)/participants", method: .get) { result in
+        apiClient.request(endpoint: "/tournaments/\(tournamentId)/participants", method: .get) { result in
             switch result {
             case .success(let data):
                 do {
@@ -243,7 +337,7 @@ class TournamentService: ObservableObject {
     }
     
     func getRegisteredParticipants(tournamentId: Int64, completion: @escaping (Result<[TournamentParticipant], Error>) -> Void) {
-        apiClient.request(endpoint: "/api/tournaments/\(tournamentId)/participants/registered", method: .get) { result in
+        apiClient.request(endpoint: "/tournaments/\(tournamentId)/participants/registered", method: .get) { result in
             switch result {
             case .success(let data):
                 do {
@@ -259,7 +353,7 @@ class TournamentService: ObservableObject {
     }
     
     func getWaitingList(tournamentId: Int64, completion: @escaping (Result<[TournamentParticipant], Error>) -> Void) {
-        apiClient.request(endpoint: "/api/tournaments/\(tournamentId)/participants/waiting", method: .get) { result in
+        apiClient.request(endpoint: "/tournaments/\(tournamentId)/participants/waiting", method: .get) { result in
             switch result {
             case .success(let data):
                 do {
@@ -319,7 +413,7 @@ class TournamentService: ObservableObject {
             encoder.keyEncodingStrategy = .convertToSnakeCase
             let body = try encoder.encode(request)
             
-            apiClient.request(endpoint: "/api/tournaments/\(tournamentId)/start", method: .post, body: body) { result in
+            apiClient.request(endpoint: "/tournaments/\(tournamentId)/start", method: .post, body: body) { result in
                 switch result {
                 case .success(let data):
                     do {
@@ -348,7 +442,7 @@ class TournamentService: ObservableObject {
             encoder.keyEncodingStrategy = .convertToSnakeCase
             let body = try encoder.encode(request)
             
-            apiClient.request(endpoint: "/api/tournaments/\(tournamentId)/round/matchmaking", method: .post, body: body) { result in
+            apiClient.request(endpoint: "/tournaments/\(tournamentId)/round/matchmaking", method: .post, body: body) { result in
                 switch result {
                 case .success(let data):
                     do {
@@ -377,7 +471,7 @@ class TournamentService: ObservableObject {
             encoder.keyEncodingStrategy = .convertToSnakeCase
             let body = try encoder.encode(request)
             
-            apiClient.request(endpoint: "/api/matches/\(matchId)/result", method: .post, body: body) { result in
+            apiClient.request(endpoint: "/matches/\(matchId)/result", method: .post, body: body) { result in
                 switch result {
                 case .success(let data):
                     do {
@@ -408,7 +502,7 @@ class TournamentService: ObservableObject {
             encoder.keyEncodingStrategy = .convertToSnakeCase
             let body = try encoder.encode(request)
             
-            apiClient.request(endpoint: "/api/tournaments/\(tournamentId)/register", method: .post, body: body) { result in
+            apiClient.request(endpoint: "/tournaments/\(tournamentId)/register", method: .post, body: body) { result in
                 switch result {
                 case .success(let data):
                     do {
@@ -437,7 +531,7 @@ class TournamentService: ObservableObject {
             encoder.keyEncodingStrategy = .convertToSnakeCase
             let body = try encoder.encode(request)
             
-            apiClient.request(endpoint: "/api/tournaments/\(tournamentId)/drop", method: .post, body: body) { result in
+            apiClient.request(endpoint: "/tournaments/\(tournamentId)/drop", method: .post, body: body) { result in
                 switch result {
                 case .success:
                     completion(.success(()))
@@ -454,7 +548,7 @@ class TournamentService: ObservableObject {
     
     /// Get tournament detail with all data
     func getTournamentDetail(tournamentId: String, completion: @escaping (Result<TournamentDetailResponse, Error>) -> Void) {
-        apiClient.request(endpoint: "/api/tournaments/\(tournamentId)/detail", method: .get) { result in
+        apiClient.request(endpoint: "/tournaments/\(tournamentId)/detail", method: .get) { result in
             switch result {
             case .success(let data):
                 do {
@@ -474,7 +568,7 @@ class TournamentService: ObservableObject {
     
     /// Get current user's match pairing
     func getUserPairing(tournamentId: String, completion: @escaping (Result<MatchPairingResponse, Error>) -> Void) {
-        apiClient.request(endpoint: "/api/tournaments/\(tournamentId)/my-match", method: .get) { result in
+        apiClient.request(endpoint: "/tournaments/\(tournamentId)/my-match", method: .get) { result in
             switch result {
             case .success(let data):
                 do {
@@ -494,7 +588,7 @@ class TournamentService: ObservableObject {
     
     /// Get tournament standings
     func getStandings(tournamentId: String, completion: @escaping (Result<StandingsResponse, Error>) -> Void) {
-        apiClient.request(endpoint: "/api/tournaments/\(tournamentId)/standings", method: .get) { result in
+        apiClient.request(endpoint: "/tournaments/\(tournamentId)/standings", method: .get) { result in
             switch result {
             case .success(let data):
                 do {
@@ -514,7 +608,7 @@ class TournamentService: ObservableObject {
     
     /// Get tournament bracket (for single elimination)
     func getBracket(tournamentId: String, completion: @escaping (Result<[TournamentRound], Error>) -> Void) {
-        apiClient.request(endpoint: "/api/tournaments/\(tournamentId)/bracket", method: .get) { result in
+        apiClient.request(endpoint: "/tournaments/\(tournamentId)/bracket", method: .get) { result in
             switch result {
             case .success(let data):
                 do {

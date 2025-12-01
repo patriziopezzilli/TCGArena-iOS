@@ -19,13 +19,12 @@ enum ShopServiceType {
     case onlineStore
 }
 
-
-
 struct ShopDetailView: View {
     let shop: Shop
     @EnvironmentObject var shopService: ShopService
-    @State private var selectedTab = 0
+    @Environment(\.presentationMode) var presentationMode
     @State private var showingSubscribeAlert = false
+    @State private var scrollOffset: CGFloat = 0
     
     private var alertTitle: String {
         shopService.isSubscribed(to: shop.id.description) ? "Subscribed!" : "Unsubscribed"
@@ -37,251 +36,331 @@ struct ShopDetailView: View {
         : "You won't receive notifications from \(shop.name) anymore."
     }
     
-    private var newsSection: some View {
-        if !shopService.getNews(for: shop.id.description).isEmpty {
-            return AnyView(
-                VStack(spacing: 0) {
-                    VStack(alignment: .leading, spacing: 12) {
-                        HStack {
-                            SwiftUI.Image(systemName: "newspaper.fill")
-                                .font(.system(size: 18))
-                                .foregroundColor(.blue)
-                            
-                            Text("News & Updates")
-                                .font(.system(size: 20, weight: .bold))
-                                .foregroundColor(.primary)
-                            
-                            Spacer()
-                            
-                            // Subscribe Bell Icon
-                            Button(action: {
-                                shopService.toggleSubscription(for: String(shop.id))
-                                showingSubscribeAlert = true
-                            }) {
-                                SwiftUI.Image(systemName: shopService.isSubscribed(to: String(shop.id)) ? "bell.fill" : "bell")
-                                    .font(.system(size: 20, weight: .semibold))
-                                    .foregroundColor(shopService.isSubscribed(to: String(shop.id)) ? .green : .gray)
-                            }
-                        }
-                        
-                        VStack(spacing: 12) {
-                            ForEach(shopService.getNews(for: shop.id.description)) { newsItem in
-                                NewsCardView(news: newsItem)
-                            }
-                        }
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    
-                    Divider()
-                }
-            )
-        } else {
-            return AnyView(EmptyView())
-        }
-    }
-    
     var body: some View {
-        ScrollView {
-            VStack(spacing: 0) {
-                // Header Image Placeholder
-                ZStack(alignment: .bottomLeading) {
-                    Rectangle()
-                        .fill(
+        ZStack(alignment: .top) {
+            Color(.systemGroupedBackground)
+                .ignoresSafeArea()
+            
+            ScrollView {
+                VStack(spacing: 0) {
+                    // Header
+                    GeometryReader { geometry in
+                        let offset = geometry.frame(in: .global).minY
+                        
+                        ZStack(alignment: .bottomLeading) {
+                            // Background Gradient
                             LinearGradient(
-                                gradient: Gradient(colors: [Color.blue.opacity(0.6), Color.purple.opacity(0.6)]),
+                                gradient: Gradient(colors: [Color.indigo, Color.purple.opacity(0.8)]),
                                 startPoint: .topLeading,
                                 endPoint: .bottomTrailing
                             )
-                        )
-                        .frame(height: 200)
-                    
-                    HStack(spacing: 8) {
-                        Text(shop.name)
-                            .font(.system(size: 28, weight: .bold))
-                            .foregroundColor(.white)
-                        
-                        if shop.isVerified {
-                            SwiftUI.Image(systemName: "checkmark.seal.fill")
-                                .font(.system(size: 20))
-                                .foregroundColor(.white)
-                        }
-                    }
-                    .padding(20)
-                }
-                
-                // Subscribe Button (removed from here)
-                
-                // Info Section
-                VStack(spacing: 24) {
-                    newsSection
-                    
-                    // Description
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("About")
-                            .font(.system(size: 20, weight: .bold))
-                            .foregroundColor(.primary)
-                        
-                        Text(shop.description ?? "")
-                            .font(.system(size: 15))
-                            .foregroundColor(.secondary)
-                            .lineLimit(nil)
-                    }
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                
-                Divider()
-                
-                // Opening Hours
-                VStack(alignment: .leading, spacing: 12) {
-                    Text("Opening Hours")
-                        .font(.system(size: 18, weight: .bold))
-                        .foregroundColor(.primary)
-                    
-                    VStack(spacing: 8) {
-                        if let openingDays = shop.openingDays {
-                            HStack(alignment: .top) {
-                                SwiftUI.Image(systemName: "calendar")
-                                    .font(.system(size: 16))
-                                    .foregroundColor(.blue)
-                                    .frame(width: 20)
-                                
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text("Days")
-                                        .font(.system(size: 14, weight: .medium))
-                                        .foregroundColor(.secondary)
-                                    
-                                    Text(openingDays)
-                                        .font(.system(size: 15))
-                                        .foregroundColor(.primary)
-                                }
-                            }
-                        }
-                        
-                        if let openingHours = shop.openingHours {
-                            HStack(alignment: .top) {
-                                SwiftUI.Image(systemName: "clock")
-                                    .font(.system(size: 16))
-                                    .foregroundColor(.green)
-                                    .frame(width: 20)
-                                
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text("Hours")
-                                        .font(.system(size: 14, weight: .medium))
-                                        .foregroundColor(.secondary)
-                                    
-                                    Text(openingHours)
-                                        .font(.system(size: 15))
-                                        .foregroundColor(.primary)
-                                }
-                            }
-                        }
-                        
-                        if shop.openingHours == nil && shop.openingDays == nil {
-                            Text("Hours not available")
-                                .font(.system(size: 15))
-                                .foregroundColor(.secondary)
-                                .italic()
-                        }
-                    }
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                
-                Divider()
-                
-                // Location
-                VStack(alignment: .leading, spacing: 12) {
-                    Text("Location")
-                        .font(.system(size: 18, weight: .bold))
-                        .foregroundColor(.primary)
-                    
-                    VStack(alignment: .leading, spacing: 8) {
-                        HStack(spacing: 8) {
-                            SwiftUI.Image(systemName: "mappin.circle.fill")
-                                .font(.system(size: 16))
-                                .foregroundColor(.red)
-                            
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(shop.address)
-                                    .font(.system(size: 15))
-                                    .foregroundColor(.primary)
-                            }
-                        }
-                        
-                        // Map Preview
-                        if let latitude = shop.latitude, let longitude = shop.longitude {
-                            Map(coordinateRegion: .constant(MKCoordinateRegion(
-                                center: CLLocationCoordinate2D(latitude: latitude, longitude: longitude),
-                                span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
-                            )), annotationItems: [shop]) { shop in
-                                MapMarker(coordinate: CLLocationCoordinate2D(latitude: shop.latitude ?? 0, longitude: shop.longitude ?? 0), tint: .red)
-                            }
-                            .frame(height: 200)
-                            .cornerRadius(12)
-                            .disabled(true)
-                        }
-                        
-                        // Navigate Button
-                        Button(action: {
-                            openInMaps()
-                        }) {
-                            HStack(spacing: 8) {
-                                SwiftUI.Image(systemName: "location.fill")
-                                    .font(.system(size: 14, weight: .semibold))
-                                
-                                Text("Open in Maps")
-                                    .font(.system(size: 15, weight: .semibold))
-                            }
-                            .foregroundColor(.white)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 12)
-                            .background(
-                                RoundedRectangle(cornerRadius: 10)
-                                    .fill(Color.blue)
+                            .overlay(
+                                SwiftUI.Image(systemName: "storefront.fill")
+                                    .font(.system(size: 70))
+                                    .foregroundColor(.white.opacity(0.15))
+                                    .offset(x: 20, y: -20)
                             )
+                            .frame(height: max(250, 250 + offset))
+                            .clipped()
+                            
+                            // Gradient Overlay
+                            LinearGradient(
+                                gradient: Gradient(colors: [.clear, .black.opacity(0.6)]),
+                                startPoint: .top,
+                                endPoint: .bottom
+                            )
+                            .frame(height: 100)
+                            .offset(y: min(0, -offset))
+                            
+                            VStack(alignment: .leading, spacing: 8) {
+                                HStack(spacing: 8) {
+                                    Text(shop.name)
+                                        .font(.system(size: 28, weight: .bold))
+                                        .foregroundColor(.white)
+                                        .shadow(radius: 4)
+                                    
+                                    if shop.isVerified {
+                                        SwiftUI.Image(systemName: "checkmark.seal.fill")
+                                            .font(.system(size: 20))
+                                            .foregroundColor(.blue)
+                                    }
+                                }
+                                
+                                HStack(spacing: 6) {
+                                    SwiftUI.Image(systemName: "mappin.and.ellipse")
+                                        .font(.system(size: 13))
+                                    Text(shop.address)
+                                        .font(.system(size: 13, weight: .medium))
+                                        .lineLimit(1)
+                                }
+                                .foregroundColor(.white.opacity(0.9))
+                                .shadow(radius: 2)
+                            }
+                            .padding(20)
+                            .offset(y: min(0, -offset))
                         }
                     }
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                
-                Divider()
-                
-                // Contact
-                VStack(alignment: .leading, spacing: 12) {
-                    Text("Contact")
-                        .font(.system(size: 18, weight: .bold))
-                        .foregroundColor(.primary)
+                    .frame(height: 250)
                     
-                    VStack(spacing: 12) {
-                        if let phone = shop.phoneNumber {
-                            ContactRow(icon: "phone.fill", text: phone, color: .green)
+                    VStack(spacing: 24) {
+                        // Subscription Status/Button
+                        VStack(spacing: 16) {
+                            if shopService.isSubscribed(to: String(shop.id)) {
+                                // Subscribed Status Card
+                                HStack {
+                                    SwiftUI.Image(systemName: "bell.badge.fill")
+                                        .font(.system(size: 24))
+                                        .foregroundColor(.orange)
+                                    
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text("Notifications Active")
+                                            .font(.system(size: 18, weight: .bold))
+                                            .foregroundColor(.primary)
+                                        
+                                        Text("You'll receive updates from this store")
+                                            .font(.system(size: 14))
+                                            .foregroundColor(.secondary)
+                                    }
+                                    Spacer()
+                                }
+                                .padding(20)
+                                .background(Color(.systemBackground))
+                                .cornerRadius(16)
+                                .shadow(color: Color.black.opacity(0.05), radius: 8, x: 0, y: 2)
+                                
+                                // Unsubscribe Button
+                                Button(action: {
+                                    withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                                        shopService.toggleSubscription(for: String(shop.id))
+                                        showingSubscribeAlert = true
+                                    }
+                                }) {
+                                    HStack {
+                                        SwiftUI.Image(systemName: "bell.slash.fill")
+                                            .font(.system(size: 16))
+                                        Text("Unsubscribe")
+                                            .font(.system(size: 16, weight: .semibold))
+                                    }
+                                    .foregroundColor(.orange)
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 12)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 12)
+                                            .stroke(Color.orange, lineWidth: 2)
+                                    )
+                                }
+                                .buttonStyle(ScaleButtonStyle())
+                            } else {
+                                // Subscribe Button
+                                Button(action: {
+                                    withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                                        shopService.toggleSubscription(for: String(shop.id))
+                                        showingSubscribeAlert = true
+                                    }
+                                }) {
+                                    HStack {
+                                        SwiftUI.Image(systemName: "bell.fill")
+                                            .font(.system(size: 16))
+                                        Text("Subscribe for Updates")
+                                            .font(.system(size: 18, weight: .bold))
+                                    }
+                                    .foregroundColor(.white)
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 16)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 16)
+                                            .fill(Color.orange)
+                                            .shadow(color: Color.orange.opacity(0.3), radius: 8, x: 0, y: 4)
+                                    )
+                                }
+                                .buttonStyle(ScaleButtonStyle())
+                            }
+                        }
+                        .padding(.horizontal, 20)
+                        
+                        // Quick Info Grid
+                        LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
+                            if let phone = shop.phoneNumber {
+                                QuickInfoCard(icon: "phone.fill", title: "Phone", value: phone, color: .green) {
+                                    if let url = URL(string: "tel://\(phone.replacingOccurrences(of: " ", with: ""))") {
+                                        UIApplication.shared.open(url)
+                                    }
+                                }
+                            }
+                            
+                            if shop.latitude != nil && shop.longitude != nil {
+                                QuickInfoCard(icon: "mappin.circle.fill", title: "Navigate", value: "Directions", color: .red) {
+                                    openInMaps()
+                                }
+                            }
+                            
+                            if let website = shop.websiteUrl {
+                                QuickInfoCard(icon: "globe", title: "Website", value: "Visit", color: .blue) {
+                                    if let url = URL(string: website.hasPrefix("http") ? website : "https://\(website)") {
+                                        UIApplication.shared.open(url)
+                                    }
+                                }
+                            }
+                        }
+                        .padding(.horizontal, 20)
+                        
+                        // News Section
+                        if !shopService.getNews(for: shop.id.description).isEmpty {
+                            VStack(alignment: .leading, spacing: 16) {
+                                SectionHeader(title: "Latest News", icon: "newspaper.fill", color: .purple)
+                                    .padding(.horizontal, 20)
+                                
+                                VStack(spacing: 12) {
+                                    ForEach(shopService.getNews(for: shop.id.description).prefix(3)) { newsItem in
+                                        CompactNewsCard(news: newsItem)
+                                    }
+                                }
+                                .padding(.horizontal, 20)
+                            }
                         }
                         
-                        if let email = shop.email {
-                            ContactRow(icon: "envelope.fill", text: email, color: .orange)
+                        // About Section
+                        VStack(alignment: .leading, spacing: 16) {
+                            SectionHeader(title: "About", icon: "info.circle.fill", color: .blue)
+                            
+                            VStack(alignment: .leading, spacing: 12) {
+                                Text(shop.description ?? "No description available.")
+                                    .font(.system(size: 15))
+                                    .foregroundColor(.secondary)
+                                    .lineSpacing(4)
+                                
+                                // Services
+                                if let services = shop.services, !services.isEmpty {
+                                    Divider()
+                                        .padding(.vertical, 4)
+                                    
+                                    Text("Services")
+                                        .font(.system(size: 14, weight: .semibold))
+                                        .foregroundColor(.primary)
+                                    
+                                    FlowLayout(spacing: 8) {
+                                        ForEach(services, id: \.self) { service in
+                                            Text(service)
+                                                .font(.system(size: 13, weight: .medium))
+                                                .foregroundColor(.blue)
+                                                .padding(.horizontal, 12)
+                                                .padding(.vertical, 6)
+                                                .background(Color.blue.opacity(0.1))
+                                                .cornerRadius(8)
+                                        }
+                                    }
+                                }
+                            }
+                            .padding(16)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .background(Color(.systemBackground))
+                            .cornerRadius(12)
+                        }
+                        .padding(.horizontal, 20)
+                        
+                        // Location Section
+                        if shop.latitude != nil && shop.longitude != nil {
+                            VStack(alignment: .leading, spacing: 16) {
+                                SectionHeader(title: "Location", icon: "mappin.circle.fill", color: .red)
+                                
+                                VStack(alignment: .leading, spacing: 12) {
+                                    Text(shop.address)
+                                        .font(.system(size: 15, weight: .medium))
+                                    
+                                    HStack(alignment: .top, spacing: 8) {
+                                        SwiftUI.Image(systemName: "clock.fill")
+                                            .foregroundColor(.orange)
+                                            .font(.system(size: 14))
+                                        
+                                        if let hours = shop.openingHours {
+                                            VStack(alignment: .leading, spacing: 2) {
+                                                Text("Open Today")
+                                                    .font(.system(size: 14, weight: .medium))
+                                                Text(hours)
+                                                    .font(.system(size: 13))
+                                                    .foregroundColor(.secondary)
+                                            }
+                                        } else {
+                                            Text("Hours not available")
+                                                .font(.system(size: 13))
+                                                .foregroundColor(.secondary)
+                                        }
+                                    }
+                                    
+                                    Button(action: openInMaps) {
+                                        Text("Get Directions")
+                                            .font(.system(size: 14, weight: .medium))
+                                            .foregroundColor(.blue)
+                                    }
+                                }
+                                .padding(16)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .background(Color(.systemBackground))
+                                .cornerRadius(12)
+                            }
+                            .padding(.horizontal, 20)
                         }
                         
-                        if let website = shop.websiteUrl {
-                            ContactRow(icon: "globe", text: website, color: .purple)
+                        // Contact Section
+                        if shop.email != nil || shop.instagramUrl != nil || shop.facebookUrl != nil {
+                            VStack(alignment: .leading, spacing: 16) {
+                                SectionHeader(title: "Social", icon: "at.circle.fill", color: .pink)
+                                
+                                VStack(spacing: 12) {
+                                    if let email = shop.email {
+                                        SocialButton(icon: "envelope.fill", title: "Email", color: .blue) {
+                                            if let url = URL(string: "mailto:\(email)") {
+                                                UIApplication.shared.open(url)
+                                            }
+                                        }
+                                    }
+                                    
+                                    if let instagram = shop.instagramUrl {
+                                        SocialButton(icon: "camera.fill", title: "Instagram", color: .pink) {
+                                            if let url = URL(string: instagram.hasPrefix("http") ? instagram : "https://instagram.com/\(instagram)") {
+                                                UIApplication.shared.open(url)
+                                            }
+                                        }
+                                    }
+                                    
+                                    if let facebook = shop.facebookUrl {
+                                        SocialButton(icon: "f.square.fill", title: "Facebook", color: .blue) {
+                                            if let url = URL(string: facebook.hasPrefix("http") ? facebook : "https://facebook.com/\(facebook)") {
+                                                UIApplication.shared.open(url)
+                                            }
+                                        }
+                                    }
+                                }
+                                .padding(16)
+                                .background(Color(.systemBackground))
+                                .cornerRadius(12)
+                            }
+                            .padding(.horizontal, 20)
                         }
                         
-                        if let instagram = shop.instagramUrl {
-                            ContactRow(icon: "camera.fill", text: instagram, color: .pink)
-                        }
-                        
-                        if let facebook = shop.facebookUrl {
-                            ContactRow(icon: "f.circle.fill", text: facebook, color: .blue)
-                        }
-                        
-                        if let twitter = shop.twitterUrl {
-                            ContactRow(icon: "bird.fill", text: twitter, color: .cyan)
-                        }
+                        Spacer(minLength: 40)
                     }
+                    .padding(.top, 24)
+                    .background(Color(.systemGroupedBackground))
                 }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(20)
             }
+            .edgesIgnoringSafeArea(.top)
+            
+            // Custom Navigation Bar
+            HStack {
+                Button(action: { presentationMode.wrappedValue.dismiss() }) {
+                    SwiftUI.Image(systemName: "arrow.left")
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundColor(.white)
+                        .padding(10)
+                        .background(Circle().fill(Color.black.opacity(0.5)))
+                }
+                Spacer()
+            }
+            .padding(.horizontal, 20)
+            .padding(.top, 50) // Adjust for safe area
         }
-        .navigationBarTitleDisplayMode(.inline)
+        .navigationBarHidden(true)
         .alert(alertTitle, isPresented: $showingSubscribeAlert) {
             Button("OK", role: .cancel) { }
         } message: {
@@ -292,181 +371,192 @@ struct ShopDetailView: View {
     private func openInMaps() {
         guard let latitude = shop.latitude, let longitude = shop.longitude else { return }
         let coordinate = CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
-        let address = shop.address
-        
-        // Try to open in Apple Maps
-        let urlString = "http://maps.apple.com/?daddr=\(coordinate.latitude),\(coordinate.longitude)&dirflg=d"
-        if let url = URL(string: urlString) {
-            if UIApplication.shared.canOpenURL(url) {
-                UIApplication.shared.open(url)
-                return
-            }
-        }
-        
-        // Fallback to Google Maps
-        let googleMapsString = "comgooglemaps://?daddr=\(coordinate.latitude),\(coordinate.longitude)&directionsmode=driving"
-        if let googleUrl = URL(string: googleMapsString) {
-            if UIApplication.shared.canOpenURL(googleUrl) {
-                UIApplication.shared.open(googleUrl)
-                return
-            }
-        }
-        
-        // Last fallback: open in browser
-        if let encodedAddress = address.addingPercentEncoding(withAllowedCharacters: CharacterSet.urlQueryAllowed),
-           let webUrl = URL(string: "https://maps.google.com/?q=\(encodedAddress)") {
-            UIApplication.shared.open(webUrl)
-        }
+        let mapItem = MKMapItem(placemark: MKPlacemark(coordinate: coordinate))
+        mapItem.name = shop.name
+        mapItem.openInMaps()
     }
     
-    private func iconForService(_ service: ShopServiceType) -> String {
-        switch service {
-        case .cardSales: return "cart.fill"
-        case .buyCards: return "dollarsign.circle.fill"
-        case .tournaments: return "trophy.fill"
-        case .playArea: return "gamecontroller.fill"
-        case .grading: return "checkmark.seal.fill"
-        case .accessories: return "bag.fill"
-        case .preorders: return "calendar.badge.clock"
-        case .onlineStore: return "laptopcomputer"
-        }
-    }
+    // MARK: - Subviews
     
-    
-    
-    
-    
-    
-    // MARK: - News Card View
-    struct NewsCardView: View {
-        let news: ShopNews
+    struct QuickInfoCard: View {
+        let icon: String
+        let title: String
+        let value: String
+        let color: Color
+        let action: () -> Void
         
         var body: some View {
-            VStack(alignment: .leading, spacing: 10) {
-                HStack(alignment: .top, spacing: 10) {
-                    // Icon
-                    ZStack {
-                        Circle()
-                            .fill(newsTypeColor.opacity(0.15))
-                            .frame(width: 40, height: 40)
-                        
-                        SwiftUI.Image(systemName: news.newsType.icon)
+            Button(action: action) {
+                VStack(alignment: .leading, spacing: 12) {
+                    HStack {
+                        SwiftUI.Image(systemName: icon)
                             .font(.system(size: 16))
-                            .foregroundColor(newsTypeColor)
+                            .foregroundColor(color)
+                        Spacer()
                     }
                     
-                    VStack(alignment: .leading, spacing: 6) {
-                        // Title with pinned indicator
-                        HStack(spacing: 6) {
-                            if news.isPinned {
-                                SwiftUI.Image(systemName: "pin.fill")
-                                    .font(.system(size: 12))
-                                    .foregroundColor(.orange)
-                            }
-                            
-                            Text(news.title)
-                                .font(.system(size: 16, weight: .bold))
-                                .foregroundColor(.primary)
-                                .lineLimit(2)
-                        }
-                        
-                        // Content
-                        Text(news.content)
-                            .font(.system(size: 14))
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(title)
+                            .font(.system(size: 12, weight: .medium))
                             .foregroundColor(.secondary)
-                            .lineLimit(3)
                         
-                        // Footer
-                        HStack {
-                            // News Type Badge
-                            Text(news.newsType.rawValue)
-                                .font(.system(size: 11, weight: .semibold))
-                                .foregroundColor(newsTypeColor)
-                                .padding(.horizontal, 8)
-                                .padding(.vertical, 4)
-                                .background(
-                                    Capsule()
-                                        .fill(newsTypeColor.opacity(0.15))
-                                )
-                            
-                            Spacer()
-                            
-                            // Date
-                            Text(timeAgo(from: news.publishedDate))
-                                .font(.system(size: 12))
-                                .foregroundColor(.secondary)
-                        }
+                        Text(value)
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundColor(.primary)
+                            .lineLimit(1)
                     }
                 }
-            }
-            .padding(14)
-            .background(
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(Color.gray)
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 12)
-                    .stroke(news.isPinned ? Color.orange.opacity(0.3) : Color.clear, lineWidth: 2)
-            )
-        }
-        
-        private var newsTypeColor: Color {
-            switch news.newsType {
-            case .announcement: return .blue
-            case .newStock: return .green
-            case .tournament: return .orange
-            case .sale: return .red
-            case .event: return .purple
-            case .general: return .gray
-            default: return .gray
-            }
-        }
-        
-        private func timeAgo(from date: Date) -> String {
-            let calendar = Calendar.current
-            let now = Date()
-            let components = calendar.dateComponents([.day, .hour, .minute], from: date, to: now)
-            
-            if let days = components.day, days > 0 {
-                return days == 1 ? "1 day ago" : "\(days) days ago"
-            } else if let hours = components.hour, hours > 0 {
-                return hours == 1 ? "1 hour ago" : "\(hours) hours ago"
-            } else if let minutes = components.minute, minutes > 0 {
-                return minutes == 1 ? "1 minute ago" : "\(minutes) minutes ago"
-            } else {
-                return "Just now"
+                .padding(16)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(Color(.systemBackground))
+                .cornerRadius(12)
+                .shadow(color: Color.black.opacity(0.03), radius: 4, x: 0, y: 2)
             }
         }
     }
     
-    // MARK: - Contact Row
-    struct ContactRow: View {
+    struct SectionHeader: View {
+        let title: String
         let icon: String
-        let text: String
         let color: Color
         
         var body: some View {
-            HStack(spacing: 12) {
+            HStack(spacing: 8) {
                 SwiftUI.Image(systemName: icon)
-                    .font(.system(size: 16))
+                    .font(.system(size: 18))
                     .foregroundColor(color)
-                    .frame(width: 24)
                 
-                Text(text)
-                    .font(.system(size: 15))
+                Text(title)
+                    .font(.system(size: 18, weight: .bold))
                     .foregroundColor(.primary)
+            }
+        }
+    }
+    
+    struct SocialButton: View {
+        let icon: String
+        let title: String
+        let color: Color
+        let action: () -> Void
+        
+        var body: some View {
+            Button(action: action) {
+                HStack(spacing: 12) {
+                    SwiftUI.Image(systemName: icon)
+                        .font(.system(size: 18))
+                        .foregroundColor(color)
+                        .frame(width: 24)
+                    
+                    Text(title)
+                        .font(.system(size: 15, weight: .medium))
+                        .foregroundColor(.primary)
+                    
+                    Spacer()
+                    
+                    SwiftUI.Image(systemName: "arrow.up.right")
+                        .font(.system(size: 12))
+                        .foregroundColor(.secondary)
+                }
+            }
+        }
+    }
+    
+    struct CompactNewsCard: View {
+        let news: ShopNews
+        
+        var body: some View {
+            HStack(alignment: .top, spacing: 12) {
+                SwiftUI.Image(systemName: news.newsType.icon)
+                    .font(.system(size: 14))
+                    .foregroundColor(.white)
+                    .padding(8)
+                    .background(Circle().fill(Color.purple))
                 
-                Spacer()
-                
-                SwiftUI.Image(systemName: "chevron.right")
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundColor(.secondary)
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack {
+                        Text(news.newsType.rawValue)
+                            .font(.system(size: 11, weight: .semibold))
+                            .foregroundColor(.purple)
+                        
+                        Spacer()
+                        
+                        Text(timeAgo(from: news.publishedDate))
+                            .font(.system(size: 11))
+                            .foregroundColor(.secondary)
+                    }
+                    
+                    Text(news.title)
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundColor(.primary)
+                        .lineLimit(2)
+                    
+                    Text(news.content)
+                        .font(.system(size: 13))
+                        .foregroundColor(.secondary)
+                        .lineLimit(2)
+                }
             }
             .padding(12)
-            .background(
-                RoundedRectangle(cornerRadius: 10)
-                    .fill(Color(.systemGray6))
-            )
+            .background(Color(.systemBackground))
+            .cornerRadius(12)
+            .shadow(color: Color.black.opacity(0.03), radius: 4, x: 0, y: 2)
+        }
+        
+        private func timeAgo(from date: Date) -> String {
+            let formatter = RelativeDateTimeFormatter()
+            formatter.unitsStyle = .abbreviated
+            return formatter.localizedString(for: date, relativeTo: Date())
+        }
+    }
+    
+    // FlowLayout helper for services
+    struct FlowLayout: Layout {
+        var spacing: CGFloat = 8
+        
+        func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+            let rows = computeRows(proposal: proposal, subviews: subviews)
+            let height = rows.reduce(0) { $0 + $1.maxHeight } + CGFloat(max(0, rows.count - 1)) * spacing
+            return CGSize(width: proposal.width ?? 0, height: height)
+        }
+        
+        func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+            let rows = computeRows(proposal: proposal, subviews: subviews)
+            var y = bounds.minY
+            
+            for row in rows {
+                var x = bounds.minX
+                for index in row.indices {
+                    let size = subviews[index].sizeThatFits(.unspecified)
+                    subviews[index].place(at: CGPoint(x: x, y: y), proposal: .unspecified)
+                    x += size.width + spacing
+                }
+                y += row.maxHeight + spacing
+            }
+        }
+        
+        private func computeRows(proposal: ProposedViewSize, subviews: Subviews) -> [[Int]] {
+            var rows: [[Int]] = [[]]
+            var currentRowWidth: CGFloat = 0
+            let maxWidth = proposal.width ?? .infinity
+            
+            for (index, subview) in subviews.enumerated() {
+                let size = subview.sizeThatFits(.unspecified)
+                
+                if currentRowWidth + size.width > maxWidth && !rows[rows.count - 1].isEmpty {
+                    rows.append([index])
+                    currentRowWidth = size.width + spacing
+                } else {
+                    rows[rows.count - 1].append(index)
+                    currentRowWidth += size.width + spacing
+                }
+            }
+            
+            return rows
         }
     }
 }
+
+extension Array where Element == Int {
+    var maxHeight: CGFloat { 20 }
+}
+

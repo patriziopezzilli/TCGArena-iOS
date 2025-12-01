@@ -34,7 +34,7 @@ class RequestService: ObservableObject {
         let body = try encoder.encode(request)
         
         return try await withCheckedThrowingContinuation { continuation in
-            apiClient.request(endpoint: "/api/requests", method: .post, body: body) { result in
+            apiClient.request(endpoint: "/requests", method: .post, body: body) { result in
                 switch result {
                 case .success(let data):
                     do {
@@ -73,7 +73,7 @@ class RequestService: ObservableObject {
         defer { isLoading = false }
         
         return try await withCheckedThrowingContinuation { continuation in
-            apiClient.request(endpoint: "/api/requests?userId=\(userId)", method: .get) { result in
+            apiClient.request(endpoint: "/requests?userId=\(userId)", method: .get) { result in
                 switch result {
                 case .success(let data):
                     do {
@@ -111,7 +111,7 @@ class RequestService: ObservableObject {
         
         defer { isLoading = false }
         
-        var endpoint = "/api/requests?merchantId=\(merchantId)"
+        var endpoint = "/requests?merchantId=\(merchantId)"
         if let status = status {
             endpoint += "&status=\(status.rawValue)"
         }
@@ -156,7 +156,7 @@ class RequestService: ObservableObject {
         defer { isLoading = false }
         
         return try await withCheckedThrowingContinuation { continuation in
-            apiClient.request(endpoint: "/api/requests/\(id)", method: .get) { result in
+            apiClient.request(endpoint: "/requests/\(id)", method: .get) { result in
                 switch result {
                 case .success(let data):
                     do {
@@ -195,7 +195,7 @@ class RequestService: ObservableObject {
         let body = try encoder.encode(request)
         
         return try await withCheckedThrowingContinuation { continuation in
-            apiClient.request(endpoint: "/api/requests/\(requestId)/message", method: .post, body: body) { result in
+            apiClient.request(endpoint: "/requests/\(requestId)/message", method: .post, body: body) { result in
                 switch result {
                 case .success(let data):
                     do {
@@ -234,7 +234,7 @@ class RequestService: ObservableObject {
         let body = try encoder.encode(request)
         
         return try await withCheckedThrowingContinuation { continuation in
-            apiClient.request(endpoint: "/api/requests/\(id)/status", method: .patch, body: body) { result in
+            apiClient.request(endpoint: "/requests/\(id)/status", method: .patch, body: body) { result in
                 switch result {
                 case .success(let data):
                     do {

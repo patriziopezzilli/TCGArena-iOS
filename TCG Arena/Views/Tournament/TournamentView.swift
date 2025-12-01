@@ -116,6 +116,7 @@ struct TournamentView: View {
 // MARK: - Tournament List View
 struct TournamentListView: View {
     @EnvironmentObject var tournamentService: TournamentService
+    @StateObject private var locationManager = LocationManager()
     @State private var selectedTournament: Tournament?
     
     var body: some View {
@@ -132,6 +133,16 @@ struct TournamentListView: View {
                 }
                 .padding(.horizontal, 20)
                 .padding(.bottom, 20)
+            }
+        }
+        .refreshable {
+            await tournamentService.loadTournaments()
+            
+            if let userLocation = locationManager.location {
+                await tournamentService.loadNearbyTournaments(userLocation: userLocation)
+            } else {
+                let milanCenter = CLLocation(latitude: 45.4642, longitude: 9.1900)
+                await tournamentService.loadNearbyTournaments(userLocation: milanCenter)
             }
         }
         .sheet(item: $selectedTournament) { tournament in
@@ -172,7 +183,7 @@ struct TournamentListCard: View {
                             .font(.system(size: 12, weight: .medium))
                             .foregroundColor(.secondary)
                         
-                        Text(tournament.location?.name ?? "Location TBA")
+                        Text(tournament.location?.venueName ?? "Location TBA")
                             .font(.system(size: 14, weight: .medium))
                             .foregroundColor(.secondary)
                             .lineLimit(1)

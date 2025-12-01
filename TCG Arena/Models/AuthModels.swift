@@ -19,19 +19,20 @@ struct RegisterRequest: Codable {
     let username: String
     let displayName: String
     let password: String
-    let favoriteGame: TCGType?
+    let favoriteGames: [TCGType]?
     
     enum CodingKeys: String, CodingKey {
         case email
         case username
         case displayName = "display_name"
         case password
-        case favoriteGame = "favorite_game"
+        case favoriteGames = "favorite_games"
     }
 }
 
 // Modello per la risposta di autenticazione
 struct AuthResponse: Codable {
     let token: String
+    let refreshToken: String?
     let user: User
 }

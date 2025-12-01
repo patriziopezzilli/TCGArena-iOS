@@ -16,7 +16,7 @@ class AchievementService: ObservableObject {
     // MARK: - Achievement Operations
 
     func getAllActiveAchievements(completion: @escaping (Result<[Achievement], Error>) -> Void) {
-        apiClient.request(endpoint: "/api/achievements", method: .get) { result in
+        apiClient.request(endpoint: "/achievements", method: .get) { result in
             switch result {
             case .success(let data):
                 do {
@@ -32,7 +32,7 @@ class AchievementService: ObservableObject {
     }
 
     func getAchievementById(_ id: Int, completion: @escaping (Result<Achievement, Error>) -> Void) {
-        apiClient.request(endpoint: "/api/achievements/\(id)", method: .get) { result in
+        apiClient.request(endpoint: "/achievements/\(id)", method: .get) { result in
             switch result {
             case .success(let data):
                 do {
@@ -48,7 +48,7 @@ class AchievementService: ObservableObject {
     }
 
     func getUserAchievements(completion: @escaping (Result<[UserAchievement], Error>) -> Void) {
-        apiClient.request(endpoint: "/api/achievements/user", method: .get) { result in
+        apiClient.request(endpoint: "/achievements/user", method: .get) { result in
             switch result {
             case .success(let data):
                 do {
@@ -64,7 +64,7 @@ class AchievementService: ObservableObject {
     }
 
     func unlockAchievement(_ achievementId: Int, completion: @escaping (Result<[String: String], Error>) -> Void) {
-        apiClient.request(endpoint: "/api/achievements/\(achievementId)/unlock", method: .post) { result in
+        apiClient.request(endpoint: "/achievements/\(achievementId)/unlock", method: .post) { result in
             switch result {
             case .success(let data):
                 do {

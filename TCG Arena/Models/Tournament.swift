@@ -48,17 +48,20 @@ struct Tournament: Identifiable, Codable {
     }
     
     struct TournamentLocation: Codable {
-        let name: String
+        let venueName: String
         let address: String
         let city: String
         let country: String
-        let latitude: Double
-        let longitude: Double
-        let phoneNumber: String?
-        let website: String?
+        let latitude: Double?
+        let longitude: Double?
         
-        var coordinate: CLLocationCoordinate2D {
-            CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
+        var coordinate: CLLocationCoordinate2D? {
+            guard let lat = latitude, let lon = longitude else { return nil }
+            return CLLocationCoordinate2D(latitude: lat, longitude: lon)
+        }
+        
+        var displayName: String {
+            "\(venueName), \(city)"
         }
     }
     
@@ -66,15 +69,17 @@ struct Tournament: Identifiable, Codable {
         case id
         case title
         case description
-        case tcgType = "tcg_type"
+        case tcgType
         case type
         case status
-        case startDate = "start_date"
-        case endDate = "end_date"
-        case maxParticipants = "max_participants"
-        case entryFee = "entry_fee"
-        case prizePool = "prize_pool"
-        case organizerId = "organizer_id"
+        case startDate
+        case endDate
+        case maxParticipants
+        case entryFee
+        case prizePool
+        case organizerId
+        case location
+        case tournamentParticipants = "participants"
     }
     
     init(title: String, description: String?, tcgType: TCGType, type: TournamentType, status: TournamentStatus = .upcoming, startDate: Date, endDate: Date, maxParticipants: Int, entryFee: Double, prizePool: Double, organizerId: Int64, location: TournamentLocation? = nil, rules: String? = nil) {

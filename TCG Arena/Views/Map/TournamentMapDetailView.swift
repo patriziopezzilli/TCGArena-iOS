@@ -68,7 +68,7 @@ struct TournamentMapDetailView: View {
                                         .foregroundColor(tournament.tcgType.themeColor)
                                     
                                     VStack(alignment: .leading, spacing: 2) {
-                                        Text(location.name)
+                                        Text(location.venueName)
                                             .font(.system(size: 16, weight: .semibold))
                                             .foregroundColor(.primary)
                                         
@@ -287,14 +287,12 @@ struct TournamentMapDetailView: View {
             prizePool: 5000.0,
             organizerId: 1,
             location: Tournament.TournamentLocation(
-                name: "San Francisco Game Center",
+                venueName: "San Francisco Game Center",
                 address: "123 Game Street",
                 city: "San Francisco",
                 country: "United States",
                 latitude: 37.7749,
-                longitude: -122.4194,
-                phoneNumber: "+1 (555) 123-4567",
-                website: "https://sfgamecenter.com"
+                longitude: -122.4194
             ),
             rules: "Standard format rules apply."
         )

@@ -11,7 +11,7 @@ class CardService: ObservableObject {
     // MARK: - Card Template Operations
 
     func getAllCardTemplates(completion: @escaping (Result<[CardTemplate], Error>) -> Void) {
-        apiClient.request(endpoint: "/api/cards/templates", method: .get) { result in
+        apiClient.request(endpoint: "/cards/templates", method: .get) { result in
             switch result {
             case .success(let data):
                 do {
@@ -27,7 +27,7 @@ class CardService: ObservableObject {
     }
 
     func getCardTemplateById(_ id: Int, completion: @escaping (Result<CardTemplate, Error>) -> Void) {
-        apiClient.request(endpoint: "/api/cards/templates/\(id)", method: .get) { result in
+        apiClient.request(endpoint: "/cards/templates/\(id)", method: .get) { result in
             switch result {
             case .success(let data):
                 do {
@@ -45,7 +45,7 @@ class CardService: ObservableObject {
     func createCardTemplate(_ template: CardTemplate, completion: @escaping (Result<CardTemplate, Error>) -> Void) {
         do {
             let data = try JSONEncoder().encode(template)
-            apiClient.request(endpoint: "/api/cards/templates", method: .post, body: data) { result in
+            apiClient.request(endpoint: "/cards/templates", method: .post, body: data) { result in
                 switch result {
                 case .success(let data):
                     do {
@@ -66,7 +66,7 @@ class CardService: ObservableObject {
     func updateCardTemplate(_ template: CardTemplate, completion: @escaping (Result<CardTemplate, Error>) -> Void) {
         do {
             let data = try JSONEncoder().encode(template)
-            apiClient.request(endpoint: "/api/cards/templates/\(template.id)", method: .put, body: data) { result in
+            apiClient.request(endpoint: "/cards/templates/\(template.id)", method: .put, body: data) { result in
                 switch result {
                 case .success(let data):
                     do {
@@ -85,7 +85,7 @@ class CardService: ObservableObject {
     }
 
     func deleteCardTemplate(_ id: Int, completion: @escaping (Result<Void, Error>) -> Void) {
-        apiClient.request(endpoint: "/api/cards/templates/\(id)", method: .delete) { result in
+        apiClient.request(endpoint: "/cards/templates/\(id)", method: .delete) { result in
             switch result {
             case .success:
                 completion(.success(()))
@@ -98,7 +98,7 @@ class CardService: ObservableObject {
     // MARK: - User Card Collection Operations
 
     func getUserCardCollection(completion: @escaping (Result<[UserCard], Error>) -> Void) {
-        apiClient.request(endpoint: "/api/cards/collection", method: .get) { result in
+        apiClient.request(endpoint: "/cards/collection", method: .get) { result in
             switch result {
             case .success(let data):
                 do {
@@ -116,7 +116,7 @@ class CardService: ObservableObject {
     func addCardToCollection(cardTemplateId: Int, condition: CardCondition, quantity: Int, completion: @escaping (Result<UserCard, Error>) -> Void) {
         // For now, add one card at a time. TODO: Support quantity parameter in backend
         for _ in 0..<quantity {
-            apiClient.request(endpoint: "/api/cards/\(cardTemplateId)/add-to-collection?condition=\(condition.rawValue)", method: .post) { result in
+            apiClient.request(endpoint: "/cards/\(cardTemplateId)/add-to-collection?condition=\(condition.rawValue)", method: .post) { result in
                 switch result {
                 case .success(let data):
                     do {
@@ -135,7 +135,7 @@ class CardService: ObservableObject {
     // MARK: - Market Price Operations
 
     func getCardMarketPrice(cardTemplateId: Int, completion: @escaping (Result<Double, Error>) -> Void) {
-        apiClient.request(endpoint: "/api/cards/market-price/\(cardTemplateId)", method: .get) { result in
+        apiClient.request(endpoint: "/cards/market-price/\(cardTemplateId)", method: .get) { result in
             switch result {
             case .success(let data):
                 do {
@@ -168,7 +168,7 @@ class CardService: ObservableObject {
         }
 
         let queryString = parameters.map { "\($0.key)=\($0.value)" }.joined(separator: "&")
-        let endpoint = "/api/cards/search?\(queryString)"
+        let endpoint = "/cards/search?\(queryString)"
 
         apiClient.request(endpoint: endpoint, method: .get) { result in
             switch result {
@@ -186,7 +186,7 @@ class CardService: ObservableObject {
     }
 
     func removeCardFromCollection(userCardId: Int64, completion: @escaping (Result<Void, Error>) -> Void) {
-        apiClient.request(endpoint: "/api/cards/collection/\(userCardId)", method: .delete) { result in
+        apiClient.request(endpoint: "/cards/collection/\(userCardId)", method: .delete) { result in
             switch result {
             case .success:
                 completion(.success(()))
@@ -223,7 +223,7 @@ class CardService: ObservableObject {
         
         do {
             let data = try JSONEncoder().encode(updatedCard)
-            apiClient.request(endpoint: "/api/cards/\(cardId)", method: .put, body: data) { result in
+            apiClient.request(endpoint: "/cards/\(cardId)", method: .put, body: data) { result in
                 switch result {
                 case .success(let data):
                     do {

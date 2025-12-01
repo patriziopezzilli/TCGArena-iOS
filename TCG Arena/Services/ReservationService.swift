@@ -35,7 +35,7 @@ class ReservationService: ObservableObject {
         let body = try encoder.encode(request)
         
         return try await withCheckedThrowingContinuation { continuation in
-            apiClient.request(endpoint: "/api/reservations", method: .post, body: body) { result in
+            apiClient.request(endpoint: "/reservations", method: .post, body: body) { result in
                 switch result {
                 case .success(let data):
                     do {
@@ -74,7 +74,7 @@ class ReservationService: ObservableObject {
         defer { isLoading = false }
         
         return try await withCheckedThrowingContinuation { continuation in
-            apiClient.request(endpoint: "/api/reservations?userId=\(userId)", method: .get) { result in
+            apiClient.request(endpoint: "/reservations?userId=\(userId)", method: .get) { result in
                 switch result {
                 case .success(let data):
                     do {
@@ -112,7 +112,7 @@ class ReservationService: ObservableObject {
         
         defer { isLoading = false }
         
-        var endpoint = "/api/reservations?merchantId=\(merchantId)"
+        var endpoint = "/reservations?merchantId=\(merchantId)"
         if let status = status {
             endpoint += "&status=\(status.rawValue)"
         }
@@ -162,7 +162,7 @@ class ReservationService: ObservableObject {
         let body = try encoder.encode(request)
         
         return try await withCheckedThrowingContinuation { continuation in
-            apiClient.request(endpoint: "/api/reservations/\(id)/validate", method: .post, body: body) { result in
+            apiClient.request(endpoint: "/reservations/\(id)/validate", method: .post, body: body) { result in
                 switch result {
                 case .success(let data):
                     do {
@@ -203,7 +203,7 @@ class ReservationService: ObservableObject {
         defer { isLoading = false }
         
         return try await withCheckedThrowingContinuation { continuation in
-            apiClient.request(endpoint: "/api/reservations/\(id)/pickup", method: .post) { result in
+            apiClient.request(endpoint: "/reservations/\(id)/pickup", method: .post) { result in
                 switch result {
                 case .success(let data):
                     do {
@@ -244,7 +244,7 @@ class ReservationService: ObservableObject {
         defer { isLoading = false }
         
         return try await withCheckedThrowingContinuation { continuation in
-            apiClient.request(endpoint: "/api/reservations/\(id)/cancel", method: .post) { result in
+            apiClient.request(endpoint: "/reservations/\(id)/cancel", method: .post) { result in
                 switch result {
                 case .success:
                     Task { @MainActor in

@@ -130,7 +130,7 @@ struct OnboardingView: View {
             .padding(.vertical, 40)
         }
         .sheet(isPresented: $showLogin) {
-            LoginView(email: email)
+            LoginView(username: email)
         }
         .sheet(isPresented: $showRegister) {
             RegisterView(email: email, selectedTCG: selectedTCG)

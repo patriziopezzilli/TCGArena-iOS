@@ -16,21 +16,32 @@ class ExpansionService: ObservableObject {
     
     private let apiClient: APIClient
     
+    private let decoder: JSONDecoder = {
+        let decoder = JSONDecoder()
+        let formatter = DateFormatter()
+        formatter.dateFormat = "dd MMM yyyy"
+        formatter.locale = Locale(identifier: "it_IT")
+        decoder.dateDecodingStrategy = .formatted(formatter)
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
+        return decoder
+    }()
+    
     init(apiClient: APIClient = APIClient.shared) {
         self.apiClient = apiClient
-        loadExpansions()
     }
     
     // MARK: - API Methods
     
     func getAllExpansions(completion: @escaping (Result<[Expansion], Error>) -> Void) {
-        apiClient.request(endpoint: "/api/expansions", method: .get) { result in
+        apiClient.request(endpoint: "/expansions", method: .get) { result in
             switch result {
             case .success(let data):
                 do {
-                    let expansions = try JSONDecoder().decode([Expansion].self, from: data)
+                    let expansions = try self.decoder.decode([Expansion].self, from: data)
+                    print("✅ Successfully decoded \(expansions.count) expansions")
                     completion(.success(expansions))
                 } catch {
+                    print("❌ Failed to decode expansions: \(error)")
                     completion(.failure(error))
                 }
             case .failure(let error):
@@ -40,13 +51,15 @@ class ExpansionService: ObservableObject {
     }
     
     func getRecentExpansions(completion: @escaping (Result<[Expansion], Error>) -> Void) {
-        apiClient.request(endpoint: "/api/expansions/recent", method: .get) { result in
+        apiClient.request(endpoint: "/expansions/recent", method: .get) { result in
             switch result {
             case .success(let data):
                 do {
-                    let expansions = try JSONDecoder().decode([Expansion].self, from: data)
+                    let expansions = try self.decoder.decode([Expansion].self, from: data)
+                    print("✅ Successfully decoded \(expansions.count) recent expansions")
                     completion(.success(expansions))
                 } catch {
+                    print("❌ Failed to decode recent expansions: \(error)")
                     completion(.failure(error))
                 }
             case .failure(let error):
@@ -56,11 +69,11 @@ class ExpansionService: ObservableObject {
     }
     
     func getExpansionById(_ id: Int64, completion: @escaping (Result<Expansion, Error>) -> Void) {
-        apiClient.request(endpoint: "/api/expansions/\(id)", method: .get) { result in
+        apiClient.request(endpoint: "/expansions/\(id)", method: .get) { result in
             switch result {
             case .success(let data):
                 do {
-                    let expansion = try JSONDecoder().decode(Expansion.self, from: data)
+                    let expansion = try self.decoder.decode(Expansion.self, from: data)
                     completion(.success(expansion))
                 } catch {
                     completion(.failure(error))
@@ -74,53 +87,58 @@ class ExpansionService: ObservableObject {
     
     // MARK: - User Interface Methods
     
-    func loadExpansions() {
+    func loadExpansions() async {
         isLoading = true
         errorMessage = nil
         
-        getAllExpansions { result in
-            DispatchQueue.main.async {
-                switch result {
-                case .success(let fetchedExpansions):
-                    self.expansions = fetchedExpansions
-                    // Load recent expansions as well
-                    self.loadRecentExpansions()
-                case .failure(let error):
-                    self.errorMessage = error.localizedDescription
-                    // Fallback to empty arrays
-                    self.expansions = []
-                    self.recentExpansions = []
+        await withCheckedContinuation { continuation in
+            getAllExpansions { result in
+                Task { @MainActor in
+                    switch result {
+                    case .success(let fetchedExpansions):
+                        self.expansions = fetchedExpansions
+                        continuation.resume()
+                    case .failure(let error):
+                        self.errorMessage = error.localizedDescription
+                        self.expansions = []
+                        self.recentExpansions = []
+                        continuation.resume()
+                    }
+                    self.isLoading = false
                 }
-                self.isLoading = false
             }
         }
+        
+        // Load recent expansions after all expansions are loaded
+        await loadRecentExpansions()
     }
     
-    func loadRecentExpansions() {
-        getRecentExpansions { result in
-            DispatchQueue.main.async {
-                switch result {
-                case .success(let recentExpansions):
-                    self.recentExpansions = recentExpansions
-                case .failure:
-                    // Fallback: filter recent expansions from all expansions
-                    // Since backend provides recent endpoint, this shouldn't happen
-                    self.recentExpansions = self.expansions.filter { expansion in
-                        // Consider recent if any set was released in last 6 months
+    func loadRecentExpansions() async {
+        await withCheckedContinuation { continuation in
+            getRecentExpansions { result in
+                Task { @MainActor in
+                    switch result {
+                    case .success(let recentExpansions):
+                        self.recentExpansions = recentExpansions
+                    case .failure:
+                        // Fallback: filter recent expansions from all expansions
                         let sixMonthsAgo = Calendar.current.date(byAdding: .month, value: -6, to: Date()) ?? Date()
-                        return expansion.sets.contains { $0.releaseDate >= sixMonthsAgo }
+                        self.recentExpansions = self.expansions.filter { expansion in
+                            expansion.sets.contains { $0.releaseDate >= sixMonthsAgo }
+                        }
                     }
+                    continuation.resume()
                 }
             }
         }
     }
     
     func getCardsForExpansion(_ expansion: Expansion, completion: @escaping (Result<[CardTemplate], Error>) -> Void) {
-        apiClient.request(endpoint: "/api/expansions/\(expansion.id)/cards", method: .get) { result in
+        apiClient.request(endpoint: "/expansions/\(expansion.id)/cards", method: .get) { result in
             switch result {
             case .success(let data):
                 do {
-                    let cards = try JSONDecoder().decode([CardTemplate].self, from: data)
+                    let cards = try self.decoder.decode([CardTemplate].self, from: data)
                     completion(.success(cards))
                 } catch {
                     completion(.failure(error))

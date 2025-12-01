@@ -10,7 +10,7 @@ import SwiftUI
 struct LoginView: View {
     @Environment(\.dismiss) private var dismiss
     @StateObject private var authService = AuthService()
-    @State private var email: String
+    @State private var username: String
     @State private var password = ""
     @State private var showForgotPassword = false
     @State private var showRegister = false
@@ -18,8 +18,8 @@ struct LoginView: View {
     @State private var showError = false
     @State private var errorMessage = ""
 
-    init(email: String = "") {
-        _email = State(initialValue: email)
+    init(username: String = "") {
+        _username = State(initialValue: username)
     }
 
     var body: some View {
@@ -70,18 +70,18 @@ struct LoginView: View {
                     VStack(spacing: 24) {
                         // Form Fields Card
                         VStack(spacing: 20) {
-                            // Email field with icon
+                            // Username field with icon
                             VStack(alignment: .leading, spacing: 8) {
                                 HStack(spacing: 8) {
-                                    SwiftUI.Image(systemName: "envelope")
+                                    SwiftUI.Image(systemName: "person.circle")
                                         .foregroundColor(AdaptiveColors.brandPrimary)
                                         .frame(width: 20, height: 20)
-                                    Text("Email")
+                                    Text("Username")
                                         .font(.system(size: 14, weight: .semibold, design: .rounded))
                                         .foregroundColor(AdaptiveColors.brandPrimary)
                                 }
 
-                                TextField("Enter your email", text: $email)
+                                TextField("Enter your username", text: $username)
                                     .padding(.horizontal, 16)
                                     .padding(.vertical, 14)
                                     .background(
@@ -95,7 +95,6 @@ struct LoginView: View {
                                     )
                                     .foregroundColor(AdaptiveColors.neutralDark)
                                     .font(.system(size: 16))
-                                    .keyboardType(.emailAddress)
                                     .autocapitalization(.none)
                             }
 
@@ -177,8 +176,8 @@ struct LoginView: View {
                         )
                         .cornerRadius(16)
                         .shadow(color: AdaptiveColors.brandPrimary.opacity(0.3), radius: 8, x: 0, y: 4)
-                        .disabled(isLoading || email.isEmpty || password.isEmpty)
-                        .opacity(isLoading || email.isEmpty || password.isEmpty ? 0.6 : 1.0)
+                        .disabled(isLoading || username.isEmpty || password.isEmpty)
+                        .opacity(isLoading || username.isEmpty || password.isEmpty ? 0.6 : 1.0)
                     }
                     .padding(.horizontal, 20)
 
@@ -212,20 +211,20 @@ struct LoginView: View {
             ForgotPasswordView()
         }
         .sheet(isPresented: $showRegister) {
-            RegisterView(email: email)
+            RegisterView(email: username)
         }
     }
 
     // MARK: - Subviews
     
     private func login() {
-        guard !email.isEmpty, !password.isEmpty else { return }
+        guard !username.isEmpty, !password.isEmpty else { return }
 
         isLoading = true
 
         Task {
             do {
-                try await authService.signIn(email: email, password: password)
+                try await authService.signIn(email: username, password: password)
                 UserDefaults.standard.set(true, forKey: "hasCompletedOnboarding")
                 dismiss()
             } catch {

@@ -56,14 +56,25 @@ struct Card: Identifiable, Codable {
 }
 
 enum TCGType: String, CaseIterable, Codable {
-    case pokemon = "Pokemon"
-    case onePiece = "One Piece"
-    case magic = "Magic: The Gathering"
-    case yugioh = "Yu-Gi-Oh!"
-    case digimon = "Digimon"
+    case pokemon = "POKEMON"
+    case onePiece = "ONE_PIECE"
+    case magic = "MAGIC"
+    case yugioh = "YUGIOH"
+    case digimon = "DIGIMON"
     
     var displayName: String {
-        return self.rawValue
+        switch self {
+        case .pokemon:
+            return "Pokémon"
+        case .onePiece:
+            return "One Piece"
+        case .magic:
+            return "Magic: The Gathering"
+        case .yugioh:
+            return "Yu-Gi-Oh!"
+        case .digimon:
+            return "Digimon"
+        }
     }
     
     var themeColor: Color {

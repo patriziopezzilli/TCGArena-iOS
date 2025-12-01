@@ -22,20 +22,26 @@ struct Shop: Identifiable, Codable {
     let twitterUrl: String?
     let type: ShopType
     let isVerified: Bool
+    let active: Bool?
     let ownerId: Int64
     let openingHours: String?
     let openingDays: String?
     let tcgTypes: [TCGType]?
     let services: [String]?
+    let inventory: [InventoryItem]?
     
     enum CodingKeys: String, CodingKey {
         case id, name, description, address, latitude, longitude, phoneNumber, email
-        case websiteUrl = "websiteUrl"
-        case instagramUrl = "instagramUrl"
-        case facebookUrl = "facebookUrl"
-        case twitterUrl = "twitterUrl"
-        case type, isVerified, ownerId, openingHours, openingDays, tcgTypes, services
+        case websiteUrl, instagramUrl, facebookUrl, twitterUrl
+        case type, isVerified, active, ownerId, openingHours, openingDays, tcgTypes, services, inventory
     }
+}
+
+struct InventoryItem: Codable {
+    let id: Int64?
+    let cardId: Int64?
+    let quantity: Int?
+    let price: Double?
 }
 
 enum ShopType: String, Codable {
