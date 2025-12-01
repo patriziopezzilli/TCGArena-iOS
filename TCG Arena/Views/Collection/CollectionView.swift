@@ -535,8 +535,6 @@ struct CardDiscoverView: View {
     @StateObject private var expansionService = ExpansionService()
     @State private var selectedTCGType: TCGType? = nil
     @State private var searchText = ""
-    @State private var showingExpansionDetail = false
-    @State private var selectedExpansion: Expansion?
     
     private var filteredCards: [Card] {
         var cards = cardService.userCards
@@ -740,10 +738,10 @@ struct CardDiscoverView: View {
                             // Expansions List
                             VStack(spacing: 12) {
                                 ForEach(filteredExpansions.prefix(8)) { expansion in
-                                    ExpansionRow(expansion: expansion) {
-                                        selectedExpansion = expansion
-                                        showingExpansionDetail = true
+                                    NavigationLink(destination: ExpansionDetailView(expansion: expansion)) {
+                                        ExpansionRow(expansion: expansion, showCards: false) { }
                                     }
+                                    .buttonStyle(PlainButtonStyle())
                                     .padding(.horizontal, 20)
                                 }
                             }
@@ -801,11 +799,6 @@ struct CardDiscoverView: View {
                         dismiss()
                     }
                     .font(.system(size: 16, weight: .semibold))
-                }
-            }
-            .sheet(isPresented: $showingExpansionDetail) {
-                if let expansion = selectedExpansion {
-                    ExpansionDetailView(expansion: expansion)
                 }
             }
             .task {
