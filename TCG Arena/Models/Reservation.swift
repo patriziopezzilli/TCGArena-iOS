@@ -8,7 +8,7 @@
 import Foundation
 
 /// Represents a card reservation made by a user
-struct Reservation: Identifiable, Codable, Hashable {
+struct Reservation: Identifiable, Codable {
     let id: String
     let cardId: String
     let userId: String
@@ -115,7 +115,19 @@ struct Reservation: Identifiable, Codable, Hashable {
             return "Expired"
         }
     }
+    
+    // Manual Hashable/Equatable implementation
+    static func == (lhs: Reservation, rhs: Reservation) -> Bool {
+        lhs.id == rhs.id
+    }
+    
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+    }
 }
+
+// MARK: - Hashable/Equatable conformance
+extension Reservation: Hashable, Equatable {}
 
 // MARK: - Request DTOs
 struct CreateReservationRequest: Codable {

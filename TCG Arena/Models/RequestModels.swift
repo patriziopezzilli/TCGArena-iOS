@@ -8,7 +8,7 @@
 import Foundation
 
 /// Represents a request from a user to a merchant
-struct MerchantRequest: Identifiable, Codable, Hashable {
+struct MerchantRequest: Identifiable, Codable {
     let id: String
     let userId: String
     let merchantId: String
@@ -171,7 +171,19 @@ struct RequestMessage: Identifiable, Codable, Hashable {
         // For now, just a placeholder
         senderType == .user
     }
+    
+    // Manual Hashable/Equatable implementation
+    static func == (lhs: RequestMessage, rhs: RequestMessage) -> Bool {
+        lhs.id == rhs.id
+    }
+    
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+    }
 }
+
+// MARK: - Hashable/Equatable conformance
+extension RequestMessage: Hashable, Equatable {}
 
 // MARK: - Request DTOs
 struct CreateRequestRequest: Codable {

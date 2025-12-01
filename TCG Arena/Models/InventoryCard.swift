@@ -8,7 +8,7 @@
 import Foundation
 
 /// Represents a card in a merchant's inventory
-struct InventoryCard: Identifiable, Codable, Hashable {
+struct InventoryCard: Identifiable, Codable {
     let id: String
     let cardTemplateId: String  // Reference to the card template
     let shopId: String
@@ -24,10 +24,18 @@ struct InventoryCard: Identifiable, Codable, Hashable {
     
     // Convenience accessors (delegate to cardTemplate)
     var name: String { cardTemplate?.name ?? "Unknown Card" }
-    var setName: String? { cardTemplate?.setName }
+    var setName: String? { cardTemplate?.set }
     var tcgType: TCGType { cardTemplate?.tcgType ?? .pokemon }
-    var imageUrl: String? { cardTemplate?.imageUrl }
+    var imageUrl: String? { cardTemplate?.imageURL }
     var marketPrice: Double? { cardTemplate?.marketPrice }
+    
+    var formattedPrice: String {
+        String(format: "€%.2f", price)
+    }
+    
+    var conditionColor: String {
+        condition.color
+    }
     
     enum CardCondition: String, Codable, CaseIterable {
         case nearMint = "NM"
@@ -72,52 +80,23 @@ struct InventoryCard: Identifiable, Codable, Hashable {
         case cardTemplateId = "card_template_id"
         case shopId = "shop_id"
         case condition, price, quantity, notes
-    var formattedPrice: String {
-        return String(format: "€%.2f", price)
+        case createdAt = "created_at"
+        case updatedAt = "updated_at"
+        case cardTemplate = "card_template"
     }
     
-    var conditionColor: String {
-        switch condition {
-        case .nearMint: return "green"
-        case .slightlyPlayed: return "blue"
-        case .moderatelyPlayed: return "yellow"
-        case .heavilyPlayed: return "orange"
-        case .damaged: return "red"
-        }
+    // Manual Hashable/Equatable implementation (cardTemplate is not Hashable)
+    static func == (lhs: InventoryCard, rhs: InventoryCard) -> Bool {
+        lhs.id == rhs.id
     }
     
-    // Helper initializer for creating new inventory items
-    init(
-        id: String = UUID().uuidString,
-        game: TCGType,
-        name: String,
-        edition: String,
-        rarity: String,
-        country: String,
-        condition: CardCondition,
-        grading: String? = nil,
-        price: Double? = nil,
-        quantity: Int,
-        merchantId: String,
-        imageUrl: String? = nil,
-        createdAt: Date = Date(),
-        updatedAt: Date = Date()
-    ) {
-        self.id = id
-        self.game = game
-        self.name = name
-        self.edition = edition
-        self.rarity = rarity
-        self.country = country
-        self.condition = condition
-        self.grading = grading
-        self.price = price
-        self.quantity = quantity
-        self.merchantId = merchantId
-        self.imageUrl = imageUrl
-        self.createdAt = createdAt
-        self.updatedAt = updatedAt
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+    }
 }
+
+// MARK: - Hashable/Equatable conformance
+extension InventoryCard: Hashable, Equatable {}
 
 // MARK: - Create/Update DTOs
 struct CreateInventoryCardRequest: Codable {
@@ -162,10 +141,5 @@ struct InventoryFilters {
         self.minPrice = minPrice
         self.maxPrice = maxPrice
         self.onlyAvailable = onlyAvailable
-    }
-}
-        }
-        
-        return params
     }
 }

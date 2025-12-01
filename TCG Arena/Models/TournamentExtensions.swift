@@ -9,7 +9,7 @@ import Foundation
 
 // MARK: - Match
 /// Represents a match in a tournament
-struct Match: Identifiable, Codable, Hashable {
+struct Match: Identifiable, Codable {
     let id: String
     let tournamentId: String
     let round: Int
@@ -85,11 +85,23 @@ struct Match: Identifiable, Codable, Hashable {
         }
         return nil
     }
+    
+    // Manual Hashable/Equatable implementation
+    static func == (lhs: Match, rhs: Match) -> Bool {
+        lhs.id == rhs.id
+    }
+    
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+    }
 }
+
+// MARK: - Hashable/Equatable conformance
+extension Match: Hashable, Equatable {}
 
 // MARK: - Tournament Registration
 /// Represents a user's registration for a tournament
-struct TournamentRegistration: Identifiable, Codable, Hashable {
+struct TournamentRegistration: Identifiable, Codable {
     let id: String
     let tournamentId: String
     let userId: String
@@ -161,7 +173,19 @@ struct TournamentRegistration: Identifiable, Codable, Hashable {
     var canCheckIn: Bool {
         status == .registered
     }
+    
+    // Manual Hashable/Equatable implementation
+    static func == (lhs: TournamentRegistration, rhs: TournamentRegistration) -> Bool {
+        lhs.id == rhs.id
+    }
+    
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+    }
 }
+
+// MARK: - Hashable/Equatable conformance
+extension TournamentRegistration: Hashable, Equatable {}
 
 // MARK: - Tournament Round
 /// Represents a round in a tournament
@@ -204,7 +228,7 @@ struct TournamentRound: Identifiable, Codable, Hashable {
 
 // MARK: - Standings
 /// Represents a player's standing in a tournament
-struct TournamentStanding: Identifiable, Codable, Hashable {
+struct TournamentStanding: Identifiable, Codable {
     let id: String
     let tournamentId: String
     let userId: String
@@ -241,6 +265,30 @@ struct TournamentStanding: Identifiable, Codable, Hashable {
         "\(wins)-\(losses)-\(draws)"
     }
 }
+
+// MARK: - Hashable/Equatable conformance
+extension TournamentStanding: Hashable, Equatable {
+    static func == (lhs: TournamentStanding, rhs: TournamentStanding) -> Bool {
+        lhs.id == rhs.id
+    }
+    
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+    }
+}
+
+// MARK: - Tournament DTOs
+    static func == (lhs: TournamentStanding, rhs: TournamentStanding) -> Bool {
+        lhs.id == rhs.id
+    }
+    
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+    }
+}
+
+// MARK: - Hashable/Equatable conformance
+extension TournamentStanding: Hashable, Equatable {}
 
 // MARK: - Tournament DTOs
 struct CreateMatchResultRequest: Codable {
