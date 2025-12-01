@@ -37,6 +37,14 @@ struct InventoryCard: Identifiable, Codable {
         condition.color
     }
     
+    var isAvailable: Bool {
+        quantity > 0
+    }
+    
+    var cardId: String {
+        cardTemplateId
+    }
+    
     enum CardCondition: String, Codable, CaseIterable {
         case nearMint = "NM"
         case slightlyPlayed = "SP"

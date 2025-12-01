@@ -22,6 +22,14 @@ class InventoryService: ObservableObject {
     }
     
     // MARK: - Get Inventory
+    func loadInventory(shopId: String, filters: InventoryFilters? = nil) async {
+        do {
+            inventory = try await getInventory(merchantId: shopId, filters: filters)
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+    
     func getInventory(merchantId: String, filters: InventoryFilters? = nil) async throws -> [InventoryCard] {
         isLoading = true
         errorMessage = nil
