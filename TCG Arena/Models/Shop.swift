@@ -15,7 +15,11 @@ struct Shop: Identifiable, Codable {
     let latitude: Double?
     let longitude: Double?
     let phoneNumber: String?
+    let email: String?
     let websiteUrl: String?
+    let instagramUrl: String?
+    let facebookUrl: String?
+    let twitterUrl: String?
     let type: ShopType
     let isVerified: Bool
     let ownerId: Int64
@@ -25,8 +29,11 @@ struct Shop: Identifiable, Codable {
     let services: [String]?
     
     enum CodingKeys: String, CodingKey {
-        case id, name, description, address, latitude, longitude, phoneNumber
+        case id, name, description, address, latitude, longitude, phoneNumber, email
         case websiteUrl = "websiteUrl"
+        case instagramUrl = "instagramUrl"
+        case facebookUrl = "facebookUrl"
+        case twitterUrl = "twitterUrl"
         case type, isVerified, ownerId, openingHours, openingDays, tcgTypes, services
     }
 }
