@@ -256,8 +256,24 @@ struct ShopDetailView: View {
                             ContactRow(icon: "phone.fill", text: phone, color: .green)
                         }
                         
+                        if let email = shop.email {
+                            ContactRow(icon: "envelope.fill", text: email, color: .orange)
+                        }
+                        
                         if let website = shop.websiteUrl {
                             ContactRow(icon: "globe", text: website, color: .purple)
+                        }
+                        
+                        if let instagram = shop.instagramUrl {
+                            ContactRow(icon: "camera.fill", text: instagram, color: .pink)
+                        }
+                        
+                        if let facebook = shop.facebookUrl {
+                            ContactRow(icon: "f.circle.fill", text: facebook, color: .blue)
+                        }
+                        
+                        if let twitter = shop.twitterUrl {
+                            ContactRow(icon: "bird.fill", text: twitter, color: .cyan)
                         }
                     }
                 }
