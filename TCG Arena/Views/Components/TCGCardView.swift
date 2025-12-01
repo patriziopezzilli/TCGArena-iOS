@@ -149,7 +149,7 @@ struct DeckBadge: View {
 }
 
 struct ConditionIndicator: View {
-    let condition: Card.CardCondition
+    let condition: CardCondition
     
     var body: some View {
         HStack(spacing: TCGTheme.Spacing.xs) {
@@ -167,7 +167,7 @@ struct ConditionIndicator: View {
                 }
             }
             
-            Text(condition.rawValue)
+            Text(condition.displayName)
                 .font(.system(size: 12))
                 .foregroundColor(conditionColor)
         }

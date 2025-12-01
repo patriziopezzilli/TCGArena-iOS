@@ -8,12 +8,14 @@
 import SwiftUI
 import MapKit
 import CoreLocation
+import SkeletonUI
 
 struct TournamentView: View {
     @EnvironmentObject var tournamentService: TournamentService
     @StateObject private var locationManager = LocationManager()
     @State private var showingLocationInput = false
     @State private var userLocationText = "Milano, Italy"
+    @State private var isLoading = true
     
     var body: some View {
         NavigationView {
@@ -86,7 +88,7 @@ struct TournamentView: View {
                 .padding(.bottom, 16)
                 
                 // Tournament List
-                TournamentListView()
+                TournamentListView(isLoading: isLoading)
             }
             .background(Color(.systemBackground))
             .navigationTitle("")
@@ -101,6 +103,8 @@ struct TournamentView: View {
                     let milanCenter = CLLocation(latitude: 45.4642, longitude: 9.1900)
                     await tournamentService.loadNearbyTournaments(userLocation: milanCenter)
                 }
+                
+                isLoading = false
             }
             .sheet(isPresented: $showingLocationInput) {
                 LocationInputView(locationText: $userLocationText) { location in
@@ -117,10 +121,11 @@ struct TournamentView: View {
 struct TournamentListView: View {
     @EnvironmentObject var tournamentService: TournamentService
     @State private var selectedTournament: Tournament?
+    let isLoading: Bool
     
     var body: some View {
         ScrollView {
-            if tournamentService.nearbyTournaments.isEmpty {
+            if !isLoading && tournamentService.nearbyTournaments.isEmpty {
                 EmptyTournamentsView()
             } else {
                 LazyVStack(spacing: 16) {
@@ -128,6 +133,7 @@ struct TournamentListView: View {
                         TournamentListCard(tournament: tournament) {
                             selectedTournament = tournament
                         }
+                        .skeleton(with: isLoading)
                     }
                 }
                 .padding(.horizontal, 20)
@@ -185,7 +191,7 @@ struct TournamentListCard: View {
                             .font(.system(size: 12, weight: .medium))
                             .foregroundColor(.secondary)
                         
-                        Text(DateFormatter.shortDate.string(from: tournament.startDate))
+                        Text(tournament.formattedStartDate)
                             .font(.system(size: 14, weight: .medium))
                             .foregroundColor(.secondary)
                         

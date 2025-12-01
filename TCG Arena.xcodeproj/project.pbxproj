@@ -11,6 +11,9 @@
 		7840904A2EDB96F800CC6B9A /* ImageCacheManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 784090492EDB96F800CC6B9A /* ImageCacheManager.swift */; };
 		7840904C2EDB98F000CC6B9A /* DeckSelectionModal.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7840904B2EDB98F000CC6B9A /* DeckSelectionModal.swift */; };
 		7840904E2EDB9DCB00CC6B9A /* SearchCardResultView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7840904D2EDB9DCB00CC6B9A /* SearchCardResultView.swift */; };
+		785CF4BD2EDC8B2B00BA98AD /* DeckTypeBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 785CF4BC2EDC8B2B00BA98AD /* DeckTypeBadge.swift */; };
+		785CF4BF2EDC8D3F00BA98AD /* CreateDeckView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 785CF4BE2EDC8D3F00BA98AD /* CreateDeckView.swift */; };
+		785CF4C52EDCDA6F00BA98AD /* SkeletonUI in Frameworks */ = {isa = PBXBuildFile; productRef = 785CF4C42EDCDA6F00BA98AD /* SkeletonUI */; };
 		7A1CC91D2ED1EC3B00A61395 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1CC91C2ED1EC3B00A61395 /* OnboardingView.swift */; };
 		7A1CC9292ED238D500A61395 /* CardModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1CC9202ED238D500A61395 /* CardModels.swift */; };
 		7A1CC92A2ED238D500A61395 /* ImageModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1CC9222ED238D500A61395 /* ImageModels.swift */; };
@@ -115,6 +118,8 @@
 		784090492EDB96F800CC6B9A /* ImageCacheManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageCacheManager.swift; sourceTree = "<group>"; };
 		7840904B2EDB98F000CC6B9A /* DeckSelectionModal.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeckSelectionModal.swift; sourceTree = "<group>"; };
 		7840904D2EDB9DCB00CC6B9A /* SearchCardResultView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchCardResultView.swift; sourceTree = "<group>"; };
+		785CF4BC2EDC8B2B00BA98AD /* DeckTypeBadge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeckTypeBadge.swift; sourceTree = "<group>"; };
+		785CF4BE2EDC8D3F00BA98AD /* CreateDeckView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateDeckView.swift; sourceTree = "<group>"; };
 		7A1CC91C2ED1EC3B00A61395 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
 		7A1CC91E2ED238D500A61395 /* AchievementModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AchievementModels.swift; sourceTree = "<group>"; };
 		7A1CC91F2ED238D500A61395 /* AuthModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthModels.swift; sourceTree = "<group>"; };
@@ -221,6 +226,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				785CF4C52EDCDA6F00BA98AD /* SkeletonUI in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -293,6 +299,7 @@
 		7AA785912EBCA4D300A11D94 /* Components */ = {
 			isa = PBXGroup;
 			children = (
+				785CF4BC2EDC8B2B00BA98AD /* DeckTypeBadge.swift */,
 				7AA7858F2EBCA4D300A11D94 /* CollectionCardWithPrice.swift */,
 				7AA785902EBCA4D300A11D94 /* PortfolioCard.swift */,
 			);
@@ -430,6 +437,7 @@
 		A5000009 /* Collection */ = {
 			isa = PBXGroup;
 			children = (
+				785CF4BE2EDC8D3F00BA98AD /* CreateDeckView.swift */,
 				784090472EDA2CD700CC6B9A /* SetDetailView.swift */,
 				7A8B2E9D2EC22EFD004F6826 /* ExpansionDetailView.swift */,
 				7A8B2E752EC1E375004F6826 /* CardScanResultView.swift */,
@@ -481,6 +489,7 @@
 			);
 			name = "TCG Arena";
 			packageProductDependencies = (
+				785CF4C42EDCDA6F00BA98AD /* SkeletonUI */,
 			);
 			productName = "TCG Arena";
 			productReference = A3000001 /* TCG Arena.app */;
@@ -511,6 +520,7 @@
 			);
 			mainGroup = A5000001;
 			packageReferences = (
+				785CF4C32EDCDA6F00BA98AD /* XCRemoteSwiftPackageReference "SkeletonUI" */,
 			);
 			productRefGroup = A5000003 /* Products */;
 			projectDirPath = "";
@@ -617,6 +627,7 @@
 				7A8B2E982EC21F61004F6826 /* CreateTournamentView.swift in Sources */,
 				A1000013 /* AddCardView.swift in Sources */,
 				7AE3FF972EC900A4004EE982 /* HowToGetPointsView.swift in Sources */,
+				785CF4BD2EDC8B2B00BA98AD /* DeckTypeBadge.swift in Sources */,
 				7A7DF4242EBBAD5000331A52 /* ViewHelpers.swift in Sources */,
 				7A817B8F2EC7693C00500F32 /* ShopView.swift in Sources */,
 				7A817B902EC7693C00500F32 /* ShopDetailView.swift in Sources */,
@@ -627,6 +638,7 @@
 				7A7DF3DC2EBB938A00331A52 /* CollectionView.swift in Sources */,
 				7AA785922EBCA4D300A11D94 /* CollectionCardWithPrice.swift in Sources */,
 				7A1CC91D2ED1EC3B00A61395 /* OnboardingView.swift in Sources */,
+				785CF4BF2EDC8D3F00BA98AD /* CreateDeckView.swift in Sources */,
 				7A817B942EC76A1C00500F32 /* LocationInputView.swift in Sources */,
 				7A8B2EA22EC23DA1004F6826 /* SettingsService.swift in Sources */,
 				7A8B2E802EC1EE9F004F6826 /* NewDeckView.swift in Sources */,
@@ -858,6 +870,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		785CF4C32EDCDA6F00BA98AD /* XCRemoteSwiftPackageReference "SkeletonUI" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/CSolanaM/SkeletonUI.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.0.2;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		785CF4C42EDCDA6F00BA98AD /* SkeletonUI */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 785CF4C32EDCDA6F00BA98AD /* XCRemoteSwiftPackageReference "SkeletonUI" */;
+			productName = SkeletonUI;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = AA000001 /* Project object */;
 }

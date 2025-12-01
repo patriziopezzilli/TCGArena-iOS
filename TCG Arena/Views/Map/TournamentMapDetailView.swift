@@ -51,8 +51,8 @@ struct TournamentMapDetailView: View {
                     // Key Info Card
                     InfoCard(title: "Event Details") {
                         VStack(spacing: 12) {
-                            InfoRow(icon: "calendar", title: "Date", value: tournament.startDate.formatted(date: .abbreviated, time: .omitted))
-                            InfoRow(icon: "clock", title: "Time", value: tournament.startDate.formatted(date: .omitted, time: .shortened))
+                            InfoRow(icon: "calendar", title: "Date", value: tournament.formattedStartDate)
+                            InfoRow(icon: "clock", title: "Time", value: tournament.formattedStartDate)
                             InfoRow(icon: "person.2", title: "Players", value: "\(tournament.currentParticipants)/\(tournament.maxParticipants)")
                             InfoRow(icon: "dollarsign.circle", title: "Entry Fee", value: tournament.entryFee > 0 ? String(format: "$%.0f", tournament.entryFee) : "Free")
                             InfoRow(icon: "trophy", title: "Prize Pool", value: String(format: "$%.0f", tournament.prizePool))
@@ -196,7 +196,7 @@ struct TournamentMapDetailView: View {
                                 .font(.system(size: 20, weight: .bold))
                                 .foregroundColor(.primary)
                             
-                            Text("Registration closes \(tournament.startDate.formatted(date: .abbreviated, time: .shortened))")
+                            Text("Registration closes \(tournament.formattedStartDate)")
                                 .font(.system(size: 14, weight: .medium))
                                 .foregroundColor(.secondary)
                         }
@@ -251,7 +251,7 @@ struct TournamentMapDetailView: View {
                 registerForTournament()
             }
         } message: {
-            Text("Are you sure you want to register for '\(tournament.title)'?\n\nEntry Fee: $\(String(format: "%.2f", tournament.entryFee))\nRegistration Deadline: \(tournament.startDate.formatted(date: .abbreviated, time: .omitted))")
+            Text("Are you sure you want to register for '\(tournament.title)'?\n\nEntry Fee: $\(String(format: "%.2f", tournament.entryFee))\nRegistration Deadline: \(tournament.formattedStartDate)")
         }
     }
     
@@ -273,15 +273,23 @@ struct TournamentMapDetailView: View {
 }
 
 #Preview {
-    TournamentMapDetailView(
+    // Helper function to format dates as strings for backend
+    func formatDateForBackend(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "dd MMM yyyy, HH:mm"
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        return formatter.string(from: date)
+    }
+    
+    return TournamentMapDetailView(
         tournament: Tournament(
             title: "Pokemon Regional Championship 2024",
             description: "Official Pokemon TCG Regional Championship with players from across the region competing for championship points and prizes.",
             tcgType: .pokemon,
             type: .championship,
             status: .upcoming,
-            startDate: Date().addingTimeInterval(86400 * 7),
-            endDate: Date().addingTimeInterval(86400 * 7 + 3600 * 8),
+            startDate: formatDateForBackend(Date().addingTimeInterval(86400 * 7)),
+            endDate: formatDateForBackend(Date().addingTimeInterval(86400 * 7 + 3600 * 8)),
             maxParticipants: 128,
             entryFee: 50.0,
             prizePool: 5000.0,

@@ -124,7 +124,7 @@ struct TournamentDetailView: View {
                     VStack(spacing: 20) {
                         // Basic Info
                         InfoRow(icon: "calendar", title: "Date",
-                               value: "\(formatDate(tournament.startDate)) - \(formatDate(tournament.endDate))")
+                               value: "\(tournament.formattedStartDate) - \(tournament.formattedEndDate)")
 
                         InfoRow(icon: "person.2", title: "Participants",
                                value: "\(tournament.registeredParticipantsCount)/\(tournament.maxParticipants)")
@@ -247,10 +247,5 @@ struct TournamentDetailView: View {
         // For now, this is a placeholder
     }
 
-    private func formatDate(_ date: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.dateStyle = .medium
-        formatter.timeStyle = .short
-        return formatter.string(from: date)
-    }
+    // Dates are already formatted as strings by the backend
 }

@@ -19,14 +19,14 @@ struct RegisterRequest: Codable {
     let username: String
     let displayName: String
     let password: String
-    let favoriteGame: TCGType?
+    let favoriteGames: [TCGType]?
     
     enum CodingKeys: String, CodingKey {
         case email
         case username
         case displayName = "display_name"
         case password
-        case favoriteGame = "favorite_game"
+        case favoriteGames = "favorite_games"
     }
     
     func encode(to encoder: Encoder) throws {
@@ -35,7 +35,7 @@ struct RegisterRequest: Codable {
         try container.encode(username, forKey: .username)
         try container.encode(displayName, forKey: .displayName)
         try container.encode(password, forKey: .password)
-        try container.encodeIfPresent(favoriteGame, forKey: .favoriteGame)
+        try container.encodeIfPresent(favoriteGames, forKey: .favoriteGames)
     }
 }
 

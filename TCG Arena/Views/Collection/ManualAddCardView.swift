@@ -30,6 +30,49 @@ struct ManualAddCardView: View {
         NavigationView {
             ZStack(alignment: .bottom) {
                 VStack(spacing: 0) {
+                    // Enhanced Search Bar
+                    VStack(spacing: 12) {                        
+                        HStack(spacing: 12) {
+                            SwiftUI.Image(systemName: "magnifyingglass")
+                                .foregroundColor(.blue)
+                                .font(.system(size: 18, weight: .medium))
+                            
+                            TextField("Enter card name...", text: $searchText)
+                                .font(.system(size: 16))
+                                .onChange(of: searchText) { newValue in
+                                    performSearch(query: newValue)
+                                }
+                            
+                            if !searchText.isEmpty {
+                                Button(action: { searchText = "" }) {
+                                    SwiftUI.Image(systemName: "xmark.circle.fill")
+                                        .foregroundColor(.secondary)
+                                        .font(.system(size: 16))
+                                }
+                            }
+                        }
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 14)
+                        .background(
+                            RoundedRectangle(cornerRadius: 16)
+                                .fill(Color(.systemBackground))
+                                .shadow(color: Color.blue.opacity(0.1), radius: 8, x: 0, y: 4)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 16)
+                                        .stroke(searchText.isEmpty ? Color.blue.opacity(0.2) : Color.blue.opacity(0.5), lineWidth: 1.5)
+                                )
+                        )
+                        .padding(.horizontal, 20)
+                        
+                        if searchText.isEmpty {
+                            Text("Start typing to find your favorite cards")
+                                .font(.system(size: 14, weight: .medium))
+                                .foregroundColor(.secondary)
+                                .padding(.top, 4)
+                        }
+                    }
+                    .padding(.vertical, 20)
+                    
                     // Deck Selection
                     if !deckService.userDecks.isEmpty {
                         VStack(alignment: .leading, spacing: 8) {
@@ -74,31 +117,8 @@ struct ManualAddCardView: View {
                             }
                             .padding(.horizontal, 16)
                         }
-                        .padding(.top, 8)
+                        .padding(.bottom, 8)
                     }
-                    
-                    // Search Bar
-                    HStack(spacing: 12) {
-                        SwiftUI.Image(systemName: "magnifyingglass")
-                            .foregroundColor(.secondary)
-                        
-                        TextField("Search card by name...", text: $searchText)
-                            .font(.system(size: 16))
-                            .onChange(of: searchText) { newValue in
-                                performSearch(query: newValue)
-                            }
-                        
-                        if !searchText.isEmpty {
-                            Button(action: { searchText = "" }) {
-                                SwiftUI.Image(systemName: "xmark.circle.fill")
-                                    .foregroundColor(.secondary)
-                            }
-                        }
-                    }
-                    .padding(12)
-                    .background(Color(.systemGray6))
-                    .cornerRadius(12)
-                    .padding()
                     
                     // Tip View
                     if showTip {
@@ -142,23 +162,79 @@ struct ManualAddCardView: View {
                         Spacer()
                     } else if searchResults.isEmpty && !searchText.isEmpty {
                         Spacer()
-                        VStack(spacing: 12) {
-                            SwiftUI.Image(systemName: "magnifyingglass")
-                                .font(.system(size: 40))
-                                .foregroundColor(.secondary)
-                            Text("No cards found")
-                                .foregroundColor(.secondary)
+                        VStack(spacing: 20) {
+                            ZStack {
+                                Circle()
+                                    .fill(Color.orange.opacity(0.1))
+                                    .frame(width: 100, height: 100)
+                                
+                                SwiftUI.Image(systemName: "magnifyingglass.circle.fill")
+                                    .font(.system(size: 40, weight: .medium))
+                                    .foregroundColor(.orange)
+                            }
+                            
+                            VStack(spacing: 8) {
+                                Text("No cards found")
+                                    .font(.system(size: 20, weight: .bold))
+                                    .foregroundColor(.primary)
+                                
+                                Text("Try a different search term or check the spelling")
+                                    .font(.system(size: 14, weight: .medium))
+                                    .foregroundColor(.secondary)
+                                    .multilineTextAlignment(.center)
+                                    .lineLimit(nil)
+                                    .padding(.horizontal, 32)
+                            }
+                            
+                            // Suggestions
+                            VStack(spacing: 12) {
+                                Text("Try these instead:")
+                                    .font(.system(size: 14, weight: .semibold))
+                                    .foregroundColor(.secondary)
+                                
+                                HStack(spacing: 8) {
+                                    Text("• Check spelling")
+                                        .font(.system(size: 13))
+                                        .foregroundColor(.secondary)
+                                    Text("• Use card name")
+                                        .font(.system(size: 13))
+                                        .foregroundColor(.secondary)
+                                    Text("• Try abbreviations")
+                                        .font(.system(size: 13))
+                                        .foregroundColor(.secondary)
+                                }
+                            }
                         }
+                        .padding(.horizontal, 20)
                         Spacer()
                     } else if searchResults.isEmpty {
                         Spacer()
-                        VStack(spacing: 12) {
-                            SwiftUI.Image(systemName: "text.magnifyingglass")
-                                .font(.system(size: 40))
-                                .foregroundColor(.secondary)
-                            Text("Search for a card")
-                                .foregroundColor(.secondary)
+                        VStack(spacing: 24) {
+                            ZStack {
+                                Circle()
+                                    .fill(Color.blue.opacity(0.1))
+                                    .frame(width: 120, height: 120)
+                                
+                                SwiftUI.Image(systemName: "sparkles")
+                                    .font(.system(size: 50, weight: .medium))
+                                    .foregroundColor(.blue)
+                            }
+                            
+                            VStack(spacing: 12) {
+                                Text("Discover Amazing Cards")
+                                    .font(.system(size: 24, weight: .bold))
+                                    .foregroundColor(.primary)
+                                    .multilineTextAlignment(.center)
+                                
+                                Text("Search for any TCG card by name to add it to your collection. From Pokémon to Magic, find your favorites!")
+                                    .font(.system(size: 16, weight: .medium))
+                                    .foregroundColor(.secondary)
+                                    .multilineTextAlignment(.center)
+                                    .lineLimit(nil)
+                                    .padding(.horizontal, 32)
+                            }
                         }
+                        .padding(.horizontal, 20)
                         Spacer()
                     } else {
                         ScrollView {
@@ -204,15 +280,8 @@ struct ManualAddCardView: View {
                     .transition(.move(edge: .bottom).combined(with: .opacity))
                 }
             }
-            .navigationTitle("Add Card")
+            .navigationTitle("Add Cards")
             .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Done") {
-                        dismiss()
-                    }
-                }
-            }
             .onAppear {
                 // Select first deck by default
                 if selectedDeckId == nil, let firstDeck = deckService.userDecks.first {
@@ -415,5 +484,32 @@ struct ManualAddCardRow: View {
         .scaleEffect(isTapped ? 1.02 : 1.0)
         .animation(.spring(response: 0.3, dampingFraction: 0.6), value: isTapped)
         .contentShape(Rectangle())
+    }
+}
+
+// MARK: - Popular Search Chip
+struct PopularSearchChip: View {
+    let text: String
+    
+    var body: some View {
+        Button(action: {
+            // This would need to be connected to the search functionality
+            // For now, just a visual component
+        }) {
+            Text(text)
+                .font(.system(size: 14, weight: .medium))
+                .foregroundColor(.blue)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 8)
+                .background(
+                    Capsule()
+                        .fill(Color.blue.opacity(0.1))
+                        .overlay(
+                            Capsule()
+                                .stroke(Color.blue.opacity(0.3), lineWidth: 1)
+                        )
+                )
+        }
+        .buttonStyle(PlainButtonStyle())
     }
 }

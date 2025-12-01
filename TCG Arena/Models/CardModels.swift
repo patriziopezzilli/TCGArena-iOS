@@ -277,6 +277,66 @@ enum GradeService: String, Codable, CaseIterable {
     case bgs = "BGS"
     case cgc = "CGC"
     case beckett = "BECKETT"
+    
+    var displayName: String {
+        switch self {
+        case .psa: return "PSA"
+        case .bgs: return "BGS"
+        case .cgc: return "CGC"
+        case .beckett: return "Beckett"
+        }
+    }
+}
+
+// Enum per CardGrade
+enum CardGrade: String, Codable, CaseIterable {
+    case grade10 = "10"
+    case grade9_5 = "9.5"
+    case grade9 = "9"
+    case grade8_5 = "8.5"
+    case grade8 = "8"
+    case grade7_5 = "7.5"
+    case grade7 = "7"
+    case grade6_5 = "6.5"
+    case grade6 = "6"
+    case grade5_5 = "5.5"
+    case grade5 = "5"
+    case grade4_5 = "4.5"
+    case grade4 = "4"
+    case grade3_5 = "3.5"
+    case grade3 = "3"
+    case grade2_5 = "2.5"
+    case grade2 = "2"
+    case grade1_5 = "1.5"
+    case grade1 = "1"
+    
+    var displayName: String {
+        return rawValue
+    }
+    
+    var numericValue: Double {
+        switch self {
+        case .grade10: return 10.0
+        case .grade9_5: return 9.5
+        case .grade9: return 9.0
+        case .grade8_5: return 8.5
+        case .grade8: return 8.0
+        case .grade7_5: return 7.5
+        case .grade7: return 7.0
+        case .grade6_5: return 6.5
+        case .grade6: return 6.0
+        case .grade5_5: return 5.5
+        case .grade5: return 5.0
+        case .grade4_5: return 4.5
+        case .grade4: return 4.0
+        case .grade3_5: return 3.5
+        case .grade3: return 3.0
+        case .grade2_5: return 2.5
+        case .grade2: return 2.0
+        case .grade1_5: return 1.5
+        case .grade1: return 1.0
+        }
+    }
 }
 
 // Modello per risposta API paginata

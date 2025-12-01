@@ -50,33 +50,9 @@ struct TCGSet: Identifiable, Codable {
     }
     
     // Computed properties for display
+    // Date is already formatted by backend as "dd MMM yyyy, HH:mm", so use it directly
     var formattedReleaseDate: String {
-        let parsedDate = releaseDate
-        
-        // Check if parsing failed by comparing with current date
-        // If it's exactly the current date, parsing likely failed
-        let now = Date()
-        let calendar = Calendar.current
-        if calendar.isDate(parsedDate, inSameDayAs: now) {
-            // Additional check: if the original string doesn't match today's date format
-            let todayString = ISO8601DateFormatter().string(from: now)
-            if releaseDateString != String(todayString.prefix(releaseDateString.count)) {
-                // Parsing likely failed, try to show original string in readable format
-                if releaseDateString.contains("-") {
-                    // Try to extract date part (yyyy-MM-dd)
-                    let components = releaseDateString.split(separator: "-")
-                    if components.count >= 3 {
-                        return "\(components[2].prefix(2))/\(components[1])/\(components[0])"
-                    }
-                }
-                // Fallback to showing original string
-                return releaseDateString
-            }
-        }
-        
-        let formatter = DateFormatter()
-        formatter.dateStyle = .medium
-        return formatter.string(from: parsedDate)
+        return releaseDateString
     }
     
     var isRecent: Bool {

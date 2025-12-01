@@ -108,7 +108,7 @@ struct ProfileView: View {
                                                 .fill(user.isPremium ? Color(red: 1.0, green: 0.7, blue: 0.0) : Color.gray)
                                         )
                                         
-                                        Text("Joined \(formattedJoinDate(user.dateJoined))")
+                                        Text("Joined \(formattedJoinDate(parseDate(user.dateJoined)))")
                                             .font(.system(size: 14, weight: .medium))
                                             .foregroundColor(.secondary)
                                     } else {
@@ -1302,6 +1302,13 @@ struct StatCard: View {
                 )
             }
         }
+    }
+    
+    private func parseDate(_ dateString: String) -> Date {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "dd MMM yyyy, HH:mm"
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        return formatter.date(from: dateString) ?? Date()
     }
     
     private func formattedJoinDate(_ date: Date) -> String {

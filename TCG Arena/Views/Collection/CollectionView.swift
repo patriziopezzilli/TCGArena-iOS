@@ -1,38 +1,254 @@
-//
-//  CollectionView.swift
-//  TCG Arena
-//
-//  Created by TCG Arena Team on 11/5/25.
-//
-
 import SwiftUI
 import Foundation
+// Import for MarketDataService and PortfolioSummary
+import TCG_Arena
+import SkeletonUI
+
+// MARK: - Import From Decks View
+struct ImportFromDecksView: View {
+    @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject var cardService: CardService
+    @EnvironmentObject var deckService: DeckService
+    @State private var selectedCards: Set<Int64> = []
+    @State private var isImporting = false
+    
+    private var decksWithCards: [Deck] {
+        deckService.userDecks.filter { !$0.cards.isEmpty }
+    }
+    
+    private var allCardsFromDecks: [(deck: Deck, card: Deck.DeckCard)] {
+        var result: [(deck: Deck, card: Deck.DeckCard)] = []
+        for deck in decksWithCards {
+            for card in deck.cards {
+                result.append((deck: deck, card: card))
+            }
+        }
+        return result
+    }
+    
+    var body: some View {
+        NavigationView {
+            VStack(spacing: 0) {
+                // Header
+                VStack(spacing: 12) {
+                    Text("Import Cards to Collection")
+                        .font(.system(size: 24, weight: .bold))
+                        .foregroundColor(.primary)
+                    
+                    Text("Select cards from your decks to add to your personal collection")
+                        .font(.system(size: 16, weight: .medium))
+                        .foregroundColor(.secondary)
+                        .multilineTextAlignment(.center)
+                }
+                .padding(.horizontal, 20)
+                .padding(.top, 20)
+                .padding(.bottom, 16)
+                
+                if decksWithCards.isEmpty {
+                    // No decks with cards
+                    VStack(spacing: 24) {
+                        Spacer()
+                        ZStack {
+                            Circle()
+                                .fill(Color.gray.opacity(0.1))
+                                .frame(width: 120, height: 120)
+                        
+                            SwiftUI.Image(systemName: "rectangle.stack")
+                                .font(.system(size: 50, weight: .medium))
+                                .foregroundColor(.gray)
+                        }
+                    
+                        VStack(spacing: 12) {
+                            Text("No Cards in Decks")
+                                .font(.system(size: 24, weight: .bold))
+                                .foregroundColor(.primary)
+                        
+                            Text("Add cards to your decks first, then you can import them to your collection.")
+                                .font(.system(size: 16, weight: .medium))
+                                .foregroundColor(.secondary)
+                                .multilineTextAlignment(.center)
+                                .lineLimit(nil)
+                        }
+                        Spacer()
+                    }
+                    .padding(.horizontal, 40)
+                } else {
+                    // List of cards from decks
+                    List {
+                        ForEach(decksWithCards, id: \.id) { deck in
+                            Section(header: Text(deck.name)) {
+                                ForEach(deck.cards, id: \.cardId) { deckCard in
+                                    HStack {
+                                        // Card Image
+                                        if let imageURL = URL(string: deckCard.cardImageUrl ?? "") {
+                                            CachedAsyncImage(url: imageURL) { phase in
+                                                switch phase {
+                                                case .empty:
+                                                    RoundedRectangle(cornerRadius: 8)
+                                                        .fill(Color.gray.opacity(0.2))
+                                                        .frame(width: 50, height: 70)
+                                                        .overlay(ProgressView())
+                                                case .success(let image):
+                                                    image
+                                                        .resizable()
+                                                        .aspectRatio(contentMode: .fill)
+                                                        .frame(width: 50, height: 70)
+                                                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                                                case .failure:
+                                                    RoundedRectangle(cornerRadius: 8)
+                                                        .fill(Color.gray.opacity(0.2))
+                                                        .frame(width: 50, height: 70)
+                                                        .overlay(
+                                                            SwiftUI.Image(systemName: "photo")
+                                                                .foregroundColor(.gray)
+                                                        )
+                                                @unknown default:
+                                                    RoundedRectangle(cornerRadius: 8)
+                                                        .fill(Color.gray.opacity(0.2))
+                                                        .frame(width: 50, height: 70)
+                                                }
+                                            }
+                                        } else {
+                                            RoundedRectangle(cornerRadius: 8)
+                                                .fill(Color.gray.opacity(0.2))
+                                                .frame(width: 50, height: 70)
+                                                .overlay(
+                                                    SwiftUI.Image(systemName: "photo")
+                                                        .foregroundColor(.gray)
+                                                )
+                                        }
+                                        
+                                        VStack(alignment: .leading, spacing: 4) {
+                                            Text(deckCard.cardName)
+                                                .font(.system(size: 16, weight: .semibold))
+                                                .foregroundColor(.primary)
+                                            
+                                            Text("Quantity: \(deckCard.quantity)")
+                                                .font(.system(size: 14, weight: .medium))
+                                                .foregroundColor(.secondary)
+                                        }
+                                        
+                                        Spacer()
+                                        
+                                        // Checkbox
+                                        SwiftUI.Image(systemName: selectedCards.contains(deckCard.cardId) ? "checkmark.circle.fill" : "circle")
+                                            .font(.system(size: 24, weight: .medium))
+                                            .foregroundColor(selectedCards.contains(deckCard.cardId) ? .blue : .gray)
+                                    }
+                                    .contentShape(Rectangle())
+                                    .onTapGesture {
+                                        if selectedCards.contains(deckCard.cardId) {
+                                            selectedCards.remove(deckCard.cardId)
+                                        } else {
+                                            selectedCards.insert(deckCard.cardId)
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    .listStyle(InsetGroupedListStyle())
+                }
+            }
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button("Cancel") {
+                        dismiss()
+                    }
+                }
+                
+                if !decksWithCards.isEmpty {
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        Button(action: importSelectedCards) {
+                            if isImporting {
+                                ProgressView()
+                                    .tint(.white)
+                            } else {
+                                Text("Import (\(selectedCards.count))")
+                                    .fontWeight(.semibold)
+                            }
+                        }
+                        .disabled(selectedCards.isEmpty || isImporting)
+                    }
+                }
+            }
+        }
+    }
+    
+    private func importSelectedCards() {
+        guard !selectedCards.isEmpty else { return }
+        
+        isImporting = true
+        
+        // Find the selected cards and import them
+        let cardsToImport = allCardsFromDecks.filter { selectedCards.contains($0.card.cardId) }
+        
+        var importedCount = 0
+        let totalCount = cardsToImport.count
+        
+        for (deck, deckCard) in cardsToImport {
+            // Add each card to collection with default condition
+            cardService.addCardToCollection(cardTemplateId: Int(deckCard.cardId), condition: .nearMint, quantity: deckCard.quantity) { result in
+                switch result {
+                case .success(let updatedDeck):
+                    // Card successfully added to collection deck
+                    importedCount += 1
+                    if importedCount == totalCount {
+                        // All cards imported
+                        DispatchQueue.main.async {
+                            self.isImporting = false
+                            self.dismiss()
+                        }
+                    }
+                case .failure(let error):
+                    print("Failed to import card \(deckCard.cardName): \(error.localizedDescription)")
+                    importedCount += 1
+                    if importedCount == totalCount {
+                        DispatchQueue.main.async {
+                            self.isImporting = false
+                            self.dismiss()
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
 
 struct CollectionView: View {
     @EnvironmentObject var cardService: CardService
     @EnvironmentObject var deckService: DeckService
     @EnvironmentObject var authService: AuthService
-    @StateObject private var expansionService = ExpansionService()
-    @StateObject private var marketService = MarketDataService()
+    @EnvironmentObject var marketService: MarketDataService
     @AppStorage("showMarketValues") private var showMarketValues: Bool = true
+    @State private var showingCreateDeck = false
     @State private var showingAddCard = false
     @State private var selectedTCGType: TCGType? = nil
     @State private var searchText = ""
     @State private var isInitialLoading = true
     @State private var viewMode: ViewMode = .lists
+    @State private var isLoadingCards = false
     @State private var selectedCard: Card? = nil
     @State private var isCardActive = false
+    @State private var isLoadingDecks = true
+    @State private var showingImportFromDecks = false
+    @State private var userCards: [Card] = [] // Personal collection cards
+    @State private var enrichedAllCards: [Card] = [] // Cards from all decks (enriched)
     
     enum ViewMode {
         case lists, allCards
     }
     
     var filteredCards: [Card] {
-        // If userCards is empty, try to populate from decks
-        var cards = cardService.userCards
+        var cards: [Card]
         
-        if cards.isEmpty {
-            cards = getAllCardsFromDecks()
+        if viewMode == .allCards {
+            // Show all cards from all decks with enrichment
+            cards = enrichedAllCards
+        } else {
+            // Show only cards from user's personal collection
+            cards = userCards
         }
         
         // Filter by TCG type
@@ -46,6 +262,51 @@ struct CollectionView: View {
         }
         
         return cards
+    }
+    
+    // Separate count calculations for the picker
+    var listsCount: Int {
+        var count = deckService.userDecks.count
+        
+        // Filter by TCG type
+        if let tcgType = selectedTCGType {
+            count = deckService.userDecks.filter { $0.tcgType == tcgType }.count
+        }
+        
+        // Filter by search text
+        if !searchText.isEmpty {
+            count = deckService.userDecks.filter { $0.name.localizedCaseInsensitiveContains(searchText) }.count
+        }
+        
+        return count
+    }
+    
+    var allCardsCount: Int {
+        var count = enrichedAllCards.count
+        
+        // Apply TCG type filter
+        if let tcgType = selectedTCGType {
+            count = enrichedAllCards.filter { $0.tcgType == tcgType }.count
+        }
+        
+        // Apply search text filter
+        if !searchText.isEmpty {
+            var filteredCount = 0
+            for card in enrichedAllCards {
+                // Apply TCG type filter first
+                var shouldInclude = true
+                if let tcgType = selectedTCGType {
+                    shouldInclude = card.tcgType == tcgType
+                }
+                // Then apply search filter
+                if shouldInclude && card.name.localizedCaseInsensitiveContains(searchText) {
+                    filteredCount += 1
+                }
+            }
+            count = filteredCount
+        }
+        
+        return count
     }
     
     var filteredDecks: [Deck] {
@@ -64,6 +325,58 @@ struct CollectionView: View {
         return decks
     }
     
+    private func loadUserCards() {
+        isLoadingCards = true
+        cardService.getUserCardCollection { result in
+            DispatchQueue.main.async {
+                self.isLoadingCards = false
+                switch result {
+                case .success(let cards):
+                    // Cards are already enriched by getUserCardCollection
+                    self.userCards = cards
+                    // Always load enriched cards after loading user cards to keep data synchronized
+                    self.loadEnrichedAllCards()
+                case .failure(let error):
+                    print("Error loading user cards: \(error)")
+                    // Still try to load enriched cards even if user cards fail
+                    self.loadEnrichedAllCards()
+                }
+            }
+        }
+    }
+    
+    
+    private func loadEnrichedAllCards() {
+        let group = DispatchGroup()
+        var enrichedCards: [Card] = []
+        
+        for deck in deckService.userDecks {
+            for deckCard in deck.cards {
+                group.enter()
+                // Create basic card from deck card
+                let basicCard = cardService.convertDeckCardToCard(deckCard, deckId: deck.id!)
+                
+                // Enrich with template data
+                cardService.enrichCardWithTemplateData(basicCard) { result in
+                    switch result {
+                    case .success(let enrichedCard):
+                        enrichedCards.append(enrichedCard)
+                    case .failure(let error):
+                        print("Failed to enrich card \(deckCard.cardName): \(error.localizedDescription)")
+                        // Use basic card if enrichment fails
+                        enrichedCards.append(basicCard)
+                    }
+                    group.leave()
+                }
+            }
+        }
+        
+        group.notify(queue: .main) {
+            // Sort cards by name for consistent ordering
+            self.enrichedAllCards = enrichedCards.sorted { $0.name < $1.name }
+        }
+    }
+    
     var body: some View {
         NavigationView {
             VStack(spacing: 0) {
@@ -78,7 +391,10 @@ struct CollectionView: View {
             .navigationTitle("")
             .navigationBarHidden(true)
             .background(cardNavigationLink)
-            .navigationBarItems(trailing: addCardButton)
+            .sheet(isPresented: $showingCreateDeck) {
+                CreateDeckView(userId: authService.currentUserId ?? 0)
+                    .environmentObject(deckService)
+            }
             .sheet(isPresented: $showingAddCard) {
                 NewAddCardView()
                     .environmentObject(cardService)
@@ -87,6 +403,9 @@ struct CollectionView: View {
             .onAppear(perform: onAppearAction)
             .task(taskAction)
             .onChange(of: showMarketValues, perform: onChangeAction)
+            .refreshable {
+                await performRefresh()
+            }
         }
         .background(Color(.systemBackground))
     }
@@ -102,25 +421,42 @@ struct CollectionView: View {
                 
                 Spacer()
                 
-                Button(action: { showingAddCard = true }) {
-                    ZStack {
-                        Circle()
-                            .fill(Color.blue)
-                            .frame(width: 32, height: 32)
-                        
-                        SwiftUI.Image(systemName: "plus")
-                            .font(.system(size: 16, weight: .bold))
-                            .foregroundColor(.white)
+                HStack(spacing: 12) {
+                    // Add Card Button
+                    Button(action: { showingAddCard = true }) {
+                        ZStack {
+                            Circle()
+                                .fill(Color.blue)
+                                .frame(width: 32, height: 32)
+                            
+                            SwiftUI.Image(systemName: "plus.circle.fill")
+                                .font(.system(size: 16, weight: .bold))
+                                .foregroundColor(.white)
+                        }
+                        .shadow(color: Color.blue.opacity(0.3), radius: 4, x: 0, y: 2)
                     }
-                    .shadow(color: Color.blue.opacity(0.3), radius: 4, x: 0, y: 2)
+                    
+                    // Create Deck Button
+                    Button(action: { showingCreateDeck = true }) {
+                        ZStack {
+                            Circle()
+                                .fill(Color.green)
+                                .frame(width: 32, height: 32)
+                            
+                            SwiftUI.Image(systemName: "plus.square")
+                                .font(.system(size: 16, weight: .bold))
+                                .foregroundColor(.white)
+                        }
+                        .shadow(color: Color.green.opacity(0.3), radius: 4, x: 0, y: 2)
+                    }
                 }
         }
         .padding(.horizontal, 20)
         .padding(.top, 20)
         .padding(.bottom, 12)            // View Mode Selector
             Picker("View Mode", selection: $viewMode) {
-                Text("Lists (\(deckService.userDecks.count))").tag(ViewMode.lists)
-                Text("All Cards (\(filteredCards.count))").tag(ViewMode.allCards)
+                Text("Lists (\(listsCount))").tag(ViewMode.lists)
+                Text("All Cards (\(allCardsCount))").tag(ViewMode.allCards)
             }
             .pickerStyle(.segmented)
             .padding(.horizontal, 20)
@@ -135,7 +471,7 @@ struct CollectionView: View {
                     .foregroundColor(.secondary)
                     .font(.system(size: 16, weight: .medium))
                 
-                TextField(viewMode == .lists ? "Search your lists..." : "Search your collection...", text: $searchText)
+                TextField(viewMode == .lists ? "Search your lists..." : viewMode == .allCards ? "Search all your cards..." : "Search your collection...", text: $searchText)
                     .textFieldStyle(PlainTextFieldStyle())
                     .font(.system(size: 16, weight: .medium))
                 
@@ -229,52 +565,49 @@ struct CollectionView: View {
     private var contentView: some View {
         Group {
             if viewMode == .lists {
-                if filteredDecks.isEmpty {
+                if filteredDecks.isEmpty && !isLoadingDecks {
                     emptyDecksView
                 } else {
                     decksListView
+                        .skeleton(with: isLoadingDecks)
                 }
             } else {
-                if filteredCards.isEmpty {
+                if filteredCards.isEmpty && !isLoadingCards {
                     emptyCardsView
                 } else {
                     cardsListView
+                        .skeleton(with: isLoadingCards)
                 }
             }
         }
     }
     
     private var emptyDecksView: some View {
-        VStack(spacing: 32) {
-            Spacer()
+        VStack(spacing: 24) {
+            ZStack {
+                Circle()
+                    .fill(Color.blue.opacity(0.1))
+                    .frame(width: 120, height: 120)
             
-            VStack(spacing: 24) {
-                ZStack {
-                    Circle()
-                        .fill(Color.blue.opacity(0.1))
-                        .frame(width: 120, height: 120)
-                
-                    SwiftUI.Image(systemName: "rectangle.stack")
-                        .font(.system(size: 50, weight: .medium))
-                        .foregroundColor(.blue)
-                }
-            
-                VStack(spacing: 12) {
-                    Text("No Lists Yet")
-                        .font(.system(size: 24, weight: .bold))
-                        .foregroundColor(.primary)
-                
-                    Text("Create your first list to start collecting cards!")
-                        .font(.system(size: 16, weight: .medium))
-                        .foregroundColor(.secondary)
-                        .multilineTextAlignment(.center)
-                        .lineLimit(nil)
-                }
+                SwiftUI.Image(systemName: "rectangle.stack")
+                    .font(.system(size: 50, weight: .medium))
+                    .foregroundColor(.blue)
             }
         
+            VStack(spacing: 12) {
+                Text("No Lists Yet")
+                    .font(.system(size: 24, weight: .bold))
+                    .foregroundColor(.primary)
+            
+                Text("Create your first list to start collecting cards!")
+                    .font(.system(size: 16, weight: .medium))
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
+                    .lineLimit(nil)
+            }
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
         .padding(.horizontal, 40)
-        .padding(.vertical, 60)
     }
     
     private var decksListView: some View {
@@ -310,37 +643,77 @@ struct CollectionView: View {
                 }
             
                 VStack(spacing: 12) {
-                    Text("No Cards Yet")
+                    Text(viewMode == .allCards ? "No Cards in Your Decks" : "No Cards in Collection")
                         .font(.system(size: 24, weight: .bold))
                         .foregroundColor(.primary)
                 
-                    Text("Start building your collection!\nScan or add your first cards.")
+                    Text(viewMode == .allCards ? 
+                        "Your decks are empty.\nAdd cards to your decks to see them here." :
+                        "Your personal collection is empty.\nAdd cards from the Discover section or import from your decks.")
                         .font(.system(size: 16, weight: .medium))
                         .foregroundColor(.secondary)
                         .multilineTextAlignment(.center)
                         .lineLimit(nil)
+                }
+                
+                // Show import option only for collection view
+                if viewMode != .allCards && hasCardsInDecks() {
+                    Button(action: {
+                        showingImportFromDecks = true
+                    }) {
+                        HStack(spacing: 8) {
+                            SwiftUI.Image(systemName: "arrow.down.circle")
+                            Text("Import from Decks")
+                        }
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundColor(.blue)
+                        .padding(.horizontal, 20)
+                        .padding(.vertical, 12)
+                        .background(Color.blue.opacity(0.1))
+                        .clipShape(Capsule())
+                    }
                 }
             }
         
         }
         .padding(.horizontal, 40)
         .padding(.vertical, 60)
+        .sheet(isPresented: $showingImportFromDecks) {
+            ImportFromDecksView()
+                .environmentObject(cardService)
+                .environmentObject(deckService)
+        }
     }
     
 
     
     private var cardsListView: some View {
-        List(filteredCards) { card in
-            ZStack {
-                NavigationLink(destination: CardDetailView(card: card, isFromDiscover: false)) {
-                    EmptyView()
+        List {
+            if isLoadingCards {
+                // Show skeleton cards while loading
+                ForEach(0..<8, id: \.self) { _ in
+                    CardRowSkeletonView()
+                        .listRowSeparator(.hidden)
+                        .listRowInsets(EdgeInsets(top: 4, leading: 20, bottom: 4, trailing: 20))
+                        .listRowBackground(Color.clear)
                 }
-                .opacity(0)
-                
-                CardRowView(card: card, deckService: deckService)
+            } else {
+                ForEach(filteredCards) { card in
+                    ZStack {
+                        NavigationLink(destination: CardDetailView(card: card, isFromDiscover: false) { updatedCard in
+                            // After card update, always reload both user cards and enriched cards to stay synchronized
+                            self.loadUserCards()
+                        }) {
+                            EmptyView()
+                        }
+                        .opacity(0)
+                        
+                        CardRowView(card: card, deckService: deckService)
+                    }
+                    .listRowSeparator(.hidden)
+                    .listRowInsets(EdgeInsets(top: 4, leading: 20, bottom: 4, trailing: 20))
+                }
             }
-            .listRowSeparator(.hidden)
-            .listRowInsets(EdgeInsets(top: 4, leading: 20, bottom: 4, trailing: 20))
         }
         .listStyle(PlainListStyle())
         .background(Color(.systemGroupedBackground))
@@ -349,16 +722,12 @@ struct CollectionView: View {
     private var cardNavigationLink: some View {
         Group {
             if selectedCard != nil {
-                NavigationLink("", destination: CardDetailView(card: selectedCard!, isFromDiscover: false), isActive: Binding(get: { isCardActive }, set: { isCardActive = $0; if !$0 { selectedCard = nil } }))
+                NavigationLink("", destination: CardDetailView(card: selectedCard!, isFromDiscover: false) { updatedCard in
+                    // After card update, always reload both user cards and enriched cards to stay synchronized
+                    self.loadUserCards()
+                    selectedCard = updatedCard
+                }, isActive: Binding(get: { isCardActive }, set: { isCardActive = $0; if !$0 { selectedCard = nil } }))
             }
-        }
-    }
-    
-    private var addCardButton: some View {
-        Button(action: { showingAddCard = true }) {
-            SwiftUI.Image(systemName: "plus.circle.fill")
-                .font(.title2)
-                .foregroundColor(TCGTheme.Colors.accent)
         }
     }
     
@@ -367,9 +736,12 @@ struct CollectionView: View {
             marketService.loadMarketData()
         }
         
-        // Load user decks if authenticated - force refresh when returning from navigation
+        // Always refresh user decks and cards when appearing
         if let userId = authService.currentUserId {
             deckService.refreshUserDecks(userId: userId) { result in
+                DispatchQueue.main.async {
+                    self.isLoadingDecks = false
+                }
                 switch result {
                 case .success(let decks):
                     // Handle success silently
@@ -379,7 +751,12 @@ struct CollectionView: View {
                     break
                 }
             }
+        } else {
+            isLoadingDecks = false
         }
+
+        // Always load user card collection and enriched cards
+        loadUserCards()
     }
     
     private func taskAction() async {
@@ -409,8 +786,44 @@ struct CollectionView: View {
         }
     }
     
-    private func deleteCard(at offsets: IndexSet) {
-        cardService.userCards.remove(atOffsets: offsets)
+    private func performRefresh() async {
+        // Refresh market data if enabled
+        if showMarketValues {
+            marketService.loadMarketData()
+        }
+        
+        // Always refresh both decks and cards to keep them synchronized
+        if let userId = authService.currentUserId {
+            await withCheckedContinuation { continuation in
+                deckService.refreshUserDecks(userId: userId) { result in
+                    switch result {
+                    case .success:
+                        print("🔄 CollectionView: Decks refreshed successfully")
+                    case .failure(let error):
+                        print("🔴 CollectionView: Failed to refresh decks: \(error.localizedDescription)")
+                    }
+                    continuation.resume()
+                }
+            }
+        }
+
+        // Refresh user card collection and enriched cards
+        await withCheckedContinuation { continuation in
+            loadUserCards()
+            // Wait a bit for async operations to complete
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                continuation.resume()
+            }
+        }
+    }
+    
+    // MARK: - Data Synchronization Helpers
+    private func reloadAllData() {
+        // Force complete reload of both user cards and enriched cards
+        loadUserCards()
+        if let userId = authService.currentUserId {
+            deckService.refreshUserDecks(userId: userId) { _ in }
+        }
     }
     
     // MARK: - Helper Functions
@@ -436,79 +849,71 @@ struct CollectionView: View {
     
 
     
-    private func getAllCardsFromDecks() -> [Card] {
-        var cardMap: [Int64: Card] = [:]
-        
-        for deck in deckService.userDecks {
-            for deckCard in deck.cards {
-                let cardId = deckCard.cardId
-                
-                // Fix image URL if needed
-                var imageUrl = deckCard.cardImageUrl
-                if let url = imageUrl, !url.contains("/high.webp") {
-                    imageUrl = "\(url)/high.webp"
+    private func hasCardsInDecks() -> Bool {
+        return deckService.userDecks.contains { !$0.cards.isEmpty }
+    }
+}
+
+struct CardRowSkeletonView: View {
+    var body: some View {
+        HStack(alignment: .top, spacing: 12) {
+            // Card Thumbnail Skeleton
+            RoundedRectangle(cornerRadius: 8)
+                .fill(Color(.systemGray5))
+                .frame(width: 50, height: 70)
+            
+            VStack(alignment: .leading, spacing: 4) {
+                // Header with TCG type badge skeleton
+                HStack {
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(Color(.systemGray4))
+                        .frame(width: 60, height: 20)
+                    Spacer()
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(Color(.systemGray4))
+                        .frame(width: 40, height: 20)
                 }
                 
-                if let existingCard = cardMap[cardId] {
-                    // Update quantity and deck names
-                    var deckNames = existingCard.deckNames ?? []
-                    if !deckNames.contains(deck.name) {
-                        deckNames.append(deck.name)
-                    }
+                // Card Name Skeleton
+                RoundedRectangle(cornerRadius: 4)
+                    .fill(Color(.systemGray4))
+                    .frame(height: 14)
+                
+                RoundedRectangle(cornerRadius: 4)
+                    .fill(Color(.systemGray4))
+                    .frame(width: 120, height: 14)
+                
+                // Set and Number Skeleton
+                HStack {
+                    RoundedRectangle(cornerRadius: 4)
+                        .fill(Color(.systemGray4))
+                        .frame(width: 80, height: 12)
                     
-                    let updatedCard = Card(
-                        id: existingCard.id,
-                        templateId: existingCard.templateId,
-                        name: existingCard.name,
-                        rarity: existingCard.rarity,
-                        condition: existingCard.condition,
-                        imageURL: existingCard.imageURL,
-                        isFoil: existingCard.isFoil,
-                        quantity: existingCard.quantity + deckCard.quantity,
-                        ownerId: existingCard.ownerId,
-                        createdAt: existingCard.createdAt,
-                        updatedAt: existingCard.updatedAt,
-                        tcgType: existingCard.tcgType,
-                        set: existingCard.set,
-                        cardNumber: existingCard.cardNumber,
-                        expansion: existingCard.expansion,
-                        marketPrice: existingCard.marketPrice,
-                        description: existingCard.description
-                    )
-                    // Manually set deckNames since it's not in init
-                    var finalCard = updatedCard
-                    finalCard.deckNames = deckNames
-                    cardMap[cardId] = finalCard
-                } else {
-                    // Create new card from deck card
-                    let newCard = Card(
-                        id: cardId, // Use templateId as ID for uniqueness in list
-                        templateId: cardId,
-                        name: deckCard.cardName,
-                        rarity: .common, // Default
-                        condition: .nearMint, // Default
-                        imageURL: imageUrl,
-                        isFoil: false,
-                        quantity: deckCard.quantity,
-                        ownerId: deck.ownerId,
-                        createdAt: deck.dateCreated,
-                        updatedAt: deck.dateModified,
-                        tcgType: deck.tcgType,
-                        set: nil,
-                        cardNumber: nil,
-                        expansion: nil,
-                        marketPrice: nil,
-                        description: nil
-                    )
-                    // Manually set deckNames
-                    var finalCard = newCard
-                    finalCard.deckNames = [deck.name]
-                    cardMap[cardId] = finalCard
+                    Spacer()
+                    
+                    RoundedRectangle(cornerRadius: 4)
+                        .fill(Color(.systemGray4))
+                        .frame(width: 30, height: 12)
                 }
+                
+                // Condition bar skeleton
+                RoundedRectangle(cornerRadius: 2)
+                    .fill(Color(.systemGray4))
+                    .frame(height: 4)
             }
+            
+            Spacer()
         }
-        
-        return Array(cardMap.values).sorted { $0.name < $1.name }
+        .padding(16)
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(Color(.secondarySystemGroupedBackground))
+                .shadow(color: Color.black.opacity(0.08), radius: 10, x: 0, y: 3)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 16)
+                .stroke(Color(.separator).opacity(0.3), lineWidth: 1)
+        )
     }
 }
 
@@ -598,7 +1003,7 @@ struct HorizontalCardRowView: View {
                     }
                     
                     // Condition
-                    Text(card.condition.rawValue)
+                    Text(card.condition.displayName)
                         .font(.system(size: 11, weight: .medium))
                         .foregroundColor(conditionColor(card.condition))
                         .padding(.horizontal, 8)
@@ -712,19 +1117,9 @@ struct CardDiscoverView: View {
     @State private var searchTask: Task<Void, Never>?
     
     private var filteredCards: [Card] {
-        var cards = cardService.userCards
-        
-        // Filter by TCG type
-        if let selectedType = selectedTCGType {
-            cards = cards.filter { $0.tcgType == selectedType }
-        }
-        
-        // Filter by search text
-        if !searchText.isEmpty {
-            cards = cards.filter { $0.name.localizedCaseInsensitiveContains(searchText) }
-        }
-        
-        return cards
+        // CardDiscoverView should load cards from search, not from user collection
+        // For now, return empty array since this view is for discovering new cards
+        []
     }
     
     private var recentSets: [TCGSet] {
@@ -750,159 +1145,167 @@ struct CardDiscoverView: View {
         return selectedTCGType == type ? .white : type.themeColor
     }
     
-    var body: some View {
-        NavigationView {
-            ZStack(alignment: .top) {
-                Color(.systemGroupedBackground)
-                    .edgesIgnoringSafeArea(.all)
-                
-                ScrollView {
-                    VStack(spacing: 20) {
-                        // Premium Header
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text("Discover")
-                                .font(.system(size: 34, weight: .bold))
-                                .foregroundStyle(
-                                    LinearGradient(
-                                        colors: [.primary, .blue],
-                                        startPoint: .topLeading,
-                                        endPoint: .bottomTrailing
-                                    )
-                                )
-                            
-                            Text("Explore new cards and expansions")
-                                .font(.system(size: 16, weight: .medium))
-                                .foregroundColor(.secondary)
-                        }
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.horizontal, 24)
-                        .padding(.top, 20)
-                        
-                        // Modern Search Bar
-                        HStack(spacing: 12) {
-                            SwiftUI.Image(systemName: "magnifyingglass")
-                                .font(.system(size: 18, weight: .semibold))
-                                .foregroundColor(.secondary)
-                            
-                            TextField("Search cards, sets...", text: $searchText)
-                                .font(.system(size: 16, weight: .medium))
-                            
-                            if !searchText.isEmpty {
-                                Button(action: { searchText = "" }) {
-                                    SwiftUI.Image(systemName: "xmark.circle.fill")
-                                        .foregroundColor(.secondary)
-                                        .font(.system(size: 18))
-                                }
+    private var headerView: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Discover")
+                .font(.system(size: 34, weight: .bold))
+                .foregroundColor(.primary)
+            
+            Text("Explore new cards and expansions")
+                .font(.system(size: 16, weight: .medium))
+                .foregroundColor(.secondary)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, 24)
+        .padding(.top, 60)
+    }
+    
+    private var searchBarView: some View {
+        HStack(spacing: 12) {
+            SwiftUI.Image(systemName: "magnifyingglass")
+                .font(.system(size: 18, weight: .semibold))
+                .foregroundColor(.secondary)
+            
+            TextField("Search cards, sets...", text: $searchText)
+                .font(.system(size: 16, weight: .medium))
+            
+            if !searchText.isEmpty {
+                Button(action: { searchText = "" }) {
+                    SwiftUI.Image(systemName: "xmark.circle.fill")
+                        .foregroundColor(.secondary)
+                        .font(.system(size: 18))
+                }
+            }
+        }
+        .padding(16)
+        .background(
+            RoundedRectangle(cornerRadius: 20)
+                .fill(Color(.systemBackground))
+                .shadow(color: Color.black.opacity(0.08), radius: 10, x: 0, y: 4)
+        )
+        .padding(.horizontal, 20)
+        .padding(.top, 4)
+    }
+    
+    private var contentView: some View {
+        if !searchText.isEmpty && searchText.count >= 2 {
+            AnyView(searchResultsView)
+        } else {
+            AnyView(mainContentView)
+        }
+    }
+    
+    private var mainContentView: some View {
+        Group {
+            tcgFilterView
+            featuredExpansionsView
+            featuredCardsView
+        }
+    }
+    
+    private var tcgFilterView: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 12) {
+                ForEach([nil] + TCGType.allCases, id: \.self) { tcgType in
+                    Button(action: {
+                        selectedTCGType = tcgType
+                    }) {
+                        HStack(spacing: 6) {
+                            if let type = tcgType {
+                                SwiftUI.Image(systemName: type.systemIcon)
+                                    .font(.system(size: 14, weight: .semibold))
+                                    .foregroundColor(iconColorFor(tcgType, type: type))
                             }
+                            
+                            Text(tcgType?.displayName ?? "All")
+                                .font(.system(size: 14, weight: .semibold))
+                                .foregroundColor(textColorFor(tcgType))
                         }
-                        .padding(16)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 10)
                         .background(
-                            RoundedRectangle(cornerRadius: 20)
-                                .fill(Color(.systemBackground))
-                                .shadow(color: Color.black.opacity(0.08), radius: 10, x: 0, y: 4)
+                            Capsule()
+                                .fill(backgroundColorFor(tcgType))
                         )
-                        .padding(.horizontal, 20)
-                        .padding(.top, 4)
+                    }
+                }
+            }
+            .padding(.horizontal, 20)
+        }
+    }
+    
+    private var featuredExpansionsView: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            HStack {
+                Text("All Expansions")
+                    .font(.system(size: 20, weight: .bold))
+                    .foregroundColor(.primary)
+                
+                Spacer()
+            }
+            
+            VStack(spacing: 16) {
+                ForEach(filteredExpansions.prefix(8)) { expansion in
+                    NavigationLink(destination: ExpansionDetailView(expansion: expansion).environmentObject(expansionService)) {
+                        ExpansionRow(expansion: expansion, isButton: false) { }
+                    }
+                }
+            }
+        }
+        .padding(.horizontal, 20)
+    }
+    
+    private var featuredCardsView: some View {
+        Group {
+            if searchText.isEmpty && selectedTCGType == nil && !filteredCards.isEmpty {
+                VStack(alignment: .leading, spacing: 16) {
+                    HStack {
+                        Text("Featured Cards")
+                            .font(.system(size: 20, weight: .bold))
+                            .foregroundColor(.primary)
                         
-                        if !searchText.isEmpty && searchText.count >= 2 {
-                            searchResultsView
-                        } else {
-                            // TCG Filter
-                            ScrollView(.horizontal, showsIndicators: false) {
-                                HStack(spacing: 12) {
-                                    ForEach([nil] + TCGType.allCases, id: \.self) { tcgType in
-                                        Button(action: {
-                                            selectedTCGType = tcgType
-                                        }) {
-                                            HStack(spacing: 6) {
-                                                if let type = tcgType {
-                                                    SwiftUI.Image(systemName: type.systemIcon)
-                                                        .font(.system(size: 14, weight: .semibold))
-                                                        .foregroundColor(iconColorFor(tcgType, type: type))
-                                                }
-                                                
-                                                Text(tcgType?.displayName ?? "All")
-                                                    .font(.system(size: 14, weight: .semibold))
-                                                    .foregroundColor(textColorFor(tcgType))
-                                            }
-                                            .padding(.horizontal, 16)
-                                            .padding(.vertical, 10)
-                                            .background(
-                                                Capsule()
-                                                    .fill(backgroundColorFor(tcgType))
-                                            )
-                                        }
-                                    }
-                                }
-                                .padding(.horizontal, 20)
+                        Spacer()
+                    }
+                    
+                    LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
+                        ForEach(Array(filteredCards.prefix(6)), id: \.id) { card in
+                            NavigationLink(destination: CardDetailView(card: card, isFromDiscover: false)) {
+                                CompactCardView(card: card)
                             }
-                            
-                            // Featured Expansions (Vertical List)
-                            VStack(alignment: .leading, spacing: 16) {
-                                HStack {
-                                    Text("All Expansions")
-                                        .font(.system(size: 20, weight: .bold))
-                                        .foregroundColor(.primary)
-                                    
-                                    Spacer()
-                                }
-                                
-                                VStack(spacing: 16) {
-                                    ForEach(filteredExpansions.prefix(8)) { expansion in
-                                        NavigationLink(destination: ExpansionDetailView(expansion: expansion).environmentObject(expansionService)) {
-                                            ExpansionRow(expansion: expansion, isButton: false) { }
-                                        }
-                                    }
-                                }
-                            }
-                            .padding(.horizontal, 20)
-                            
-                            // Featured Cards
-                            if searchText.isEmpty && selectedTCGType == nil && !filteredCards.isEmpty {
-                                VStack(alignment: .leading, spacing: 16) {
-                                    HStack {
-                                        Text("Featured Cards")
-                                            .font(.system(size: 20, weight: .bold))
-                                            .foregroundColor(.primary)
-                                        
-                                        Spacer()
-                                    }
-                                    
-                                    LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
-                                        ForEach(Array(filteredCards.prefix(6)), id: \.id) { card in
-                                            NavigationLink(destination: CardDetailView(card: card, isFromDiscover: false)) {
-                                                CompactCardView(card: card)
-                                            }
-                                            .buttonStyle(PlainButtonStyle())
-                                        }
-                                    }
-                                }
-                                .padding(.horizontal, 20)
-                            }
+                            .buttonStyle(PlainButtonStyle())
                         }
                     }
-                    .padding(.bottom, 32)
                 }
-            }
-            .navigationBarHidden(true)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Done") {
-                        dismiss()
-                    }
-                    .font(.system(size: 16, weight: .semibold))
-                }
-            }
-            .task {
-                await expansionService.loadExpansions()
-            }
-            .onChange(of: searchText) { newValue in
-                performSearch(query: newValue)
+                .padding(.horizontal, 20)
             }
         }
     }
     
-    // Computed properties
+    private var closeButtonView: some View {
+        VStack {
+            HStack {
+                Spacer()
+                Button(action: {
+                    dismiss()
+                }) {
+                    SwiftUI.Image(systemName: "xmark")
+                        .font(.system(size: 20, weight: .semibold))
+                        .foregroundColor(.secondary)
+                        .padding(12)
+                        .background(
+                            Circle()
+                                .fill(Color(.systemBackground))
+                                .shadow(color: Color.black.opacity(0.1), radius: 4, x: 0, y: 2)
+                        )
+                }
+                .padding(.top, 16)
+                .padding(.trailing, 20)
+            }
+            Spacer()
+        }
+    }
+    
+    // Computed properties for filtering and search
     private var filteredExpansions: [Expansion] {
         var expansions = expansionService.expansions
         
@@ -911,7 +1314,7 @@ struct CardDiscoverView: View {
         }
         
         if !searchText.isEmpty {
-            expansions = expansions.filter { 
+            expansions = expansions.filter {
                 $0.title.localizedCaseInsensitiveContains(searchText) ||
                 $0.sets.contains { $0.setCode.localizedCaseInsensitiveContains(searchText) } ||
                 $0.sets.contains { $0.name.localizedCaseInsensitiveContains(searchText) }
@@ -995,15 +1398,38 @@ struct CardDiscoverView: View {
             }
         }
     }
-}
-
-// MARK: - Compact Card View for Featured Section
-struct CompactCardView: View {
-    let card: Card
     
     var body: some View {
-        VStack(spacing: 0) {
-            // Card Image
+        NavigationView {
+            ZStack(alignment: .top) {
+                Color(.systemGroupedBackground)
+                    .edgesIgnoringSafeArea(.all)
+                
+                ScrollView {
+                    VStack(spacing: 20) {
+                        headerView
+                        searchBarView
+                        contentView
+                    }
+                    .padding(.bottom, 32)
+                }
+                
+                closeButtonView
+            }
+            .navigationBarHidden(true)
+            .task {
+                await expansionService.loadExpansions()
+            }
+            .onChange(of: searchText) { newValue in
+                performSearch(query: newValue)
+            }
+        }
+    }
+    
+    struct CompactCardView: View {
+        let card: Card
+        
+        private var cardImageView: some View {
             ZStack {
                 CachedAsyncImage(url: URL(string: card.fullImageURL ?? "")) { phase in
                     switch phase {
@@ -1028,8 +1454,9 @@ struct CompactCardView: View {
             }
             .frame(height: 160)
             .clipped()
-            
-            // Card Info
+        }
+        
+        private var cardInfoView: some View {
             VStack(alignment: .leading, spacing: 6) {
                 Text(card.name)
                     .font(.system(size: 14, weight: .semibold))
@@ -1054,46 +1481,36 @@ struct CompactCardView: View {
             .padding(12)
             .background(Color(.systemBackground))
         }
-        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-        .shadow(color: Color.black.opacity(0.1), radius: 5, x: 0, y: 2)
-    }
-}
-
-// MARK: - Set Card Component
-struct SetCard: View {
-    let set: TCGSet
-    let action: () -> Void
-    
-    // Dynamic color based on set code or name
-    private var cardColor: Color {
-        // Use a hash of the set code to generate a consistent color
-        let hash = abs(set.setCode.hashValue)
-        let hue = Double(hash % 360) / 360.0
-        return Color(hue: hue, saturation: 0.6, brightness: 0.8)
+        
+        var body: some View {
+            VStack(spacing: 0) {
+                cardImageView
+                cardInfoView
+            }
+            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+            .shadow(color: Color.black.opacity(0.1), radius: 5, x: 0, y: 2)
+        }
     }
     
-    var body: some View {
-        Button(action: action) {
-            VStack(spacing: 12) {
-                // Set Image
-                ZStack {
+    // MARK: - Set Card Component
+    struct SetCard: View {
+        let set: TCGSet
+        let action: () -> Void
+        
+        // Dynamic color based on set code or name
+        private var cardColor: Color {
+            // Use a hash of the set code to generate a consistent color
+            let hash = abs(set.setCode.hashValue)
+            let hue = Double(hash % 360) / 360.0
+            return Color(hue: hue, saturation: 0.6, brightness: 0.8)
+        }
+        
+        private var setImageView: some View {
+            ZStack {
                 CachedAsyncImage(url: URL(string: set.logoUrl ?? "")) { phase in
                     switch phase {
                     case .empty:
-                        RoundedRectangle(cornerRadius: 12)
-                            .fill(cardColor.opacity(0.3))
-                            .frame(height: 100)
-                            .overlay(
-                                VStack(spacing: 6) {
-                                    SwiftUI.Image(systemName: "square.stack.3d.up.fill")
-                                        .font(.system(size: 24, weight: .bold))
-                                        .foregroundColor(cardColor)
-                                    
-                                    Text(set.setCode.uppercased())
-                                        .font(.system(size: 10, weight: .bold))
-                                        .foregroundColor(cardColor)
-                                }
-                            )
+                        setPlaceholderView
                     case .success(let image):
                         image
                             .resizable()
@@ -1101,110 +1518,110 @@ struct SetCard: View {
                             .frame(height: 100)
                             .clipShape(RoundedRectangle(cornerRadius: 12))
                     case .failure(_):
-                        RoundedRectangle(cornerRadius: 12)
-                            .fill(cardColor.opacity(0.3))
-                            .frame(height: 100)
-                            .overlay(
-                                VStack(spacing: 6) {
-                                    SwiftUI.Image(systemName: "square.stack.3d.up.fill")
-                                        .font(.system(size: 24, weight: .bold))
-                                        .foregroundColor(cardColor)
-                                    
-                                    Text(set.setCode.uppercased())
-                                        .font(.system(size: 10, weight: .bold))
-                                        .foregroundColor(cardColor)
-                                }
-                            )
+                        setPlaceholderView
                     @unknown default:
-                        RoundedRectangle(cornerRadius: 12)
-                            .fill(cardColor.opacity(0.3))
-                            .frame(height: 100)
-                            .overlay(
-                                VStack(spacing: 6) {
-                                    SwiftUI.Image(systemName: "square.stack.3d.up.fill")
-                                        .font(.system(size: 24, weight: .bold))
-                                        .foregroundColor(cardColor)
-                                    
-                                    Text(set.setCode.uppercased())
-                                        .font(.system(size: 10, weight: .bold))
-                                        .foregroundColor(cardColor)
-                                }
-                            )
-                    }
-                }                    // Gradient overlay for better text readability
-                    LinearGradient(
-                        gradient: Gradient(colors: [.clear, .black.opacity(0.3)]),
-                        startPoint: .top,
-                        endPoint: .bottom
-                    )
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
-                    
-                    // Set code badge
-                    VStack {
-                        Spacer()
-                        HStack {
-                            Spacer()
-                            Text(set.setCode.uppercased())
-                                .font(.system(size: 8, weight: .bold))
-                                .foregroundColor(.white)
-                                .padding(.horizontal, 6)
-                                .padding(.vertical, 2)
-                                .background(Color.black.opacity(0.7))
-                                .clipShape(Capsule())
-                                .padding(6)
-                        }
+                        setPlaceholderView
                     }
                 }
-                .frame(height: 100)
+                // Gradient overlay for better text readability
+                LinearGradient(
+                    gradient: Gradient(colors: [.clear, .black.opacity(0.3)]),
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
+                .clipShape(RoundedRectangle(cornerRadius: 12))
                 
-                // Set Info
-                VStack(spacing: 4) {
-                    Text(set.name)
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundColor(.primary)
-                        .lineLimit(2)
-                        .multilineTextAlignment(.center)
-                    
-                    HStack(spacing: 8) {
-                        HStack(spacing: 2) {
-                            SwiftUI.Image(systemName: "square.stack.3d.up.fill")
-                                .font(.system(size: 10))
-                                .foregroundColor(.secondary)
-                            
-                            Text("\(set.cardCount)")
-                                .font(.system(size: 12, weight: .medium))
-                                .foregroundColor(.secondary)
-                        }
+                // Set code badge
+                setCodeBadge
+            }
+            .frame(height: 100)
+        }
+        
+        private var setPlaceholderView: some View {
+            RoundedRectangle(cornerRadius: 12)
+                .fill(cardColor.opacity(0.3))
+                .frame(height: 100)
+                .overlay(
+                    VStack(spacing: 6) {
+                        SwiftUI.Image(systemName: "square.stack.3d.up.fill")
+                            .font(.system(size: 24, weight: .bold))
+                            .foregroundColor(cardColor)
                         
-                        HStack(spacing: 2) {
-                            SwiftUI.Image(systemName: "calendar")
-                                .font(.system(size: 10))
-                                .foregroundColor(.secondary)
-                            
-                            Text(set.formattedReleaseDate)
-                                .font(.system(size: 10, weight: .medium))
-                                .foregroundColor(.secondary)
-                        }
+                        Text(set.setCode.uppercased())
+                            .font(.system(size: 10, weight: .bold))
+                            .foregroundColor(cardColor)
+                    }
+                )
+        }
+        
+        private var setCodeBadge: some View {
+            VStack {
+                Spacer()
+                HStack {
+                    Spacer()
+                    Text(set.setCode.uppercased())
+                        .font(.system(size: 8, weight: .bold))
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 2)
+                        .background(Color.black.opacity(0.7))
+                        .clipShape(Capsule())
+                        .padding(6)
+                }
+            }
+        }
+        
+        private var setInfoView: some View {
+            VStack(spacing: 4) {
+                Text(set.name)
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(.primary)
+                    .lineLimit(2)
+                    .multilineTextAlignment(.center)
+                
+                HStack(spacing: 8) {
+                    HStack(spacing: 2) {
+                        SwiftUI.Image(systemName: "square.stack.3d.up.fill")
+                            .font(.system(size: 10))
+                            .foregroundColor(.secondary)
+                        
+                        Text("\(set.cardCount)")
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundColor(.secondary)
+                    }
+                    
+                    HStack(spacing: 2) {
+                        SwiftUI.Image(systemName: "calendar")
+                            .font(.system(size: 10))
+                            .foregroundColor(.secondary)
+                        
+                        Text(set.formattedReleaseDate)
+                            .font(.system(size: 10, weight: .medium))
+                            .foregroundColor(.secondary)
                     }
                 }
-                .padding(.horizontal, 8)
             }
-            .padding(.vertical, 12)
-            .background(
-                RoundedRectangle(cornerRadius: 16)
-                    .fill(Color(.systemBackground))
-                    .shadow(color: cardColor.opacity(0.3), radius: 8, x: 0, y: 4)
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 16)
-                    .stroke(cardColor.opacity(0.2), lineWidth: 1)
-            )
+            .padding(.horizontal, 8)
         }
-        .buttonStyle(PlainButtonStyle())
+        
+        var body: some View {
+            Button(action: action) {
+                VStack(spacing: 12) {
+                    setImageView
+                    setInfoView
+                }
+                .padding(.vertical, 12)
+                .background(
+                    RoundedRectangle(cornerRadius: 16)
+                        .fill(Color(.systemBackground))
+                        .shadow(color: cardColor.opacity(0.3), radius: 8, x: 0, y: 4)
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 16)
+                        .stroke(cardColor.opacity(0.2), lineWidth: 1)
+                )
+            }
+            .buttonStyle(PlainButtonStyle())
+        }
     }
-}
-
-#Preview {
-    CollectionView()
-        .environmentObject(CardService())
 }

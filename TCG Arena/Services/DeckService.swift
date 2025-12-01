@@ -11,6 +11,14 @@ class DeckService: ObservableObject {
     static let shared = DeckService()
     private let apiClient = APIClient.shared
     
+    // Helper function to format dates as strings for backend (format: "dd MMM yyyy, HH:mm")
+    private func formatDateForBackend(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "dd MMM yyyy, HH:mm"
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        return formatter.string(from: date)
+    }
+    
     @Published var userDecks: [Deck] = []
     @Published var proDecks: [ProDeck] = []
     @Published var isLoading = false
@@ -24,26 +32,64 @@ class DeckService: ObservableObject {
         loadCachedUserDecks()
     }
     
+    func updateDeck(id: Int64, name: String, description: String?, userId: Int64, completion: @escaping (Result<Deck, Error>) -> Void) {
+        // First, fetch the existing deck to get all its properties
+        getDeckById(id) { [weak self] result in
+            guard let self = self else { return }
+            
+            switch result {
+            case .success(var deck):
+                // Create an updated copy of the deck with new name and description
+                // We need to use a mutable variable since Deck properties might be let
+                // Create a new Deck using the existing data but with updated name/description
+                let encoder = JSONEncoder()
+                encoder.dateEncodingStrategy = .custom { date, encoder in
+                    let formatter = DateFormatter()
+                    formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSSSS"
+                    formatter.locale = Locale(identifier: "en_US_POSIX")
+                    formatter.timeZone = TimeZone(secondsFromGMT: 0)
+                    let dateString = formatter.string(from: date)
+                    var container = encoder.singleValueContainer()
+                    try container.encode(dateString)
+                }
+                
+                let decoder = self.createDecoder()
+                
+                do {
+                    // Instead of modifying the JSON, create a new Deck instance with updated properties
+                    let updatedDeck = Deck(
+                        id: deck.id,
+                        name: name,
+                        tcgType: deck.tcgType,
+                        deckType: deck.deckType,
+                        cards: deck.cards,
+                        ownerId: deck.ownerId,
+                        dateCreated: deck.dateCreated,
+                        dateModified: formatDateForBackend(Date()), // Update modification date
+                        isPublic: deck.isPublic,
+                        description: description,
+                        tags: deck.tags
+                    )
+                    
+                    // Now use the existing updateDeck method that uses the correct endpoint
+                    self.updateDeck(id, deck: updatedDeck) { updateResult in
+                        completion(updateResult)
+                    }
+                } catch {
+                    completion(.failure(error))
+                }
+                
+            case .failure(let error):
+                completion(.failure(error))
+            }
+        }
+    }
+    
     // MARK: - Helper Methods
     
     private func createDecoder() -> JSONDecoder {
         let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .custom { decoder in
-            let container = try decoder.singleValueContainer()
-            let dateString = try container.decode(String.self)
-            
-            // Java LocalDateTime format: "2025-11-26T21:55:29.218488"
-            let formatter = DateFormatter()
-            formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSSSS"
-            formatter.locale = Locale(identifier: "en_US_POSIX")
-            formatter.timeZone = TimeZone(secondsFromGMT: 0)
-            
-            if let date = formatter.date(from: dateString) {
-                return date
-            }
-            
-            throw DecodingError.dataCorruptedError(in: container, debugDescription: "Cannot decode date string \(dateString)")
-        }
+        // Dates are now formatted as strings by the backend, so no custom decoding needed
         return decoder
     }
     
@@ -103,35 +149,81 @@ class DeckService: ObservableObject {
         }
     }
     
+    func createDeck(name: String, description: String?, tcgType: TCGType, deckType: DeckType, userId: Int64, completion: @escaping (Result<Deck, Error>) -> Void) {
+        let urlString = "/api/decks/create?name=\(name.urlEncoded())&description=\(description?.urlEncoded() ?? "")&tcgType=\(tcgType.rawValue)&deckType=\(deckType.rawValue)&userId=\(userId)"
+        print("📤 DeckService: Creating new deck '\(name)'")
+        apiClient.request(endpoint: urlString, method: .post) { result in
+            switch result {
+            case .success(let data):
+                do {
+                    let createdDeck = try self.createDecoder().decode(Deck.self, from: data)
+                    // Add to local cache on main thread
+                    DispatchQueue.main.async {
+                        self.userDecks.append(createdDeck)
+                        self.saveUserDecksToCache(self.userDecks)
+                        print("✅ DeckService: Deck '\(name)' created and added to cache")
+                    }
+                    completion(.success(createdDeck))
+                } catch {
+                    print("🔴 DeckService: Failed to decode created deck: \(error)")
+                    completion(.failure(error))
+                }
+            case .failure(let error):
+                print("🔴 DeckService: Failed to create deck: \(error)")
+                completion(.failure(error))
+            }
+        }
+    }
+    
     func updateDeck(_ id: Int64, deck: Deck, completion: @escaping (Result<Deck, Error>) -> Void) {
         do {
-            let data = try JSONEncoder().encode(deck)
+            let encoder = JSONEncoder()
+            encoder.dateEncodingStrategy = .custom { date, encoder in
+                let formatter = DateFormatter()
+                formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSSSS"
+                formatter.locale = Locale(identifier: "en_US_POSIX")
+                formatter.timeZone = TimeZone(secondsFromGMT: 0)
+                let dateString = formatter.string(from: date)
+                var container = encoder.singleValueContainer()
+                try container.encode(dateString)
+            }
+            
+            let data = try encoder.encode(deck)
+            print("📤 DeckService: Updating deck \(id)")
             apiClient.request(endpoint: "/api/decks/\(id)", method: .put, body: data) { result in
                 switch result {
                 case .success(let data):
                     do {
-                        let decoder = JSONDecoder()
-                        decoder.dateDecodingStrategy = .iso8601
-                        let updatedDeck = try decoder.decode(Deck.self, from: data)
+                        let updatedDeck = try self.createDecoder().decode(Deck.self, from: data)
+                        print("✅ DeckService: Deck \(id) updated successfully")
+                        // Update local cache
+                        self.updateLocalDeckCache(updatedDeck)
                         completion(.success(updatedDeck))
                     } catch {
+                        print("🔴 DeckService: Failed to decode updated deck: \(error)")
                         completion(.failure(error))
                     }
                 case .failure(let error):
+                    print("🔴 DeckService: Failed to update deck: \(error)")
                     completion(.failure(error))
                 }
             }
         } catch {
+            print("🔴 DeckService: Failed to encode deck: \(error)")
             completion(.failure(error))
         }
     }
     
-    func deleteDeck(_ id: Int64, completion: @escaping (Result<Void, Error>) -> Void) {
-        apiClient.request(endpoint: "/api/decks/\(id)", method: .delete) { result in
+    func deleteDeck(_ id: Int64, userId: Int64, completion: @escaping (Result<Void, Error>) -> Void) {
+        let urlString = "/api/decks/\(id)?userId=\(userId)"
+        print("🗑️ DeckService: Deleting deck \(id) for user \(userId)")
+        apiClient.request(endpoint: urlString, method: .delete) { result in
             switch result {
             case .success:
+                print("✅ DeckService: Deck \(id) deleted successfully")
                 completion(.success(()))
             case .failure(let error):
+                print("🔴 DeckService: Failed to delete deck \(id): \(error)")
                 completion(.failure(error))
             }
         }
@@ -230,34 +322,40 @@ class DeckService: ObservableObject {
         loadUserDecks(userId: userId, completion: completion)
     }
     
-    func loadUserDecks(userId: Int64, completion: @escaping (Result<[Deck], Error>) -> Void) {
+    func loadUserDecks(userId: Int64, saveToCache: Bool = true, completion: @escaping (Result<[Deck], Error>) -> Void) {
         isLoading = true
         errorMessage = nil
         
         getAllDecks(userId: userId) { result in
-            switch result {
-            case .success(let userDecks):
-                // Backend now filters by ownerId, no client-side filtering needed
-                self.userDecks = userDecks
-                self.hasLoadedUserDecks = true
-                self.lastLoadedUserId = userId
-                self.saveUserDecksToCache(userDecks)
-                completion(.success(userDecks))
-            case .failure(let error):
-                if self.useMockData {
-                    // Mock data per testing quando l'endpoint non esiste
-                    let mockDecks = self.createMockDecks(for: userId)
-                    self.userDecks = mockDecks
+            DispatchQueue.main.async {
+                switch result {
+                case .success(let userDecks):
+                    // Backend now filters by ownerId, no client-side filtering needed
+                    self.userDecks = userDecks
                     self.hasLoadedUserDecks = true
                     self.lastLoadedUserId = userId
-                    self.saveUserDecksToCache(mockDecks)
-                    completion(.success(mockDecks))
-                } else {
-                    self.errorMessage = error.localizedDescription
-                    completion(.failure(error))
+                    if saveToCache {
+                        self.saveUserDecksToCache(userDecks)
+                    }
+                    completion(.success(userDecks))
+                case .failure(let error):
+                    if self.useMockData {
+                        // Mock data per testing quando l'endpoint non esiste
+                        let mockDecks = self.createMockDecks(for: userId)
+                        self.userDecks = mockDecks
+                        self.hasLoadedUserDecks = true
+                        self.lastLoadedUserId = userId
+                        if saveToCache {
+                            self.saveUserDecksToCache(mockDecks)
+                        }
+                        completion(.success(mockDecks))
+                    } else {
+                        self.errorMessage = error.localizedDescription
+                        completion(.failure(error))
+                    }
                 }
+                self.isLoading = false
             }
-            self.isLoading = false
         }
     }
     
@@ -267,44 +365,51 @@ class DeckService: ObservableObject {
         
         if let id = deck.id {
             updateDeck(id, deck: deck) { result in
-                switch result {
-                case .success(let updatedDeck):
-                    // Update local array
-                    if let index = self.userDecks.firstIndex(where: { $0.id == id }) {
-                        self.userDecks[index] = updatedDeck
-                        self.saveUserDecksToCache(self.userDecks)
+                DispatchQueue.main.async {
+                    switch result {
+                    case .success(let updatedDeck):
+                        // Update local array
+                        if let index = self.userDecks.firstIndex(where: { $0.id == id }) {
+                            self.userDecks[index] = updatedDeck
+                            self.saveUserDecksToCache(self.userDecks)
+                        }
+                        completion(.success(updatedDeck))
+                    case .failure(let error):
+                        self.errorMessage = error.localizedDescription
+                        completion(.failure(error))
                     }
-                    completion(.success(updatedDeck))
-                case .failure(let error):
-                    self.errorMessage = error.localizedDescription
-                    completion(.failure(error))
+                    self.isLoading = false
                 }
-                self.isLoading = false
             }
         } else {
             createDeck(deck) { result in
-                switch result {
-                case .success(let createdDeck):
-                    self.userDecks.append(createdDeck)
-                    self.saveUserDecksToCache(self.userDecks)
-                    completion(.success(createdDeck))
-                case .failure(let error):
-                    self.errorMessage = error.localizedDescription
-                    completion(.failure(error))
+                DispatchQueue.main.async {
+                    switch result {
+                    case .success(let createdDeck):
+                        self.userDecks.append(createdDeck)
+                        self.saveUserDecksToCache(self.userDecks)
+                        completion(.success(createdDeck))
+                    case .failure(let error):
+                        self.errorMessage = error.localizedDescription
+                        completion(.failure(error))
+                    }
+                    self.isLoading = false
                 }
-                self.isLoading = false
             }
         }
     }
     
-    func deleteDeck(deckId: Int64, completion: @escaping (Result<Void, Error>) -> Void) {
-        isLoading = true
-        
-        deleteDeck(deckId) { result in
+func deleteDeck(deckId: Int64, userId: Int64, completion: @escaping (Result<Void, Error>) -> Void) {
+    isLoading = true
+    
+    deleteDeck(deckId, userId: userId) { result in
+        DispatchQueue.main.async {
             switch result {
             case .success:
+                // Remove from local cache on main thread
                 self.userDecks.removeAll { $0.id == deckId }
                 self.saveUserDecksToCache(self.userDecks)
+                print("✅ DeckService: Deck \(deckId) removed from cache")
                 completion(.success(()))
             case .failure(let error):
                 self.errorMessage = error.localizedDescription
@@ -313,14 +418,20 @@ class DeckService: ObservableObject {
             self.isLoading = false
         }
     }
+}
     
     // MARK: - Helper Methods
     
-    private func updateLocalDeckCache(_ updatedDeck: Deck) {
-        // Update the deck in the local cache
-        if let index = self.userDecks.firstIndex(where: { $0.id == updatedDeck.id }) {
-            self.userDecks[index] = updatedDeck
-            self.saveUserDecksToCache(self.userDecks)
+    func updateLocalDeckCache(_ updatedDeck: Deck) {
+        // Update the deck in the local cache - MUST be on main thread for @Published to work
+        DispatchQueue.main.async {
+            if let index = self.userDecks.firstIndex(where: { $0.id == updatedDeck.id }) {
+                self.userDecks[index] = updatedDeck
+                self.saveUserDecksToCache(self.userDecks)
+                print("✅ DeckService: Updated deck \(updatedDeck.id ?? 0) in local cache")
+            } else {
+                print("⚠️ DeckService: Deck \(updatedDeck.id ?? 0) not found in local cache for update")
+            }
         }
     }
     
@@ -393,8 +504,10 @@ class DeckService: ObservableObject {
     }
     
     func addDeck(_ deck: Deck) {
-        userDecks.append(deck)
-        saveUserDecksToCache(userDecks)
+        DispatchQueue.main.async {
+            self.userDecks.append(deck)
+            self.saveUserDecksToCache(self.userDecks)
+        }
     }
     
     // MARK: - Cache Management
@@ -431,9 +544,11 @@ class DeckService: ObservableObject {
     }
     
     func refreshUserDecks(userId: Int64, completion: @escaping (Result<[Deck], Error>) -> Void) {
-        // Forza il ricaricamento ignorando la cache
+        // Forza il ricaricamento invalidando completamente la cache e ricarica senza salvare
+        clearCache()
         hasLoadedUserDecks = false
-        loadUserDecks(userId: userId, completion: completion)
+        lastLoadedUserId = userId
+        loadUserDecks(userId: userId, saveToCache: false, completion: completion)
     }
     
     func handleUserLogout() {
@@ -455,37 +570,59 @@ class DeckService: ObservableObject {
     
     private func createMockDecks(for userId: Int64) -> [Deck] {
         let mockCards: [Deck.DeckCard] = [
-            Deck.DeckCard(id: 1, cardId: 1001, quantity: 4, cardName: "Pikachu", cardImageUrl: nil),
-            Deck.DeckCard(id: 2, cardId: 1002, quantity: 4, cardName: "Charizard", cardImageUrl: nil),
-            Deck.DeckCard(id: 3, cardId: 1003, quantity: 2, cardName: "Blastoise", cardImageUrl: nil),
-            Deck.DeckCard(id: 4, cardId: 1004, quantity: 4, cardName: "Venusaur", cardImageUrl: nil),
+            Deck.DeckCard(id: 1, cardId: 1001, quantity: 4, cardName: "Pikachu", cardImageUrl: nil, condition: .nearMint, isGraded: nil, gradingCompany: nil, grade: nil, certificateNumber: nil),
+            Deck.DeckCard(id: 2, cardId: 1002, quantity: 4, cardName: "Charizard", cardImageUrl: nil, condition: .nearMint, isGraded: nil, gradingCompany: nil, grade: nil, certificateNumber: nil),
+            Deck.DeckCard(id: 3, cardId: 1003, quantity: 2, cardName: "Blastoise", cardImageUrl: nil, condition: .nearMint, isGraded: nil, gradingCompany: nil, grade: nil, certificateNumber: nil),
+            Deck.DeckCard(id: 4, cardId: 1004, quantity: 4, cardName: "Venusaur", cardImageUrl: nil, condition: .nearMint, isGraded: nil, gradingCompany: nil, grade: nil, certificateNumber: nil),
         ]
         
         return [
-            {
-                var deck = Deck(name: "Pikachu Control", tcgType: .pokemon, ownerId: userId, description: "A powerful control deck featuring Pikachu and friends", tags: ["control", "electric", "beginner"])
-                deck.cards = Array(mockCards.prefix(4))
-                deck.dateCreated = Date().addingTimeInterval(-86400 * 7) // 7 giorni fa
-                deck.dateModified = Date().addingTimeInterval(-86400) // 1 giorno fa
-                deck.isPublic = true
-                return deck
-            }(),
-            {
-                var deck = Deck(name: "Fire Aggro", tcgType: .pokemon, ownerId: userId, description: "Fast aggro deck with fire types", tags: ["aggro", "fire", "competitive"])
-                deck.cards = Array(mockCards.dropFirst())
-                deck.dateCreated = Date().addingTimeInterval(-86400 * 3) // 3 giorni fa
-                deck.dateModified = Date()
-                deck.isPublic = false
-                return deck
-            }(),
-            {
-                var deck = Deck(name: "Water Control", tcgType: .pokemon, ownerId: userId, description: "Slow but powerful water control deck", tags: ["control", "water", "tournament"])
-                deck.cards = [mockCards[2]] // Solo Blastoise
-                deck.dateCreated = Date().addingTimeInterval(-86400 * 14) // 2 settimane fa
-                deck.dateModified = Date().addingTimeInterval(-86400 * 2) // 2 giorni fa
-                deck.isPublic = true
-                return deck
-            }()
+            Deck(
+                id: nil,
+                name: "Pikachu Control",
+                tcgType: .pokemon,
+                deckType: .deck,
+                cards: Array(mockCards.prefix(4)),
+                ownerId: userId,
+                dateCreated: formatDateForBackend(Date().addingTimeInterval(-86400 * 7)), // 7 giorni fa
+                dateModified: formatDateForBackend(Date().addingTimeInterval(-86400)), // 1 giorno fa
+                isPublic: true,
+                description: "A powerful control deck featuring Pikachu and friends",
+                tags: ["control", "electric", "beginner"]
+            ),
+            Deck(
+                id: nil,
+                name: "Fire Aggro",
+                tcgType: .pokemon,
+                deckType: .deck,
+                cards: Array(mockCards.dropFirst()),
+                ownerId: userId,
+                dateCreated: formatDateForBackend(Date().addingTimeInterval(-86400 * 3)), // 3 giorni fa
+                dateModified: formatDateForBackend(Date()),
+                isPublic: false,
+                description: "Fast aggro deck with fire types",
+                tags: ["aggro", "fire", "competitive"]
+            ),
+            Deck(
+                id: nil,
+                name: "Water Control",
+                tcgType: .pokemon,
+                deckType: .deck,
+                cards: [mockCards[2]], // Solo Blastoise
+                ownerId: userId,
+                dateCreated: formatDateForBackend(Date().addingTimeInterval(-86400 * 14)), // 2 settimane fa
+                dateModified: formatDateForBackend(Date().addingTimeInterval(-86400 * 2)), // 2 giorni fa
+                isPublic: true,
+                description: "Slow but powerful water control deck",
+                tags: ["control", "water", "tournament"]
+            )
         ]
+    }
+}
+
+// MARK: - String Extension for URL Encoding
+extension String {
+    func urlEncoded() -> String {
+        return self.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? self
     }
 }

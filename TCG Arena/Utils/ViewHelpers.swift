@@ -48,7 +48,7 @@ extension Rarity {
 }
 
 // MARK: - Card Condition Helpers
-extension Card.CardCondition {
+extension CardCondition {
     var color: Color {
         switch self {
         case .mint, .nearMint: return .green
@@ -86,7 +86,7 @@ func rarityColor(_ rarity: Rarity) -> Color {
     return rarity.color
 }
 
-func conditionColor(_ condition: Card.CardCondition) -> Color {
+func conditionColor(_ condition: CardCondition) -> Color {
     return condition.color
 }
 

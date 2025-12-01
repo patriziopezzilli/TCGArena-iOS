@@ -18,10 +18,10 @@ struct RegisterView: View {
     @State private var showError = false
     @State private var errorMessage = ""
     @State private var agreedToTerms = false
-    @State private var selectedTCG: TCGType?
+    @State private var selectedTCGs: Set<TCGType> = []
 
-    init(selectedTCG: TCGType? = nil) {
-        _selectedTCG = State(initialValue: selectedTCG)
+    init(selectedTCGs: Set<TCGType> = []) {
+        _selectedTCGs = State(initialValue: selectedTCGs)
     }
 
     var body: some View {
@@ -145,28 +145,28 @@ struct RegisterView: View {
                                 LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 2), spacing: 12) {
                                     ForEach(TCGType.allCases.filter { $0 != .digimon }, id: \.self) { tcg in
                                         Button(action: {
-                                            selectedTCG = tcg
+                                            if selectedTCGs.contains(tcg) {
+                                                selectedTCGs.remove(tcg)
+                                            } else {
+                                                selectedTCGs.insert(tcg)
+                                            }
                                         }) {
                                             VStack(spacing: 6) {
-                                                SwiftUI.Image(systemName: "star.fill")
+                                                SwiftUI.Image(systemName: tcg.systemIcon)
                                                     .font(.system(size: 20, weight: .medium))
-                                                    .foregroundColor(.yellow)
+                                                    .foregroundColor(selectedTCGs.contains(tcg) ? .white : tcg.themeColor)
 
                                                 Text(tcg.displayName)
                                                     .font(.system(size: 12, weight: .medium))
-                                                    .foregroundColor(.black)
+                                                    .foregroundColor(selectedTCGs.contains(tcg) ? .white : .black)
                                             }
                                             .frame(maxWidth: .infinity)
                                             .frame(height: 60)
-                                            .background(Color.gray.opacity(0.1))
+                                            .background(selectedTCGs.contains(tcg) ? tcg.themeColor : Color.gray.opacity(0.1))
                                             .clipShape(RoundedRectangle(cornerRadius: 8))
                                             .overlay(
                                                 RoundedRectangle(cornerRadius: 8)
-                                                    .stroke(selectedTCG == tcg ? Color.blue : Color.gray.opacity(0.3), lineWidth: selectedTCG == tcg ? 2 : 1)
-                                            )
-                                            .background(
-                                                RoundedRectangle(cornerRadius: 8)
-                                                    .fill(selectedTCG == tcg ? Color.blue.opacity(0.1) : Color.clear)
+                                                    .stroke(selectedTCGs.contains(tcg) ? tcg.themeColor : Color.gray.opacity(0.3), lineWidth: selectedTCGs.contains(tcg) ? 2 : 1)
                                             )
                                         }
                                     }
@@ -247,6 +247,7 @@ struct RegisterView: View {
         !password.isEmpty &&
         password == confirmPassword &&
         password.count >= 6 &&
+        !selectedTCGs.isEmpty &&
         agreedToTerms
     }
 
@@ -278,7 +279,7 @@ struct RegisterView: View {
                 password: password,
                 username: username,
                 displayName: username,
-                favoriteGame: selectedTCG
+                favoriteGames: Array(selectedTCGs)
             )
             if authService.isAuthenticated {
                 UserDefaults.standard.set(true, forKey: "hasCompletedOnboarding")

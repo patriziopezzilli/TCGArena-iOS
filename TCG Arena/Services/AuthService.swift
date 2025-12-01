@@ -133,7 +133,7 @@ class AuthService: ObservableObject {
         isLoading = false
     }
     
-    func signUp(email: String, password: String, username: String, displayName: String, favoriteGame: TCGType? = nil) async {
+    func signUp(email: String, password: String, username: String, displayName: String, favoriteGames: [TCGType]? = nil) async {
         isLoading = true
         errorMessage = nil
         
@@ -143,7 +143,7 @@ class AuthService: ObservableObject {
                 username: username,
                 displayName: displayName,
                 password: password,
-                favoriteGame: favoriteGame
+                favoriteGames: favoriteGames
             )
             
             let response: AuthResponse = try await APIClient.shared.request(

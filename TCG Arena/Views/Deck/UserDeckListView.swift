@@ -372,7 +372,7 @@ struct UserDeckRowView: View {
                         .font(.system(size: 13))
                         .foregroundColor(.secondary)
                     
-                    Text(deck.dateModified.formatted(.relative(presentation: .named)))
+                    Text(deck.formattedDateModified)
                         .font(.system(size: 13))
                         .foregroundColor(.secondary)
                         .lineLimit(1)

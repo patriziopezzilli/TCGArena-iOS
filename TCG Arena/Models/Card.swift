@@ -11,9 +11,9 @@ import SwiftUI
 struct Card: Identifiable, Codable {
     let id: Int64?
     let templateId: Int64
-    let name: String
+    var name: String
     let rarity: Rarity
-    let condition: CardCondition
+    var condition: CardCondition
     let imageURL: String?
     let isFoil: Bool
     let quantity: Int
@@ -27,6 +27,13 @@ struct Card: Identifiable, Codable {
     let marketPrice: Double?
     let description: String?
     var deckNames: [String]? // Transient property for UI display
+    
+    // Grading fields
+    var isGraded: Bool?
+    var gradingCompany: GradeService?
+    var grade: CardGrade?
+    var certificateNumber: String?
+    var gradingDate: Date?
 
     // Computed property per ottenere l'URL completo dell'immagine
     var fullImageURL: String? {
@@ -57,18 +64,14 @@ struct Card: Identifiable, Codable {
         case expansion
         case marketPrice = "market_price"
         case description
+        case isGraded = "isGraded"
+        case gradingCompany = "grading_company"
+        case grade
+        case certificateNumber = "certificate_number"
+        case gradingDate = "grading_date"
     }
 
-    enum CardCondition: String, CaseIterable, Codable {
-        case mint = "Mint"
-        case nearMint = "Near Mint"
-        case lightlyPlayed = "Lightly Played"
-        case moderatelyPlayed = "Moderately Played"
-        case heavilyPlayed = "Heavily Played"
-        case damaged = "Damaged"
-    }
-    
-    // Designated initializer
+// Designated initializer
     init(
         id: Int64?,
         templateId: Int64,
@@ -86,7 +89,12 @@ struct Card: Identifiable, Codable {
         cardNumber: String?,
         expansion: Expansion?,
         marketPrice: Double?,
-        description: String?
+        description: String?,
+        isGraded: Bool? = nil,
+        gradingCompany: GradeService? = nil,
+        grade: CardGrade? = nil,
+        certificateNumber: String? = nil,
+        gradingDate: Date? = nil
     ) {
         self.id = id
         self.templateId = templateId
@@ -106,6 +114,11 @@ struct Card: Identifiable, Codable {
         self.marketPrice = marketPrice
         self.description = description
         self.deckNames = nil
+        self.isGraded = isGraded
+        self.gradingCompany = gradingCompany
+        self.grade = grade
+        self.certificateNumber = certificateNumber
+        self.gradingDate = gradingDate
     }
     
     // Convenience initializer from CardTemplate (for template cards)
@@ -167,15 +180,27 @@ enum TCGType: String, CaseIterable, Codable {
     var systemIcon: String {
         switch self {
         case .pokemon:
-            return "bolt.fill"
+            return "star.fill" // Star for Pokemon
         case .onePiece:
-            return "sailboat.fill"
+            return "sailboat.fill" // Sailboat for One Piece
         case .magic:
-            return "flame.fill"
+            return "sparkles" // Sparkles for Magic: The Gathering
         case .yugioh:
-            return "eye.fill"
+            return "eye.fill" // Eye for Yu-Gi-Oh!
         case .digimon:
-            return "shield.fill"
+            return "shield.fill" // Shield for Digimon
+        }
+    }
+}
+
+enum DeckType: String, Codable {
+    case deck = "DECK"
+    case lista = "LISTA"
+    
+    var displayName: String {
+        switch self {
+        case .deck: return "Deck"
+        case .lista: return "Lista"
         }
     }
 }

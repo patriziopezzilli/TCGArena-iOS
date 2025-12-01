@@ -8,8 +8,10 @@
 import SwiftUI
 
 struct CardDetailView: View {
-    let card: Card
+    @State var card: Card
     let isFromDiscover: Bool
+    var deckId: Int64? = nil
+    var onCardUpdated: ((Card) -> Void)? = nil
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject var cardService: CardService
     @EnvironmentObject var deckService: DeckService
@@ -136,14 +138,17 @@ struct CardDetailView: View {
             InfoRow(label: "Set", value: card.set ?? "Unknown", color: .secondary)
             InfoRow(label: "Number", value: card.cardNumber ?? "N/A", color: .secondary)
             InfoRow(label: "Rarity", value: card.rarity.rawValue, color: card.rarity.color)
-            
-            // Mostra la condizione solo se NON siamo arrivati da discover
-            if !isFromDiscover {
-                InfoRow(label: "Condition", value: card.condition.rawValue, color: card.condition.color)
+        
+        // Mostra sempre la condizione
+        InfoRow(label: "Condition", value: card.condition.displayName, color: card.condition.color)
+        
+        if let cardPrice = cardPrice {
+                InfoRow(label: "Price", value: "€\(String(format: "%.2f", cardPrice.currentPrice))", color: card.tcgType?.themeColor ?? Color.gray)
             }
             
-            if let cardPrice = cardPrice {
-                InfoRow(label: "Price", value: "€\(String(format: "%.2f", cardPrice.currentPrice))", color: card.tcgType?.themeColor ?? Color.gray)
+            // Show "Found in" section if card has deck names
+            if let deckNames = card.deckNames, !deckNames.isEmpty {
+                InfoRow(label: "Found in", value: deckNames.joined(separator: ", "), color: .secondary)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -166,7 +171,35 @@ struct CardDetailView: View {
     private var additionalInfoCard: some View {
         InfoCard(title: "Additional Info") {
             VStack(spacing: 12) {
-                InfoRow(label: "Grade", value: "Ungraded", color: .secondary)
+                // Graded status badge
+                HStack {
+                    Spacer()
+                    Text(card.isGraded == true ? "Graded" : "Ungraded")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundColor(card.isGraded == true ? .white : .secondary)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+                        .background(
+                            Capsule()
+                                .fill(card.isGraded == true ? Color.green : Color.gray.opacity(0.3))
+                        )
+                }
+                
+                // Show grading information
+                if card.isGraded == true {
+                    if let gradingCompany = card.gradingCompany {
+                        InfoRow(label: "Grading Company", value: gradingCompany.rawValue, color: .primary)
+                    }
+                    if let grade = card.grade {
+                        InfoRow(label: "Grade", value: grade.rawValue, color: .primary)
+                    }
+                    if let certificateNumber = card.certificateNumber, !certificateNumber.isEmpty {
+                        InfoRow(label: "Certificate #", value: certificateNumber, color: .primary)
+                    }
+                } else {
+                    InfoRow(label: "Grade", value: "Ungraded", color: .secondary)
+                }
+                
                 InfoRow(label: "Added", value: card.createdAt.formatted(date: .abbreviated, time: .omitted), color: .secondary)
             }
         }
@@ -385,7 +418,10 @@ struct CardDetailView: View {
         .navigationTitle(card.name)
         .navigationBarTitleDisplayMode(.inline)
         .sheet(isPresented: $showingEditView) {
-            EditCardView(card: card)
+            EditCardView(card: card, deckId: deckId) { updatedCard in
+                self.card = updatedCard
+                onCardUpdated?(updatedCard)
+            }
         }
         .sheet(isPresented: $isShowingDeckModal) {
             DeckSelectionModal(cardName: card.name) { selectedDeck in
@@ -418,9 +454,23 @@ struct CardDetailView: View {
     }
     
     private func deleteCard() {
-        // TODO: Implement delete functionality with new backend API
-        // For now, show a message that this feature is being migrated
-        dismiss()
+        guard let cardId = card.id else { return }
+        
+        cardService.removeCardFromCollection(userCardId: cardId) { result in
+            DispatchQueue.main.async {
+                switch result {
+                case .success:
+                    // Card deleted successfully from backend
+                    // No need to remove from local arrays since we load fresh data from backend
+                    dismiss()
+                case .failure(let error):
+                    // Handle error - could show an alert
+                    print("Error deleting card: \(error.localizedDescription)")
+                    // For now, just dismiss anyway
+                    dismiss()
+                }
+            }
+        }
     }
     
     private func addCardToSelectedDeck(_ deck: Deck) {

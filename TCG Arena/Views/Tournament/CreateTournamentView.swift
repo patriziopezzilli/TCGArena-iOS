@@ -337,6 +337,14 @@ struct CreateTournamentView: View {
     }
     
     // MARK: - Actions
+    // Helper function to format dates as strings for backend (format: "dd MMM yyyy, HH:mm")
+    private func formatDateForBackend(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "dd MMM yyyy, HH:mm"
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        return formatter.string(from: date)
+    }
+    
     private func createTournament() {
         guard isFormValid else {
             errorMessage = "Please fill all required fields correctly."
@@ -351,8 +359,8 @@ struct CreateTournamentView: View {
             description: description,
             tcgType: selectedTCG,
             type: selectedFormat,
-            startDate: startDate,
-            endDate: endDate,
+            startDate: formatDateForBackend(startDate),
+            endDate: formatDateForBackend(endDate),
             maxParticipants: maxParticipants,
             entryFee: entryFee,
             prizePool: Double(prizePool) ?? 0.0,

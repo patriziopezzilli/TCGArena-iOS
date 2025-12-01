@@ -132,15 +132,15 @@ class ImageCacheManager {
 }
 
 /// View personalizzata per AsyncImage con caching
-struct CachedAsyncImage<Content: View>: View {
+struct CachedAsyncImage: View {
     let url: URL?
     let scale: CGFloat
-    let content: (AsyncImagePhase) -> Content
+    let content: (AsyncImagePhase) -> AnyView
     
-    init(url: URL?, scale: CGFloat = 1.0, @ViewBuilder content: @escaping (AsyncImagePhase) -> Content) {
+    init(url: URL?, scale: CGFloat = 1.0, @ViewBuilder content: @escaping (AsyncImagePhase) -> some View) {
         self.url = url
         self.scale = scale
-        self.content = content
+        self.content = { phase in AnyView(content(phase)) }
     }
     
     var body: some View {

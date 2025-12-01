@@ -73,10 +73,10 @@ struct TournamentCardView: View {
                             .foregroundColor(tournament.tcgType.themeColor)
                         
                         VStack(alignment: .leading, spacing: 2) {
-                            Text(tournament.startDate, style: .date)
+                            Text(tournament.formattedStartDate)
                                 .font(.system(size: 14, weight: .semibold))
                                 .foregroundColor(.primary)
-                            Text(tournament.startDate, style: .time)
+                            Text(tournament.formattedStartDate)
                                 .font(.system(size: 12))
                                 .foregroundColor(.secondary)
                         }

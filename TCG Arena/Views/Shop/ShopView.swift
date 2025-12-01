@@ -8,6 +8,7 @@
 import SwiftUI
 import MapKit
 import CoreLocation
+import SkeletonUI
 
 struct ShopView: View {
     @EnvironmentObject var shopService: ShopService
@@ -17,6 +18,7 @@ struct ShopView: View {
     @State private var showingLocationInput = false
     @State private var userLocationText = "Milano, Italy"
     @State private var hasLoadedInitialData = false
+    @State private var isLoading = true
     
     var body: some View {
         NavigationView {
@@ -75,9 +77,9 @@ struct ShopView: View {
                 
                 // Content based on selected section
                 if selectedSection == 0 {
-                    ShopListView()
+                    ShopListView(isLoading: isLoading)
                 } else {
-                    EventListView()
+                    EventListView(isLoading: isLoading)
                 }
             }
             .background(Color(.systemBackground))
@@ -99,6 +101,8 @@ struct ShopView: View {
                     let milanoCenter = CLLocation(latitude: 45.4642, longitude: 9.1900)
                     await tournamentService.loadNearbyTournaments(userLocation: milanoCenter)
                 }
+                
+                isLoading = false
             }
             .sheet(isPresented: $showingLocationInput) {
                 LocationInputView(locationText: $userLocationText)
@@ -110,20 +114,55 @@ struct ShopView: View {
 // MARK: - Shop List View
 struct ShopListView: View {
     @EnvironmentObject var shopService: ShopService
+    let isLoading: Bool
     
     var body: some View {
         ScrollView {
-            LazyVStack(spacing: 12) {
-                ForEach(shopService.nearbyShops) { shop in
-                    NavigationLink(destination: ShopDetailView(shop: shop)
-                        .environmentObject(shopService)) {
-                        ShopCardView(shop: shop)
+            if !isLoading && shopService.nearbyShops.isEmpty {
+                // Empty state
+                VStack(spacing: 24) {
+                    Spacer()
+                    
+                    ZStack {
+                        Circle()
+                            .fill(Color.blue.opacity(0.1))
+                            .frame(width: 120, height: 120)
+                        
+                        SwiftUI.Image(systemName: "building.2")
+                            .font(.system(size: 50, weight: .medium))
+                            .foregroundColor(.blue)
                     }
-                    .buttonStyle(PlainButtonStyle())
+                    
+                    VStack(spacing: 12) {
+                        Text("No Stores Found")
+                            .font(.system(size: 24, weight: .bold))
+                            .foregroundColor(.primary)
+                        
+                        Text("There are no stores in your area yet.\nTry adjusting your location or check back later!")
+                            .font(.system(size: 16, weight: .medium))
+                            .foregroundColor(.secondary)
+                            .multilineTextAlignment(.center)
+                            .lineLimit(nil)
+                    }
+                    
+                    Spacer()
                 }
+                .padding(.horizontal, 40)
+                .padding(.vertical, 60)
+            } else {
+                LazyVStack(spacing: 12) {
+                    ForEach(shopService.nearbyShops) { shop in
+                        NavigationLink(destination: ShopDetailView(shop: shop)
+                            .environmentObject(shopService)) {
+                            ShopCardView(shop: shop)
+                                .skeleton(with: isLoading)
+                        }
+                        .buttonStyle(PlainButtonStyle())
+                    }
+                }
+                .padding(.horizontal, 20)
+                .padding(.vertical, 12)
             }
-            .padding(.horizontal, 20)
-            .padding(.vertical, 12)
         }
     }
 }
@@ -132,6 +171,7 @@ struct ShopListView: View {
 struct EventListView: View {
     @EnvironmentObject var tournamentService: TournamentService
     @State private var showingCreateEvent = false
+    let isLoading: Bool
     
     var body: some View {
         VStack(spacing: 0) {
@@ -160,20 +200,54 @@ struct EventListView: View {
             .padding(.bottom, 12)
             
             ScrollView {
-                LazyVStack(spacing: 12) {
-                    ForEach(tournamentService.nearbyTournaments) { tournament in
-                        NavigationLink(destination: TournamentDetailView(tournament: tournament)) {
-                            TournamentCardView(
-                                tournament: tournament,
-                                isUserRegistered: false,
-                                onRegisterTap: {}
-                            )
+                if !isLoading && tournamentService.nearbyTournaments.isEmpty {
+                    // Empty state
+                    VStack(spacing: 24) {
+                        Spacer()
+                        
+                        ZStack {
+                            Circle()
+                                .fill(Color(red: 0.0, green: 0.7, blue: 1.0).opacity(0.1))
+                                .frame(width: 120, height: 120)
+                            
+                            SwiftUI.Image(systemName: "trophy")
+                                .font(.system(size: 50, weight: .medium))
+                                .foregroundColor(Color(red: 0.0, green: 0.7, blue: 1.0))
                         }
-                        .buttonStyle(PlainButtonStyle())
+                        
+                        VStack(spacing: 12) {
+                            Text("No Events Found")
+                                .font(.system(size: 24, weight: .bold))
+                                .foregroundColor(.primary)
+                            
+                            Text("There are no events in your area yet.\nTry adjusting your location or check back later!")
+                                .font(.system(size: 16, weight: .medium))
+                                .foregroundColor(.secondary)
+                                .multilineTextAlignment(.center)
+                                .lineLimit(nil)
+                        }
+                        
+                        Spacer()
                     }
+                    .padding(.horizontal, 40)
+                    .padding(.vertical, 60)
+                } else {
+                    LazyVStack(spacing: 12) {
+                        ForEach(tournamentService.nearbyTournaments) { tournament in
+                            NavigationLink(destination: TournamentDetailView(tournament: tournament)) {
+                                TournamentCardView(
+                                    tournament: tournament,
+                                    isUserRegistered: false,
+                                    onRegisterTap: {}
+                                )
+                                .skeleton(with: isLoading)
+                            }
+                            .buttonStyle(PlainButtonStyle())
+                        }
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.vertical, 12)
                 }
-                .padding(.horizontal, 20)
-                .padding(.vertical, 12)
             }
         }
         .sheet(isPresented: $showingCreateEvent) {

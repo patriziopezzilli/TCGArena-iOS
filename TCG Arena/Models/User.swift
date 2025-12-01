@@ -13,11 +13,12 @@ struct User: Identifiable, Codable {
     let username: String
     let displayName: String
     let profileImageUrl: String?
-    let dateJoined: Date
+    let dateJoined: String
     let isPremium: Bool
     let isMerchant: Bool
     let shopId: Int64?
-    let favoriteGame: TCGType?
+    let favoriteGame: TCGType? // Deprecated, kept for backward compatibility
+    let favoriteGames: [TCGType]?
     let location: UserLocation?
     
     enum CodingKeys: String, CodingKey {
@@ -31,6 +32,7 @@ struct User: Identifiable, Codable {
         case isMerchant = "is_merchant"
         case shopId = "shop_id"
         case favoriteGame = "favorite_game"
+        case favoriteGames = "favorite_games"
         case location
     }
     
@@ -93,7 +95,7 @@ struct User: Identifiable, Codable {
             shopId = nil
         }
         
-        // Gestisci favoriteGame (può essere "favoriteGame" o "favorite_game")
+        // Gestisci favoriteGame (può essere "favoriteGame" o "favorite_game") - deprecated
         if let game = try? container.decodeIfPresent(TCGType.self, forKey: .favoriteGame) {
             favoriteGame = game
         } else if let jsonContainer = try? decoder.container(keyedBy: DynamicCodingKeys.self),
@@ -101,6 +103,16 @@ struct User: Identifiable, Codable {
             favoriteGame = game
         } else {
             favoriteGame = nil
+        }
+        
+        // Gestisci favoriteGames (lista di TCG preferiti)
+        if let games = try? container.decodeIfPresent([TCGType].self, forKey: .favoriteGames) {
+            favoriteGames = games
+        } else if let jsonContainer = try? decoder.container(keyedBy: DynamicCodingKeys.self),
+                  let games = try? jsonContainer.decodeIfPresent([TCGType].self, forKey: DynamicCodingKeys(stringValue: "favoriteGames")!) {
+            favoriteGames = games
+        } else {
+            favoriteGames = nil
         }
         
         // Gestisci location
@@ -113,18 +125,17 @@ struct User: Identifiable, Codable {
             location = nil
         }
         
-        // Gestisci la conversione della data (può essere "dateJoined" o "date_joined")
+        // Gestisci la data come stringa (formattata dal backend)
         if let dateString = try? container.decode(String.self, forKey: .dateJoined) {
-            let formatter = ISO8601DateFormatter()
-            formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-            dateJoined = formatter.date(from: dateString) ?? Date()
+            dateJoined = dateString
         } else if let jsonContainer = try? decoder.container(keyedBy: DynamicCodingKeys.self),
                   let dateString = try? jsonContainer.decode(String.self, forKey: DynamicCodingKeys(stringValue: "dateJoined")!) {
-            let formatter = ISO8601DateFormatter()
-            formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
-            dateJoined = formatter.date(from: dateString) ?? Date()
+            dateJoined = dateString
         } else {
-            dateJoined = Date()
+            // Fallback: usa data corrente formattata
+            let formatter = DateFormatter()
+            formatter.dateFormat = "dd MMM yyyy, HH:mm"
+            dateJoined = formatter.string(from: Date())
         }
     }
     
@@ -140,28 +151,35 @@ struct User: Identifiable, Codable {
         try container.encode(isMerchant, forKey: .isMerchant)
         try container.encodeIfPresent(shopId, forKey: .shopId)
         try container.encodeIfPresent(favoriteGame, forKey: .favoriteGame)
+        try container.encodeIfPresent(favoriteGames, forKey: .favoriteGames)
         try container.encodeIfPresent(location, forKey: .location)
         
-        let formatter = ISO8601DateFormatter()
-        try container.encode(formatter.string(from: dateJoined), forKey: .dateJoined)
+        // La data è già una stringa formattata dal backend
+        try container.encode(dateJoined, forKey: .dateJoined)
     }
     
     func toUserProfile() -> UserProfile {
+        // Convert dateJoined string to Date
+        let formatter = DateFormatter()
+        formatter.dateFormat = "dd MMM yyyy, HH:mm"
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        let joinDate = formatter.date(from: dateJoined) ?? Date()
+        
         return UserProfile(
             id: String(id),
             username: username,
             displayName: displayName,
             avatarURL: profileImageUrl,
             bio: nil,
-            joinDate: dateJoined,
-            lastActiveDate: dateJoined,
+            joinDate: joinDate,
+            lastActiveDate: joinDate,
             isVerified: false,
             level: 1,
             experience: 0,
             stats: DiscoverUserStats(totalCards: 0, totalDecks: 0, tournamentsWon: 0, tournamentsPlayed: 0, tradesToday: 0, totalTrades: 0, communityPoints: 0, achievementsUnlocked: 0),
             badges: [],
             favoriteCard: nil,
-            preferredTCG: favoriteGame,
+            preferredTCG: favoriteGames?.first ?? favoriteGame,
             location: location,
             followersCount: 0,
             followingCount: 0,

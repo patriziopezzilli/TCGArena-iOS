@@ -9,7 +9,7 @@ struct CardPrice: Identifiable, Codable {
     let previousPrice: Double
     let weeklyChange: Double
     let weeklyChangePercent: Double
-    let condition: Card.CardCondition
+    let condition: CardCondition
     let rarity: Rarity
     let lastUpdated: Date
     

@@ -60,25 +60,15 @@ class APIClient: NSObject {
         
         do {
             let decoder = JSONDecoder()
-            decoder.dateDecodingStrategy = .custom { decoder in
-                let container = try decoder.singleValueContainer()
-                let dateString = try container.decode(String.self)
-                
-                // Java LocalDateTime format: "2025-11-26T21:55:29.218488"
-                let formatter = DateFormatter()
-                formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSSSS"
-                formatter.locale = Locale(identifier: "en_US_POSIX")
-                formatter.timeZone = TimeZone(secondsFromGMT: 0)
-                
-                if let date = formatter.date(from: dateString) {
-                    return date
-                }
-                
-                throw DecodingError.dataCorruptedError(in: container, debugDescription: "Cannot decode date string \(dateString)")
-            }
+            // Dates are now formatted as strings by the backend, so no custom decoding needed
             let decoded = try decoder.decode(T.self, from: data)
             return decoded
+        } catch let decodingError as DecodingError {
+            print("🔴 APIClient: JSON Decoding error - \(decodingError.localizedDescription)")
+            print("🔴 APIClient: Error details: \(decodingError)")
+            throw decodingError
         } catch {
+            print("🔴 APIClient: Unexpected decoding error - \(error.localizedDescription)")
             throw error
         }
     }
@@ -99,11 +89,15 @@ class APIClient: NSObject {
         _ endpoint: String,
         method: String = "GET",
         body: Data? = nil,
-        headers: [String: String] = [:]
+        headers: [String: String] = [:],
+        retryCount: Int = 0
     ) async throws -> Data {
         guard let url = URL(string: baseURL + endpoint) else {
+            print("🔴 APIClient: Invalid URL - \(baseURL + endpoint)")
             throw APIError.invalidURL
         }
+        
+        print("🌐 APIClient: Making \(method) request to: \(url.absoluteString)")
         
         var request = URLRequest(url: url)
         request.httpMethod = method
@@ -112,6 +106,21 @@ class APIClient: NSObject {
         // Aggiungi JWT token se disponibile
         if let token = jwtToken {
             request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+            let tokenPrefix = token.prefix(20)
+            print("🔑 APIClient: Using JWT token (prefix: \(tokenPrefix)...)")
+        } else {
+            print("⚠️ APIClient: No JWT token available")
+            // Debug: Check if token exists in UserDefaults
+            if let savedToken = UserDefaults.standard.string(forKey: "jwtToken") {
+                print("⚠️ APIClient: Token found in UserDefaults but _jwtToken is nil!")
+                print("⚠️ APIClient: Forcing reload from UserDefaults")
+                _jwtToken = savedToken
+                request.setValue("Bearer \(savedToken)", forHTTPHeaderField: "Authorization")
+                let tokenPrefix = savedToken.prefix(20)
+                print("🔑 APIClient: Recovered JWT token (prefix: \(tokenPrefix)...)")
+            } else {
+                print("⚠️ APIClient: No token in UserDefaults either")
+            }
         }
         
         // Aggiungi headers personalizzati
@@ -122,24 +131,55 @@ class APIClient: NSObject {
         // Aggiungi body se presente
         if let body = body {
             request.httpBody = body
-        }
-        
-        let (data, response) = try await urlSession.data(for: request)
-        
-        guard let httpResponse = response as? HTTPURLResponse else {
-            throw APIError.invalidResponse
-        }
-        
-        guard (200...299).contains(httpResponse.statusCode) else {
-            if httpResponse.statusCode == 401 {
-                // Token scaduto, logout
-                // jwtToken = nil  // Commented out to prevent clearing valid token
-                throw APIError.unauthorized
+            if let bodyString = String(data: body, encoding: .utf8) {
+                print("📦 APIClient: Request body: \(bodyString)")
             }
-            throw APIError.serverError(httpResponse.statusCode)
         }
         
-        return data
+        do {
+            let (data, response) = try await urlSession.data(for: request)
+            
+            guard let httpResponse = response as? HTTPURLResponse else {
+                print("🔴 APIClient: Invalid response type")
+                throw APIError.invalidResponse
+            }
+            
+            print("📡 APIClient: Response status code: \(httpResponse.statusCode)")
+            
+            guard (200...299).contains(httpResponse.statusCode) else {
+                print("🔴 APIClient: Server error with status code: \(httpResponse.statusCode)")
+                if httpResponse.statusCode == 401 {
+                    if retryCount < 1 {
+                        print("🔄 APIClient: Token expired, attempting refresh and retry")
+                        let refreshed = try await refreshToken()
+                        if refreshed {
+                            // Retry the request with the new token
+                            return try await rawRequest(endpoint, method: method, body: body, headers: headers, retryCount: retryCount + 1)
+                        } else {
+                            print("🔄 APIClient: Refresh failed, but keeping token for manual re-auth")
+                            // Don't clear token immediately - let user re-authenticate manually
+                            // jwtToken = nil  // Commented out to prevent logout
+                            throw APIError.unauthorized
+                        }
+                    } else {
+                        print("🔴 APIClient: Token expired and refresh failed - clearing JWT token")
+                        jwtToken = nil
+                        throw APIError.unauthorized
+                    }
+                }
+                throw APIError.serverError(httpResponse.statusCode)
+            }
+            
+            if let responseString = String(data: data, encoding: .utf8) {
+                print("📄 APIClient: Response data: \(responseString)")
+            }
+            
+            return data
+        } catch {
+            print("🔴 APIClient: Network error - \(error.localizedDescription)")
+            // Se è un errore di rete, rilancia come serverError con codice speciale
+            throw APIError.serverError(3)
+        }
     }
     
     func setJWTToken(_ token: String) {
@@ -148,6 +188,59 @@ class APIClient: NSObject {
     
     func clearJWTToken() {
         jwtToken = nil
+    }
+    
+    private func refreshToken() async throws -> Bool {
+        guard let currentToken = jwtToken else { return false }
+        
+        guard let url = URL(string: baseURL + "/api/auth/refresh-token") else {
+            print("🔴 APIClient: Invalid refresh URL")
+            return false
+        }
+        
+        print("🔄 APIClient: Attempting to refresh token")
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        
+        // NON includere nell'header Authorization per endpoint pubblici
+        // Includi solo nel body
+        let refreshBody = ["token": currentToken]
+        request.httpBody = try? JSONEncoder().encode(refreshBody)
+        
+        do {
+            let (data, response) = try await urlSession.data(for: request)
+            
+            guard let httpResponse = response as? HTTPURLResponse else {
+                print("🔴 APIClient: Invalid refresh response type")
+                return false
+            }
+            
+            guard (200...299).contains(httpResponse.statusCode) else {
+                print("🔴 APIClient: Refresh failed with status code: \(httpResponse.statusCode)")
+                if let responseString = String(data: data, encoding: .utf8) {
+                    print("🔴 APIClient: Refresh error response: \(responseString)")
+                }
+                return false
+            }
+            
+            // Parse the response to get new token
+            let decoder = JSONDecoder()
+            let refreshResponse = try decoder.decode([String: String].self, from: data)
+            
+            if let newToken = refreshResponse["token"] {
+                jwtToken = newToken
+                print("✅ APIClient: Token refreshed successfully")
+                return true
+            } else {
+                print("🔴 APIClient: Refresh response missing token")
+                return false
+            }
+        } catch {
+            print("🔴 APIClient: Refresh request failed - \(error.localizedDescription)")
+            return false
+        }
     }
 }
 

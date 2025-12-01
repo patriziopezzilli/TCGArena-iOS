@@ -17,7 +17,7 @@ struct AddCardView: View {
     @State private var selectedRarity: Rarity = .common
     @State private var cardNumber = ""
     @State private var cardDescription = ""
-    @State private var selectedCondition: Card.CardCondition = .nearMint
+    @State private var selectedCondition: CardCondition = .nearMint
     @State private var isGraded = false
     @State private var selectedGradeService: GradeService = .psa
     @State private var gradeScore = 10
@@ -145,7 +145,7 @@ struct AddCardView: View {
         Section("Condition") {
             Picker("Condition", selection: $selectedCondition) {
                 ForEach(CardCondition.allCases, id: \.self) { condition in
-                    Text(condition.rawValue).tag(condition)
+                    Text(condition.displayName).tag(condition)
                 }
             }
             
@@ -194,8 +194,8 @@ struct AddCardView: View {
                 description: nil
             )
             
-            // For mock purposes, just add to the array
-            cardService.userCards.append(card)
+            // Card added to backend successfully
+            // No need to add to local arrays since we load fresh data from backend
             
             // Close the view
             presentationMode.wrappedValue.dismiss()

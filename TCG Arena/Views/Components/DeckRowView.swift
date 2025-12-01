@@ -74,6 +74,9 @@ struct DeckRowView: View {
                     .clipShape(Capsule())
                     .foregroundColor(.white)
                     
+                    // Deck Type Badge
+                    DeckTypeBadge(deckType: deck.deckType)
+                    
                     Spacer()
                     
                     // Card Count Badge

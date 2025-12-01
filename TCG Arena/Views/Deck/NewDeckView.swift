@@ -10,6 +10,7 @@ import SwiftUI
 struct NewDeckView: View {
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject var deckService: DeckService
+    @EnvironmentObject var authService: AuthService
     
     @State private var deckName = ""
     @State private var selectedTCG: TCGType = .pokemon
@@ -121,13 +122,27 @@ struct NewDeckView: View {
                                     .font(.system(size: 14, weight: .semibold))
                                     .foregroundColor(.primary)
                                 
-                                TextField("Describe your deck strategy...", text: $deckDescription, axis: .vertical)
-                                    .lineLimit(3...5)
-                                    .padding(12)
-                                    .background(
-                                        RoundedRectangle(cornerRadius: 12)
-                                            .fill(Color(.systemGray6))
-                                    )
+                                ZStack(alignment: .topLeading) {
+                                    if deckDescription.isEmpty {
+                                        Text("Describe your deck strategy, playstyle, or key cards...")
+                                            .foregroundColor(.secondary)
+                                            .padding(.top, 12)
+                                            .padding(.leading, 16)
+                                            .font(.system(size: 15))
+                                    }
+                                    
+                                    TextEditor(text: $deckDescription)
+                                        .frame(minHeight: 80)
+                                        .padding(12)
+                                        .background(
+                                            RoundedRectangle(cornerRadius: 12)
+                                                .fill(Color(.systemGray6))
+                                        )
+                                        .overlay(
+                                            RoundedRectangle(cornerRadius: 12)
+                                                .stroke(Color(.systemGray4), lineWidth: 1)
+                                        )
+                                }
                             }
                             
                             // Public Toggle
@@ -276,29 +291,29 @@ struct NewDeckView: View {
         
         isSaving = true
         
-        Task {
-            // Simulate deck creation
-            try? await Task.sleep(nanoseconds: 1_500_000_000) // 1.5 seconds
-            
-            let newDeck = Deck(
-                name: deckName.trimmingCharacters(in: .whitespacesAndNewlines),
-                tcgType: selectedTCG,
-                ownerId: 1, // Mock user ID
-                description: deckDescription.isEmpty ? nil : deckDescription,
-                tags: tags
-            )
-            
-            await MainActor.run {
-                // Add to deck service (assuming it exists)
-                deckService.addDeck(newDeck)
+        let userId = authService.currentUserId ?? 1 // Use real user ID from auth service
+        
+        deckService.createDeck(
+            name: deckName.trimmingCharacters(in: .whitespacesAndNewlines),
+            description: deckDescription.isEmpty ? nil : deckDescription,
+            tcgType: selectedTCG,
+            deckType: .deck, // Default deck type
+            userId: userId
+        ) { result in
+            DispatchQueue.main.async {
                 isSaving = false
-                
-                // Show success animation
-                showSuccess = true
-                
-                // Auto dismiss after success
-                DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-                    dismiss()
+                switch result {
+                case .success(let createdDeck):
+                    print("✅ NewDeckView: Deck created successfully: \(createdDeck.name)")
+                    showSuccess = true
+                    
+                    // Auto dismiss after success
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                        dismiss()
+                    }
+                case .failure(let error):
+                    print("🔴 NewDeckView: Failed to create deck: \(error.localizedDescription)")
+                    // TODO: Show error alert
                 }
             }
         }
@@ -308,4 +323,5 @@ struct NewDeckView: View {
 #Preview {
     NewDeckView()
         .environmentObject(DeckService())
+        .environmentObject(AuthService())
 }
