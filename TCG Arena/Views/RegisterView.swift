@@ -27,209 +27,257 @@ struct RegisterView: View {
 
     var body: some View {
         ZStack {
-            Color.white
-                .ignoresSafeArea()
+            // Background gradient
+            LinearGradient(
+                gradient: Gradient(colors: [
+                    AdaptiveColors.brandPrimary.opacity(0.1),
+                    AdaptiveColors.brandSecondary.opacity(0.05),
+                    AdaptiveColors.background
+                ]),
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+            .ignoresSafeArea()
 
             ScrollView {
                 VStack(spacing: 32) {
-                    Spacer()
-
-                    // Header
+                    // Header with decorative elements
                     VStack(spacing: 16) {
+                        // Decorative circles
                         ZStack {
                             Circle()
-                                .fill(Color.blue.opacity(0.1))
-                                .frame(width: 120, height: 120)
-
-                            SwiftUI.Image(systemName: "person.badge.plus.fill")
-                                .font(.system(size: 60, weight: .light))
-                                .foregroundColor(.blue)
+                                .fill(AdaptiveColors.brandPrimary.opacity(0.1))
+                                .frame(width: 80, height: 80)
+                            Circle()
+                                .fill(AdaptiveColors.brandSecondary.opacity(0.1))
+                                .frame(width: 60, height: 60)
+                            SwiftUI.Image(systemName: "person.badge.plus")
+                                .font(.system(size: 24, weight: .bold))
+                                .foregroundColor(AdaptiveColors.brandPrimary)
                         }
 
-                        VStack(spacing: 8) {
-                            Text("Create Account")
-                                .font(.system(size: 28, weight: .bold))
-                                .foregroundColor(.black)
+                        Text("Create Account")
+                            .font(.system(size: 32, weight: .bold, design: .rounded))
+                            .foregroundColor(AdaptiveColors.brandPrimary)
 
-                            Text("Join TCG Arena")
-                                .font(.system(size: 16, weight: .regular))
-                                .foregroundColor(.gray)
-                        }
+                        Text("Join the TCG community and start your collection")
+                            .font(.system(size: 16, weight: .regular, design: .rounded))
+                            .foregroundColor(AdaptiveColors.neutralDark)
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal, 20)
                     }
+                    .padding(.top, 60)
 
-                    // Registration form in card
+                    // Main registration card
                     VStack(spacing: 24) {
+                        // Form Fields Card
                         VStack(spacing: 20) {
+                            // Username field with icon
                             VStack(alignment: .leading, spacing: 8) {
-                                Text("Username")
-                                    .font(.system(size: 14, weight: .semibold))
-                                    .foregroundColor(.gray)
+                                HStack(spacing: 8) {
+                                    SwiftUI.Image(systemName: "person.circle")
+                                        .foregroundColor(AdaptiveColors.brandPrimary)
+                                        .frame(width: 20, height: 20)
+                                    Text("Username")
+                                        .font(.system(size: 14, weight: .semibold, design: .rounded))
+                                        .foregroundColor(AdaptiveColors.brandPrimary)
+                                }
 
-                                TextField("Choose a username", text: $username)
-                                    .font(.system(size: 16))
-                                    .autocapitalization(.none)
-                                    .disableAutocorrection(true)
+                                TextField("Enter your username", text: $username)
                                     .padding(.horizontal, 16)
                                     .padding(.vertical, 14)
-                                    .background(Color.gray.opacity(0.1))
-                                    .clipShape(RoundedRectangle(cornerRadius: 8))
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: 8)
-                                            .stroke(Color.gray.opacity(0.3), lineWidth: 1)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 12)
+                                            .fill(Color.white.opacity(0.9))
+                                            .overlay(
+                                                RoundedRectangle(cornerRadius: 12)
+                                                    .stroke(AdaptiveColors.neutralLight, lineWidth: 1)
+                                            )
+                                            .shadow(color: Color.black.opacity(0.05), radius: 4, x: 0, y: 2)
                                     )
-                                    .foregroundColor(.black)
+                                    .foregroundColor(AdaptiveColors.neutralDark)
+                                    .font(.system(size: 16))
                             }
 
+                            // Email field with icon
                             VStack(alignment: .leading, spacing: 8) {
-                                Text("Email")
-                                    .font(.system(size: 14, weight: .semibold))
-                                    .foregroundColor(.gray)
+                                HStack(spacing: 8) {
+                                    SwiftUI.Image(systemName: "envelope")
+                                        .foregroundColor(AdaptiveColors.brandPrimary)
+                                        .frame(width: 20, height: 20)
+                                    Text("Email")
+                                        .font(.system(size: 14, weight: .semibold, design: .rounded))
+                                        .foregroundColor(AdaptiveColors.brandPrimary)
+                                }
 
                                 TextField("Enter your email", text: $email)
+                                    .padding(.horizontal, 16)
+                                    .padding(.vertical, 14)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 12)
+                                            .fill(Color.white.opacity(0.9))
+                                            .overlay(
+                                                RoundedRectangle(cornerRadius: 12)
+                                                    .stroke(AdaptiveColors.neutralLight, lineWidth: 1)
+                                            )
+                                            .shadow(color: Color.black.opacity(0.05), radius: 4, x: 0, y: 2)
+                                    )
+                                    .foregroundColor(AdaptiveColors.neutralDark)
                                     .font(.system(size: 16))
                                     .keyboardType(.emailAddress)
                                     .autocapitalization(.none)
-                                    .disableAutocorrection(true)
-                                    .padding(.horizontal, 16)
-                                    .padding(.vertical, 14)
-                                    .background(Color.gray.opacity(0.1))
-                                    .clipShape(RoundedRectangle(cornerRadius: 8))
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: 8)
-                                            .stroke(Color.gray.opacity(0.3), lineWidth: 1)
-                                    )
-                                    .foregroundColor(.black)
                             }
 
+                            // Password field with icon
                             VStack(alignment: .leading, spacing: 8) {
-                                Text("Password")
-                                    .font(.system(size: 14, weight: .semibold))
-                                    .foregroundColor(.gray)
+                                HStack(spacing: 8) {
+                                    SwiftUI.Image(systemName: "lock")
+                                        .foregroundColor(AdaptiveColors.brandPrimary)
+                                        .frame(width: 20, height: 20)
+                                    Text("Password")
+                                        .font(.system(size: 14, weight: .semibold, design: .rounded))
+                                        .foregroundColor(AdaptiveColors.brandPrimary)
+                                }
 
                                 SecureField("Create a password", text: $password)
-                                    .font(.system(size: 16))
                                     .padding(.horizontal, 16)
                                     .padding(.vertical, 14)
-                                    .background(Color.gray.opacity(0.1))
-                                    .clipShape(RoundedRectangle(cornerRadius: 8))
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: 8)
-                                            .stroke(Color.gray.opacity(0.3), lineWidth: 1)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 12)
+                                            .fill(Color.white.opacity(0.9))
+                                            .overlay(
+                                                RoundedRectangle(cornerRadius: 12)
+                                                    .stroke(AdaptiveColors.neutralLight, lineWidth: 1)
+                                            )
+                                            .shadow(color: Color.black.opacity(0.05), radius: 4, x: 0, y: 2)
                                     )
-                                    .foregroundColor(.black)
+                                    .foregroundColor(AdaptiveColors.neutralDark)
+                                    .font(.system(size: 16))
                             }
 
+                            // Confirm Password field with icon
                             VStack(alignment: .leading, spacing: 8) {
-                                Text("Confirm Password")
-                                    .font(.system(size: 14, weight: .semibold))
-                                    .foregroundColor(.gray)
+                                HStack(spacing: 8) {
+                                    SwiftUI.Image(systemName: "lock.shield")
+                                        .foregroundColor(AdaptiveColors.brandPrimary)
+                                        .frame(width: 20, height: 20)
+                                    Text("Confirm Password")
+                                        .font(.system(size: 14, weight: .semibold, design: .rounded))
+                                        .foregroundColor(AdaptiveColors.brandPrimary)
+                                }
 
                                 SecureField("Confirm your password", text: $confirmPassword)
-                                    .font(.system(size: 16))
                                     .padding(.horizontal, 16)
                                     .padding(.vertical, 14)
-                                    .background(Color.gray.opacity(0.1))
-                                    .clipShape(RoundedRectangle(cornerRadius: 8))
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: 8)
-                                            .stroke(Color.gray.opacity(0.3), lineWidth: 1)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 12)
+                                            .fill(Color.white.opacity(0.9))
+                                            .overlay(
+                                                RoundedRectangle(cornerRadius: 12)
+                                                    .stroke(AdaptiveColors.neutralLight, lineWidth: 1)
+                                            )
+                                            .shadow(color: Color.black.opacity(0.05), radius: 4, x: 0, y: 2)
                                     )
-                                    .foregroundColor(.black)
+                                    .foregroundColor(AdaptiveColors.neutralDark)
+                                    .font(.system(size: 16))
                             }
 
-                            // TCG Selection if not selected
-                            if selectedTCG == nil {
-                                VStack(alignment: .leading, spacing: 12) {
-                                    Text("Choose your favorite TCG")
-                                        .font(.system(size: 14, weight: .semibold))
-                                        .foregroundColor(.gray)
+                            // TCG Selection with icon
+                            VStack(alignment: .leading, spacing: 8) {
+                                HStack(spacing: 8) {
+                                    SwiftUI.Image(systemName: "gamecontroller")
+                                        .foregroundColor(AdaptiveColors.brandPrimary)
+                                        .frame(width: 20, height: 20)
+                                    Text("Favorite TCG")
+                                        .font(.system(size: 14, weight: .semibold, design: .rounded))
+                                        .foregroundColor(AdaptiveColors.brandPrimary)
+                                }
 
-                                    LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 2), spacing: 12) {
-                                        ForEach(TCGType.allCases.filter { $0 != .digimon }, id: \.self) { tcg in
-                                            Button(action: {
-                                                selectedTCG = tcg
-                                            }) {
-                                                VStack(spacing: 6) {
-                                                    SwiftUI.Image(systemName: "star.fill")
-                                                        .font(.system(size: 20, weight: .medium))
-                                                        .foregroundColor(.yellow)
-
-                                                    Text(tcg.rawValue)
-                                                        .font(.system(size: 12, weight: .medium))
-                                                        .foregroundColor(.black)
+                                Menu {
+                                    ForEach(TCGType.allCases, id: \.self) { tcg in
+                                        Button(action: { selectedTCG = tcg }) {
+                                            HStack {
+                                                Text(tcg.rawValue.capitalized)
+                                                if selectedTCG == tcg {
+                                                    SwiftUI.Image(systemName: "checkmark")
                                                 }
-                                                .frame(maxWidth: .infinity)
-                                                .frame(height: 60)
-                                                .background(Color.gray.opacity(0.1))
-                                                .clipShape(RoundedRectangle(cornerRadius: 8))
-                                                .overlay(
-                                                    RoundedRectangle(cornerRadius: 8)
-                                                        .stroke(Color.gray.opacity(0.3), lineWidth: 1)
-                                                )
                                             }
                                         }
                                     }
-                                }
-                            }
-                        }
-                        .padding(.horizontal, 24)
-                        .padding(.vertical, 32)
-                        .background(Color.white)
-                        .clipShape(RoundedRectangle(cornerRadius: 16))
-                        .shadow(color: Color.black.opacity(0.1), radius: 10, x: 0, y: 5)
-
-                        // Terms agreement
-                        HStack(alignment: .top, spacing: 16) {
-                            Button(action: {
-                                agreedToTerms.toggle()
-                            }) {
-                                ZStack {
-                                    RoundedRectangle(cornerRadius: 6)
-                                        .fill(Color.gray.opacity(0.1))
-                                        .frame(width: 24, height: 24)
-                                        .overlay(
-                                            RoundedRectangle(cornerRadius: 6)
-                                                .stroke(Color.gray.opacity(0.3), lineWidth: 1)
-                                        )
-
-                                    if agreedToTerms {
-                                        SwiftUI.Image(systemName: "checkmark")
-                                            .font(.system(size: 14, weight: .bold))
-                                            .foregroundColor(.blue)
+                                } label: {
+                                    HStack {
+                                        Text(selectedTCG?.rawValue.capitalized ?? "Choose your favorite TCG")
+                                            .foregroundColor(selectedTCG == nil ? AdaptiveColors.neutralDark.opacity(0.6) : AdaptiveColors.neutralDark)
+                                            .font(.system(size: 16))
+                                        Spacer()
+                                        SwiftUI.Image(systemName: "chevron.down")
+                                            .foregroundColor(AdaptiveColors.neutralDark.opacity(0.6))
+                                            .font(.system(size: 14))
                                     }
+                                    .padding(.horizontal, 16)
+                                    .padding(.vertical, 14)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 12)
+                                            .fill(Color.white.opacity(0.9))
+                                            .overlay(
+                                                RoundedRectangle(cornerRadius: 12)
+                                                    .stroke(AdaptiveColors.neutralLight, lineWidth: 1)
+                                            )
+                                            .shadow(color: Color.black.opacity(0.05), radius: 4, x: 0, y: 2)
+                                    )
                                 }
                             }
-
-                            Text("I agree to the Terms of Service and Privacy Policy")
-                                .font(.system(size: 14, weight: .regular))
-                                .foregroundColor(.gray)
-                                .lineLimit(2)
-
-                            Spacer()
                         }
-                        .padding(.horizontal, 24)
+                        .padding(24)
+                        .background(
+                            RoundedRectangle(cornerRadius: 20)
+                                .fill(Color.white.opacity(0.95))
+                                .shadow(color: Color.black.opacity(0.1), radius: 10, x: 0, y: 5)
+                        )
 
-                        // Register button
+                        // Sign Up Button with enhanced styling
                         Button(action: register) {
                             if isLoading {
-                                ProgressView()
-                                    .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                                HStack(spacing: 12) {
+                                    ProgressView()
+                                        .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                                        .scaleEffect(0.8)
+                                    Text("Creating Account...")
+                                        .font(.system(size: 18, weight: .semibold, design: .rounded))
+                                }
                             } else {
-                                Text("Create Account")
-                                    .font(.system(size: 16, weight: .semibold))
-                                    .foregroundColor(.white)
+                                HStack(spacing: 8) {
+                                    Text("Create Account")
+                                        .font(.system(size: 18, weight: .semibold, design: .rounded))
+                                    SwiftUI.Image(systemName: "arrow.right")
+                                        .font(.system(size: 16, weight: .semibold))
+                                }
                             }
                         }
+                        .foregroundColor(.white)
                         .frame(maxWidth: .infinity)
-                        .frame(height: 50)
-                        .background(Color.blue)
-                        .clipShape(RoundedRectangle(cornerRadius: 25))
-                        .padding(.horizontal, 24)
+                        .padding(.vertical, 16)
+                        .background(
+                            LinearGradient(
+                                gradient: Gradient(colors: [AdaptiveColors.brandPrimary, AdaptiveColors.brandPrimary.opacity(0.8)]),
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
+                        )
+                        .cornerRadius(16)
+                        .shadow(color: AdaptiveColors.brandPrimary.opacity(0.3), radius: 8, x: 0, y: 4)
                         .disabled(isLoading || !isFormValid)
                         .opacity(isLoading || !isFormValid ? 0.6 : 1.0)
                     }
+                    .padding(.horizontal, 20)
 
-                    Spacer()
+                    // Terms and login section
+                    VStack(spacing: 24) {
+                        termsView
+                        loginPromptView
+                    }
+
+                    Spacer(minLength: 60)
                 }
             }
         }
@@ -238,6 +286,82 @@ struct RegisterView: View {
         } message: {
             Text(errorMessage)
         }
+    }
+
+    // MARK: - Subviews
+
+    private var termsView: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            HStack(alignment: .top, spacing: 16) {
+                Button(action: {
+                    agreedToTerms.toggle()
+                }) {
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 8)
+                            .fill(Color.white.opacity(0.9))
+                            .frame(width: 28, height: 28)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .stroke(AdaptiveColors.neutralLight, lineWidth: 2)
+                                    .shadow(color: Color.black.opacity(0.05), radius: 2, x: 0, y: 1)
+                            )
+
+                        if agreedToTerms {
+                            SwiftUI.Image(systemName: "checkmark")
+                                .font(.system(size: 16, weight: .bold))
+                                .foregroundColor(AdaptiveColors.brandPrimary)
+                        }
+                    }
+                }
+
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("I agree to the Terms of Service and Privacy Policy")
+                        .font(.system(size: 14, weight: .regular, design: .rounded))
+                        .foregroundColor(AdaptiveColors.neutralDark)
+                        .lineLimit(2)
+
+                    Button(action: {
+                        // Open terms and conditions
+                    }) {
+                        HStack(spacing: 4) {
+                            Text("Read Terms")
+                                .font(.system(size: 14, weight: .semibold, design: .rounded))
+                                .foregroundColor(AdaptiveColors.brandPrimary)
+                            SwiftUI.Image(systemName: "arrow.up.right")
+                                .font(.system(size: 12))
+                                .foregroundColor(AdaptiveColors.brandPrimary)
+                        }
+                    }
+                }
+            }
+        }
+        .padding(.horizontal, 20)
+    }
+
+    private var loginPromptView: some View {
+        VStack(spacing: 12) {
+            HStack(spacing: 4) {
+                Text("Already have an account?")
+                    .font(.system(size: 14, weight: .regular, design: .rounded))
+                    .foregroundColor(AdaptiveColors.neutralDark.opacity(0.8))
+
+                Button(action: {
+                    // Switch to login view
+                    dismiss()
+                }) {
+                    HStack(spacing: 6) {
+                        Text("Sign In")
+                            .font(.system(size: 16, weight: .semibold, design: .rounded))
+                            .foregroundColor(AdaptiveColors.accent)
+                        SwiftUI.Image(systemName: "arrow.right")
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundColor(AdaptiveColors.accent)
+                    }
+                }
+            }
+        }
+        .padding(.horizontal, 20)
+        .padding(.vertical, 8)
     }
 
     private var isFormValid: Bool {

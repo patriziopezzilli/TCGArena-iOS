@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		7A000AB32ED61E1D00A7E572 /* AdaptiveColors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A000AB12ED61E1D00A7E572 /* AdaptiveColors.swift */; };
 		7A1CC91D2ED1EC3B00A61395 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1CC91C2ED1EC3B00A61395 /* OnboardingView.swift */; };
 		7A1CC9292ED238D500A61395 /* CardModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1CC9202ED238D500A61395 /* CardModels.swift */; };
 		7A1CC92A2ED238D500A61395 /* ImageModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1CC9222ED238D500A61395 /* ImageModels.swift */; };
@@ -73,6 +74,14 @@
 		7AA785992EBCAA6C00A11D94 /* DeckListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AA785962EBCAA6C00A11D94 /* DeckListView.swift */; };
 		7AA7859C2EBCC5CC00A11D94 /* UserDeckListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AA7859B2EBCC5CC00A11D94 /* UserDeckListView.swift */; };
 		7AA7859D2EBCC5CC00A11D94 /* ProDecksListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AA7859A2EBCC5CC00A11D94 /* ProDecksListView.swift */; };
+		7AAAA20D2EDD938A0035F942 /* RequestModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AAAA20A2EDD938A0035F942 /* RequestModels.swift */; };
+		7AAAA20E2EDD938A0035F942 /* InventoryCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AAAA2092EDD938A0035F942 /* InventoryCard.swift */; };
+		7AAAA20F2EDD938A0035F942 /* Reservation.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AAAA20B2EDD938A0035F942 /* Reservation.swift */; };
+		7AAAA2102EDD938A0035F942 /* TournamentExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AAAA20C2EDD938A0035F942 /* TournamentExtensions.swift */; };
+		7AAAA2142EDD93980035F942 /* InventoryService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AAAA2112EDD93980035F942 /* InventoryService.swift */; };
+		7AAAA2152EDD93980035F942 /* ReservationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AAAA2132EDD93980035F942 /* ReservationService.swift */; };
+		7AAAA2162EDD93980035F942 /* RequestService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AAAA2122EDD93980035F942 /* RequestService.swift */; };
+		7AAAA2182EDD93A90035F942 /* ShopInventoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AAAA2172EDD93A90035F942 /* ShopInventoryView.swift */; };
 		7AAF9FDD2ECE12E0008221E9 /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AAF9FD82ECE12E0008221E9 /* LoginView.swift */; };
 		7AAF9FDE2ECE12E0008221E9 /* RegisterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AAF9FDB2ECE12E0008221E9 /* RegisterView.swift */; };
 		7AAF9FDF2ECE12E0008221E9 /* WelcomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AAF9FDC2ECE12E0008221E9 /* WelcomeView.swift */; };
@@ -107,6 +116,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		7A000AB12ED61E1D00A7E572 /* AdaptiveColors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdaptiveColors.swift; sourceTree = "<group>"; };
 		7A1CC91C2ED1EC3B00A61395 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
 		7A1CC91E2ED238D500A61395 /* AchievementModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AchievementModels.swift; sourceTree = "<group>"; };
 		7A1CC91F2ED238D500A61395 /* AuthModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthModels.swift; sourceTree = "<group>"; };
@@ -173,6 +183,14 @@
 		7AA785972EBCAA6C00A11D94 /* ProDeckListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProDeckListView.swift; sourceTree = "<group>"; };
 		7AA7859A2EBCC5CC00A11D94 /* ProDecksListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProDecksListView.swift; sourceTree = "<group>"; };
 		7AA7859B2EBCC5CC00A11D94 /* UserDeckListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserDeckListView.swift; sourceTree = "<group>"; };
+		7AAAA2092EDD938A0035F942 /* InventoryCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InventoryCard.swift; sourceTree = "<group>"; };
+		7AAAA20A2EDD938A0035F942 /* RequestModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RequestModels.swift; sourceTree = "<group>"; };
+		7AAAA20B2EDD938A0035F942 /* Reservation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Reservation.swift; sourceTree = "<group>"; };
+		7AAAA20C2EDD938A0035F942 /* TournamentExtensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TournamentExtensions.swift; sourceTree = "<group>"; };
+		7AAAA2112EDD93980035F942 /* InventoryService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InventoryService.swift; sourceTree = "<group>"; };
+		7AAAA2122EDD93980035F942 /* RequestService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RequestService.swift; sourceTree = "<group>"; };
+		7AAAA2132EDD93980035F942 /* ReservationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReservationService.swift; sourceTree = "<group>"; };
+		7AAAA2172EDD93A90035F942 /* ShopInventoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShopInventoryView.swift; sourceTree = "<group>"; };
 		7AAF9FD72ECE12E0008221E9 /* ForgotPasswordView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ForgotPasswordView.swift; sourceTree = "<group>"; };
 		7AAF9FD82ECE12E0008221E9 /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
 		7AAF9FD92ECE12E0008221E9 /* MainAppView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainAppView.swift; sourceTree = "<group>"; };
@@ -219,6 +237,14 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		7A000AB22ED61E1D00A7E572 /* Helpers */ = {
+			isa = PBXGroup;
+			children = (
+				7A000AB12ED61E1D00A7E572 /* AdaptiveColors.swift */,
+			);
+			path = Helpers;
+			sourceTree = "<group>";
+		};
 		7A7DF4042EBB943D00331A52 /* Community */ = {
 			isa = PBXGroup;
 			children = (
@@ -265,6 +291,7 @@
 		7A817B8E2EC7693C00500F32 /* Shop */ = {
 			isa = PBXGroup;
 			children = (
+				7AAAA2172EDD93A90035F942 /* ShopInventoryView.swift */,
 				7A817B8C2EC7693C00500F32 /* ShopDetailView.swift */,
 				7A817B8D2EC7693C00500F32 /* ShopView.swift */,
 			);
@@ -301,6 +328,7 @@
 		A5000002 /* TCG Arena */ = {
 			isa = PBXGroup;
 			children = (
+				7A000AB22ED61E1D00A7E572 /* Helpers */,
 				A2000001 /* TCGArenaApp.swift */,
 				A2000002 /* ContentView.swift */,
 				7AA785912EBCA4D300A11D94 /* Components */,
@@ -327,6 +355,10 @@
 		A5000004 /* Models */ = {
 			isa = PBXGroup;
 			children = (
+				7AAAA2092EDD938A0035F942 /* InventoryCard.swift */,
+				7AAAA20A2EDD938A0035F942 /* RequestModels.swift */,
+				7AAAA20B2EDD938A0035F942 /* Reservation.swift */,
+				7AAAA20C2EDD938A0035F942 /* TournamentExtensions.swift */,
 				7A1CC91E2ED238D500A61395 /* AchievementModels.swift */,
 				7A1CC91F2ED238D500A61395 /* AuthModels.swift */,
 				7A1CC9202ED238D500A61395 /* CardModels.swift */,
@@ -383,6 +415,9 @@
 		A5000006 /* Services */ = {
 			isa = PBXGroup;
 			children = (
+				7AAAA2112EDD93980035F942 /* InventoryService.swift */,
+				7AAAA2122EDD93980035F942 /* RequestService.swift */,
+				7AAAA2132EDD93980035F942 /* ReservationService.swift */,
 				7A1CC93C2ED2392C00A61395 /* AchievementService.swift */,
 				7A1CC93D2ED2392C00A61395 /* APIClient.swift */,
 				7A1CC93E2ED2392C00A61395 /* ImageService.swift */,
@@ -528,6 +563,10 @@
 			buildActionMask = 2147483647;
 			files = (
 				7AA785952EBCAA6200A11D94 /* DeckModels.swift in Sources */,
+				7AAAA20D2EDD938A0035F942 /* RequestModels.swift in Sources */,
+				7AAAA20E2EDD938A0035F942 /* InventoryCard.swift in Sources */,
+				7AAAA20F2EDD938A0035F942 /* Reservation.swift in Sources */,
+				7AAAA2102EDD938A0035F942 /* TournamentExtensions.swift in Sources */,
 				A1000001 /* TCGArenaApp.swift in Sources */,
 				7AE3FF992EC90409004EE982 /* Set.swift in Sources */,
 				7AFBD61F2EBCF99F0023B5D2 /* EditCardView.swift in Sources */,
@@ -571,6 +610,7 @@
 				7A8B2E7C2EC1E375004F6826 /* CardScanResultView.swift in Sources */,
 				7A1CC9292ED238D500A61395 /* CardModels.swift in Sources */,
 				7A1CC92A2ED238D500A61395 /* ImageModels.swift in Sources */,
+				7A000AB32ED61E1D00A7E572 /* AdaptiveColors.swift in Sources */,
 				7A1CC92B2ED238D500A61395 /* RewardModels.swift in Sources */,
 				7A1CC92C2ED238D500A61395 /* AuthModels.swift in Sources */,
 				7A1CC92E2ED238D500A61395 /* AchievementModels.swift in Sources */,
@@ -608,6 +648,7 @@
 				7A8B2E7E2EC1ECC3004F6826 /* LoadingComponents.swift in Sources */,
 				7AA7859D2EBCC5CC00A11D94 /* ProDecksListView.swift in Sources */,
 				A1000014 /* TCGButton.swift in Sources */,
+				7AAAA2182EDD93A90035F942 /* ShopInventoryView.swift in Sources */,
 				7A7DF3DC2EBB938A00331A52 /* CollectionView.swift in Sources */,
 				7AA785922EBCA4D300A11D94 /* CollectionCardWithPrice.swift in Sources */,
 				7A1CC91D2ED1EC3B00A61395 /* OnboardingView.swift in Sources */,
@@ -621,6 +662,9 @@
 				7A817B8B2EC7692500500F32 /* Shop.swift in Sources */,
 				A1000015 /* CardRowView.swift in Sources */,
 				A1000016 /* TournamentCardView.swift in Sources */,
+				7AAAA2142EDD93980035F942 /* InventoryService.swift in Sources */,
+				7AAAA2152EDD93980035F942 /* ReservationService.swift in Sources */,
+				7AAAA2162EDD93980035F942 /* RequestService.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -636,6 +680,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"TCG Arena/Preview Content\"";
+				DEVELOPMENT_TEAM = RBKZN3272M;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "TCG Arena/Info.plist";
@@ -673,6 +718,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"TCG Arena/Preview Content\"";
+				DEVELOPMENT_TEAM = RBKZN3272M;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "TCG Arena/Info.plist";

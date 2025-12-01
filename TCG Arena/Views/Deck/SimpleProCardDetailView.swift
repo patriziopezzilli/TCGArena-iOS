@@ -15,14 +15,14 @@ struct SimpleProCardDetailView: View {
             VStack(spacing: 24) {
                 // Card Image Placeholder
                 RoundedRectangle(cornerRadius: 16)
-                    .fill(deckCard.cardTemplate.tcgType.themeColor.opacity(0.2))
+                    .fill(AdaptiveColors.neutralLight.opacity(0.2))
                     .frame(height: 400)
                     .overlay(
                         VStack(spacing: 16) {
                             SwiftUI.Image(systemName: deckCard.cardTemplate.tcgType.systemIcon)
                                 .font(.system(size: 80, weight: .semibold))
-                                .foregroundColor(deckCard.cardTemplate.tcgType.themeColor)
-                            
+                                .foregroundColor(AdaptiveColors.brandPrimary)
+
                             Text(deckCard.cardTemplate.name)
                                 .font(.title2)
                                 .fontWeight(.bold)
@@ -30,7 +30,7 @@ struct SimpleProCardDetailView: View {
                                 .padding(.horizontal)
                         }
                     )
-                    .padding(.horizontal, 20)
+                    .padding(.horizontal, 24) // Adjusted padding for modern spacing
                 
                 // Card Details
                 VStack(alignment: .leading, spacing: 16) {

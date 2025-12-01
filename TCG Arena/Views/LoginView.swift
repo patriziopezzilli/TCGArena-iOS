@@ -21,134 +21,187 @@ struct LoginView: View {
     init(email: String = "") {
         _email = State(initialValue: email)
     }
-    @State private var isAnimating = false
 
     var body: some View {
         ZStack {
-            Color.white
-                .ignoresSafeArea()
+            // Background gradient
+            LinearGradient(
+                gradient: Gradient(colors: [
+                    AdaptiveColors.brandPrimary.opacity(0.1),
+                    AdaptiveColors.brandSecondary.opacity(0.05),
+                    AdaptiveColors.background
+                ]),
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+            .ignoresSafeArea()
 
-            VStack(spacing: 32) {
-                Spacer()
+            ScrollView {
+                VStack(spacing: 32) {
+                    // Header with decorative elements
+                    VStack(spacing: 16) {
+                        // Decorative circles
+                        ZStack {
+                            Circle()
+                                .fill(AdaptiveColors.brandPrimary.opacity(0.1))
+                                .frame(width: 80, height: 80)
+                            Circle()
+                                .fill(AdaptiveColors.brandSecondary.opacity(0.1))
+                                .frame(width: 60, height: 60)
+                            SwiftUI.Image(systemName: "person.circle.fill")
+                                .font(.system(size: 24, weight: .bold))
+                                .foregroundColor(AdaptiveColors.brandPrimary)
+                        }
 
-                // Header
-                VStack(spacing: 16) {
-                    ZStack {
-                        Circle()
-                            .fill(Color.blue.opacity(0.1))
-                            .frame(width: 120, height: 120)
+                        VStack(spacing: 8) {
+                            Text("Welcome Back")
+                                .font(.system(size: 32, weight: .bold, design: .rounded))
+                                .foregroundColor(AdaptiveColors.brandPrimary)
 
-                        SwiftUI.Image(systemName: "person.circle.fill")
-                            .font(.system(size: 60, weight: .light))
-                            .foregroundColor(.blue)
+                            Text("Sign in to continue")
+                                .font(.system(size: 16, weight: .regular, design: .rounded))
+                                .foregroundColor(AdaptiveColors.neutralDark)
+                                .multilineTextAlignment(.center)
+                        }
+                    }
+                    .padding(.top, 60)
+
+                    // Main login card
+                    VStack(spacing: 24) {
+                        // Form Fields Card
+                        VStack(spacing: 20) {
+                            // Email field with icon
+                            VStack(alignment: .leading, spacing: 8) {
+                                HStack(spacing: 8) {
+                                    SwiftUI.Image(systemName: "envelope")
+                                        .foregroundColor(AdaptiveColors.brandPrimary)
+                                        .frame(width: 20, height: 20)
+                                    Text("Email")
+                                        .font(.system(size: 14, weight: .semibold, design: .rounded))
+                                        .foregroundColor(AdaptiveColors.brandPrimary)
+                                }
+
+                                TextField("Enter your email", text: $email)
+                                    .padding(.horizontal, 16)
+                                    .padding(.vertical, 14)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 12)
+                                            .fill(Color.white.opacity(0.9))
+                                            .overlay(
+                                                RoundedRectangle(cornerRadius: 12)
+                                                    .stroke(AdaptiveColors.neutralLight, lineWidth: 1)
+                                            )
+                                            .shadow(color: Color.black.opacity(0.05), radius: 4, x: 0, y: 2)
+                                    )
+                                    .foregroundColor(AdaptiveColors.neutralDark)
+                                    .font(.system(size: 16))
+                                    .keyboardType(.emailAddress)
+                                    .autocapitalization(.none)
+                            }
+
+                            // Password field with icon
+                            VStack(alignment: .leading, spacing: 8) {
+                                HStack(spacing: 8) {
+                                    SwiftUI.Image(systemName: "lock")
+                                        .foregroundColor(AdaptiveColors.brandPrimary)
+                                        .frame(width: 20, height: 20)
+                                    Text("Password")
+                                        .font(.system(size: 14, weight: .semibold, design: .rounded))
+                                        .foregroundColor(AdaptiveColors.brandPrimary)
+                                }
+
+                                SecureField("Enter your password", text: $password)
+                                    .padding(.horizontal, 16)
+                                    .padding(.vertical, 14)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 12)
+                                            .fill(Color.white.opacity(0.9))
+                                            .overlay(
+                                                RoundedRectangle(cornerRadius: 12)
+                                                    .stroke(AdaptiveColors.neutralLight, lineWidth: 1)
+                                            )
+                                            .shadow(color: Color.black.opacity(0.05), radius: 4, x: 0, y: 2)
+                                    )
+                                    .foregroundColor(AdaptiveColors.neutralDark)
+                                    .font(.system(size: 16))
+                            }
+                        }
+                        .padding(24)
+                        .background(
+                            RoundedRectangle(cornerRadius: 20)
+                                .fill(Color.white.opacity(0.95))
+                                .shadow(color: Color.black.opacity(0.1), radius: 10, x: 0, y: 5)
+                        )
+
+                        // Forgot password link
+                        HStack {
+                            Spacer()
+                            Button(action: {
+                                showForgotPassword = true
+                            }) {
+                                Text("Forgot Password?")
+                                    .font(.system(size: 14, weight: .medium, design: .rounded))
+                                    .foregroundColor(AdaptiveColors.brandPrimary)
+                                    .underline()
+                            }
+                        }
+
+                        // Login Button with enhanced styling
+                        Button(action: login) {
+                            if isLoading {
+                                HStack(spacing: 12) {
+                                    ProgressView()
+                                        .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                                        .scaleEffect(0.8)
+                                    Text("Signing In...")
+                                        .font(.system(size: 18, weight: .semibold, design: .rounded))
+                                }
+                            } else {
+                                HStack(spacing: 8) {
+                                    Text("Sign In")
+                                        .font(.system(size: 18, weight: .semibold, design: .rounded))
+                                    SwiftUI.Image(systemName: "arrow.right")
+                                        .font(.system(size: 16, weight: .semibold))
+                                }
+                            }
+                        }
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 16)
+                        .background(
+                            LinearGradient(
+                                gradient: Gradient(colors: [AdaptiveColors.brandPrimary, AdaptiveColors.brandPrimary.opacity(0.8)]),
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
+                        )
+                        .cornerRadius(16)
+                        .shadow(color: AdaptiveColors.brandPrimary.opacity(0.3), radius: 8, x: 0, y: 4)
+                        .disabled(isLoading || email.isEmpty || password.isEmpty)
+                        .opacity(isLoading || email.isEmpty || password.isEmpty ? 0.6 : 1.0)
+                    }
+                    .padding(.horizontal, 20)
+
+                    // Register section
+                    VStack(spacing: 12) {
+                        HStack(spacing: 4) {
+                            Text("Don't have an account?")
+                                .font(.system(size: 14, weight: .regular, design: .rounded))
+                                .foregroundColor(AdaptiveColors.neutralDark.opacity(0.8))
+
+                            Button(action: {
+                                showRegister = true
+                            }) {
+                                Text("Sign Up")
+                                    .font(.system(size: 16, weight: .semibold, design: .rounded))
+                                    .foregroundColor(AdaptiveColors.brandPrimary)
+                            }
+                        }
                     }
 
-                    VStack(spacing: 8) {
-                        Text("Welcome Back")
-                            .font(.system(size: 28, weight: .bold))
-                            .foregroundColor(.black)
-
-                        Text("Sign in to continue")
-                            .font(.system(size: 16, weight: .regular))
-                            .foregroundColor(.gray)
-                    }
+                    Spacer(minLength: 60)
                 }
-
-                // Login form in card
-                VStack(spacing: 24) {
-                    VStack(spacing: 20) {
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text("Email")
-                                .font(.system(size: 14, weight: .semibold))
-                                .foregroundColor(.gray)
-
-                            TextField("Enter your email", text: $email)
-                                .font(.system(size: 16))
-                                .keyboardType(.emailAddress)
-                                .autocapitalization(.none)
-                                .disableAutocorrection(true)
-                                .padding(.horizontal, 16)
-                                .padding(.vertical, 14)
-                                .background(Color.gray.opacity(0.1))
-                                .clipShape(RoundedRectangle(cornerRadius: 8))
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 8)
-                                        .stroke(Color.gray.opacity(0.3), lineWidth: 1)
-                                )
-                                .foregroundColor(.black)
-                        }
-
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text("Password")
-                                .font(.system(size: 14, weight: .semibold))
-                                .foregroundColor(.gray)
-
-                            SecureField("Enter your password", text: $password)
-                                .font(.system(size: 16))
-                                .padding(.horizontal, 16)
-                                .padding(.vertical, 14)
-                                .background(Color.gray.opacity(0.1))
-                                .clipShape(RoundedRectangle(cornerRadius: 8))
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 8)
-                                        .stroke(Color.gray.opacity(0.3), lineWidth: 1)
-                                )
-                                .foregroundColor(.black)
-                        }
-                    }
-                    .padding(.horizontal, 24)
-                    .padding(.vertical, 32)
-                    .background(Color.white)
-                    .clipShape(RoundedRectangle(cornerRadius: 16))
-                    .shadow(color: Color.black.opacity(0.1), radius: 10, x: 0, y: 5)
-
-                    // Forgot password
-                    HStack {
-                        Spacer()
-                        Button(action: {
-                            showForgotPassword = true
-                        }) {
-                            Text("Forgot Password?")
-                                .font(.system(size: 14, weight: .medium))
-                                .foregroundColor(.blue)
-                        }
-                    }
-                    .padding(.horizontal, 24)
-
-                    // Login button
-                    Button(action: login) {
-                        if isLoading {
-                            ProgressView()
-                                .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                        } else {
-                            Text("Sign In")
-                                .font(.system(size: 16, weight: .semibold))
-                                .foregroundColor(.white)
-                        }
-                    }
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 50)
-                    .background(Color.blue)
-                    .clipShape(RoundedRectangle(cornerRadius: 25))
-                    .padding(.horizontal, 24)
-                    .disabled(isLoading || email.isEmpty || password.isEmpty)
-                    .opacity((isLoading || email.isEmpty || password.isEmpty) ? 0.6 : 1.0)
-                }
-
-                Spacer()
-
-                // Register option
-                Button(action: {
-                    showRegister = true
-                }) {
-                    Text("Don't have an account? Sign Up")
-                        .font(.system(size: 16, weight: .medium))
-                        .foregroundColor(.blue)
-                }
-
-                Spacer()
             }
-            .padding(.vertical, 40)
         }
         .alert("Login Error", isPresented: $showError) {
             Button("OK", role: .cancel) {}
@@ -163,6 +216,8 @@ struct LoginView: View {
         }
     }
 
+    // MARK: - Subviews
+    
     private func login() {
         guard !email.isEmpty, !password.isEmpty else { return }
 

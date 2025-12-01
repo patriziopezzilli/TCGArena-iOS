@@ -214,17 +214,19 @@ struct EmptyStateView: View {
     
     var body: some View {
         VStack(spacing: 12) {
-            Image(systemName: icon)
-                .font(.system(size: 48))
-                .foregroundColor(.secondary.opacity(0.5))
+            SwiftUI.Image(systemName: icon)
+                .resizable()
+                .aspectRatio(contentMode: .fit)
+                .frame(width: 48, height: 48)
+                .foregroundStyle(.secondary.opacity(0.5))
             
             Text(title)
                 .font(.system(size: 17, weight: .semibold))
-                .foregroundColor(.primary)
+                .foregroundStyle(.primary)
             
             Text(message)
                 .font(.system(size: 14))
-                .foregroundColor(.secondary)
+                .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
         }
         .padding(32)

@@ -64,8 +64,12 @@ struct ContentView: View {
                 }
                 .tag(4)
         }
-        .accentColor(.blue)
-        .animation(.easeInOut(duration: 0.3), value: settingsService.isDarkMode)
+        .accentColor(AdaptiveColors.brandPrimary)
+        .animation(
+            .spring(response: 0.4, dampingFraction: 0.6, blendDuration: 0.2),
+            value: settingsService.isDarkMode
+        )
+        .padding(.top, 8) // Add spacing for modern look
     }
 }
 

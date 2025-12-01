@@ -29,8 +29,8 @@ struct ShopInventoryView: View {
             // Search & Filter
             VStack(spacing: 12) {
                 HStack {
-                    Image(systemName: "magnifyingglass")
-                        .foregroundColor(.secondary)
+                    SwiftUI.Image(systemName: "magnifyingglass")
+                        .foregroundStyle(.secondary)
                     
                     TextField("Search cards...", text: $searchText)
                         .textFieldStyle(PlainTextFieldStyle())
@@ -62,12 +62,11 @@ struct ShopInventoryView: View {
             
             // Inventory Grid
             if filteredInventory.isEmpty {
+                let emptyMessage = searchText.isEmpty ? "This shop doesn't have any cards in stock" : "No cards found matching '\(searchText)'"
                 EmptyStateView(
                     icon: "square.stack.3d.up.slash",
                     title: "No Cards Available",
-                    message: searchText.isEmpty ?
-                        "This shop doesn't have any cards in stock" :
-                        "No cards found matching '\(searchText)'"
+                    message: emptyMessage
                 )
                 .frame(maxHeight: .infinity)
             } else {
@@ -141,8 +140,8 @@ struct ShopInventoryCardCell: View {
                     Rectangle()
                         .fill(AdaptiveColors.backgroundSecondary)
                         .overlay(
-                            Image(systemName: "photo")
-                                .foregroundColor(.secondary)
+                            SwiftUI.Image(systemName: "photo")
+                                .foregroundStyle(.secondary)
                         )
                 }
                 .frame(height: 180)
@@ -271,7 +270,7 @@ struct CardReservationView: View {
                     // Reservation Info
                     VStack(alignment: .leading, spacing: 12) {
                         HStack {
-                            Image(systemName: "info.circle.fill")
+                            SwiftUI.Image(systemName: "info.circle.fill")
                                 .foregroundColor(AdaptiveColors.brandPrimary)
                             
                             Text("Reservation Details")
@@ -280,7 +279,7 @@ struct CardReservationView: View {
                         
                         VStack(alignment: .leading, spacing: 8) {
                             HStack {
-                                Image(systemName: "clock.fill")
+                                SwiftUI.Image(systemName: "clock.fill")
                                     .foregroundColor(.secondary)
                                     .frame(width: 20)
                                 
@@ -290,7 +289,7 @@ struct CardReservationView: View {
                             }
                             
                             HStack {
-                                Image(systemName: "qrcode")
+                                SwiftUI.Image(systemName: "qrcode")
                                     .foregroundColor(.secondary)
                                     .frame(width: 20)
                                 
@@ -300,7 +299,7 @@ struct CardReservationView: View {
                             }
                             
                             HStack {
-                                Image(systemName: "checkmark.circle.fill")
+                                SwiftUI.Image(systemName: "checkmark.circle.fill")
                                     .foregroundColor(.secondary)
                                     .frame(width: 20)
                                 
@@ -323,7 +322,7 @@ struct CardReservationView: View {
                                 ProgressView()
                                     .progressViewStyle(CircularProgressViewStyle(tint: .white))
                             } else {
-                                Image(systemName: "qrcode.viewfinder")
+                                SwiftUI.Image(systemName: "qrcode.viewfinder")
                                 Text("Reserve Card")
                             }
                         }
@@ -374,12 +373,10 @@ struct CardReservationView: View {
         
         Task {
             do {
-                let request = CreateReservationRequest(
-                    cardId: card.cardId,
-                    shopId: shopId
+                _ = try await reservationService.createReservation(
+                    cardId: card.id,
+                    quantity: 1
                 )
-                
-                try await reservationService.createReservation(request: request)
                 
                 await MainActor.run {
                     isReserving = false

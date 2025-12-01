@@ -9,9 +9,8 @@ import SwiftUI
 
 struct AdaptiveColors {
     // Primary accent colors that adapt to light/dark mode
-    static let primary = Color.primary
-    static let secondary = Color.secondary
-    static let accent = Color.blue
+    static let primary = Color(hex: "#6B46C1") // Modern purple
+    static let accent = Color(hex: "#E53E3E") // Modern red
     static let background = Color(.systemBackground)
     static let secondaryBackground = Color(.secondarySystemBackground)
     
@@ -21,16 +20,33 @@ struct AdaptiveColors {
     static let onePiece = Color.cyan
     static let yugioh = Color.purple
     
+    // Updated modern palette
+    static let brandPrimary = Color(hex: "#1E88E5") // Modern blue
+    static let brandSecondary = Color(hex: "#FFC107") // Warm yellow
+    static let brandTertiary = Color(hex: "#43A047") // Fresh green
+
+    // Neutral tones
+    static let neutralLight = Color(hex: "#F5F5F5") // Light neutral
+    static let neutralDark = Color(hex: "#424242") // Dark neutral
+    static let textSecondary = Color(hex: "#757575") // For secondary text on light backgrounds
+
+    // Backgrounds
+    static let backgroundPrimary = Color(.systemBackground)
+    static let backgroundSecondary = Color(.secondarySystemBackground)
+
     // Status colors
-    static let success = Color.green
-    static let warning = Color.orange
-    static let error = Color.red
-    static let info = Color.blue
+    static let success = Color(hex: "#4CAF50")
+    static let warning = Color(hex: "#FB8C00")
+    static let error = Color(hex: "#E53935")
+    static let info = Color(hex: "#1E88E5")
     
     // Neutral colors
     static let lightGray = Color(.systemGray6)
     static let mediumGray = Color(.systemGray4)
     static let darkGray = Color(.systemGray2)
+
+    // Shadow colors
+    static let shadow = Color.black.opacity(0.2) // Colore per ombre morbide
 }
 
 extension Color {

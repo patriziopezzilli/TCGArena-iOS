@@ -115,9 +115,9 @@ struct PortfolioCard: View {
         }
         .background(
             RoundedRectangle(cornerRadius: 16)
-                .fill(Color(.systemBackground))
+                .fill(AdaptiveColors.backgroundPrimary)
                 .shadow(
-                    color: Color.black.opacity(0.06),
+                    color: AdaptiveColors.neutralDark.opacity(0.1),
                     radius: 12,
                     x: 0,
                     y: 4
@@ -125,7 +125,7 @@ struct PortfolioCard: View {
         )
         .overlay(
             RoundedRectangle(cornerRadius: 16)
-                .stroke(Color(.systemGray6), lineWidth: 1)
+                .stroke(AdaptiveColors.neutralLight, lineWidth: 1)
         )
         .sheet(isPresented: $showingDetail) {
             PortfolioDetailView(portfolio: portfolio)

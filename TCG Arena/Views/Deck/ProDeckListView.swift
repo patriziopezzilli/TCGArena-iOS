@@ -34,12 +34,22 @@ struct ProDeckListView: View {
                     cards: proDeck.cards ?? [],
                     marketService: marketService,
                     showMarketValues: showMarketValues,
-                    onSelect: { 
+                    onSelect: {
                         selectedCard = $0
                         isCardActive = true
                     }
                 )
                 .tag(0)
+                .background(
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(AdaptiveColors.backgroundPrimary)
+                        .shadow(
+                            color: AdaptiveColors.neutralDark.opacity(0.1),
+                            radius: 8,
+                            x: 0,
+                            y: 4
+                        )
+                )
                 
                 // Sideboard
                 if !proDeck.sideboard.isEmpty {
@@ -47,19 +57,41 @@ struct ProDeckListView: View {
                         cards: proDeck.sideboard,
                         marketService: marketService,
                         showMarketValues: showMarketValues,
-                        onSelect: { 
+                        onSelect: {
                             selectedCard = $0
                             isCardActive = true
                         }
                     )
                     .tag(1)
+                    .background(
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(AdaptiveColors.backgroundPrimary)
+                            .shadow(
+                                color: AdaptiveColors.neutralDark.opacity(0.1),
+                                radius: 8,
+                                x: 0,
+                                y: 4
+                            )
+                    )
                 }
                 
                 // Strategy
                 ProDeckStrategyView(proDeck: proDeck)
                     .tag(2)
+                    .background(
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(AdaptiveColors.backgroundPrimary)
+                            .shadow(
+                                color: AdaptiveColors.neutralDark.opacity(0.1),
+                                radius: 8,
+                                x: 0,
+                                y: 4
+                            )
+                    )
             }
             .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
+            .padding(.horizontal, 24) // Adjusted padding for modern spacing
+            .padding(.top, 20) // Increased top padding for better alignment
         }
         .navigationTitle(proDeck.name)
         .navigationBarTitleDisplayMode(.inline)

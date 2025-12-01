@@ -114,17 +114,17 @@ struct CollectionCardWithPrice: View {
         .frame(width: 160)
         .background(
             RoundedRectangle(cornerRadius: 12)
-                .fill(Color(.systemBackground))
+                .fill(AdaptiveColors.backgroundPrimary)
                 .shadow(
-                    color: Color.black.opacity(0.06),
-                    radius: 8,
+                    color: AdaptiveColors.neutralDark.opacity(0.1),
+                    radius: 10,
                     x: 0,
-                    y: 2
+                    y: 4
                 )
         )
         .overlay(
             RoundedRectangle(cornerRadius: 12)
-                .stroke(Color(.systemGray6), lineWidth: 1)
+                .stroke(AdaptiveColors.neutralLight, lineWidth: 1)
         )
     }
     
