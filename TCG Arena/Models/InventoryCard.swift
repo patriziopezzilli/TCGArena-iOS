@@ -121,6 +121,10 @@ struct UpdateInventoryCardRequest: Codable {
     let notes: String?
 }
 
+struct InventoryQuantityUpdate: Codable {
+    let delta: Int
+}
+
 // MARK: - Filters
 struct InventoryFilters {
     var tcgType: TCGType?
@@ -128,18 +132,46 @@ struct InventoryFilters {
     var minPrice: Double?
     var maxPrice: Double?
     var onlyAvailable: Bool = true
+    var searchQuery: String?
     
     init(
         tcgType: TCGType? = nil,
         condition: InventoryCard.CardCondition? = nil,
         minPrice: Double? = nil,
         maxPrice: Double? = nil,
-        onlyAvailable: Bool = true
+        onlyAvailable: Bool = true,
+        searchQuery: String? = nil
     ) {
         self.tcgType = tcgType
         self.condition = condition
         self.minPrice = minPrice
         self.maxPrice = maxPrice
         self.onlyAvailable = onlyAvailable
+        self.searchQuery = searchQuery
+    }
+    
+    var queryParameters: [String: String] {
+        var params: [String: String] = [:]
+        
+        if let tcgType = tcgType {
+            params["tcg_type"] = tcgType.rawValue
+        }
+        if let condition = condition {
+            params["condition"] = condition.rawValue
+        }
+        if let minPrice = minPrice {
+            params["min_price"] = String(minPrice)
+        }
+        if let maxPrice = maxPrice {
+            params["max_price"] = String(maxPrice)
+        }
+        if onlyAvailable {
+            params["only_available"] = "true"
+        }
+        if let searchQuery = searchQuery {
+            params["search"] = searchQuery
+        }
+        
+        return params
     }
 }
