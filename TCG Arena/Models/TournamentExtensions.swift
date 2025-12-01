@@ -278,19 +278,6 @@ extension TournamentStanding: Hashable, Equatable {
 }
 
 // MARK: - Tournament DTOs
-    static func == (lhs: TournamentStanding, rhs: TournamentStanding) -> Bool {
-        lhs.id == rhs.id
-    }
-    
-    func hash(into hasher: inout Hasher) {
-        hasher.combine(id)
-    }
-}
-
-// MARK: - Hashable/Equatable conformance
-extension TournamentStanding: Hashable, Equatable {}
-
-// MARK: - Tournament DTOs
 struct CreateMatchResultRequest: Codable {
     let matchId: String
     let result: Match.MatchResult
