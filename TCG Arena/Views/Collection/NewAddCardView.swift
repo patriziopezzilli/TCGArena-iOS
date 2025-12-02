@@ -17,236 +17,193 @@ struct NewAddCardView: View {
     
     var body: some View {
         NavigationView {
-            VStack(spacing: 0) {
-                // Header
-                VStack(spacing: 16) {
-                    ZStack {
-                        Circle()
-                            .fill(Color.blue)
-                            .frame(width: 80, height: 80)
-                        
-                        SwiftUI.Image(systemName: "plus.circle.fill")
-                            .font(.system(size: 40, weight: .medium))
-                            .foregroundColor(.white)
-                    }
-                    
-                    VStack(spacing: 8) {
-                        Text("Add New Card")
-                            .font(.system(size: 28, weight: .bold))
-                            .foregroundColor(.primary)
-                        
-                        Text("Choose how you'd like to add your card to the collection")
-                            .font(.system(size: 16, weight: .medium))
-                            .foregroundColor(.secondary)
-                            .multilineTextAlignment(.center)
-                            .lineLimit(nil)
-                    }
-                }
-                .padding(.top, 40)
-                .padding(.horizontal, 32)
+            ZStack {
+                // Background
+                Color(.systemGroupedBackground)
+                    .ignoresSafeArea()
                 
-                Spacer()
-                
-                // Options
-                VStack(spacing: 20) {
-                    // OCR Option - Disabled
-                    AddCardOptionView(
-                        icon: "camera.viewfinder",
-                        title: "Scan Card",
-                        subtitle: "Coming Soon - Use manual entry for now",
-                        color: Color.gray,
-                        isRecommended: false,
-                        isDisabled: true
-                    )
-                    
-                    // Manual Option
-                    NavigationLink(destination: ManualAddCardView()
-                        .environmentObject(cardService)
-                        .environmentObject(deckService)) {
-                        AddCardOptionView(
-                            icon: "keyboard",
-                            title: "Add Manually", 
-                            subtitle: "Enter card information by hand",
-                            color: Color.purple,
-                            isRecommended: true
-                        )
-                    }
-                    .buttonStyle(PlainButtonStyle())
-                }
-                .padding(.horizontal, 24)
-                
-                Spacer()
-                
-                // Quick Tips
-                VStack(spacing: 12) {
+                VStack(spacing: 0) {
+                    // Custom Header
                     HStack {
-                        SwiftUI.Image(systemName: "lightbulb.fill")
-                            .foregroundColor(.yellow)
-                        
-                        Text("Pro Tips")
-                            .font(.system(size: 14, weight: .semibold))
-                            .foregroundColor(.primary)
-                        
+                        Button(action: { dismiss() }) {
+                            SwiftUI.Image(systemName: "xmark")
+                                .font(.system(size: 14, weight: .bold))
+                                .foregroundColor(.primary)
+                                .padding(8)
+                                .background(.ultraThinMaterial)
+                                .clipShape(Circle())
+                        }
                         Spacer()
                     }
+                    .padding(.horizontal, 20)
+                    .padding(.top, 16)
+                    .padding(.bottom, 8)
                     
-                    VStack(alignment: .leading, spacing: 8) {
-                        TipRowView(
-                            icon: "camera",
-                            text: "For best results, scan cards in good lighting"
-                        )
-                        
-                        TipRowView(
-                            icon: "hand.raised.fill",
-                            text: "Make sure the card is flat and fully visible"
-                        )
-                        
-                        TipRowView(
-                            icon: "checkmark.circle",
-                            text: "Review scanned info before saving"
-                        )
+                    ScrollView(showsIndicators: false) {
+                        VStack(spacing: 30) {
+                            // Title Section
+                            VStack(spacing: 4) {
+                                Text("Nuova Carta")
+                                    .font(.system(size: 28, weight: .bold, design: .rounded))
+                                    .foregroundStyle(
+                                        LinearGradient(
+                                            colors: [.primary, .primary.opacity(0.8)],
+                                            startPoint: .leading,
+                                            endPoint: .trailing
+                                        )
+                                    )
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                
+                                Text("Scegli come vuoi aggiungere la tua prossima carta alla collezione")
+                                    .font(.subheadline)
+                                    .foregroundColor(.secondary)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                            }
+                            .padding(.horizontal, 24)
+                            .padding(.top, 10)
+                            
+                            // Options Grid
+                            VStack(spacing: 20) {
+                                // Manual Entry
+                                NavigationLink(destination: ManualAddCardView()
+                                    .environmentObject(cardService)
+                                    .environmentObject(deckService)
+                                ) {
+                                    NewAddCardOptionView(
+                                        icon: "keyboard.fill",
+                                        title: "Manuale",
+                                        subtitle: "Cerca per nome, set o numero",
+                                        accentColor: .blue,
+                                        badge: "Consigliato"
+                                    )
+                                }
+                                .buttonStyle(PlainButtonStyle())
+                                
+                                // Scan Entry (Disabled)
+                                NewAddCardOptionView(
+                                    icon: "camera.viewfinder",
+                                    title: "Scansiona",
+                                    subtitle: "Usa la fotocamera per identificare",
+                                    accentColor: .purple,
+                                    badge: "Presto disponibile",
+                                    isDisabled: true
+                                )
+                            }
+                            .padding(.horizontal, 24)
+                            
+                            // Pro Tips
+                            VStack(alignment: .leading, spacing: 16) {
+                                HStack {
+                                    SwiftUI.Image(systemName: "lightbulb.fill")
+                                        .foregroundColor(.yellow)
+                                    Text("Consigli Pro")
+                                        .font(.headline)
+                                }
+                                .padding(.bottom, 4)
+                                
+                                NewAddCardTipRow(icon: "magnifyingglass", text: "Usa il codice del set (es. OP01-001) per risultati precisi")
+                                NewAddCardTipRow(icon: "square.stack.3d.up.fill", text: "Puoi aggiungere più copie della stessa carta")
+                                NewAddCardTipRow(icon: "star.fill", text: "Specifica la condizione per tracciare il valore reale")
+                            }
+                            .padding(24)
+                            .background(
+                                RoundedRectangle(cornerRadius: 24)
+                                    .fill(Color(.secondarySystemGroupedBackground))
+                                    .shadow(color: Color.black.opacity(0.05), radius: 10, x: 0, y: 5)
+                            )
+                            .padding(.horizontal, 24)
+                            
+                            Spacer(minLength: 40)
+                        }
                     }
                 }
-                .padding(20)
-                .background(
-                    RoundedRectangle(cornerRadius: 16)
-                        .fill(Color(.systemGray6))
-                )
-                .padding(.horizontal, 24)
-                .padding(.bottom, 32)
             }
-            .background(Color(.systemBackground))
-            .navigationTitle("")
             .navigationBarHidden(true)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Cancel") {
-                        dismiss()
-                    }
-                    .foregroundColor(.primary)
-                }
-            }
         }
     }
 }
 
-// MARK: - Add Card Option View
-struct AddCardOptionView: View {
+struct NewAddCardOptionView: View {
     let icon: String
     let title: String
     let subtitle: String
-    let color: Color
-    let isRecommended: Bool
+    let accentColor: Color
+    let badge: String?
     var isDisabled: Bool = false
     
     var body: some View {
         HStack(spacing: 20) {
-            // Icon
             ZStack {
                 Circle()
-                    .fill(isDisabled ? Color.gray.opacity(0.3) : color)
+                    .fill(accentColor.opacity(0.1))
                     .frame(width: 60, height: 60)
                 
                 SwiftUI.Image(systemName: icon)
-                    .font(.system(size: 24, weight: .medium))
-                    .foregroundColor(isDisabled ? .gray : .white)
+                    .font(.system(size: 24, weight: .semibold))
+                    .foregroundColor(accentColor)
             }
             
-            // Content
-            VStack(alignment: .leading, spacing: 6) {
+            VStack(alignment: .leading, spacing: 4) {
                 HStack {
                     Text(title)
-                        .font(.system(size: 18, weight: .semibold))
-                        .foregroundColor(isDisabled ? .gray : .primary)
+                        .font(.title3)
+                        .fontWeight(.bold)
+                        .foregroundColor(.primary)
                     
-                    if isRecommended && !isDisabled {
-                        Text("RECOMMENDED")
+                    if let badge = badge {
+                        Text(badge)
                             .font(.system(size: 10, weight: .bold))
                             .padding(.horizontal, 8)
-                            .padding(.vertical, 3)
-                            .background(
-                                Capsule()
-                                    .fill(Color.green)
-                            )
-                            .foregroundColor(.white)
+                            .padding(.vertical, 4)
+                            .background(accentColor.opacity(0.1))
+                            .clipShape(Capsule())
+                            .foregroundColor(accentColor)
                     }
-                    
-                    if isDisabled {
-                        Text("SOON")
-                            .font(.system(size: 10, weight: .bold))
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 3)
-                            .background(
-                                Capsule()
-                                    .fill(Color.orange)
-                            )
-                            .foregroundColor(.white)
-                    }
-                    
-                    Spacer()
                 }
                 
                 Text(subtitle)
-                    .font(.system(size: 14, weight: .medium))
-                    .foregroundColor(isDisabled ? .gray : .secondary)
-                    .lineLimit(nil)
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
                     .multilineTextAlignment(.leading)
             }
             
-            // Arrow
+            Spacer()
+            
             if !isDisabled {
-                SwiftUI.Image(systemName: "arrow.right.circle.fill")
-                    .font(.system(size: 24, weight: .medium))
-                    .foregroundColor(color)
-            } else {
-                SwiftUI.Image(systemName: "clock.fill")
-                    .font(.system(size: 24, weight: .medium))
-                    .foregroundColor(.gray)
+                SwiftUI.Image(systemName: "chevron.right")
+                    .font(.system(size: 20, weight: .bold))
+                    .foregroundColor(Color(.tertiaryLabel))
             }
         }
-        .padding(20)
+        .padding(24)
         .background(
-            RoundedRectangle(cornerRadius: 16)
+            RoundedRectangle(cornerRadius: 24)
                 .fill(Color(.systemBackground))
-                .shadow(
-                    color: Color.black.opacity(0.08),
-                    radius: 12,
-                    x: 0,
-                    y: 4
-                )
+                .shadow(color: Color.black.opacity(0.05), radius: 8, x: 0, y: 4)
         )
         .overlay(
-            RoundedRectangle(cornerRadius: 16)
-                .stroke(isDisabled ? Color.gray.opacity(0.3) : color, lineWidth: isRecommended && !isDisabled ? 2 : 1)
-                .opacity(isRecommended && !isDisabled ? 0.6 : 0.3)
+            RoundedRectangle(cornerRadius: 24)
+                .stroke(accentColor.opacity(0.3), lineWidth: 1.5)
         )
         .opacity(isDisabled ? 0.6 : 1.0)
+        .scaleEffect(isDisabled ? 0.98 : 1.0)
     }
 }
 
-// MARK: - Tip Row View
-struct TipRowView: View {
+struct NewAddCardTipRow: View {
     let icon: String
     let text: String
     
     var body: some View {
         HStack(spacing: 12) {
             SwiftUI.Image(systemName: icon)
-                .font(.system(size: 12, weight: .medium))
-                .foregroundColor(.blue)
-                .frame(width: 16)
+                .font(.system(size: 14))
+                .foregroundColor(.secondary)
+                .frame(width: 20)
             
             Text(text)
-                .font(.system(size: 13, weight: .medium))
+                .font(.subheadline)
                 .foregroundColor(.secondary)
-                .lineLimit(nil)
-            
-            Spacer()
         }
     }
-}
-
-#Preview {
-    NewAddCardView()
-        .environmentObject(CardService())
 }

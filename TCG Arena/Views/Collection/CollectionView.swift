@@ -334,12 +334,8 @@ struct CollectionView: View {
                 case .success(let cards):
                     // Cards are already enriched by getUserCardCollection
                     self.userCards = cards
-                    // Always load enriched cards after loading user cards to keep data synchronized
-                    self.loadEnrichedAllCards()
                 case .failure(let error):
                     print("Error loading user cards: \(error)")
-                    // Still try to load enriched cards even if user cards fail
-                    self.loadEnrichedAllCards()
                 }
             }
         }
@@ -348,32 +344,84 @@ struct CollectionView: View {
 
     private func loadEnrichedAllCards() {
         let group = DispatchGroup()
-        var enrichedCards: [Card] = []
+        let serialQueue = DispatchQueue(label: "com.tcgarena.cardEnrichment")
+        var cardsByTemplateId: [Int64: (card: Card, totalQuantity: Int, deckNames: [String])] = [:]
 
         for deck in deckService.userDecks {
             for deckCard in deck.cards {
-                group.enter()
-                // Create basic card from deck card
-                let basicCard = cardService.convertDeckCardToCard(deckCard, deckId: deck.id!)
+                let templateId = deckCard.cardId
+                
+                // Controlla se la carta esiste già in modo thread-safe
+                serialQueue.sync {
+                    if var existing = cardsByTemplateId[templateId] {
+                        // Aggiorna quantità e deck names
+                        existing.totalQuantity += deckCard.quantity
+                        if !existing.deckNames.contains(deck.name) {
+                            existing.deckNames.append(deck.name)
+                        }
+                        cardsByTemplateId[templateId] = existing
+                    } else {
+                        // Prima volta che vediamo questa carta - segna come in elaborazione
+                        cardsByTemplateId[templateId] = (Card(
+                            id: nil,
+                            templateId: templateId,
+                            name: deckCard.cardName,
+                            rarity: .common,
+                            condition: .nearMint,
+                            imageURL: deckCard.cardImageUrl,
+                            isFoil: false,
+                            quantity: deckCard.quantity,
+                            ownerId: 1,
+                            createdAt: Date(),
+                            updatedAt: Date(),
+                            tcgType: deck.tcgType,
+                            set: nil,
+                            cardNumber: nil,
+                            expansion: nil,
+                            marketPrice: nil,
+                            description: nil
+                        ), deckCard.quantity, [deck.name])
+                        
+                        group.enter()
+                        // Create basic card from deck card
+                        let basicCard = cardService.convertDeckCardToCard(deckCard, deckId: deck.id!)
 
-                // Enrich with template data
-                cardService.enrichCardWithTemplateData(basicCard) { result in
-                    switch result {
-                    case .success(let enrichedCard):
-                        enrichedCards.append(enrichedCard)
-                    case .failure(let error):
-                        print("Failed to enrich card \(deckCard.cardName): \(error.localizedDescription)")
-                        // Use basic card if enrichment fails
-                        enrichedCards.append(basicCard)
+                        // Enrich with template data
+                        cardService.enrichCardWithTemplateData(basicCard) { result in
+                            serialQueue.async {
+                                switch result {
+                                case .success(var enrichedCard):
+                                    // Aggiorna con la carta arricchita
+                                    if let existing = cardsByTemplateId[templateId] {
+                                        enrichedCard.deckNames = existing.deckNames
+                                        cardsByTemplateId[templateId] = (enrichedCard, existing.totalQuantity, existing.deckNames)
+                                    }
+                                case .failure(let error):
+                                    print("Failed to enrich card \(deckCard.cardName): \(error.localizedDescription)")
+                                    // Mantieni la carta base già inserita
+                                }
+                                group.leave()
+                            }
+                        }
                     }
-                    group.leave()
                 }
             }
         }
 
         group.notify(queue: .main) {
+            // Converti il dizionario in array di carte
+            var finalCards: [Card] = []
+            serialQueue.sync {
+                for (_, value) in cardsByTemplateId {
+                    var card = value.card
+                    card.deckNames = value.deckNames
+                    finalCards.append(card)
+                }
+            }
+            
             // Sort cards by name for consistent ordering
-            self.enrichedAllCards = enrichedCards.sorted { $0.name < $1.name }
+            self.enrichedAllCards = finalCards.sorted { $0.name < $1.name }
+            print("🔍 CollectionView: Loaded \(finalCards.count) unique cards from all decks")
         }
     }
 
@@ -760,6 +808,8 @@ struct CollectionView: View {
             deckService.refreshUserDecks(userId: userId) { result in
                 DispatchQueue.main.async {
                     self.isLoadingDecks = false
+                    // Load enriched cards immediately after decks are loaded
+                    self.loadEnrichedAllCards()
                 }
                 switch result {
                 case .success(let decks):
@@ -772,9 +822,11 @@ struct CollectionView: View {
             }
         } else {
             isLoadingDecks = false
+            // Load enriched cards even if no userId (should not happen)
+            loadEnrichedAllCards()
         }
 
-        // Always load user card collection and enriched cards
+        // Always load user card collection
         loadUserCards()
     }
 
