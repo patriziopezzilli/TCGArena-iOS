@@ -9,6 +9,7 @@ import SwiftUI
 
 struct CreateDeckView: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.colorScheme) private var colorScheme
     @EnvironmentObject var deckService: DeckService
     
     let userId: Int64
@@ -18,179 +19,213 @@ struct CreateDeckView: View {
     @State private var selectedTCGType: TCGType = .pokemon
     @State private var selectedDeckType: DeckType = .lista
     @State private var isCreating = false
+    @State private var showError = false
+    @State private var errorMessage = ""
+    
+    // Animation states
+    // @State private var animateGradient = false
+    
+    private var accentColor: Color {
+        selectedTCGType.themeColor
+    }
     
     var body: some View {
         NavigationView {
-            VStack(spacing: 0) {
-                // Header
-                VStack(spacing: 16) {
-                    ZStack {
-                        Circle()
-                            .fill(Color.green)
-                            .frame(width: 80, height: 80)
-                        
-                        SwiftUI.Image(systemName: "square.stack")
-                            .font(.system(size: 40, weight: .medium))
-                            .foregroundColor(.white)
-                    }
+            ZStack {
+                // Dynamic Background
+                backgroundLayer
+                
+                // Main Content - No ScrollView
+                VStack(spacing: 0) {
+                    // Header
+                    headerSection
+                        .padding(.vertical, 20)
                     
-                    VStack(spacing: 8) {
-                        Text("Create New Deck")
-                            .font(.system(size: 28, weight: .bold))
-                            .foregroundColor(.primary)
+                    // Central Form Card
+                    VStack(spacing: 24) {
+                        inputSection
                         
-                        Text("Set up your new deck or list")
-                            .font(.system(size: 16, weight: .medium))
-                            .foregroundColor(.secondary)
-                            .multilineTextAlignment(.center)
-                            .lineLimit(nil)
+                        Divider()
+                            .background(Color.primary.opacity(0.1))
+                        
+                        deckTypeSection
+                        
+                        gameTypeSection
                     }
+                    .padding(24)
+                    .background(
+                        RoundedRectangle(cornerRadius: 24)
+                            .fill(.ultraThinMaterial)
+                            .shadow(color: Color.black.opacity(0.05), radius: 20, x: 0, y: 10)
+                    )
+                    .padding(.horizontal, 20)
+                    
+                    Spacer()
+                    
+                    // Bottom Button
+                    createButton
+                        .padding(.horizontal, 24)
+                        .padding(.bottom, 20)
                 }
-                .padding(.top, 40)
-                .padding(.horizontal, 32)
-                
-                Spacer()
-                
-                // Form
-                VStack(spacing: 24) {
-                    // Deck Name
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Deck Name")
-                            .font(.system(size: 16, weight: .semibold))
-                            .foregroundColor(.primary)
-                        
-                        TextField("Enter deck name", text: $deckName)
-                            .font(.system(size: 16))
-                            .padding(16)
-                            .background(
-                                RoundedRectangle(cornerRadius: 12)
-                                    .fill(Color(.secondarySystemFill))
-                            )
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 12)
-                                    .stroke(deckName.isEmpty ? Color.clear : Color.blue.opacity(0.5), lineWidth: 1.5)
-                            )
-                    }
-                    
-                    // Deck Description
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Description (Optional)")
-                            .font(.system(size: 16, weight: .semibold))
-                            .foregroundColor(.primary)
-                        
-                        ZStack(alignment: .topLeading) {
-                            if deckDescription.isEmpty {
-                                Text("Enter deck description...")
-                                    .font(.system(size: 16))
-                                    .foregroundColor(.secondary.opacity(0.6))
-                                    .padding(.horizontal, 16)
-                                    .padding(.vertical, 16)
-                            }
-                            
-                            TextEditor(text: $deckDescription)
-                                .font(.system(size: 16))
-                                .padding(12)
-                                .frame(minHeight: 80, maxHeight: 120)
-                                .background(Color.clear)
-                        }
-                        .background(
-                            RoundedRectangle(cornerRadius: 12)
-                                .fill(Color(.secondarySystemFill))
-                        )
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 12)
-                                .stroke(deckDescription.isEmpty ? Color.clear : Color.blue.opacity(0.5), lineWidth: 1.5)
-                        )
-                    }
-                    
-                    // Deck Type
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text("Deck Type")
-                            .font(.system(size: 16, weight: .semibold))
-                            .foregroundColor(.primary)
-                        
-                        HStack(spacing: 12) {
-                            DeckTypeOption(
-                                type: .lista,
-                                title: "List",
-                                subtitle: "Organize and collect cards",
-                                isSelected: selectedDeckType == .lista
-                            ) {
-                                selectedDeckType = .lista
-                            }
-                            
-                            DeckTypeOption(
-                                type: .deck,
-                                title: "Deck",
-                                subtitle: "Build competitive decks",
-                                isSelected: selectedDeckType == .deck
-                            ) {
-                                selectedDeckType = .deck
-                            }
-                        }
-                    }
-                    
-                    // TCG Type
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text("Game Type")
-                            .font(.system(size: 16, weight: .semibold))
-                            .foregroundColor(.primary)
-                        
-                        ScrollView(.horizontal, showsIndicators: false) {
-                            HStack(spacing: 12) {
-                                ForEach(TCGType.allCases, id: \.self) { tcgType in
-                                    TCGTypeOption(
-                                        tcgType: tcgType,
-                                        isSelected: selectedTCGType == tcgType
-                                    ) {
-                                        selectedTCGType = tcgType
-                                    }
-                                }
-                            }
-                            .padding(.vertical, 8)
-                            .padding(.leading, 4) // Margine a sinistra
-                        }
-                    }
-                }
-                .padding(.horizontal, 24)
-                
-                Spacer()
-                
-                // Create Button
-                VStack(spacing: 16) {
-                    Button(action: createDeck) {
-                        ZStack {
-                            RoundedRectangle(cornerRadius: 16)
-                                .fill(canCreateDeck ? Color.green : Color.gray.opacity(0.3))
-                                .frame(height: 56)
-                            
-                            if isCreating {
-                                ProgressView()
-                                    .tint(.white)
-                            } else {
-                                Text("Create Deck")
-                                    .font(.system(size: 18, weight: .semibold))
-                                    .foregroundColor(.white)
-                            }
-                        }
-                    }
-                    .disabled(!canCreateDeck || isCreating)
-                    
-                    Button(action: { dismiss() }) {
-                        Text("Cancel")
-                            .font(.system(size: 16, weight: .medium))
-                            .foregroundColor(.secondary)
-                    }
-                }
-                .padding(.horizontal, 24)
-                .padding(.bottom, 32)
             }
-            .background(Color(.systemBackground))
-            .navigationTitle("")
-            .navigationBarHidden(true)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button(action: { dismiss() }) {
+                        SwiftUI.Image(systemName: "xmark")
+                            .font(.system(size: 14, weight: .bold))
+                            .foregroundColor(.primary)
+                            .padding(8)
+                            .background(.ultraThinMaterial)
+                            .clipShape(Circle())
+                    }
+                }
+            }
+            .alert("Error", isPresented: $showError) {
+                Button("OK", role: .cancel) { }
+            } message: {
+                Text(errorMessage)
+            }
         }
     }
     
+    // MARK: - Background
+    private var backgroundLayer: some View {
+        accentColor
+            .opacity(0.05)
+            .ignoresSafeArea()
+    }
+    
+    // MARK: - Header
+    private var headerSection: some View {
+        VStack(spacing: 4) {
+            Text("Nuova collezione")
+                .font(.system(size: 28, weight: .bold, design: .rounded))
+                .foregroundStyle(
+                    LinearGradient(
+                        colors: [.primary, .primary.opacity(0.8)],
+                        startPoint: .leading,
+                        endPoint: .trailing
+                    )
+                )
+            
+            Text("Create your collection")
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+        }
+    }
+    
+    // MARK: - Input Section
+    private var inputSection: some View {
+        VStack(spacing: 16) {
+            VStack(alignment: .leading, spacing: 8) {
+                Label("NAME", systemImage: "character.cursor.ibeam")
+                    .font(.caption)
+                    .fontWeight(.bold)
+                    .foregroundColor(.secondary)
+                
+                TextField("e.g., Master Collection", text: $deckName)
+                    .font(.system(size: 17, weight: .medium))
+                    .padding()
+                    .background(Color(.systemBackground).opacity(0.5))
+                    .cornerRadius(12)
+            }
+            
+            VStack(alignment: .leading, spacing: 8) {
+                Label("DESCRIPTION", systemImage: "text.alignleft")
+                    .font(.caption)
+                    .fontWeight(.bold)
+                    .foregroundColor(.secondary)
+                
+                TextField("Optional description...", text: $deckDescription)
+                    .font(.system(size: 16))
+                    .padding()
+                    .background(Color(.systemBackground).opacity(0.5))
+                    .cornerRadius(12)
+            }
+        }
+    }
+    
+    // MARK: - Deck Type Section
+    private var deckTypeSection: some View {
+        HStack(spacing: 12) {
+            DeckTypeOption(
+                title: "Collection",
+                icon: "list.bullet.rectangle.fill",
+                isSelected: selectedDeckType == .lista,
+                color: .green
+            ) {
+                withAnimation { selectedDeckType = .lista }
+            }
+            
+            DeckTypeOption(
+                title: "Playable Deck",
+                icon: "rectangle.stack.fill",
+                isSelected: selectedDeckType == .deck,
+                color: .blue
+            ) {
+                withAnimation { selectedDeckType = .deck }
+            }
+        }
+        .frame(height: 56)
+    }
+    
+    // MARK: - Game Type Section
+    private var gameTypeSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Label("TCG", systemImage: "gamecontroller.fill")
+                .font(.caption)
+                .fontWeight(.bold)
+                .foregroundColor(.secondary)
+            
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 16) {
+                    ForEach(TCGType.allCases, id: \.self) { tcg in
+                        GameTypeOption(
+                            tcg: tcg,
+                            isSelected: selectedTCGType == tcg
+                        ) {
+                            withAnimation { selectedTCGType = tcg }
+                        }
+                    }
+                }
+                .padding(.horizontal, 4)
+                .padding(.vertical, 4)
+            }
+        }
+    }
+    
+    // MARK: - Create Button
+    private var createButton: some View {
+        Button(action: createDeck) {
+            HStack {
+                if isCreating {
+                    ProgressView()
+                        .tint(.white)
+                } else {
+                    Text(selectedDeckType == .lista ? "Create Collection" : "Create Deck")
+                        .font(.headline)
+                    SwiftUI.Image(systemName: "arrow.right")
+                        .font(.headline)
+                }
+            }
+            .foregroundColor(.white)
+            .frame(maxWidth: .infinity)
+            .frame(height: 56)
+            .background(
+                LinearGradient(
+                    colors: canCreateDeck ? [accentColor, accentColor.opacity(0.8)] : [.gray, .gray.opacity(0.8)],
+                    startPoint: .leading,
+                    endPoint: .trailing
+                )
+            )
+            .clipShape(RoundedRectangle(cornerRadius: 28))
+            .shadow(color: canCreateDeck ? accentColor.opacity(0.4) : .clear, radius: 10, x: 0, y: 5)
+        }
+        .disabled(!canCreateDeck || isCreating)
+    }
+    
+    // MARK: - Logic
     private var canCreateDeck: Bool {
         !deckName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
@@ -199,10 +234,12 @@ struct CreateDeckView: View {
         guard canCreateDeck else { return }
         
         isCreating = true
+        let trimmedName = deckName.trimmingCharacters(in: .whitespacesAndNewlines)
+        let trimmedDescription = deckDescription.trimmingCharacters(in: .whitespacesAndNewlines)
         
         deckService.createDeck(
-            name: deckName.trimmingCharacters(in: .whitespacesAndNewlines),
-            description: deckDescription.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? nil : deckDescription.trimmingCharacters(in: .whitespacesAndNewlines),
+            name: trimmedName,
+            description: trimmedDescription.isEmpty ? nil : trimmedDescription,
             tcgType: selectedTCGType,
             deckType: selectedDeckType,
             userId: userId
@@ -213,122 +250,86 @@ struct CreateDeckView: View {
                 case .success:
                     dismiss()
                 case .failure(let error):
-                    // Handle error - could show alert
-                    print("Error creating deck: \(error.localizedDescription)")
+                    errorMessage = error.localizedDescription
+                    showError = true
                 }
             }
         }
     }
 }
 
-// MARK: - Deck Type Option
+// MARK: - Subviews
 struct DeckTypeOption: View {
-    let type: DeckType
     let title: String
-    let subtitle: String
+    let icon: String
     let isSelected: Bool
+    let color: Color
     let action: () -> Void
     
     var body: some View {
         Button(action: action) {
-            VStack(alignment: .leading, spacing: 8) {
-                HStack {
-                    ZStack {
-                        Circle()
-                            .fill(type == .lista ? Color.green.opacity(0.2) : Color.blue.opacity(0.2))
-                            .frame(width: 40, height: 40)
-                        
-                        SwiftUI.Image(systemName: type == .lista ? "list.bullet" : "square.stack")
-                            .font(.system(size: 18, weight: .medium))
-                            .foregroundColor(type == .lista ? .green : .blue)
-                    }
-                    
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(title)
-                            .font(.system(size: 16, weight: .semibold))
-                            .foregroundColor(.primary)
-                            .fixedSize(horizontal: false, vertical: true)
-                        
-                        Text(subtitle)
-                            .font(.system(size: 12, weight: .medium))
-                            .foregroundColor(.secondary)
-                            .fixedSize(horizontal: false, vertical: true)
-                    }
-                    
-                    Spacer()
-                    
-                    if isSelected {
-                        SwiftUI.Image(systemName: "checkmark.circle.fill")
-                            .font(.system(size: 20, weight: .medium))
-                            .foregroundColor(type == .lista ? .green : .blue)
-                    }
-                }
+            HStack {
+                SwiftUI.Image(systemName: icon)
+                    .font(.system(size: 18))
+                Text(title)
+                    .font(.system(size: 15, weight: .medium))
             }
-            .padding(16)
-            .frame(width: 170, height: 100) // Dimensione fissa aumentata
+            .foregroundColor(isSelected ? .white : .primary)
+            .frame(maxWidth: .infinity)
+            .frame(maxHeight: .infinity)
             .background(
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(Color(.systemBackground))
-                    .shadow(
-                        color: Color.black.opacity(0.08),
-                        radius: 8,
-                        x: 0,
-                        y: 2
-                    )
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(isSelected ? color : Color(.systemBackground).opacity(0.5))
             )
             .overlay(
-                RoundedRectangle(cornerRadius: 12)
-                    .stroke(isSelected ? (type == .lista ? Color.green : Color.blue) : Color.clear, lineWidth: 2)
+                RoundedRectangle(cornerRadius: 16)
+                    .stroke(isSelected ? color : Color.clear, lineWidth: 1)
             )
+            .scaleEffect(isSelected ? 1.02 : 1.0)
         }
-        .buttonStyle(PlainButtonStyle())
+        .buttonStyle(.plain)
     }
 }
 
-// MARK: - TCG Type Option
-struct TCGTypeOption: View {
-    let tcgType: TCGType
+struct GameTypeOption: View {
+    let tcg: TCGType
     let isSelected: Bool
     let action: () -> Void
     
     var body: some View {
         Button(action: action) {
-            VStack(spacing: 12) {
+            VStack(spacing: 8) {
                 ZStack {
                     Circle()
-                        .fill(isSelected ? tcgType.themeColor : Color(.secondarySystemFill))
-                        .frame(width: 60, height: 60)
+                        .fill(isSelected ? tcg.themeColor : Color.gray.opacity(0.1))
+                        .frame(width: 44, height: 44)
                     
-                    SwiftUI.Image(systemName: tcgType.systemIcon)
-                        .font(.system(size: 24, weight: .medium))
-                        .foregroundColor(isSelected ? .white : tcgType.themeColor)
+                    SwiftUI.Image(systemName: tcg.systemIcon)
+                        .font(.system(size: 20))
+                        .foregroundColor(isSelected ? .white : tcg.themeColor)
                 }
+                .shadow(color: isSelected ? tcg.themeColor.opacity(0.4) : .clear, radius: 4, y: 2)
                 
-                Text(tcgType.displayName)
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundColor(.primary)
-                    .lineLimit(1) // Forza una sola riga per altezza uniforme
-                    .frame(maxWidth: .infinity, alignment: .center)
+                Text(tcg.shortName)
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundColor(isSelected ? .primary : .secondary)
             }
-            .padding(.vertical, 12)
-            .padding(.horizontal, 8)
-            .frame(width: 85, height: 110) // Dimensione fissa aumentata
-            .background(
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(Color(.systemBackground))
-                    .shadow(
-                        color: Color.black.opacity(0.08),
-                        radius: 8,
-                        x: 0,
-                        y: 2
-                    )
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 12)
-                    .stroke(isSelected ? tcgType.themeColor : Color.clear, lineWidth: 2)
-            )
+            .scaleEffect(isSelected ? 1.1 : 1.0)
         }
-        .buttonStyle(PlainButtonStyle())
+        .buttonStyle(.plain)
+    }
+}
+
+// MARK: - Extensions
+extension TCGType {
+    var shortName: String {
+        switch self {
+        case .pokemon: return "Pokémon"
+        case .magic: return "Magic"
+        case .yugioh: return "Yu-Gi-Oh!"
+        case .onePiece: return "One Piece"
+        case .digimon: return "Digimon"
+        }
     }
 }
 

@@ -7,6 +7,36 @@
 
 import SwiftUI
 
+// MARK: - Set Cards Cache Manager
+class SetCardsCache {
+    static let shared = SetCardsCache()
+    
+    private var cache: [Int64: [CardTemplate]] = [:]
+    private var cacheTimestamps: [Int64: Date] = [:]
+    private let cacheValidityDuration: TimeInterval = 3 * 60 * 60 // 3 hours
+    
+    private init() {}
+    
+    func getCards(for setId: Int64) -> [CardTemplate]? {
+        guard let cards = cache[setId],
+              let timestamp = cacheTimestamps[setId],
+              Date().timeIntervalSince(timestamp) < cacheValidityDuration else {
+            return nil
+        }
+        return cards
+    }
+    
+    func setCards(_ cards: [CardTemplate], for setId: Int64) {
+        cache[setId] = cards
+        cacheTimestamps[setId] = Date()
+    }
+    
+    func clearCache() {
+        cache.removeAll()
+        cacheTimestamps.removeAll()
+    }
+}
+
 struct SetDetailView: View {
     let set: TCGSet
     @StateObject private var expansionService = ExpansionService()
@@ -230,6 +260,14 @@ struct SetDetailView: View {
     
     // MARK: - Actions
     private func loadCards() async {
+        // Check cache first
+        if let cachedCards = SetCardsCache.shared.getCards(for: set.id), !cachedCards.isEmpty {
+            Swift.print("💾 Using cached cards for set \(set.name): \(cachedCards.count) cards")
+            self.cards = cachedCards
+            isLoading = false
+            return
+        }
+        
         isLoading = true
         
         Swift.print("🎯 Loading cards for set: \(set.name) (ID: \(set.id), cardCount: \(set.cardCount))")
@@ -238,6 +276,7 @@ struct SetDetailView: View {
         if let preloadedCards = set.cards, !preloadedCards.isEmpty {
             Swift.print("💾 Using pre-loaded cards: \(preloadedCards.count) cards")
             cards = preloadedCards
+            SetCardsCache.shared.setCards(preloadedCards, for: set.id)
         } else {
             // Load all cards from backend with pagination
             await loadAllCardsForSet()
@@ -303,6 +342,8 @@ struct SetDetailView: View {
             self.cards = self.createMockCards()
         } else {
             self.cards = allCards
+            // Cache the loaded cards
+            SetCardsCache.shared.setCards(allCards, for: set.id)
         }
     }
     

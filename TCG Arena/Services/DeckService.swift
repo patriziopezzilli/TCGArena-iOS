@@ -96,7 +96,7 @@ class DeckService: ObservableObject {
     // MARK: - Deck Operations
     
     func getAllDecks(userId: Int64, completion: @escaping (Result<[Deck], Error>) -> Void) {
-        apiClient.request(endpoint: "/decks?userId=\(userId)", method: .get) { result in
+        apiClient.request(endpoint: "/api/decks?userId=\(userId)", method: .get) { result in
             switch result {
             case .success(let data):
                 do {
@@ -112,7 +112,7 @@ class DeckService: ObservableObject {
     }
     
     func getDeckById(_ id: Int64, completion: @escaping (Result<Deck, Error>) -> Void) {
-        apiClient.request(endpoint: "/decks/\(id)", method: .get) { result in
+        apiClient.request(endpoint: "/api/decks/\(id)", method: .get) { result in
             switch result {
             case .success(let data):
                 do {
@@ -131,7 +131,7 @@ class DeckService: ObservableObject {
     func createDeck(_ deck: Deck, completion: @escaping (Result<Deck, Error>) -> Void) {
         do {
             let data = try JSONEncoder().encode(deck)
-            apiClient.request(endpoint: "/decks", method: .post, body: data) { result in
+            apiClient.request(endpoint: "/api/decks", method: .post, body: data) { result in
                 switch result {
                 case .success(let data):
                     do {
@@ -190,7 +190,7 @@ class DeckService: ObservableObject {
 
             let data = try encoder.encode(deck)
             print("📤 DeckService: Updating deck \(id)")
-            apiClient.request(endpoint: "/decks/\(id)", method: .put, body: data) { result in
+            apiClient.request(endpoint: "/api/decks/\(id)", method: .put, body: data) { result in
                 switch result {
                 case .success(let data):
                     do {
@@ -233,7 +233,7 @@ class DeckService: ObservableObject {
         let parameters = ["cardId": cardId, "quantity": quantity] as [String: Any]
         do {
             let data = try JSONSerialization.data(withJSONObject: parameters)
-            apiClient.request(endpoint: "/decks/\(deckId)/add-card", method: .post, body: data) { result in
+            apiClient.request(endpoint: "/api/decks/\(deckId)/add-card", method: .post, body: data) { result in
                 switch result {
                 case .success(let data):
                     do {
@@ -279,7 +279,7 @@ class DeckService: ObservableObject {
         let parameters = ["cardId": cardId] as [String: Any]
         do {
             let data = try JSONSerialization.data(withJSONObject: parameters)
-            apiClient.request(endpoint: "/decks/\(deckId)/remove-card", method: .delete, body: data) { result in
+            apiClient.request(endpoint: "/api/decks/\(deckId)/remove-card", method: .delete, body: data) { result in
                 switch result {
                 case .success:
                     completion(.success(()))
@@ -293,7 +293,7 @@ class DeckService: ObservableObject {
     }
     
     func getPublicDecks(completion: @escaping (Result<[Deck], Error>) -> Void) {
-        apiClient.request(endpoint: "/decks/public", method: .get) { result in
+        apiClient.request(endpoint: "/api/decks/public", method: .get) { result in
             switch result {
             case .success(let data):
                 do {
@@ -452,7 +452,7 @@ func deleteDeck(deckId: Int64, userId: Int64, completion: @escaping (Result<Void
     }
 
     func getAllProDecks(completion: @escaping (Result<[ProDeck], Error>) -> Void) {
-        apiClient.request(endpoint: "/pro-decks", method: .get) { result in
+        apiClient.request(endpoint: "/api/pro-decks", method: .get) { result in
             switch result {
             case .success(let data):
                 do {
@@ -470,7 +470,7 @@ func deleteDeck(deckId: Int64, userId: Int64, completion: @escaping (Result<Void
     }
 
     func getProDeckById(_ id: Int64, completion: @escaping (Result<ProDeck, Error>) -> Void) {
-        apiClient.request(endpoint: "/pro-decks/\(id)", method: .get) { result in
+        apiClient.request(endpoint: "/api/pro-decks/\(id)", method: .get) { result in
             switch result {
             case .success(let data):
                 do {
@@ -486,7 +486,7 @@ func deleteDeck(deckId: Int64, userId: Int64, completion: @escaping (Result<Void
     }
 
     func getRecentProDecks(completion: @escaping (Result<[ProDeck], Error>) -> Void) {
-        apiClient.request(endpoint: "/pro-decks/recent", method: .get) { result in
+        apiClient.request(endpoint: "/api/pro-decks/recent", method: .get) { result in
             switch result {
             case .success(let data):
                 do {

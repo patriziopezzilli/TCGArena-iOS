@@ -28,7 +28,7 @@ class ShopService: ObservableObject {
     // MARK: - API Methods
     
     func getAllShops(completion: @escaping (Result<[Shop], Error>) -> Void) {
-        apiClient.request(endpoint: "/shops", method: .get) { result in
+        apiClient.request(endpoint: "/api/shops", method: .get) { result in
             switch result {
             case .success(let data):
                 do {
@@ -44,7 +44,7 @@ class ShopService: ObservableObject {
     }
     
     func getShopById(_ id: Int64, completion: @escaping (Result<Shop, Error>) -> Void) {
-        apiClient.request(endpoint: "/shops/\(id)", method: .get) { result in
+        apiClient.request(endpoint: "/api/shops/\(id)", method: .get) { result in
             switch result {
             case .success(let data):
                 do {
@@ -62,7 +62,7 @@ class ShopService: ObservableObject {
     func createShop(_ shop: Shop, completion: @escaping (Result<Shop, Error>) -> Void) {
         do {
             let data = try JSONEncoder().encode(shop)
-            apiClient.request(endpoint: "/shops", method: .post, body: data) { result in
+            apiClient.request(endpoint: "/api/shops", method: .post, body: data) { result in
                 switch result {
                 case .success(let data):
                     do {
@@ -83,7 +83,7 @@ class ShopService: ObservableObject {
     func updateShop(_ id: Int64, _ shop: Shop, completion: @escaping (Result<Shop, Error>) -> Void) {
         do {
             let data = try JSONEncoder().encode(shop)
-            apiClient.request(endpoint: "/shops/\(id)", method: .put, body: data) { result in
+            apiClient.request(endpoint: "/api/shops/\(id)", method: .put, body: data) { result in
                 switch result {
                 case .success(let data):
                     do {
@@ -102,7 +102,7 @@ class ShopService: ObservableObject {
     }
     
     func deleteShop(_ id: Int64, completion: @escaping (Result<Void, Error>) -> Void) {
-        apiClient.request(endpoint: "/shops/\(id)", method: .delete) { result in
+        apiClient.request(endpoint: "/api/shops/\(id)", method: .delete) { result in
             switch result {
             case .success:
                 completion(.success(()))
@@ -172,7 +172,7 @@ class ShopService: ObservableObject {
         errorMessage = nil
         
         do {
-            let shops: [Shop] = try await apiClient.request("/shops", method: "GET")
+            let shops: [Shop] = try await apiClient.request("/api/shops", method: "GET")
             
             // Filter shops within radius (only those with valid coordinates)
             self.nearbyShops = shops.compactMap { shop in

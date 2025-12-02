@@ -134,21 +134,30 @@ struct TournamentCardView: View {
     }
 
     // MARK: - Helpers
-    private func monthString(from date: Date) -> String {
+    private func monthString(from dateString: String) -> String {
+        guard let date = parseDate(dateString) else { return "N/A" }
         let formatter = DateFormatter()
         formatter.dateFormat = "MMM"
         return formatter.string(from: date).uppercased()
     }
 
-    private func dayString(from date: Date) -> String {
+    private func dayString(from dateString: String) -> String {
+        guard let date = parseDate(dateString) else { return "N/A" }
         let formatter = DateFormatter()
         formatter.dateFormat = "d"
         return formatter.string(from: date)
     }
 
-    private func timeString(from date: Date) -> String {
+    private func timeString(from dateString: String) -> String {
+        guard let date = parseDate(dateString) else { return "N/A" }
         let formatter = DateFormatter()
         formatter.timeStyle = .short
         return formatter.string(from: date)
+    }
+
+    private func parseDate(_ dateString: String) -> Date? {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss"
+        return formatter.date(from: dateString)
     }
 }

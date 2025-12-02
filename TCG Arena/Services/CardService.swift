@@ -17,7 +17,7 @@ class CardService: ObservableObject {
     // MARK: - Card Template Operations
 
     func getAllCardTemplates(completion: @escaping (Result<[CardTemplate], Error>) -> Void) {
-        apiClient.request(endpoint: "/cards/templates", method: .get) { result in
+        apiClient.request(endpoint: "/api/cards/templates", method: .get) { result in
             switch result {
             case .success(let data):
                 do {
@@ -35,7 +35,7 @@ class CardService: ObservableObject {
     }
 
     func getCardTemplateById(_ id: Int, completion: @escaping (Result<CardTemplate, Error>) -> Void) {
-        apiClient.request(endpoint: "/cards/templates/\(id)", method: .get) { result in
+        apiClient.request(endpoint: "/api/cards/templates/\(id)", method: .get) { result in
             switch result {
             case .success(let data):
                 do {
@@ -55,7 +55,7 @@ class CardService: ObservableObject {
     func createCardTemplate(_ template: CardTemplate, completion: @escaping (Result<CardTemplate, Error>) -> Void) {
         do {
             let data = try JSONEncoder().encode(template)
-            apiClient.request(endpoint: "/cards/templates", method: .post, body: data) { result in
+            apiClient.request(endpoint: "/api/cards/templates", method: .post, body: data) { result in
                 switch result {
                 case .success(let data):
                     do {
@@ -78,7 +78,7 @@ class CardService: ObservableObject {
     func updateCardTemplate(_ template: CardTemplate, completion: @escaping (Result<CardTemplate, Error>) -> Void) {
         do {
             let data = try JSONEncoder().encode(template)
-            apiClient.request(endpoint: "/cards/templates/\(template.id)", method: .put, body: data) { result in
+            apiClient.request(endpoint: "/api/cards/templates/\(template.id)", method: .put, body: data) { result in
                 switch result {
                 case .success(let data):
                     do {
@@ -99,7 +99,7 @@ class CardService: ObservableObject {
     }
 
     func deleteCardTemplate(_ id: Int, completion: @escaping (Result<Void, Error>) -> Void) {
-        apiClient.request(endpoint: "/cards/templates/\(id)", method: .delete) { result in
+        apiClient.request(endpoint: "/api/cards/templates/\(id)", method: .delete) { result in
             switch result {
             case .success:
                 completion(.success(()))
@@ -111,8 +111,54 @@ class CardService: ObservableObject {
 
     // MARK: - User Card Collection Operations
 
-    func getUserCardCollection(completion: @escaping (Result<[UserCard], Error>) -> Void) {
-        apiClient.request(endpoint: "/cards/collection", method: .get) { result in
+    @MainActor
+    func getUserCardCollection(completion: @escaping (Result<[Card], Error>) -> Void) {
+        // First get the collection deck
+        getCollectionDeck { deckResult in
+            switch deckResult {
+            case .success(let deck):
+                // Convert deck cards to Card objects and enrich with template data
+                let cards = deck.cards.map { self.convertDeckCardToCard($0, deckId: deck.id!) }
+
+                // Enrich cards with template data
+                let group = DispatchGroup()
+                var enrichedCards: [Card] = []
+                var enrichmentErrors: [Error] = []
+
+                for card in cards {
+                    group.enter()
+                    self.enrichCardWithTemplateData(card) { result in
+                        switch result {
+                        case .success(let enrichedCard):
+                            enrichedCards.append(enrichedCard)
+                        case .failure(let error):
+                            print("Failed to enrich card \(card.name): \(error.localizedDescription)")
+                            enrichedCards.append(card) // Use original card if enrichment fails
+                        }
+                        group.leave()
+                    }
+                }
+
+                group.notify(queue: .main) {
+                    // Sort cards by name for consistent ordering
+                    let sortedCards = enrichedCards.sorted { $0.name < $1.name }
+                    completion(.success(sortedCards))
+                }
+            case .failure(let error):
+                completion(.failure(error))
+            }
+        }
+    }
+
+    @MainActor
+    private func getCollectionDeck(completion: @escaping (Result<Deck, Error>) -> Void) {
+        guard let userId = AuthService.shared.currentUserId else {
+            completion(.failure(NSError(domain: "CardService", code: -1, userInfo: [NSLocalizedDescriptionKey: "User not authenticated"])))
+            return
+        }
+
+        // Get all user decks and find the collection deck (LISTA type)
+        apiClient.request(endpoint: "/api/decks?userId=\(userId)", method: .get) { result in
             switch result {
             case .success(let data):
                 do {
@@ -257,7 +303,7 @@ class CardService: ObservableObject {
     // MARK: - Market Price Operations
 
     func getCardMarketPrice(cardTemplateId: Int, completion: @escaping (Result<Double, Error>) -> Void) {
-        apiClient.request(endpoint: "/cards/market-price/\(cardTemplateId)", method: .get) { result in
+        apiClient.request(endpoint: "/api/cards/market-price/\(cardTemplateId)", method: .get) { result in
             switch result {
             case .success(let data):
                 do {
@@ -290,7 +336,7 @@ class CardService: ObservableObject {
         }
 
         let queryString = parameters.map { "\($0.key)=\($0.value)" }.joined(separator: "&")
-        let endpoint = "/cards/search?\(queryString)"
+        let endpoint = "/api/cards/search?\(queryString)"
 
         apiClient.request(endpoint: endpoint, method: .get) { result in
             switch result {

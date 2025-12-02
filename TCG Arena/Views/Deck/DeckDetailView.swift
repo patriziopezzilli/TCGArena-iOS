@@ -240,7 +240,14 @@ struct DeckDetailView: View {
                 } else {
                     ForEach(deckCards) { card in
                         ZStack {
-                            NavigationLink(destination: CardDetailView(card: card, isFromDiscover: false, deckId: deck.id)) {
+                            NavigationLink(destination: CardDetailView(card: card, isFromDiscover: false, deckId: deck.id) { updatedCard in
+                                // Update the card in the local deck cards array
+                                if let index = deckCards.firstIndex(where: { $0.id == updatedCard.id }) {
+                                    deckCards[index] = updatedCard
+                                }
+                                // Also refresh deck data from service
+                                loadDeckCards()
+                            }) {
                                 EmptyView()
                             }
                             .opacity(0)

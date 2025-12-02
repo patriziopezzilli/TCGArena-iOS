@@ -366,18 +366,26 @@ struct TournamentDetailView: View {
         // For now, this is a placeholder
     }
 
-    private func formatDate(_ date: Date) -> String {
+    private func formatDate(_ dateString: String) -> String {
+        guard let date = parseDate(dateString) else { return "N/A" }
         let formatter = DateFormatter()
         formatter.dateStyle = .medium
         formatter.timeStyle = .none
         return formatter.string(from: date)
     }
 
-    private func formatTime(_ date: Date) -> String {
+    private func formatTime(_ dateString: String) -> String {
+        guard let date = parseDate(dateString) else { return "N/A" }
         let formatter = DateFormatter()
         formatter.dateStyle = .none
         formatter.timeStyle = .short
         return formatter.string(from: date)
+    }
+
+    private func parseDate(_ dateString: String) -> Date? {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss"
+        return formatter.date(from: dateString)
     }
 
     // MARK: - Subviews

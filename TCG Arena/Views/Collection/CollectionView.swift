@@ -377,6 +377,21 @@ struct CollectionView: View {
         }
     }
 
+    // Helper function to update a card in local state for instant UI feedback
+    private func updateCardInLocalState(_ updatedCard: Card) {
+        // Update in userCards array
+        if let index = userCards.firstIndex(where: { $0.id == updatedCard.id }) {
+            userCards[index] = updatedCard
+        }
+        
+        // Update in enrichedAllCards array
+        if let index = enrichedAllCards.firstIndex(where: { $0.id == updatedCard.id }) {
+            enrichedAllCards[index] = updatedCard
+        }
+        
+        print("✅ CollectionView: Updated card '\(updatedCard.name)' in local state")
+    }
+
     var body: some View {
         NavigationView {
             VStack(spacing: 0) {
@@ -701,7 +716,9 @@ struct CollectionView: View {
                 ForEach(filteredCards) { card in
                     ZStack {
                         NavigationLink(destination: CardDetailView(card: card, isFromDiscover: false) { updatedCard in
-                            // After card update, always reload both user cards and enriched cards to stay synchronized
+                            // Update local state immediately for instant UI feedback
+                            self.updateCardInLocalState(updatedCard)
+                            // Then reload from backend to ensure consistency
                             self.loadUserCards()
                         }) {
                             EmptyView()
@@ -723,9 +740,11 @@ struct CollectionView: View {
         Group {
             if selectedCard != nil {
                 NavigationLink("", destination: CardDetailView(card: selectedCard!, isFromDiscover: false) { updatedCard in
-                    // After card update, always reload both user cards and enriched cards to stay synchronized
-                    self.loadUserCards()
+                    // Update local state immediately for instant UI feedback
+                    self.updateCardInLocalState(updatedCard)
                     selectedCard = updatedCard
+                    // Then reload from backend to ensure consistency
+                    self.loadUserCards()
                 }, isActive: Binding(get: { isCardActive }, set: { isCardActive = $0; if !$0 { selectedCard = nil } }))
             }
         }
@@ -1269,7 +1288,7 @@ struct CardDiscoverView: View {
 
                     LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
                         ForEach(Array(filteredCards.prefix(6)), id: \.id) { card in
-                            NavigationLink(destination: CardDetailView(card: card, isFromDiscover: false)) {
+                            NavigationLink(destination: CardDetailView(card: card, isFromDiscover: true)) {
                                 CompactCardView(card: card)
                             }
                             .buttonStyle(PlainButtonStyle())

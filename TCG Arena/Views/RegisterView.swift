@@ -418,18 +418,18 @@ struct RegisterView: View {
         isLoading = true
 
         Task {
-            do {
-                try await authService.signUp(
-                    email: email,
-                    password: password,
-                    username: username,
-                    displayName: username, // Per ora usa username come displayName
-                    favoriteGames: Array(selectedTCGs)
-                )
+            await authService.signUp(
+                email: email,
+                password: password,
+                username: username,
+                displayName: username, // Per ora usa username come displayName
+                favoriteGames: Array(selectedTCGs)
+            )
+            if authService.errorMessage == nil {
                 UserDefaults.standard.set(true, forKey: "hasCompletedOnboarding")
                 dismiss()
-            } else if let error = authService.errorMessage {
-                errorMessage = error
+            } else {
+                errorMessage = authService.errorMessage!
                 showError = true
             }
             isLoading = false

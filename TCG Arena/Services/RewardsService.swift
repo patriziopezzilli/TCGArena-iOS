@@ -16,7 +16,7 @@ class RewardsService: ObservableObject {
     // MARK: - Reward Operations
 
     func getAllActiveRewards(completion: @escaping (Result<[Reward], Error>) -> Void) {
-        apiClient.request(endpoint: "/rewards", method: .get) { result in
+        apiClient.request(endpoint: "/api/rewards", method: .get) { result in
             switch result {
             case .success(let data):
                 do {
@@ -32,7 +32,7 @@ class RewardsService: ObservableObject {
     }
 
     func getRewardById(_ id: Int, completion: @escaping (Result<Reward, Error>) -> Void) {
-        apiClient.request(endpoint: "/rewards/\(id)", method: .get) { result in
+        apiClient.request(endpoint: "/api/rewards/\(id)", method: .get) { result in
             switch result {
             case .success(let data):
                 do {
@@ -48,7 +48,7 @@ class RewardsService: ObservableObject {
     }
 
     func redeemReward(_ rewardId: Int, completion: @escaping (Result<[String: String], Error>) -> Void) {
-        apiClient.request(endpoint: "/rewards/\(rewardId)/redeem", method: .post) { result in
+        apiClient.request(endpoint: "/api/rewards/\(rewardId)/redeem", method: .post) { result in
             switch result {
             case .success(let data):
                 do {
@@ -66,7 +66,7 @@ class RewardsService: ObservableObject {
     // MARK: - Points Operations
 
     func getUserPoints(completion: @escaping (Result<UserPoints, Error>) -> Void) {
-        apiClient.request(endpoint: "/rewards/points", method: .get) { result in
+        apiClient.request(endpoint: "/api/rewards/points", method: .get) { result in
             switch result {
             case .success(let data):
                 do {
@@ -84,7 +84,7 @@ class RewardsService: ObservableObject {
     // MARK: - Transaction History
 
     func getTransactionHistory(completion: @escaping (Result<[RewardTransaction], Error>) -> Void) {
-        apiClient.request(endpoint: "/rewards/history", method: .get) { result in
+        apiClient.request(endpoint: "/api/rewards/history", method: .get) { result in
             switch result {
             case .success(let data):
                 do {

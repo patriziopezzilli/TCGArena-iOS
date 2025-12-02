@@ -103,10 +103,10 @@ struct ShopView: View {
 
                     // Content
                     if selectedSection == 0 {
-                        ShopListView(isLoading: isLoading)
+                        ShopListView()
                             .transition(.opacity)
                     } else {
-                        EventListView(isLoading: isLoading)
+                        EventListView()
                             .transition(.opacity)
                     }
                 }

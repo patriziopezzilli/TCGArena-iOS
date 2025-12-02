@@ -70,8 +70,6 @@ struct User: Identifiable, Codable {
             favoriteGames = try container.decodeIfPresent([TCGType].self, forKey: .favoriteGames)
         }
 
-        location = try container.decodeIfPresent(UserLocation.self, forKey: .location)
-        
         // Gestisci location
         if let loc = try? container.decodeIfPresent(UserLocation.self, forKey: .location) {
             location = loc

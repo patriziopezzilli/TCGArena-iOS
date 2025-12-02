@@ -16,7 +16,7 @@ class NotificationService: ObservableObject {
     // MARK: - Notification Operations
 
     func getUserNotifications(completion: @escaping (Result<[Notification], Error>) -> Void) {
-        apiClient.request(endpoint: "/notifications", method: .get) { result in
+        apiClient.request(endpoint: "/api/notifications", method: .get) { result in
             switch result {
             case .success(let data):
                 do {
@@ -32,7 +32,7 @@ class NotificationService: ObservableObject {
     }
 
     func getUnreadNotifications(completion: @escaping (Result<[Notification], Error>) -> Void) {
-        apiClient.request(endpoint: "/notifications/unread", method: .get) { result in
+        apiClient.request(endpoint: "/api/notifications/unread", method: .get) { result in
             switch result {
             case .success(let data):
                 do {
@@ -48,7 +48,7 @@ class NotificationService: ObservableObject {
     }
 
     func markAsRead(notificationId: Int, completion: @escaping (Result<[String: String], Error>) -> Void) {
-        apiClient.request(endpoint: "/notifications/\(notificationId)/read", method: .put) { result in
+        apiClient.request(endpoint: "/api/notifications/\(notificationId)/read", method: .put) { result in
             switch result {
             case .success(let data):
                 do {
@@ -69,7 +69,7 @@ class NotificationService: ObservableObject {
         let request = DeviceTokenRequest(token: token, platform: platform)
         do {
             let data = try JSONEncoder().encode(request)
-            apiClient.request(endpoint: "/notifications/device-token", method: .post, body: data) { result in
+            apiClient.request(endpoint: "/api/notifications/device-token", method: .post, body: data) { result in
                 switch result {
                 case .success(let data):
                     do {
@@ -88,7 +88,7 @@ class NotificationService: ObservableObject {
     }
 
     func unregisterDeviceToken(token: String, completion: @escaping (Result<[String: String], Error>) -> Void) {
-        apiClient.request(endpoint: "/notifications/device-token?token=\(token)", method: .delete) { result in
+        apiClient.request(endpoint: "/api/notifications/device-token?token=\(token)", method: .delete) { result in
             switch result {
             case .success(let data):
                 do {
@@ -104,7 +104,7 @@ class NotificationService: ObservableObject {
     }
 
     func sendTestPushNotification(completion: @escaping (Result<[String: String], Error>) -> Void) {
-        apiClient.request(endpoint: "/notifications/test-push", method: .post) { result in
+        apiClient.request(endpoint: "/api/notifications/test-push", method: .post) { result in
             switch result {
             case .success(let data):
                 do {

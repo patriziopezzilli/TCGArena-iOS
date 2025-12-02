@@ -133,7 +133,7 @@ struct OnboardingView: View {
             LoginView(username: email)
         }
         .sheet(isPresented: $showRegister) {
-            RegisterView(selectedTCGs: Set([selectedTCG].compactMap { $0 }))
+            RegisterView(email: email, selectedTCG: selectedTCG)
                 .environmentObject(authService)
         }
     }

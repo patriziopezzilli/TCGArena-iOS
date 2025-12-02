@@ -241,7 +241,7 @@ class AuthService: ObservableObject {
             ]
             
             let _: [String: String] = try await APIClient.shared.request(
-                "/notifications/device-token",
+                "/api/notifications/device-token",
                 method: "POST",
                 body: payload
             )

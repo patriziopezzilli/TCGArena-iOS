@@ -33,7 +33,7 @@ class ExpansionService: ObservableObject {
     // MARK: - API Methods
     
     func getAllExpansions(completion: @escaping (Result<[Expansion], Error>) -> Void) {
-        apiClient.request(endpoint: "/expansions", method: .get) { result in
+        apiClient.request(endpoint: "/api/expansions", method: .get) { result in
             switch result {
             case .success(let data):
                 do {
@@ -51,7 +51,7 @@ class ExpansionService: ObservableObject {
     }
     
     func getRecentExpansions(completion: @escaping (Result<[Expansion], Error>) -> Void) {
-        apiClient.request(endpoint: "/expansions/recent", method: .get) { result in
+        apiClient.request(endpoint: "/api/expansions/recent", method: .get) { result in
             switch result {
             case .success(let data):
                 do {
@@ -69,7 +69,7 @@ class ExpansionService: ObservableObject {
     }
     
     func getExpansionById(_ id: Int64, completion: @escaping (Result<Expansion, Error>) -> Void) {
-        apiClient.request(endpoint: "/expansions/\(id)", method: .get) { result in
+        apiClient.request(endpoint: "/api/expansions/\(id)", method: .get) { result in
             switch result {
             case .success(let data):
                 do {

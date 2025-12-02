@@ -43,7 +43,7 @@ class ImageService: ObservableObject {
 
         body.append("--\(boundary)--\r\n".data(using: .utf8)!)
 
-        apiClient.request(endpoint: "/images/upload", method: .post, body: body, headers: ["Content-Type": "multipart/form-data; boundary=\(boundary)"]) { result in
+        apiClient.request(endpoint: "/api/images/upload", method: .post, body: body, headers: ["Content-Type": "multipart/form-data; boundary=\(boundary)"]) { result in
             switch result {
             case .success(let data):
                 do {
@@ -59,7 +59,7 @@ class ImageService: ObservableObject {
     }
 
     func getImagesByEntity(entityType: String, entityId: Int, completion: @escaping (Result<[Image], Error>) -> Void) {
-        apiClient.request(endpoint: "/images/entity/\(entityType)/\(entityId)", method: .get) { result in
+        apiClient.request(endpoint: "/api/images/entity/\(entityType)/\(entityId)", method: .get) { result in
             switch result {
             case .success(let data):
                 do {
@@ -75,7 +75,7 @@ class ImageService: ObservableObject {
     }
 
     func getUserImages(completion: @escaping (Result<[Image], Error>) -> Void) {
-        apiClient.request(endpoint: "/images/user", method: .get) { result in
+        apiClient.request(endpoint: "/api/images/user", method: .get) { result in
             switch result {
             case .success(let data):
                 do {
@@ -91,7 +91,7 @@ class ImageService: ObservableObject {
     }
 
     func deleteImage(imageId: Int, completion: @escaping (Result<[String: String], Error>) -> Void) {
-        apiClient.request(endpoint: "/images/\(imageId)", method: .delete) { result in
+        apiClient.request(endpoint: "/api/images/\(imageId)", method: .delete) { result in
             switch result {
             case .success(let data):
                 do {

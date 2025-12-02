@@ -9,7 +9,7 @@ import Foundation
 
 class APIClient: NSObject {
     static let shared = APIClient()
-    private let baseURL = "http://localhost:8080/api"
+    private let baseURL = "http://localhost:8080"
     
     // URLSession con configurazione basata sulla modalità (debug/disabilita cache)
     private lazy var urlSession: URLSession = {
@@ -142,15 +142,16 @@ class APIClient: NSObject {
         request.httpMethod = method
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         
-        // Aggiungi JWT token se disponibile
-        if let token = jwtToken {
+        // Aggiungi JWT token se disponibile e l'endpoint non è pubblico
+        let publicEndpoints = ["/api/auth/register", "/api/auth/login", "/api/auth/refresh-token"]
+        if let token = jwtToken, !publicEndpoints.contains(where: { endpoint.hasPrefix($0) }) {
             request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
             let tokenPrefix = token.prefix(20)
             print("🔑 APIClient: Using JWT token (prefix: \(tokenPrefix)...)")
         } else {
-            print("⚠️ APIClient: No JWT token available")
+            print("⚠️ APIClient: No JWT token available or endpoint is public")
             // Debug: Check if token exists in UserDefaults
-            if let savedToken = UserDefaults.standard.string(forKey: "jwtToken") {
+            if let savedToken = UserDefaults.standard.string(forKey: "jwtToken"), !publicEndpoints.contains(where: { endpoint.hasPrefix($0) }) {
                 print("⚠️ APIClient: Token found in UserDefaults but _jwtToken is nil!")
                 print("⚠️ APIClient: Forcing reload from UserDefaults")
                 _jwtToken = savedToken
@@ -158,7 +159,7 @@ class APIClient: NSObject {
                 let tokenPrefix = savedToken.prefix(20)
                 print("🔑 APIClient: Recovered JWT token (prefix: \(tokenPrefix)...)")
             } else {
-                print("⚠️ APIClient: No token in UserDefaults either")
+                print("⚠️ APIClient: No token in UserDefaults either or endpoint is public")
             }
         }
         
@@ -169,8 +170,8 @@ class APIClient: NSObject {
         
         // Aggiungi body se presente
         if let body = body {
-            request.httpBody = try JSONEncoder().encode(body)
-            if let bodyString = String(data: request.httpBody!, encoding: .utf8) {
+            request.httpBody = body
+            if let bodyString = String(data: body, encoding: .utf8) {
                 print("Request body: \(bodyString)")
             }
         }
@@ -198,77 +199,9 @@ class APIClient: NSObject {
             throw APIError.serverError(httpResponse.statusCode)
         }
 
-        do {
-            return try jsonDecoder.decode(T.self, from: data)
-        } catch {
-            print("Decoding error: \(error)")
-            if let decodingError = error as? DecodingError {
-                print("Decoding error details: \(decodingError)")
-            }
-            throw APIError.decodingError
-        }
+        return data
     }
 
-    // Versione con completion handler per compatibilità
-    func request(endpoint: String, method: HTTPMethod, body: Data? = nil, headers: [String: String] = [:], completion: @escaping (Result<Data, Error>) -> Void) {
-        Task {
-            do {
-                guard let url = URL(string: baseURL + endpoint) else {
-                    throw APIError.invalidURL
-                }
-
-                var request = URLRequest(url: url)
-                request.httpMethod = method.rawValue
-                request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-
-                // Aggiungi JWT token se disponibile
-                if let token = jwtToken {
-                    request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-                }
-
-                // Aggiungi headers personalizzati
-                for (key, value) in headers {
-                    request.setValue(value, forHTTPHeaderField: key)
-                }
-
-                // Aggiungi body se presente
-                if let body = body {
-                    request.httpBody = body
-                    if let bodyString = String(data: body, encoding: .utf8) {
-                        print("Request body: \(bodyString)")
-                    }
-                }
-
-                print("Making request to: \(url.absoluteString)")
-                print("Method: \(method.rawValue)")
-
-                let (data, response) = try await urlSession.data(for: request)
-
-                guard let httpResponse = response as? HTTPURLResponse else {
-                    throw APIError.invalidResponse
-                }
-
-                // Log per debug
-                if let responseString = String(data: data, encoding: .utf8) {
-                    print("Response (\(httpResponse.statusCode)): \(responseString)")
-                }
-
-                guard (200...299).contains(httpResponse.statusCode) else {
-                    if httpResponse.statusCode == 401 {
-                        // Token scaduto, logout
-                        jwtToken = nil
-                        throw APIError.unauthorized
-                    }
-                    throw APIError.serverError(httpResponse.statusCode)
-                }
-
-                completion(.success(data))
-            } catch {
-                completion(.failure(error))
-            }
-        }
-    }
-    
     func setJWTToken(_ token: String) {
         jwtToken = token
     }
