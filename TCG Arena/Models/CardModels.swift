@@ -198,6 +198,24 @@ enum Rarity: String, Codable, CaseIterable {
     case mythic = "MYTHIC"
     case legendary = "LEGENDARY"
     
+    init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        let stringValue = try container.decode(String.self)
+        switch stringValue {
+        case "COMMON": self = .common
+        case "UNCOMMON": self = .uncommon
+        case "RARE": self = .rare
+        case "ULTRA_RARE": self = .ultraRare
+        case "SECRET_RARE", "SECRET": self = .secretRare
+        case "HOLOGRAPHIC": self = .holographic
+        case "PROMO": self = .promo
+        case "MYTHIC": self = .mythic
+        case "LEGENDARY": self = .legendary
+        default:
+            throw DecodingError.dataCorruptedError(in: container, debugDescription: "Invalid rarity value: \(stringValue)")
+        }
+    }
+    
     var displayName: String {
         switch self {
         case .common: return "Common"

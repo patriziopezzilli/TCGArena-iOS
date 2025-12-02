@@ -1245,7 +1245,7 @@ struct CardDiscoverView: View {
             }
             
             VStack(spacing: 16) {
-                ForEach(filteredExpansions.prefix(8)) { expansion in
+                ForEach(filteredExpansions) { expansion in
                     NavigationLink(destination: ExpansionDetailView(expansion: expansion).environmentObject(expansionService)) {
                         ExpansionRow(expansion: expansion, isButton: false) { }
                     }
