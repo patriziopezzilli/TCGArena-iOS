@@ -9,7 +9,7 @@ import SwiftUI
 
 struct LoginView: View {
     @Environment(\.dismiss) private var dismiss
-    @StateObject private var authService = AuthService()
+    @EnvironmentObject private var authService: AuthService
     @State private var username: String
     @State private var password = ""
     @State private var showForgotPassword = false
@@ -216,19 +216,19 @@ struct LoginView: View {
     }
 
     // MARK: - Subviews
-    
+
     private func login() {
         guard !username.isEmpty, !password.isEmpty else { return }
 
         isLoading = true
 
         Task {
-            do {
-                try await authService.signIn(email: username, password: password)
+            await authService.signIn(email: username, password: password)
+            if authService.isAuthenticated {
                 UserDefaults.standard.set(true, forKey: "hasCompletedOnboarding")
                 dismiss()
-            } catch {
-                errorMessage = error.localizedDescription
+            } else if let error = authService.errorMessage {
+                errorMessage = error
                 showError = true
             }
             isLoading = false

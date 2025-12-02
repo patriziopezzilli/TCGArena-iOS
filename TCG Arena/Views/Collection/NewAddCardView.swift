@@ -49,19 +49,15 @@ struct NewAddCardView: View {
                 
                 // Options
                 VStack(spacing: 20) {
-                    // OCR Option
-                    NavigationLink(destination: CardScanView()
-                        .environmentObject(cardService)
-                        .environmentObject(deckService)) {
-                        AddCardOptionView(
-                            icon: "camera.viewfinder",
-                            title: "Scan Card",
-                            subtitle: "Use camera to automatically detect card details",
-                            color: Color.blue,
-                            isRecommended: true
-                        )
-                    }
-                    .buttonStyle(PlainButtonStyle())
+                    // OCR Option - Disabled
+                    AddCardOptionView(
+                        icon: "camera.viewfinder",
+                        title: "Scan Card",
+                        subtitle: "Coming Soon - Use manual entry for now",
+                        color: Color.gray,
+                        isRecommended: false,
+                        isDisabled: true
+                    )
                     
                     // Manual Option
                     NavigationLink(destination: ManualAddCardView()
@@ -72,7 +68,7 @@ struct NewAddCardView: View {
                             title: "Add Manually", 
                             subtitle: "Enter card information by hand",
                             color: Color.purple,
-                            isRecommended: false
+                            isRecommended: true
                         )
                     }
                     .buttonStyle(PlainButtonStyle())
@@ -141,18 +137,19 @@ struct AddCardOptionView: View {
     let subtitle: String
     let color: Color
     let isRecommended: Bool
+    var isDisabled: Bool = false
     
     var body: some View {
         HStack(spacing: 20) {
             // Icon
             ZStack {
                 Circle()
-                    .fill(color)
+                    .fill(isDisabled ? Color.gray.opacity(0.3) : color)
                     .frame(width: 60, height: 60)
                 
                 SwiftUI.Image(systemName: icon)
                     .font(.system(size: 24, weight: .medium))
-                    .foregroundColor(.white)
+                    .foregroundColor(isDisabled ? .gray : .white)
             }
             
             // Content
@@ -160,9 +157,9 @@ struct AddCardOptionView: View {
                 HStack {
                     Text(title)
                         .font(.system(size: 18, weight: .semibold))
-                        .foregroundColor(.primary)
+                        .foregroundColor(isDisabled ? .gray : .primary)
                     
-                    if isRecommended {
+                    if isRecommended && !isDisabled {
                         Text("RECOMMENDED")
                             .font(.system(size: 10, weight: .bold))
                             .padding(.horizontal, 8)
@@ -174,20 +171,38 @@ struct AddCardOptionView: View {
                             .foregroundColor(.white)
                     }
                     
+                    if isDisabled {
+                        Text("SOON")
+                            .font(.system(size: 10, weight: .bold))
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 3)
+                            .background(
+                                Capsule()
+                                    .fill(Color.orange)
+                            )
+                            .foregroundColor(.white)
+                    }
+                    
                     Spacer()
                 }
                 
                 Text(subtitle)
                     .font(.system(size: 14, weight: .medium))
-                    .foregroundColor(.secondary)
+                    .foregroundColor(isDisabled ? .gray : .secondary)
                     .lineLimit(nil)
                     .multilineTextAlignment(.leading)
             }
             
             // Arrow
-            SwiftUI.Image(systemName: "arrow.right.circle.fill")
-                .font(.system(size: 24, weight: .medium))
-                .foregroundColor(color)
+            if !isDisabled {
+                SwiftUI.Image(systemName: "arrow.right.circle.fill")
+                    .font(.system(size: 24, weight: .medium))
+                    .foregroundColor(color)
+            } else {
+                SwiftUI.Image(systemName: "clock.fill")
+                    .font(.system(size: 24, weight: .medium))
+                    .foregroundColor(.gray)
+            }
         }
         .padding(20)
         .background(
@@ -202,9 +217,10 @@ struct AddCardOptionView: View {
         )
         .overlay(
             RoundedRectangle(cornerRadius: 16)
-                .stroke(color, lineWidth: isRecommended ? 2 : 1)
-                .opacity(isRecommended ? 0.6 : 0.3)
+                .stroke(isDisabled ? Color.gray.opacity(0.3) : color, lineWidth: isRecommended && !isDisabled ? 2 : 1)
+                .opacity(isRecommended && !isDisabled ? 0.6 : 0.3)
         )
+        .opacity(isDisabled ? 0.6 : 1.0)
     }
 }
 

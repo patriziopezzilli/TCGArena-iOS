@@ -118,6 +118,7 @@ class DiscoverService: ObservableObject {
     
     private func processUsers(_ users: [User], leaderboardUsers: [User]) {
         // Sort users by join date for new users (most recent first)
+        // Sort by dateJoined string (already formatted by backend)
         let sortedByJoinDate = users.sorted { $0.dateJoined > $1.dateJoined }
         self.newUsers = Array(sortedByJoinDate.prefix(5))
         
@@ -161,8 +162,8 @@ class DiscoverService: ObservableObject {
             case .success(let activities):
                 self.recentActivities = activities
             case .failure(let error):
-                print("Error loading activities: \(error)")
-                // Keep empty or mock if needed
+                // Handle error silently
+                break
             }
         }
     }

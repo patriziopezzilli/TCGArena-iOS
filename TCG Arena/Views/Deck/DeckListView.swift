@@ -368,7 +368,7 @@ struct SimpleDeckCardRowView: View {
             // Quantity indicator
             ZStack {
                 Circle()
-                    .fill(deckCard.cardTemplate.tcgType.themeColor)
+                    .fill(deckCard.cardTemplate.tcgType?.themeColor ?? Color.gray)
                     .frame(width: 24, height: 24)
                 
                 Text("\(deckCard.quantity)")

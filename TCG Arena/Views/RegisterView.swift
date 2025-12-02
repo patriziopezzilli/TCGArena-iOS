@@ -9,8 +9,8 @@ import SwiftUI
 
 struct RegisterView: View {
     @Environment(\.dismiss) private var dismiss
-    @StateObject private var authService = AuthService()
-    @State private var email: String
+    @EnvironmentObject private var authService: AuthService
+    @State private var email = ""
     @State private var username = ""
     @State private var password = ""
     @State private var confirmPassword = ""
@@ -193,7 +193,7 @@ struct RegisterView: View {
                                     Text("Favorite TCGs")
                                         .font(.system(size: 14, weight: .semibold, design: .rounded))
                                         .foregroundColor(AdaptiveColors.brandPrimary)
-                                    
+
                                     if !selectedTCGs.isEmpty {
                                         Text("(\(selectedTCGs.count) selected)")
                                             .font(.system(size: 12, weight: .regular, design: .rounded))
@@ -216,22 +216,22 @@ struct RegisterView: View {
                                                     RoundedRectangle(cornerRadius: 6)
                                                         .stroke(selectedTCGs.contains(tcg) ? AdaptiveColors.brandPrimary : AdaptiveColors.neutralLight, lineWidth: 2)
                                                         .frame(width: 24, height: 24)
-                                                    
+
                                                     if selectedTCGs.contains(tcg) {
                                                         RoundedRectangle(cornerRadius: 6)
                                                             .fill(AdaptiveColors.brandPrimary)
                                                             .frame(width: 24, height: 24)
-                                                        
+
                                                         SwiftUI.Image(systemName: "checkmark")
                                                             .font(.system(size: 14, weight: .bold))
                                                             .foregroundColor(.white)
                                                     }
                                                 }
-                                                
+
                                                 Text(tcg.rawValue.capitalized)
                                                     .font(.system(size: 16))
                                                     .foregroundColor(AdaptiveColors.neutralDark)
-                                                
+
                                                 Spacer()
                                             }
                                             .padding(.horizontal, 16)
@@ -391,6 +391,7 @@ struct RegisterView: View {
         !password.isEmpty &&
         password == confirmPassword &&
         password.count >= 6 &&
+        !selectedTCGs.isEmpty &&
         agreedToTerms
     }
 
@@ -427,8 +428,8 @@ struct RegisterView: View {
                 )
                 UserDefaults.standard.set(true, forKey: "hasCompletedOnboarding")
                 dismiss()
-            } catch {
-                errorMessage = error.localizedDescription
+            } else if let error = authService.errorMessage {
+                errorMessage = error
                 showError = true
             }
             isLoading = false

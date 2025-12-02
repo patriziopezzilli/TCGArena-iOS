@@ -23,19 +23,19 @@ struct TournamentDetailView: View {
         ZStack(alignment: .top) {
             Color(.systemGroupedBackground)
                 .ignoresSafeArea()
-            
+
             ScrollView {
                 VStack(spacing: 0) {
                     // Header
                     GeometryReader { geometry in
                         let offset = geometry.frame(in: .global).minY
-                        
+
                         ZStack(alignment: .bottomLeading) {
                             // Background Color - extends upward on scroll
                             tournament.tcgType.themeColor
                                 .frame(height: max(250, 250 + offset))
                                 .clipped()
-                            
+
                             // Gradient Overlay
                             LinearGradient(
                                 gradient: Gradient(colors: [.clear, .black.opacity(0.6)]),
@@ -44,13 +44,13 @@ struct TournamentDetailView: View {
                             )
                             .frame(height: 100)
                             .offset(y: min(0, -offset))
-                            
+
                             VStack(alignment: .leading, spacing: 8) {
                                 Text(tournament.title)
                                     .font(.system(size: 28, weight: .bold))
                                     .foregroundColor(.white)
                                     .shadow(radius: 4)
-                                
+
                                 HStack(spacing: 12) {
                                     Label(tournament.tcgType.displayName, systemImage: tournament.tcgType.icon)
                                         .font(.system(size: 14, weight: .medium))
@@ -59,7 +59,7 @@ struct TournamentDetailView: View {
                                         .padding(.vertical, 6)
                                         .background(Color.white.opacity(0.2))
                                         .cornerRadius(8)
-                                    
+
                                     Text(tournament.type.rawValue)
                                         .font(.system(size: 14, weight: .medium))
                                         .foregroundColor(.white)
@@ -74,7 +74,7 @@ struct TournamentDetailView: View {
                         }
                     }
                     .frame(height: 250)
-                    
+
                     VStack(spacing: 24) {
                         // Registration/Status Section (first item in body)
                         if let userStatus = userRegistrationStatus {
@@ -83,19 +83,19 @@ struct TournamentDetailView: View {
                                 SwiftUI.Image(systemName: userStatus.status == .REGISTERED ? "checkmark.seal.fill" : "clock.fill")
                                     .font(.system(size: 20))
                                     .foregroundColor(userStatus.status == .REGISTERED ? .green : .orange)
-                                
+
                                 VStack(alignment: .leading, spacing: 2) {
                                     Text(userStatus.status == .REGISTERED ? "✓ You're Registered" : "⏳ On Waiting List")
                                         .font(.system(size: 16, weight: .bold))
                                         .foregroundColor(.primary)
-                                    
+
                                     Text(userStatus.status == .REGISTERED ? "You're all set for this tournament" : "We'll notify you if a spot opens")
                                         .font(.system(size: 12))
                                         .foregroundColor(.secondary)
                                 }
-                                
+
                                 Spacer()
-                                
+
                                 Button(action: unregisterFromTournament) {
                                     HStack(spacing: 6) {
                                         if isRegistering {
@@ -159,7 +159,7 @@ struct TournamentDetailView: View {
                             .disabled(isRegistering)
                             .padding(.horizontal, 20)
                         }
-                        
+
                         // Info Grid
                         LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
                             InfoCard(icon: "calendar", title: "Date", value: formatDate(tournament.startDate))
@@ -168,16 +168,16 @@ struct TournamentDetailView: View {
                             InfoCard(icon: "eurosign.circle", title: "Entry Fee", value: tournament.entryFee == 0 ? "Free" : "€\(String(format: "%.0f", tournament.entryFee))")
                         }
                         .padding(.horizontal, 20)
-                        
+
                         // Location Section
                         if let location = tournament.location {
                             VStack(alignment: .leading, spacing: 16) {
                                 SectionHeader(title: "Location", icon: "mappin.circle.fill", color: .red)
-                                
+
                                 VStack(alignment: .leading, spacing: 12) {
                                     Text(location.venueName)
                                         .font(.system(size: 16, weight: .semibold))
-                                    
+
                                     HStack(alignment: .top, spacing: 8) {
                                         SwiftUI.Image(systemName: "mappin.and.ellipse")
                                             .foregroundColor(.secondary)
@@ -185,7 +185,7 @@ struct TournamentDetailView: View {
                                             .font(.system(size: 14))
                                             .foregroundColor(.secondary)
                                     }
-                                    
+
                                     Button(action: {
                                         // Open maps
                                     }) {
@@ -201,12 +201,12 @@ struct TournamentDetailView: View {
                             }
                             .padding(.horizontal, 20)
                         }
-                        
+
                         // Description
                         if let description = tournament.description {
                             VStack(alignment: .leading, spacing: 16) {
                                 SectionHeader(title: "About", icon: "info.circle.fill", color: .blue)
-                                
+
                                 Text(description)
                                     .font(.system(size: 15))
                                     .foregroundColor(.secondary)
@@ -218,7 +218,7 @@ struct TournamentDetailView: View {
                             }
                             .padding(.horizontal, 20)
                         }
-                        
+
                         Spacer(minLength: 40)
                     }
                     .padding(.top, 24)
@@ -226,7 +226,7 @@ struct TournamentDetailView: View {
                 }
             }
             .edgesIgnoringSafeArea(.top)
-            
+
             // Custom Navigation Bar
             HStack {
                 Button(action: { presentationMode.wrappedValue.dismiss() }) {
@@ -251,7 +251,7 @@ struct TournamentDetailView: View {
             // Force refresh registration status on appear
             userRegistrationStatus = nil
             isLoadingStatus = true
-            
+
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
                 checkRegistrationStatus()
             }
@@ -260,7 +260,7 @@ struct TournamentDetailView: View {
 
     private func registerForTournament() {
         guard let tournamentId = tournament.id else { return }
-        
+
         // Check if already registered
         if userRegistrationStatus != nil {
             print("User is already registered for this tournament")
@@ -272,7 +272,7 @@ struct TournamentDetailView: View {
         Task {
             do {
                 let participant = try await tournamentService.registerForTournament(tournamentId: tournamentId)
-                
+
                 await MainActor.run {
                     userRegistrationStatus = participant
                     registrationMessage = participant.status == .REGISTERED
@@ -281,7 +281,7 @@ struct TournamentDetailView: View {
                     showingRegistrationAlert = true
                     isRegistering = false
                 }
-                
+
                 // Refresh tournament data to update counts
                 loadTournamentDetails()
             } catch {
@@ -302,14 +302,14 @@ struct TournamentDetailView: View {
         Task {
             do {
                 try await tournamentService.unregisterFromTournament(tournamentId: tournamentId)
-                
+
                 await MainActor.run {
                     userRegistrationStatus = nil
                     registrationMessage = "Successfully unregistered from the tournament."
                     showingRegistrationAlert = true
                     isRegistering = false
                 }
-                
+
                 // Refresh tournament data to update counts
                 loadTournamentDetails()
             } catch {
@@ -337,12 +337,12 @@ struct TournamentDetailView: View {
                 switch result {
                 case .success(let participants):
                     print("📋 Retrieved \(participants.count) participants from API")
-                    
+
                     // Find current user's registration
                     let userParticipation = participants.first { participant in
                         participant.userId == currentUserId
                     }
-                    
+
                     if let status = userParticipation {
                         print("✅ User IS registered: userId=\(status.userId), status=\(status.status)")
                         self.userRegistrationStatus = status
@@ -350,12 +350,12 @@ struct TournamentDetailView: View {
                         print("❌ User NOT registered (userId=\(currentUserId) not found in \(participants.count) participants)")
                         self.userRegistrationStatus = nil
                     }
-                    
+
                 case .failure(let error):
                     print("⚠️ Failed to check registration status: \(error.localizedDescription)")
                     self.userRegistrationStatus = nil
                 }
-                
+
                 self.isLoadingStatus = false
             }
         }
@@ -372,20 +372,20 @@ struct TournamentDetailView: View {
         formatter.timeStyle = .none
         return formatter.string(from: date)
     }
-    
+
     private func formatTime(_ date: Date) -> String {
         let formatter = DateFormatter()
         formatter.dateStyle = .none
         formatter.timeStyle = .short
         return formatter.string(from: date)
     }
-    
+
     // MARK: - Subviews
     struct InfoCard: View {
         let icon: String
         let title: String
         let value: String
-        
+
         var body: some View {
             VStack(alignment: .leading, spacing: 12) {
                 HStack {
@@ -394,12 +394,12 @@ struct TournamentDetailView: View {
                         .foregroundColor(.blue)
                     Spacer()
                 }
-                
+
                 VStack(alignment: .leading, spacing: 4) {
                     Text(title)
                         .font(.system(size: 12, weight: .medium))
                         .foregroundColor(.secondary)
-                    
+
                     Text(value)
                         .font(.system(size: 14, weight: .semibold))
                         .foregroundColor(.primary)
@@ -411,18 +411,18 @@ struct TournamentDetailView: View {
             .shadow(color: Color.black.opacity(0.03), radius: 4, x: 0, y: 2)
         }
     }
-    
+
     struct SectionHeader: View {
         let title: String
         let icon: String
         let color: Color
-        
+
         var body: some View {
             HStack(spacing: 8) {
                 SwiftUI.Image(systemName: icon)
                     .font(.system(size: 18))
                     .foregroundColor(color)
-                
+
                 Text(title)
                     .font(.system(size: 18, weight: .bold))
                     .foregroundColor(.primary)

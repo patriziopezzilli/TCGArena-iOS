@@ -22,7 +22,7 @@ struct TCGCardView: View {
         VStack(alignment: .leading, spacing: TCGTheme.Spacing.sm) {
             // Header with TCG type badge
             HStack {
-                TCGBadge(card.tcgType.displayName, color: tcgColor)
+                TCGBadge(card.tcgType?.displayName ?? "Unknown", color: tcgColor)
                 Spacer()
                 RarityBadge(rarity: card.rarity)
             }
@@ -69,6 +69,7 @@ struct TCGCardView: View {
         case .magic: return Color(red: 0.8, green: 0.4, blue: 0.1) // Orange
         case .yugioh: return Color(red: 0.6, green: 0.2, blue: 0.8) // Purple
         case .digimon: return Color.cyan // Cyan
+        case .none: return Color.gray
         }
     }
 }
@@ -148,7 +149,7 @@ struct DeckBadge: View {
 }
 
 struct ConditionIndicator: View {
-    let condition: Card.CardCondition
+    let condition: CardCondition
     
     var body: some View {
         HStack(spacing: TCGTheme.Spacing.xs) {
@@ -166,7 +167,7 @@ struct ConditionIndicator: View {
                 }
             }
             
-            Text(condition.rawValue)
+            Text(condition.displayName)
                 .font(.system(size: 12))
                 .foregroundColor(conditionColor)
         }

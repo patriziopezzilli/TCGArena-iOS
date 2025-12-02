@@ -512,7 +512,7 @@ GET    /api/expansions/{id}
 GET    /api/expansions/recent
 GET    /api/sets
 GET    /api/sets/{id}
-GET    /api/sets/{setCode}/cards
+GET    /api/sets/code/{setCode}/cards
 ```
 
 ### Tournament APIs

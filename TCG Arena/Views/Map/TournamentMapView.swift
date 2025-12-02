@@ -267,7 +267,7 @@ struct TournamentRowView: View {
                         
                         Spacer()
                         
-                        Text(tournament.startDate, style: .date)
+                        Text(tournament.formattedStartDate)
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }
@@ -350,7 +350,7 @@ struct MinimalTournamentCard: View {
                 
                 // Date and entry fee
                 HStack {
-                    Text(DateFormatter.shortDate.string(from: tournament.startDate))
+                    Text(tournament.formattedStartDate)
                         .font(.system(size: 12, weight: .medium))
                         .foregroundColor(.secondary)
                     

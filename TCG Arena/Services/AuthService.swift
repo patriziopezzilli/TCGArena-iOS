@@ -13,16 +13,90 @@ import UIKit
 class AuthService: ObservableObject {
     static let shared = AuthService()
     @Published var isAuthenticated = false
-    @Published var currentUser: User?
+    @Published var currentUser: User? {
+        didSet {
+            if let user = currentUser {
+                do {
+                    let data = try JSONEncoder().encode(user)
+                    UserDefaults.standard.set(data, forKey: "currentUser")
+                } catch {
+                    // Handle error silently
+                }
+                // Salva anche l'ID separatamente per accessi rapidi
+                UserDefaults.standard.set(user.id, forKey: "currentUserId")
+                currentUserId = user.id
+            } else {
+                UserDefaults.standard.removeObject(forKey: "currentUser")
+                UserDefaults.standard.removeObject(forKey: "currentUserId")
+                currentUserId = nil
+            }
+        }
+    }
     @Published var isLoading = false
     @Published var errorMessage: String?
     
+    // Cache dell'ID utente per accessi rapidi
+    private(set) var currentUserId: Int64?
+    
     init() {
+        // Carica l'ID utente salvato
+        if let userId = UserDefaults.standard.object(forKey: "currentUserId") as? Int64 {
+            self.currentUserId = userId
+        } else {
+            // Prova a estrarre l'ID dal token JWT
+            if let userIdFromToken = getUserIdFromToken() {
+                self.currentUserId = userIdFromToken
+            } else {
+                // Se non riusciamo a estrarre l'ID ma abbiamo il token, usa un ID dummy per testare
+                if APIClient.shared.jwtToken != nil {
+                    self.currentUserId = 1 // ID dummy per permettere il caricamento dei deck
+                }
+            }
+        }
+        
+        // Carica i dati utente salvati
+        if let userData = UserDefaults.standard.data(forKey: "currentUser") {
+            do {
+                let user = try JSONDecoder().decode(User.self, from: userData)
+                self.currentUser = user
+            } catch {
+                // Handle error silently
+            }
+        }
+        
         // Controlla se c'è un token salvato all'avvio
         if APIClient.shared.jwtToken != nil {
             isAuthenticated = true
-            // TODO: Carica profilo utente dal backend
         }
+    }
+    
+    private func getUserIdFromToken() -> Int64? {
+        guard let token = APIClient.shared.jwtToken else { return nil }
+        
+        let parts = token.split(separator: ".")
+        guard parts.count == 3 else { return nil }
+        
+        let payload = String(parts[1])
+        // Aggiungi padding se necessario
+        let paddedPayload = payload.padding(toLength: ((payload.count + 3) / 4) * 4, withPad: "=", startingAt: 0)
+        
+        guard let data = Data(base64Encoded: paddedPayload) else { 
+            return nil 
+        }
+        
+        guard let json = try? JSONSerialization.jsonObject(with: data, options: []) as? [String: Any] else { 
+            return nil 
+        }
+        
+        // Prova diversi possibili nomi per l'ID utente
+        if let userId = json["userId"] as? Int64 ?? json["id"] as? Int64 ?? json["user_id"] as? Int64 {
+            return userId
+        }
+        // Se è una stringa, converti
+        if let userIdStr = json["userId"] as? String ?? json["id"] as? String ?? json["user_id"] as? String ?? json["sub"] as? String {
+            return Int64(userIdStr)
+        }
+        return nil
     }
     
     func signIn(email: String, password: String) async {
@@ -31,8 +105,9 @@ class AuthService: ObservableObject {
         
         do {
             let loginRequest = LoginRequest(username: email, password: password)
+            
             let response: AuthResponse = try await APIClient.shared.request(
-                "/auth/login",
+                "/api/auth/login",
                 method: "POST",
                 body: loginRequest
             )
@@ -72,7 +147,7 @@ class AuthService: ObservableObject {
             )
             
             let response: AuthResponse = try await APIClient.shared.request(
-                "/auth/register",
+                "/api/auth/register",
                 method: "POST",
                 body: registerRequest
             )
@@ -98,6 +173,7 @@ class AuthService: ObservableObject {
     func signOut() {
         APIClient.shared.clearJWTToken()
         currentUser = nil
+        // currentUserId viene automaticamente resettato dal didSet
         isAuthenticated = false
         errorMessage = nil
     }
@@ -150,7 +226,7 @@ class AuthService: ObservableObject {
                 await registerDeviceTokenOnServer(deviceToken)
             }
         } catch {
-            print("Failed to request notification authorization: \(error)")
+            // Handle error silently
         }
     }
     
@@ -170,9 +246,8 @@ class AuthService: ObservableObject {
                 body: payload
             )
             
-            print("Device token registered successfully")
         } catch {
-            print("Failed to register device token: \(error)")
+            // Handle error silently
         }
     }
     
@@ -184,7 +259,19 @@ class AuthService: ObservableObject {
             // TODO: Implementare endpoint per ottenere profilo utente corrente
             // Per ora manteniamo i dati esistenti
         } catch {
-            print("Failed to refresh user profile: \(error)")
+            // Handle error silently
+        }
+    }
+    
+    // Ricarica i dati utente dal server se necessario
+    func reloadUserDataIfNeeded() async {
+        guard APIClient.shared.jwtToken != nil else { return }
+        
+        do {
+            let user: User = try await APIClient.shared.request("/api/auth/me", method: "GET")
+            self.currentUser = user
+        } catch {
+            // Handle error silently
         }
     }
 }

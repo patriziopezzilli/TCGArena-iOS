@@ -19,20 +19,58 @@ struct CardRowView: View {
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
             // Card Thumbnail
-            ZStack {
+            if let imageURL = card.fullImageURL, let url = URL(string: imageURL) {
+                CachedAsyncImage(url: url) { phase in
+                    switch phase {
+                    case .empty:
+                        RoundedRectangle(cornerRadius: 8)
+                            .fill(Color(.systemGray5))
+                            .frame(width: 50, height: 70)
+                            .overlay(
+                                ProgressView()
+                                    .scaleEffect(0.5)
+                            )
+                    case .success(let image):
+                        image
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                            .frame(width: 50, height: 70)
+                            .clipShape(RoundedRectangle(cornerRadius: 8))
+                    case .failure(_):
+                        RoundedRectangle(cornerRadius: 8)
+                            .fill(Color(.systemGray5))
+                            .frame(width: 50, height: 70)
+                            .overlay(
+                                SwiftUI.Image(systemName: "photo")
+                                    .font(.system(size: 20))
+                                    .foregroundColor(.secondary)
+                            )
+                    @unknown default:
+                        RoundedRectangle(cornerRadius: 8)
+                            .fill(Color(.systemGray5))
+                            .frame(width: 50, height: 70)
+                            .overlay(
+                                SwiftUI.Image(systemName: "photo")
+                                    .font(.system(size: 20))
+                                    .foregroundColor(.secondary)
+                            )
+                    }
+                }
+            } else {
                 RoundedRectangle(cornerRadius: 8)
                     .fill(Color(.systemGray5))
                     .frame(width: 50, height: 70)
-                
-                SwiftUI.Image(systemName: "photo")
-                    .font(.system(size: 20))
-                    .foregroundColor(.secondary)
+                    .overlay(
+                        SwiftUI.Image(systemName: "photo")
+                            .font(.system(size: 20))
+                            .foregroundColor(.secondary)
+                    )
             }
             
             VStack(alignment: .leading, spacing: 4) {
                 // Header with TCG type badge
                 HStack {
-                    TCGBadge(card.tcgType.displayName, color: tcgColor)
+                    TCGBadge(card.tcgType?.displayName ?? "Unknown", color: tcgColor)
                     Spacer()
                     RarityBadge(rarity: card.rarity)
                 }
@@ -62,11 +100,6 @@ struct CardRowView: View {
             }
             
             Spacer()
-            
-            // Chevron
-            SwiftUI.Image(systemName: "chevron.right")
-                .font(.system(size: 14))
-                .foregroundColor(.secondary)
         }
         .padding(16)
         .background(
@@ -87,48 +120,7 @@ struct CardRowView: View {
         case .magic: return Color(red: 0.8, green: 0.4, blue: 0.1) // Orange
         case .yugioh: return Color(red: 0.6, green: 0.2, blue: 0.8) // Purple
         case .digimon: return Color.cyan // Cyan
+        case .none: return Color.gray
         }
-    }
-}
-
-#Preview {
-    List {
-        CardRowView(card: Card(
-            id: 1,
-            templateId: 1,
-            name: "Charizard ex",
-            rarity: .ultraRare,
-            condition: .nearMint,
-            imageURL: nil,
-            isFoil: false,
-            quantity: 1,
-            ownerId: 1,
-            createdAt: Date(),
-            updatedAt: Date(),
-            tcgType: .pokemon,
-            set: "Base Set",
-            cardNumber: "1/102",
-            expansion: nil,
-            marketPrice: nil
-        ), deckService: DeckService())
-        
-        CardRowView(card: Card(
-            id: 1,
-            templateId: 1,
-            name: "Black Lotus",
-            rarity: .mythic,
-            condition: .lightlyPlayed,
-            imageURL: nil,
-            isFoil: false,
-            quantity: 1,
-            ownerId: 123,
-            createdAt: Date(),
-            updatedAt: Date(),
-            tcgType: .magic,
-            set: "Alpha",
-            cardNumber: "1/100",
-            expansion: nil,
-            marketPrice: nil
-        ), deckService: DeckService())
     }
 }

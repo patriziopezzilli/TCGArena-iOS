@@ -139,28 +139,3 @@ struct ModernToggleField: View {
         )
     }
 }
-
-#Preview {
-    VStack(spacing: 20) {
-        SectionHeaderView(title: "Test Section", subtitle: "Test subtitle")
-        
-        ModernTextField(title: "Name", text: .constant("Test"), icon: "textformat")
-        
-        ModernPickerField(
-            title: "Type",
-            selection: .constant(TCGType.pokemon),
-            options: TCGType.allCases,
-            icon: "gamecontroller"
-        ) { type in
-            type.displayName
-        }
-        
-        ModernToggleField(
-            title: "Public",
-            subtitle: "Make this item public",
-            isOn: .constant(true),
-            icon: "globe"
-        )
-    }
-    .padding()
-}

@@ -20,20 +20,64 @@ struct UserDeckListView: View {
         VStack(spacing: 0) {
             UserDeckListHeader(deck: deck, sortBy: $sortBy)
             
-            List {
-                ForEach(sortedCards, id: \.cardID) { deckCard in
-                    NavigationLink(destination: SimpleCardDetailView(cardID: deckCard.cardID, cardName: deckCard.cardName)) {
-                        UserDeckCardRowView(
-                            deckCard: deckCard,
-                            showMarketValue: showMarketValues
-                        )
+            if sortedCards.isEmpty {
+                // Empty State
+                VStack(spacing: 24) {
+                    Spacer()
+                    
+                    ZStack {
+                        Circle()
+                            .fill(Color.gray.opacity(0.1))
+                            .frame(width: 120, height: 120)
+                        
+                        SwiftUI.Image(systemName: "rectangle.portrait.on.rectangle.portrait.slash")
+                            .font(.system(size: 50))
+                            .foregroundColor(.secondary)
                     }
+                    
+                    VStack(spacing: 12) {
+                        Text("No Cards Yet")
+                            .font(.title3)
+                            .fontWeight(.bold)
+                            .foregroundColor(.primary)
+                        
+                        Text("This deck is empty. Add cards from the search or scan them to build your deck.")
+                            .font(.body)
+                            .foregroundColor(.secondary)
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal, 40)
+                    }
+                    
+                    Spacer()
                 }
+                .frame(maxWidth: .infinity)
+                .background(Color(.systemGroupedBackground))
+                .transition(.opacity)
+            } else {
+                // Card List
+                ScrollView {
+                    LazyVStack(spacing: 12) {
+                        ForEach(Array(sortedCards.enumerated()), id: \.element.cardID) { index, deckCard in
+                            NavigationLink(destination: SimpleCardDetailView(cardID: deckCard.cardID, cardName: deckCard.cardName)) {
+                                UserDeckCardRowView(
+                                    deckCard: deckCard,
+                                    showMarketValue: showMarketValues
+                                )
+                            }
+                            .buttonStyle(PlainButtonStyle())
+                            .transition(.move(edge: .bottom).combined(with: .opacity))
+                            .animation(.spring(response: 0.4, dampingFraction: 0.8).delay(Double(index) * 0.05), value: true)
+                        }
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 16)
+                }
+                .background(Color(.systemGroupedBackground))
             }
-            .listStyle(PlainListStyle())
         }
         .navigationTitle(deck.name)
         .navigationBarTitleDisplayMode(.inline)
+        .background(Color(.systemGroupedBackground))
     }
     
     private var sortedCards: [Deck.DeckCard] {
@@ -168,7 +212,12 @@ struct UserDeckCardRowView: View {
                 .font(.caption)
                 .foregroundColor(.secondary)
         }
-        .padding(.vertical, 8)
+
+        .padding(.vertical, 12)
+        .padding(.horizontal, 16)
+        .background(Color(.systemBackground))
+        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .shadow(color: Color.black.opacity(0.05), radius: 2, x: 0, y: 1)
         .contentShape(Rectangle())
     }
 }
@@ -292,17 +341,19 @@ struct UserDeckRowView: View {
     
     var body: some View {
         HStack(spacing: 0) {
-            // Colored stripe on the left
-            deck.tcgType.themeColor
-                .frame(width: 4)
-            
             // Deck Info
             VStack(alignment: .leading, spacing: 8) {
                 HStack(alignment: .center, spacing: 8) {
                     // TCG Icon small
-                    SwiftUI.Image(systemName: deck.tcgType.icon)
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundColor(deck.tcgType.themeColor)
+                    ZStack {
+                        Circle()
+                            .fill(deck.tcgType.themeColor.opacity(0.15))
+                            .frame(width: 32, height: 32)
+                        
+                        SwiftUI.Image(systemName: deck.tcgType.icon)
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundColor(deck.tcgType.themeColor)
+                    }
                     
                     Text(deck.name)
                         .font(.system(size: 17, weight: .semibold))
@@ -321,7 +372,7 @@ struct UserDeckRowView: View {
                         .font(.system(size: 13))
                         .foregroundColor(.secondary)
                     
-                    Text(deck.dateModified.formatted(.relative(presentation: .named)))
+                    Text(deck.formattedDateModified)
                         .font(.system(size: 13))
                         .foregroundColor(.secondary)
                         .lineLimit(1)
@@ -329,34 +380,59 @@ struct UserDeckRowView: View {
                     Spacer()
                     
                     if deck.isPublic {
-                        SwiftUI.Image(systemName: "globe")
-                            .font(.system(size: 12))
-                            .foregroundColor(.green)
+                        HStack(spacing: 4) {
+                            SwiftUI.Image(systemName: "globe")
+                                .font(.system(size: 11))
+                            Text("Public")
+                                .font(.system(size: 11, weight: .medium))
+                        }
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(Color.green.opacity(0.1))
+                        .foregroundColor(.green)
+                        .cornerRadius(8)
                     } else {
-                        SwiftUI.Image(systemName: "lock")
-                            .font(.system(size: 12))
-                            .foregroundColor(.orange)
+                        HStack(spacing: 4) {
+                            SwiftUI.Image(systemName: "lock.fill")
+                                .font(.system(size: 10))
+                            Text("Private")
+                                .font(.system(size: 11, weight: .medium))
+                        }
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(Color.orange.opacity(0.1))
+                        .foregroundColor(.orange)
+                        .cornerRadius(8)
                     }
                 }
             }
-            .padding(.leading, 12)
-            .padding(.vertical, 14)
-            .padding(.trailing, 12)
+            .padding(16)
         }
-        .clipShape(RoundedRectangle(cornerRadius: 12))
         .background(
-            RoundedRectangle(cornerRadius: 12)
-                .fill(Color(.systemBackground))
-                .shadow(
-                    color: Color.black.opacity(0.06),
-                    radius: 8,
-                    x: 0,
-                    y: 2
+            ZStack {
+                Color(.systemBackground)
+                
+                // Subtle gradient based on TCG type
+                LinearGradient(
+                    gradient: Gradient(colors: [
+                        deck.tcgType.themeColor.opacity(0.05),
+                        Color(.systemBackground)
+                    ]),
+                    startPoint: .leading,
+                    endPoint: .trailing
                 )
+            }
         )
+        .clipShape(RoundedRectangle(cornerRadius: 16))
         .overlay(
-            RoundedRectangle(cornerRadius: 12)
-                .stroke(Color(.systemGray6), lineWidth: 1)
+            RoundedRectangle(cornerRadius: 16)
+                .stroke(Color(.systemGray5), lineWidth: 1)
+        )
+        .shadow(
+            color: Color.black.opacity(0.03),
+            radius: 5,
+            x: 0,
+            y: 2
         )
     }
 }

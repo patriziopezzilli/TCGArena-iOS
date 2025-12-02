@@ -20,7 +20,7 @@ struct CardScanResultView: View {
     @State private var selectedRarity: Rarity
     @State private var cardNumber: String
     @State private var cardDescription = ""
-    @State private var selectedCondition: Card.CardCondition = .nearMint
+    @State private var selectedCondition: CardCondition = .nearMint
     @State private var isGraded = false
     @State private var selectedGradeService: GradeService = .psa
     @State private var gradeScore = 10
@@ -164,10 +164,10 @@ struct CardScanResultView: View {
                             ModernPickerField(
                                 title: "Condition",
                                 selection: $selectedCondition,
-                                options: Card.CardCondition.allCases,
+                                options: CardCondition.allCases,
                                 icon: "shield"
                             ) { condition in
-                                condition.rawValue
+                                condition.displayName
                             }
                             
                             ModernToggleField(
@@ -313,12 +313,13 @@ struct CardScanResultView: View {
                 set: cardSet,
                 cardNumber: cardNumber,
                 expansion: nil,
-                marketPrice: nil
+                marketPrice: nil,
+                description: nil
             )
             
-            // For mock purposes, add to the array
+            // For scanned cards, we need to find or create a card template first
+            // For now, show success without adding to backend (requires template management)
             await MainActor.run {
-                cardService.userCards.append(card)
                 isSaving = false
                 
                 // Show success animation

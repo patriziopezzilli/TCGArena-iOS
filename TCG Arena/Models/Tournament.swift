@@ -15,8 +15,8 @@ struct Tournament: Identifiable, Codable {
     let tcgType: TCGType
     let type: TournamentType
     let status: TournamentStatus
-    let startDate: Date
-    let endDate: Date
+    let startDate: String
+    let endDate: String
     let maxParticipants: Int
     let entryFee: Double
     let prizePool: Double
@@ -82,7 +82,7 @@ struct Tournament: Identifiable, Codable {
         case tournamentParticipants = "participants"
     }
     
-    init(title: String, description: String?, tcgType: TCGType, type: TournamentType, status: TournamentStatus = .upcoming, startDate: Date, endDate: Date, maxParticipants: Int, entryFee: Double, prizePool: Double, organizerId: Int64, location: TournamentLocation? = nil, rules: String? = nil) {
+    init(title: String, description: String?, tcgType: TCGType, type: TournamentType, status: TournamentStatus = .upcoming, startDate: String, endDate: String, maxParticipants: Int, entryFee: Double, prizePool: Double, organizerId: Int64, location: TournamentLocation? = nil, rules: String? = nil) {
         self.id = nil
         self.title = title
         self.description = description
@@ -97,6 +97,15 @@ struct Tournament: Identifiable, Codable {
         self.organizerId = organizerId
         self.location = location
         self.rules = rules
+    }
+    
+    // Computed properties for date display (dates are already formatted as strings by backend)
+    var formattedStartDate: String {
+        startDate
+    }
+    
+    var formattedEndDate: String {
+        endDate
     }
     
     var registeredParticipantsCount: Int {

@@ -23,7 +23,7 @@ struct TournamentCardView: View {
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 4)
                         .background(tournament.tcgType.themeColor)
-                    
+
                     Text(dayString(from: tournament.startDate))
                         .font(.system(size: 20, weight: .bold))
                         .foregroundColor(.primary)
@@ -36,13 +36,13 @@ struct TournamentCardView: View {
                         .stroke(Color(.separator).opacity(0.5), lineWidth: 1)
                 )
                 .frame(width: 60)
-                
+
                 Text(timeString(from: tournament.startDate))
                     .font(.system(size: 12, weight: .medium))
                     .foregroundColor(.secondary)
             }
             .padding(16)
-            
+
             // Right Side: Info
             VStack(alignment: .leading, spacing: 8) {
                 // Badges
@@ -54,7 +54,7 @@ struct TournamentCardView: View {
                         .padding(.vertical, 2)
                         .background(tournament.tcgType.themeColor.opacity(0.1))
                         .cornerRadius(4)
-                    
+
                     Text(tournament.type.rawValue)
                         .font(.system(size: 10, weight: .medium))
                         .foregroundColor(.secondary)
@@ -62,9 +62,9 @@ struct TournamentCardView: View {
                         .padding(.vertical, 2)
                         .background(Color(.secondarySystemBackground))
                         .cornerRadius(4)
-                    
+
                     Spacer()
-                    
+
                     // Price
                     if tournament.entryFee > 0 {
                         Text("€\(tournament.entryFee, specifier: "%.0f")")
@@ -76,13 +76,13 @@ struct TournamentCardView: View {
                             .foregroundColor(.green)
                     }
                 }
-                
+
                 // Title
                 Text(tournament.title)
                     .font(.system(size: 16, weight: .bold))
                     .foregroundColor(.primary)
                     .lineLimit(2)
-                
+
                 // Location
                 if let location = tournament.location {
                     HStack(spacing: 4) {
@@ -108,7 +108,7 @@ struct TournamentCardView: View {
                     .foregroundColor(.secondary)
                     
                     Spacer()
-                    
+
                     if tournament.status == .registrationOpen {
                         Button(action: onRegisterTap) {
                             Text(isUserRegistered ? "Registered" : "Join")
@@ -132,20 +132,20 @@ struct TournamentCardView: View {
         .cornerRadius(16)
         .shadow(color: Color.black.opacity(0.05), radius: 8, x: 0, y: 2)
     }
-    
+
     // MARK: - Helpers
     private func monthString(from date: Date) -> String {
         let formatter = DateFormatter()
         formatter.dateFormat = "MMM"
         return formatter.string(from: date).uppercased()
     }
-    
+
     private func dayString(from date: Date) -> String {
         let formatter = DateFormatter()
         formatter.dateFormat = "d"
         return formatter.string(from: date)
     }
-    
+
     private func timeString(from date: Date) -> String {
         let formatter = DateFormatter()
         formatter.timeStyle = .short

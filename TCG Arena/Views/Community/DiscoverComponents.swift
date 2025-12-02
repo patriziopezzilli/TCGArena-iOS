@@ -288,3 +288,64 @@ struct NewUserCard: View {
         }
     }
 }
+
+// MARK: - Empty State Components
+struct EmptyStateCard: View {
+    let message: String
+    
+    var body: some View {
+        VStack(spacing: 12) {
+            ZStack {
+                Circle()
+                    .fill(Color.gray.opacity(0.2))
+                    .frame(width: 60, height: 60)
+                
+                SwiftUI.Image(systemName: "questionmark.circle")
+                    .font(.system(size: 30, weight: .medium))
+                    .foregroundColor(.gray)
+            }
+            
+            Text(message)
+                .font(.system(size: 14, weight: .medium))
+                .foregroundColor(.secondary)
+                .multilineTextAlignment(.center)
+                .lineLimit(2)
+        }
+        .padding(16)
+        .frame(height: 120)
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(Color(.systemGray6))
+        )
+    }
+}
+
+struct EmptyStateRow: View {
+    let message: String
+    
+    var body: some View {
+        HStack(spacing: 12) {
+            ZStack {
+                Circle()
+                    .fill(Color.gray.opacity(0.2))
+                    .frame(width: 36, height: 36)
+                
+                SwiftUI.Image(systemName: "questionmark.circle")
+                    .font(.system(size: 18, weight: .medium))
+                    .foregroundColor(.gray)
+            }
+            
+            Text(message)
+                .font(.system(size: 16, weight: .medium))
+                .foregroundColor(.secondary)
+            
+            Spacer()
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(Color(.systemGray6))
+        )
+    }
+}

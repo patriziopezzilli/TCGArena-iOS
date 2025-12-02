@@ -298,6 +298,6 @@ struct DocumentScannerView: UIViewControllerRepresentable {
 
 #Preview {
     CardScannerView(isPresented: .constant(true)) { cardName in
-        print("Recognized card: \(cardName)")
+        // Handle recognized card
     }
 }

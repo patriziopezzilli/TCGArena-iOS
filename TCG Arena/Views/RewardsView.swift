@@ -208,7 +208,7 @@ struct RewardsView: View {
             case .success(let rewards):
                 self.rewards = rewards
             case .failure(let error):
-                print("Error loading rewards: \(error)")
+                break
             }
         }
         
@@ -217,7 +217,7 @@ struct RewardsView: View {
             case .success(let points):
                 self.userPoints = points.points
             case .failure(let error):
-                print("Error loading points: \(error)")
+                break
             }
         }
     }
@@ -226,11 +226,10 @@ struct RewardsView: View {
         rewardsService.redeemReward(reward.id) { result in
             switch result {
             case .success(let response):
-                print("Redeemed: \(response)")
                 // Reload points
                 loadData()
             case .failure(let error):
-                print("Error redeeming: \(error)")
+                break
             }
         }
     }

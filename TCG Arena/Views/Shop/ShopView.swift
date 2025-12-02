@@ -8,6 +8,7 @@
 import SwiftUI
 import MapKit
 import CoreLocation
+import SkeletonUI
 
 struct ShopView: View {
     @EnvironmentObject var shopService: ShopService
@@ -17,21 +18,22 @@ struct ShopView: View {
     @State private var showingLocationInput = false
     @State private var userLocationText = "Milano, Italy"
     @State private var hasLoadedInitialData = false
-    
+    @State private var isLoading = true
+
     // Custom colors
     private let bgGradient = LinearGradient(
         gradient: Gradient(colors: [Color(.systemBackground), Color(.secondarySystemBackground)]),
         startPoint: .top,
         endPoint: .bottom
     )
-    
+
     var body: some View {
         NavigationView {
             ZStack(alignment: .top) {
                 // Background
                 Color(.systemGroupedBackground)
                     .ignoresSafeArea()
-                
+
                 VStack(spacing: 0) {
                     // Modern Header
                     VStack(spacing: 16) {
@@ -40,21 +42,21 @@ struct ShopView: View {
                             Text("Discover")
                                 .font(.system(size: 34, weight: .bold))
                                 .foregroundColor(.primary)
-                            
+
                             Spacer()
-                            
+
                             // Location Pill
                             Button(action: { showingLocationInput = true }) {
                                 HStack(spacing: 6) {
                                     SwiftUI.Image(systemName: "mappin.and.ellipse")
                                         .font(.system(size: 14))
                                         .foregroundColor(.blue)
-                                    
+
                                     Text(userLocationText)
                                         .font(.system(size: 14, weight: .medium))
                                         .foregroundColor(.primary)
                                         .lineLimit(1)
-                                    
+
                                     SwiftUI.Image(systemName: "chevron.down")
                                         .font(.system(size: 10, weight: .bold))
                                         .foregroundColor(.secondary)
@@ -70,7 +72,7 @@ struct ShopView: View {
                         }
                         .padding(.horizontal, 20)
                         .padding(.top, 10)
-                        
+
                         // Custom Segmented Control
                         HStack(spacing: 0) {
                             SegmentButton(title: "Stores", isSelected: selectedSection == 0) {
@@ -78,7 +80,7 @@ struct ShopView: View {
                                     selectedSection = 0
                                 }
                             }
-                            
+
                             SegmentButton(title: "Events", isSelected: selectedSection == 1) {
                                 withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
                                     selectedSection = 1
@@ -98,13 +100,13 @@ struct ShopView: View {
                             .shadow(color: Color.black.opacity(0.03), radius: 8, x: 0, y: 4)
                     )
                     .zIndex(1)
-                    
+
                     // Content
                     if selectedSection == 0 {
-                        ShopListView()
+                        ShopListView(isLoading: isLoading)
                             .transition(.opacity)
                     } else {
-                        EventListView()
+                        EventListView(isLoading: isLoading)
                             .transition(.opacity)
                     }
                 }
@@ -115,13 +117,15 @@ struct ShopView: View {
                 guard !hasLoadedInitialData else { return }
                 hasLoadedInitialData = true
                 await tournamentService.loadTournaments()
-                
+
                 if let userLocation = locationManager.location {
                     await tournamentService.loadNearbyTournaments(userLocation: userLocation)
                 } else {
                     let milanoCenter = CLLocation(latitude: 45.4642, longitude: 9.1900)
                     await tournamentService.loadNearbyTournaments(userLocation: milanoCenter)
                 }
+
+                isLoading = false
             }
             .sheet(isPresented: $showingLocationInput) {
                 LocationInputView(locationText: $userLocationText)
@@ -135,7 +139,7 @@ struct SegmentButton: View {
     let title: String
     let isSelected: Bool
     let action: () -> Void
-    
+
     var body: some View {
         Button(action: action) {
             Text(title)
@@ -168,7 +172,7 @@ class NamespaceWrapper {
 struct ShopListView: View {
     @EnvironmentObject var shopService: ShopService
     @StateObject private var locationManager = LocationManager()
-    
+
     var body: some View {
         ScrollView {
             LazyVStack(spacing: 20) {
@@ -181,7 +185,7 @@ struct ShopListView: View {
                 }
                 .padding(.horizontal, 20)
                 .padding(.top, 16)
-                
+
                 ForEach(shopService.nearbyShops) { shop in
                     NavigationLink(destination: ShopDetailView(shop: shop)
                         .environmentObject(shopService)) {
@@ -211,7 +215,7 @@ struct EventListView: View {
     @StateObject private var locationManager = LocationManager()
     @State private var showingCreateEvent = false
     @State private var registeringTournamentId: Int64?
-    
+
     var body: some View {
         ZStack(alignment: .bottomTrailing) {
             ScrollView {
@@ -225,7 +229,7 @@ struct EventListView: View {
                     }
                     .padding(.horizontal, 20)
                     .padding(.top, 16)
-                    
+
                     ForEach(tournamentService.nearbyTournaments) { tournament in
                         NavigationLink(destination: TournamentDetailView(tournament: tournament)
                             .environmentObject(tournamentService)
@@ -246,7 +250,7 @@ struct EventListView: View {
             }
             .refreshable {
                 await tournamentService.loadTournaments()
-                
+
                 if let userLocation = locationManager.location {
                     await tournamentService.loadNearbyTournaments(userLocation: userLocation)
                 } else {
@@ -254,7 +258,7 @@ struct EventListView: View {
                     await tournamentService.loadNearbyTournaments(userLocation: milanoCenter)
                 }
             }
-            
+
             // Floating Action Button
             Button(action: { showingCreateEvent = true }) {
                 SwiftUI.Image(systemName: "plus")
@@ -273,30 +277,30 @@ struct EventListView: View {
             CreateTournamentView()
         }
     }
-    
+
     private func isUserRegistered(for tournament: Tournament) -> Bool {
         guard let currentUserId = authService.currentUser?.id else { return false }
         return tournament.tournamentParticipants.contains { $0.userId == currentUserId }
     }
-    
+
     private func handleRegisterTap(for tournament: Tournament) {
         guard let tournamentId = tournament.id else { return }
-        
+
         // Check if already registered
         if isUserRegistered(for: tournament) {
             print("User is already registered for this tournament")
             return
         }
-        
+
         registeringTournamentId = tournamentId
-        
+
         Task {
             do {
                 let _ = try await tournamentService.registerForTournament(tournamentId: tournamentId)
-                
+
                 // Refresh tournaments to update UI
                 await tournamentService.loadTournaments()
-                
+
                 await MainActor.run {
                     registeringTournamentId = nil
                 }
@@ -333,7 +337,7 @@ struct ShopCardView: View {
                             .font(.system(size: 40))
                             .foregroundColor(Color.blue.opacity(0.2))
                     )
-                
+
                 // Verified Badge
                 if shop.isVerified {
                     HStack(spacing: 4) {
@@ -352,7 +356,7 @@ struct ShopCardView: View {
                     .padding(12)
                 }
             }
-            
+
             VStack(alignment: .leading, spacing: 12) {
                 // Title and Address
                 VStack(alignment: .leading, spacing: 4) {
@@ -378,7 +382,7 @@ struct ShopCardView: View {
                         ForEach(shop.tcgTypes ?? [], id: \.self) { tcg in
                             TCGTypeBadge(tcgType: tcg)
                         }
-                        
+
                         ForEach((shop.services ?? []).prefix(3), id: \.self) { service in
                             Text(service)
                                 .font(.system(size: 11, weight: .medium))
@@ -390,10 +394,10 @@ struct ShopCardView: View {
                         }
                     }
                 }
-                
+
                 Divider()
                     .padding(.vertical, 4)
-                
+
                 // Footer Info
                 HStack {
                     // Status (Open/Closed) - Mock data for now
@@ -405,9 +409,9 @@ struct ShopCardView: View {
                             .font(.system(size: 12, weight: .medium))
                             .foregroundColor(.green)
                     }
-                    
+
                     Spacer()
-                    
+
                     // Distance - Mock
                     HStack(spacing: 4) {
                         SwiftUI.Image(systemName: "location")
