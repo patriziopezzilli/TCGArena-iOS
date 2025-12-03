@@ -151,6 +151,8 @@ enum TCGType: String, CaseIterable, Codable {
     case magic = "MAGIC"
     case yugioh = "YUGIOH"
     case digimon = "DIGIMON"
+    case dragonBall = "DRAGON_BALL"
+    case lorcana = "LORCANA"
     
     var displayName: String {
         switch self {
@@ -164,6 +166,10 @@ enum TCGType: String, CaseIterable, Codable {
             return "Yu-Gi-Oh!"
         case .digimon:
             return "Digimon"
+        case .dragonBall:
+            return "Dragon Ball"
+        case .lorcana:
+            return "Disney Lorcana"
         }
     }
     
@@ -179,6 +185,10 @@ enum TCGType: String, CaseIterable, Codable {
             return Color.purple
         case .digimon:
             return Color.cyan
+        case .dragonBall:
+            return Color.orange.opacity(0.8)
+        case .lorcana:
+            return Color.indigo
         }
     }
     
@@ -194,6 +204,10 @@ enum TCGType: String, CaseIterable, Codable {
             return "eye.fill" // Eye for Yu-Gi-Oh!
         case .digimon:
             return "shield.fill" // Shield for Digimon
+        case .dragonBall:
+            return "flame.fill" // Flame for Dragon Ball
+        case .lorcana:
+            return "wand.and.stars" // Magic wand for Lorcana
         }
     }
 }

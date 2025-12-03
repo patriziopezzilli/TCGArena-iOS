@@ -247,7 +247,7 @@ class ShopService: ObservableObject {
             ownerId: 1,
             openingHours: "10:00-20:00",
             openingDays: "Mon-Sun",
-            tcgTypes: [.pokemon, .yugioh, .magic],
+            tcgTypes: ["POKEMON", "YUGIOH", "MAGIC"],
             services: ["Card Sales", "Buy Cards", "Tournaments", "Play Area", "Accessories", "Pre-orders"],
             inventory: nil
         )
@@ -271,7 +271,7 @@ class ShopService: ObservableObject {
             ownerId: 2,
             openingHours: "10:00-20:00",
             openingDays: "Mon-Sat",
-            tcgTypes: [.pokemon, .yugioh],
+            tcgTypes: ["POKEMON", "YUGIOH"],
             services: ["Card Sales", "Buy Cards", "Grading", "Accessories", "Online Store"],
             inventory: nil
         )
@@ -295,7 +295,7 @@ class ShopService: ObservableObject {
             ownerId: 3,
             openingHours: "09:30-19:30",
             openingDays: "Mon-Sat",
-            tcgTypes: [.pokemon, .yugioh, .magic, .onePiece],
+            tcgTypes: ["POKEMON", "YUGIOH", "MAGIC", "ONE_PIECE"],
             services: ["Card Sales", "Buy Cards", "Accessories"],
             inventory: nil
         )
@@ -319,7 +319,7 @@ class ShopService: ObservableObject {
             ownerId: 4,
             openingHours: "10:00-24:00",
             openingDays: "Mon-Sun",
-            tcgTypes: [.pokemon, .yugioh, .magic, .onePiece, .digimon],
+            tcgTypes: ["POKEMON", "YUGIOH", "MAGIC", "ONE_PIECE", "DIGIMON"],
             services: ["Card Sales", "Tournaments", "Play Area", "Accessories", "Pre-orders"],
             inventory: nil
         )

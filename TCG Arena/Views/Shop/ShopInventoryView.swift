@@ -30,26 +30,27 @@ struct ShopInventoryView: View {
             VStack(spacing: 12) {
                 HStack {
                     SwiftUI.Image(systemName: "magnifyingglass")
-                        .foregroundStyle(.secondary)
+                        .foregroundColor(.secondary)
                     
                     TextField("Search cards...", text: $searchText)
                         .textFieldStyle(PlainTextFieldStyle())
+                        .font(.system(size: 16))
                 }
                 .padding(12)
                 .background(
                     RoundedRectangle(cornerRadius: 12)
-                        .fill(AdaptiveColors.backgroundSecondary)
+                        .fill(Color(.systemGray6))
                 )
                 
                 // TCG Filter
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 8) {
-                        TCGFilterButton(title: "All", isSelected: selectedTCG == nil) {
+                        TCGFilterChip(title: "All", isSelected: selectedTCG == nil) {
                             selectedTCG = nil
                         }
                         
-                        ForEach([TCGType.pokemon, .magic, .yugioh, .onePiece], id: \.self) { tcg in
-                            TCGFilterButton(title: tcg.rawValue, isSelected: selectedTCG == tcg) {
+                        ForEach([TCGType.pokemon, .magic, .yugioh, .onePiece, .dragonBall, .lorcana], id: \.self) { tcg in
+                            TCGFilterChip(title: tcg.rawValue, isSelected: selectedTCG == tcg) {
                                 selectedTCG = tcg
                             }
                         }
@@ -57,18 +58,13 @@ struct ShopInventoryView: View {
                 }
             }
             .padding(16)
+            .background(Color(.systemBackground))
             
             Divider()
             
             // Inventory Grid
             if filteredInventory.isEmpty {
-                let emptyMessage = searchText.isEmpty ? "This shop doesn't have any cards in stock" : "No cards found matching '\(searchText)'"
-                EmptyStateView(
-                    icon: "square.stack.3d.up.slash",
-                    title: "No Cards Available",
-                    message: emptyMessage
-                )
-                .frame(maxHeight: .infinity)
+                emptyStateView
             } else {
                 ScrollView {
                     LazyVGrid(columns: [
@@ -76,7 +72,7 @@ struct ShopInventoryView: View {
                         GridItem(.flexible())
                     ], spacing: 16) {
                         ForEach(filteredInventory) { card in
-                            ShopInventoryCardCell(card: card) {
+                            InventoryCardCell(card: card) {
                                 selectedCard = card
                             }
                         }
@@ -85,12 +81,43 @@ struct ShopInventoryView: View {
                 }
             }
         }
-        .background(AdaptiveColors.backgroundPrimary)
+        .background(Color(.systemGroupedBackground))
         .sheet(item: $selectedCard) { card in
             CardReservationView(card: card, shopId: shopId)
         }
         .onAppear {
             loadInventory()
+        }
+    }
+    
+    private var emptyStateView: some View {
+        VStack(spacing: 20) {
+            Spacer()
+            
+            ZStack {
+                Circle()
+                    .fill(Color.gray.opacity(0.1))
+                    .frame(width: 100, height: 100)
+                
+                SwiftUI.Image(systemName: "square.stack.3d.up.slash")
+                    .font(.system(size: 40))
+                    .foregroundColor(.gray)
+            }
+            
+            VStack(spacing: 8) {
+                Text("No Cards Available")
+                    .font(.system(size: 20, weight: .bold))
+                    .foregroundColor(.primary)
+                
+                Text(searchText.isEmpty ? "This shop doesn't have any cards in stock" : "No cards found matching '\(searchText)'")
+                    .font(.system(size: 15))
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 40)
+            }
+            
+            Spacer()
+            Spacer()
         }
     }
     
@@ -101,8 +128,8 @@ struct ShopInventoryView: View {
     }
 }
 
-// MARK: - TCG Filter Button
-struct TCGFilterButton: View {
+// MARK: - TCG Filter Chip
+private struct TCGFilterChip: View {
     let title: String
     let isSelected: Bool
     let action: () -> Void
@@ -111,43 +138,58 @@ struct TCGFilterButton: View {
         Button(action: action) {
             Text(title)
                 .font(.system(size: 13, weight: .semibold))
-                .foregroundColor(isSelected ? .white : AdaptiveColors.brandPrimary)
+                .foregroundColor(isSelected ? .white : .indigo)
                 .padding(.horizontal, 16)
                 .padding(.vertical, 8)
                 .background(
                     Capsule()
-                        .fill(isSelected ? AdaptiveColors.brandPrimary : AdaptiveColors.brandPrimary.opacity(0.1))
+                        .fill(isSelected ? Color.indigo : Color.indigo.opacity(0.1))
                 )
         }
         .buttonStyle(PlainButtonStyle())
     }
 }
 
-// MARK: - Shop Inventory Card Cell
-struct ShopInventoryCardCell: View {
+// MARK: - Inventory Card Cell
+private struct InventoryCardCell: View {
     let card: InventoryCard
     let onTap: () -> Void
     
+    private var conditionColor: Color {
+        switch card.condition {
+        case .nearMint: return .green
+        case .slightlyPlayed: return .blue
+        case .moderatelyPlayed: return .yellow
+        case .heavilyPlayed: return .orange
+        case .damaged: return .red
+        }
+    }
+    
     var body: some View {
         Button(action: onTap) {
-            VStack(alignment: .leading, spacing: 8) {
+            VStack(spacing: 0) {
                 // Card Image
                 AsyncImage(url: URL(string: card.imageUrl ?? "")) { image in
                     image
                         .resizable()
-                        .aspectRatio(contentMode: .fill)
+                        .aspectRatio(contentMode: .fit)
                 } placeholder: {
-                    Rectangle()
-                        .fill(AdaptiveColors.backgroundSecondary)
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(Color(.systemGray5))
+                        .aspectRatio(2.5/3.5, contentMode: .fit)
                         .overlay(
                             SwiftUI.Image(systemName: "photo")
-                                .foregroundStyle(.secondary)
+                                .foregroundColor(.secondary)
                         )
                 }
-                .frame(height: 180)
-                .clipShape(RoundedRectangle(cornerRadius: 12))
+                .aspectRatio(2.5/3.5, contentMode: .fit)
+                .frame(height: 140)
+                .clipShape(RoundedRectangle(cornerRadius: 8))
+                .padding(.top, 12)
+                .padding(.horizontal, 8)
                 
-                VStack(alignment: .leading, spacing: 4) {
+                // Info
+                VStack(alignment: .leading, spacing: 6) {
                     Text(card.name)
                         .font(.system(size: 14, weight: .semibold))
                         .foregroundColor(.primary)
@@ -155,37 +197,34 @@ struct ShopInventoryCardCell: View {
                     
                     if let setName = card.setName {
                         Text(setName)
-                            .font(.system(size: 11))
+                            .font(.system(size: 12))
                             .foregroundColor(.secondary)
                             .lineLimit(1)
                     }
                     
                     HStack {
-                        Text(card.condition.displayName)
-                            .font(.system(size: 10, weight: .semibold))
+                        Text(card.condition.shortName)
+                            .font(.system(size: 10, weight: .bold))
                             .foregroundColor(.white)
                             .padding(.horizontal, 6)
-                            .padding(.vertical, 3)
+                            .padding(.vertical, 2)
                             .background(
-                                Capsule()
-                                    .fill(Color(card.condition.color))
+                                RoundedRectangle(cornerRadius: 4)
+                                    .fill(conditionColor)
                             )
                         
                         Spacer()
                         
                         Text(card.formattedPrice)
                             .font(.system(size: 15, weight: .bold))
-                            .foregroundColor(AdaptiveColors.brandPrimary)
+                            .foregroundColor(.indigo)
                     }
                 }
-                .padding(.horizontal, 4)
+                .padding(12)
             }
-            .padding(8)
-            .background(
-                RoundedRectangle(cornerRadius: 16)
-                    .fill(AdaptiveColors.backgroundSecondary)
-                    .shadow(color: .black.opacity(0.05), radius: 4, x: 0, y: 2)
-            )
+            .background(Color(.systemBackground))
+            .cornerRadius(16)
+            .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 2)
         }
         .buttonStyle(PlainButtonStyle())
     }
@@ -204,155 +243,179 @@ struct CardReservationView: View {
     @State private var showError = false
     @State private var errorMessage = ""
     
+    private var conditionColor: Color {
+        switch card.condition {
+        case .nearMint: return .green
+        case .slightlyPlayed: return .blue
+        case .moderatelyPlayed: return .yellow
+        case .heavilyPlayed: return .orange
+        case .damaged: return .red
+        }
+    }
+    
     var body: some View {
         NavigationView {
-            ScrollView {
-                VStack(spacing: 24) {
-                    // Card Preview
-                    HStack(spacing: 16) {
-                        AsyncImage(url: URL(string: card.imageUrl ?? "")) { image in
-                            image
-                                .resizable()
-                                .aspectRatio(contentMode: .fill)
-                        } placeholder: {
-                            Rectangle()
-                                .fill(AdaptiveColors.backgroundSecondary)
-                        }
-                        .frame(width: 120, height: 168)
-                        .clipShape(RoundedRectangle(cornerRadius: 16))
-                        
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text(card.name)
-                                .font(.system(size: 20, weight: .bold))
-                                .foregroundColor(.primary)
+            ZStack {
+                Color(.systemGroupedBackground)
+                    .ignoresSafeArea()
+                
+                ScrollView {
+                    VStack(spacing: 20) {
+                        // Card Preview
+                        HStack(spacing: 16) {
+                            AsyncImage(url: URL(string: card.imageUrl ?? "")) { image in
+                                image
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fit)
+                            } placeholder: {
+                                RoundedRectangle(cornerRadius: 8)
+                                    .fill(Color(.systemGray5))
+                                    .aspectRatio(2.5/3.5, contentMode: .fit)
+                            }
+                            .frame(width: 100)
+                            .clipShape(RoundedRectangle(cornerRadius: 8))
                             
-                            if let setName = card.setName {
-                                Text(setName)
-                                    .font(.system(size: 15))
-                                    .foregroundColor(.secondary)
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text(card.name)
+                                    .font(.system(size: 20, weight: .bold))
+                                    .foregroundColor(.primary)
+                                
+                                if let setName = card.setName {
+                                    Text(setName)
+                                        .font(.system(size: 15))
+                                        .foregroundColor(.secondary)
+                                }
+                                
+                                Text(card.tcgType.rawValue)
+                                    .font(.system(size: 12, weight: .semibold))
+                                    .foregroundColor(.white)
+                                    .padding(.horizontal, 10)
+                                    .padding(.vertical, 5)
+                                    .background(Capsule().fill(Color.indigo))
                             }
                             
-                            Text(card.tcgType.rawValue)
-                                .font(.system(size: 12, weight: .semibold))
-                                .foregroundColor(.white)
-                                .padding(.horizontal, 10)
-                                .padding(.vertical, 5)
-                                .background(Capsule().fill(AdaptiveColors.brandPrimary))
+                            Spacer()
                         }
+                        .padding(16)
+                        .background(Color(.systemBackground))
+                        .cornerRadius(16)
+                        .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 2)
                         
-                        Spacer()
-                    }
-                    
-                    // Details
-                    VStack(alignment: .leading, spacing: 16) {
-                        DetailRow(label: "Condition", value: card.condition.displayName)
-                        DetailRow(label: "Price", value: card.formattedPrice)
-                        DetailRow(label: "Available", value: "\(card.quantity) in stock")
-                        
-                        if let notes = card.notes {
-                            VStack(alignment: .leading, spacing: 8) {
-                                Text("Notes")
-                                    .font(.system(size: 14, weight: .semibold))
-                                    .foregroundColor(.secondary)
-                                
-                                Text(notes)
+                        // Details
+                        VStack(alignment: .leading, spacing: 16) {
+                            HStack {
+                                Text("Condition")
                                     .font(.system(size: 14))
+                                    .foregroundColor(.secondary)
+                                Spacer()
+                                Text(card.condition.displayName)
+                                    .font(.system(size: 14, weight: .semibold))
+                                    .foregroundColor(conditionColor)
+                            }
+                            
+                            Divider()
+                            
+                            HStack {
+                                Text("Price")
+                                    .font(.system(size: 14))
+                                    .foregroundColor(.secondary)
+                                Spacer()
+                                Text(card.formattedPrice)
+                                    .font(.system(size: 18, weight: .bold))
+                                    .foregroundColor(.indigo)
+                            }
+                            
+                            Divider()
+                            
+                            HStack {
+                                Text("Availability")
+                                    .font(.system(size: 14))
+                                    .foregroundColor(.secondary)
+                                Spacer()
+                                Text("\(card.quantity) in stock")
+                                    .font(.system(size: 14, weight: .semibold))
                                     .foregroundColor(.primary)
                             }
-                        }
-                    }
-                    .padding(16)
-                    .background(
-                        RoundedRectangle(cornerRadius: 16)
-                            .fill(AdaptiveColors.backgroundSecondary)
-                    )
-                    
-                    // Reservation Info
-                    VStack(alignment: .leading, spacing: 12) {
-                        HStack {
-                            SwiftUI.Image(systemName: "info.circle.fill")
-                                .foregroundColor(AdaptiveColors.brandPrimary)
                             
-                            Text("Reservation Details")
-                                .font(.system(size: 16, weight: .bold))
+                            if let notes = card.notes {
+                                Divider()
+                                
+                                VStack(alignment: .leading, spacing: 8) {
+                                    Text("Notes")
+                                        .font(.system(size: 14))
+                                        .foregroundColor(.secondary)
+                                    
+                                    Text(notes)
+                                        .font(.system(size: 14))
+                                        .foregroundColor(.primary)
+                                }
+                            }
                         }
+                        .padding(16)
+                        .background(Color(.systemBackground))
+                        .cornerRadius(16)
+                        .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 2)
                         
-                        VStack(alignment: .leading, spacing: 8) {
+                        // Reservation Info
+                        VStack(alignment: .leading, spacing: 12) {
                             HStack {
-                                SwiftUI.Image(systemName: "clock.fill")
-                                    .foregroundColor(.secondary)
-                                    .frame(width: 20)
+                                SwiftUI.Image(systemName: "info.circle.fill")
+                                    .foregroundColor(.indigo)
                                 
-                                Text("Reserved for 30 minutes")
-                                    .font(.system(size: 14))
-                                    .foregroundColor(.secondary)
+                                Text("Reservation Details")
+                                    .font(.system(size: 16, weight: .semibold))
                             }
                             
-                            HStack {
-                                SwiftUI.Image(systemName: "qrcode")
-                                    .foregroundColor(.secondary)
-                                    .frame(width: 20)
-                                
-                                Text("Show QR code at the shop to pick up")
-                                    .font(.system(size: 14))
-                                    .foregroundColor(.secondary)
-                            }
-                            
-                            HStack {
-                                SwiftUI.Image(systemName: "checkmark.circle.fill")
-                                    .foregroundColor(.secondary)
-                                    .frame(width: 20)
-                                
-                                Text("Free cancellation before validation")
-                                    .font(.system(size: 14))
-                                    .foregroundColor(.secondary)
+                            VStack(alignment: .leading, spacing: 8) {
+                                ReservationInfoRow(icon: "clock.fill", text: "Reserved for 30 minutes")
+                                ReservationInfoRow(icon: "qrcode", text: "Show QR code at the shop to pick up")
+                                ReservationInfoRow(icon: "checkmark.circle.fill", text: "Free cancellation before validation")
                             }
                         }
-                    }
-                    .padding(16)
-                    .background(
-                        RoundedRectangle(cornerRadius: 16)
-                            .fill(AdaptiveColors.brandPrimary.opacity(0.1))
-                    )
-                    
-                    // Reserve Button
-                    Button(action: createReservation) {
-                        HStack {
-                            if isReserving {
-                                ProgressView()
-                                    .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                            } else {
-                                SwiftUI.Image(systemName: "qrcode.viewfinder")
-                                Text("Reserve Card")
+                        .padding(16)
+                        .background(Color.indigo.opacity(0.1))
+                        .cornerRadius(16)
+                        
+                        // Reserve Button
+                        Button(action: createReservation) {
+                            HStack(spacing: 8) {
+                                if isReserving {
+                                    ProgressView()
+                                        .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                                } else {
+                                    SwiftUI.Image(systemName: "qrcode.viewfinder")
+                                        .font(.system(size: 16))
+                                    Text("Reserve Card")
+                                        .font(.system(size: 17, weight: .semibold))
+                                }
                             }
+                            .foregroundColor(.white)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 16)
+                            .background(
+                                RoundedRectangle(cornerRadius: 14)
+                                    .fill(Color.indigo)
+                            )
                         }
-                        .font(.system(size: 17, weight: .semibold))
-                        .foregroundColor(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 16)
-                        .background(
-                            RoundedRectangle(cornerRadius: 12)
-                                .fill(AdaptiveColors.brandPrimary)
-                        )
+                        .disabled(isReserving)
                     }
-                    .disabled(isReserving)
+                    .padding(20)
                 }
-                .padding(20)
             }
-            .background(AdaptiveColors.backgroundPrimary)
             .navigationTitle("Reserve Card")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Cancel") {
-                        dismiss()
+                    Button(action: { dismiss() }) {
+                        SwiftUI.Image(systemName: "xmark.circle.fill")
+                            .font(.system(size: 22))
+                            .foregroundColor(.secondary)
                     }
                 }
             }
             .alert("Success!", isPresented: $showSuccess) {
                 Button("View Reservation") {
                     dismiss()
-                    // Navigate to reservations
                 }
                 Button("OK", role: .cancel) {
                     dismiss()
@@ -389,6 +452,24 @@ struct CardReservationView: View {
                     showError = true
                 }
             }
+        }
+    }
+}
+
+// MARK: - Reservation Info Row
+private struct ReservationInfoRow: View {
+    let icon: String
+    let text: String
+    
+    var body: some View {
+        HStack(spacing: 10) {
+            SwiftUI.Image(systemName: icon)
+                .foregroundColor(.secondary)
+                .frame(width: 20)
+            
+            Text(text)
+                .font(.system(size: 14))
+                .foregroundColor(.secondary)
         }
     }
 }

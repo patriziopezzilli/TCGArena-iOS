@@ -34,27 +34,13 @@ class AuthService: ObservableObject {
     }
     @Published var isLoading = false
     @Published var errorMessage: String?
+    @Published var sessionExpired = false // Nuovo flag per sessione scaduta
     
     // Cache dell'ID utente per accessi rapidi
     private(set) var currentUserId: Int64?
     
     init() {
-        // Carica l'ID utente salvato
-        if let userId = UserDefaults.standard.object(forKey: "currentUserId") as? Int64 {
-            self.currentUserId = userId
-        } else {
-            // Prova a estrarre l'ID dal token JWT
-            if let userIdFromToken = getUserIdFromToken() {
-                self.currentUserId = userIdFromToken
-            } else {
-                // Se non riusciamo a estrarre l'ID ma abbiamo il token, usa un ID dummy per testare
-                if APIClient.shared.jwtToken != nil {
-                    self.currentUserId = 1 // ID dummy per permettere il caricamento dei deck
-                }
-            }
-        }
-        
-        // Carica i dati utente salvati
+        // Prima carica i dati utente salvati
         if let userData = UserDefaults.standard.data(forKey: "currentUser") {
             do {
                 let user = try JSONDecoder().decode(User.self, from: userData)
@@ -64,9 +50,21 @@ class AuthService: ObservableObject {
             }
         }
         
-        // Controlla se c'è un token salvato all'avvio
-        if APIClient.shared.jwtToken != nil {
+        // Poi carica l'ID utente
+        if let userId = UserDefaults.standard.object(forKey: "currentUserId") as? Int64 {
+            self.currentUserId = userId
+        } else {
+            // Prova a estrarre l'ID dal token JWT solo se abbiamo dati utente
+            if currentUser != nil, let userIdFromToken = getUserIdFromToken() {
+                self.currentUserId = userIdFromToken
+            }
+        }
+        
+        // Infine controlla l'autenticazione
+        if APIClient.shared.jwtToken != nil && currentUser != nil && currentUserId != nil {
             isAuthenticated = true
+        } else {
+            isAuthenticated = false
         }
     }
     
@@ -115,15 +113,28 @@ class AuthService: ObservableObject {
             // Salva il token JWT
             APIClient.shared.setJWTToken(response.token)
             
+            // Salva il refresh token se presente
+            if let refreshToken = response.refreshToken {
+                APIClient.shared.setRefreshToken(refreshToken)
+            }
+            
             // Salva l'utente corrente
             currentUser = response.user
             isAuthenticated = true
+            
+            // Reset session expired flag
+            sessionExpired = false
             
             // Registra il device token per le notifiche push
             await registerDeviceToken()
             
         } catch APIError.unauthorized {
             errorMessage = "Credenziali non valide"
+        } catch APIError.sessionExpired {
+            // Sessione scaduta, logout automatico
+            signOut()
+            sessionExpired = true
+            errorMessage = "Sessione scaduta. Effettua nuovamente il login."
         } catch APIError.serverError(let code) {
             errorMessage = "Errore del server (\(code))"
         } catch {
@@ -155,12 +166,25 @@ class AuthService: ObservableObject {
             // Salva il token JWT
             APIClient.shared.setJWTToken(response.token)
             
+            // Salva il refresh token se presente
+            if let refreshToken = response.refreshToken {
+                APIClient.shared.setRefreshToken(refreshToken)
+            }
+            
             // Salva l'utente corrente
             currentUser = response.user
             isAuthenticated = true
             
+            // Reset session expired flag
+            sessionExpired = false
+            
         } catch APIError.serverError(400) {
             errorMessage = "Username o email già esistenti"
+        } catch APIError.sessionExpired {
+            // Questo non dovrebbe succedere durante il signup, ma per completezza
+            signOut()
+            sessionExpired = true
+            errorMessage = "Sessione scaduta. Effettua nuovamente il login."
         } catch APIError.serverError(let code) {
             errorMessage = "Errore del server (\(code))"
         } catch {
@@ -172,9 +196,31 @@ class AuthService: ObservableObject {
     
     func signOut() {
         APIClient.shared.clearJWTToken()
+        APIClient.shared.clearRefreshToken()
         currentUser = nil
         // currentUserId viene automaticamente resettato dal didSet
         isAuthenticated = false
+        sessionExpired = false
+        errorMessage = nil
+    }
+    
+    // Forza logout completo e pulizia di tutti i dati
+    func forceLogout() {
+        // Pulisce tutto da UserDefaults
+        UserDefaults.standard.removeObject(forKey: "currentUser")
+        UserDefaults.standard.removeObject(forKey: "currentUserId")
+        UserDefaults.standard.removeObject(forKey: "jwtToken")
+        UserDefaults.standard.removeObject(forKey: "refreshToken")
+        
+        // Pulisce APIClient
+        APIClient.shared.clearJWTToken()
+        APIClient.shared.clearRefreshToken()
+        
+        // Reset stato
+        currentUser = nil
+        currentUserId = nil
+        isAuthenticated = false
+        sessionExpired = false
         errorMessage = nil
     }
     

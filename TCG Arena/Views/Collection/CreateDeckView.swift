@@ -55,9 +55,13 @@ struct CreateDeckView: View {
                     .padding(24)
                     .background(
                         RoundedRectangle(cornerRadius: 24)
-                            .fill(.ultraThinMaterial)
-                            .shadow(color: Color.black.opacity(0.05), radius: 20, x: 0, y: 10)
+                            .fill(Color(.systemBackground))
                     )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 24)
+                            .stroke(accentColor.opacity(0.2), lineWidth: 2)
+                    )
+                    .shadow(color: Color.black.opacity(0.05), radius: 10, x: 0, y: 5)
                     .padding(.horizontal, 20)
                     
                     Spacer()
@@ -91,8 +95,7 @@ struct CreateDeckView: View {
     
     // MARK: - Background
     private var backgroundLayer: some View {
-        accentColor
-            .opacity(0.05)
+        Color(.systemGroupedBackground)
             .ignoresSafeArea()
     }
     
@@ -127,7 +130,7 @@ struct CreateDeckView: View {
                 TextField("e.g., Master Collection", text: $deckName)
                     .font(.system(size: 17, weight: .medium))
                     .padding()
-                    .background(Color(.systemBackground).opacity(0.5))
+                    .background(Color(.secondarySystemGroupedBackground))
                     .cornerRadius(12)
             }
             
@@ -140,7 +143,7 @@ struct CreateDeckView: View {
                 TextField("Optional description...", text: $deckDescription)
                     .font(.system(size: 16))
                     .padding()
-                    .background(Color(.systemBackground).opacity(0.5))
+                    .background(Color(.secondarySystemGroupedBackground))
                     .cornerRadius(12)
             }
         }
@@ -329,6 +332,8 @@ extension TCGType {
         case .yugioh: return "Yu-Gi-Oh!"
         case .onePiece: return "One Piece"
         case .digimon: return "Digimon"
+        case .dragonBall: return "Dragon Ball"
+        case .lorcana: return "Lorcana"
         }
     }
 }

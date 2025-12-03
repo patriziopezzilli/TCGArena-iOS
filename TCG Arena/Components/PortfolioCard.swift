@@ -322,7 +322,7 @@ struct PerformanceCard: View {
                 .foregroundColor(.primary)
                 .lineLimit(2)
             
-            Text("\(card.condition.displayName) • \(card.rarity.rawValue)")
+            Text("\(card.condition.displayName) • \(card.rarity.displayName)")
                 .font(.caption)
                 .foregroundColor(.secondary)
         }

@@ -16,6 +16,8 @@ extension TCGType {
         case .magic: return "sparkles"
         case .yugioh: return "eye.fill"
         case .digimon: return "shield.fill"
+        case .dragonBall: return "flame.fill"
+        case .lorcana: return "wand.and.stars"
         }
     }
     
@@ -26,6 +28,8 @@ extension TCGType {
         case .magic: return Color(red: 1.0, green: 0.5, blue: 0.0) // Bright Orange #FF8000
         case .yugioh: return Color(red: 0.8, green: 0.0, blue: 1.0) // Bright Purple #CC00FF
         case .digimon: return Color.cyan // Cyan
+        case .dragonBall: return Color.orange // Orange
+        case .lorcana: return Color.indigo // Indigo
         }
     }
 }

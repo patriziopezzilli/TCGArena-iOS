@@ -12,6 +12,7 @@ import SkeletonUI
 
 struct TournamentView: View {
     @EnvironmentObject var tournamentService: TournamentService
+    @EnvironmentObject var authService: AuthService
     @StateObject private var locationManager = LocationManager()
     @State private var showingLocationInput = false
     @State private var userLocationText = "Milano, Italy"
@@ -34,22 +35,24 @@ struct TournamentView: View {
                     
                     Spacer()
                     
-                    // Create Tournament Button
-                    NavigationLink(destination: CreateTournamentView()) {
-                        HStack(spacing: 6) {
-                            SwiftUI.Image(systemName: "plus")
-                                .font(.system(size: 14, weight: .bold))
-                            
-                            Text("Create")
-                                .font(.system(size: 14, weight: .semibold))
+                    // Create Tournament Button - Only for merchants
+                    if authService.currentUser?.isMerchant == true {
+                        NavigationLink(destination: CreateTournamentView()) {
+                            HStack(spacing: 6) {
+                                SwiftUI.Image(systemName: "plus")
+                                    .font(.system(size: 14, weight: .bold))
+                                
+                                Text("Create")
+                                    .font(.system(size: 14, weight: .semibold))
+                            }
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 10)
+                            .background(
+                                RoundedRectangle(cornerRadius: 20)
+                                    .fill(Color.blue)
+                            )
                         }
-                        .foregroundColor(.white)
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 10)
-                        .background(
-                            RoundedRectangle(cornerRadius: 20)
-                                .fill(Color.blue)
-                        )
                     }
                 }
                 .padding(.horizontal, 20)
@@ -307,4 +310,5 @@ struct EmptyTournamentsView: View {
 #Preview {
     TournamentView()
         .environmentObject(TournamentService())
+        .environmentObject(AuthService())
 }

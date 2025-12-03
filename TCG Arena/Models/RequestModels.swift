@@ -8,22 +8,27 @@
 import Foundation
 
 /// Represents a request from a user to a merchant
-struct MerchantRequest: Identifiable, Codable {
+struct CustomerRequest: Identifiable, Codable {
     let id: String
-    let userId: String
-    let merchantId: String
+    let userId: Int64?
+    let shopId: Int64?
     let type: RequestType
     let status: RequestStatus
     let title: String
     let description: String?
-    let attachmentUrl: String?
+    let hasUnreadMessages: Bool
+    let messageCount: Int
     let createdAt: Date
     let updatedAt: Date
+    let resolvedAt: Date?
     
-    // Optional embedded data
-    var user: User?
-    var shop: Shop?
-    var messages: [RequestMessage]?
+    // Shop info (from DTO)
+    let shopName: String?
+    let shopAddress: String?
+    
+    // User info (from DTO)
+    let userName: String?
+    let userAvatar: String?
     
     enum RequestType: String, Codable, CaseIterable {
         case availability = "AVAILABILITY"
@@ -108,11 +113,62 @@ struct MerchantRequest: Identifiable, Codable {
     enum CodingKeys: String, CodingKey {
         case id
         case userId = "user_id"
-        case merchantId = "merchant_id"
+        case shopId = "shop_id"
         case type, status, title, description
-        case attachmentUrl = "attachment_url"
+        case hasUnreadMessages = "has_unread_messages"
+        case messageCount = "message_count"
         case createdAt = "created_at"
         case updatedAt = "updated_at"
+        case resolvedAt = "resolved_at"
+        case shopName = "shop_name"
+        case shopAddress = "shop_address"
+        case userName = "user_name"
+        case userAvatar = "user_avatar"
+    }
+    
+    // Custom decoder to handle date parsing
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        
+        id = try container.decode(String.self, forKey: .id)
+        userId = try container.decodeIfPresent(Int64.self, forKey: .userId)
+        shopId = try container.decodeIfPresent(Int64.self, forKey: .shopId)
+        type = try container.decode(RequestType.self, forKey: .type)
+        status = try container.decode(RequestStatus.self, forKey: .status)
+        title = try container.decode(String.self, forKey: .title)
+        description = try container.decodeIfPresent(String.self, forKey: .description)
+        hasUnreadMessages = try container.decode(Bool.self, forKey: .hasUnreadMessages)
+        messageCount = try container.decode(Int.self, forKey: .messageCount)
+        
+        // Custom date parsing
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss"
+        dateFormatter.locale = Locale(identifier: "en_US_POSIX")
+        dateFormatter.timeZone = TimeZone(secondsFromGMT: 0)
+        
+        let createdAtString = try container.decode(String.self, forKey: .createdAt)
+        guard let createdAtDate = dateFormatter.date(from: createdAtString) else {
+            throw DecodingError.dataCorruptedError(forKey: .createdAt, in: container, debugDescription: "Date string does not match format expected by formatter.")
+        }
+        createdAt = createdAtDate
+        
+        let updatedAtString = try container.decode(String.self, forKey: .updatedAt)
+        guard let updatedAtDate = dateFormatter.date(from: updatedAtString) else {
+            throw DecodingError.dataCorruptedError(forKey: .updatedAt, in: container, debugDescription: "Date string does not match format expected by formatter.")
+        }
+        updatedAt = updatedAtDate
+        
+        // Handle nullable resolvedAt
+        if let resolvedAtString = try container.decodeIfPresent(String.self, forKey: .resolvedAt) {
+            resolvedAt = dateFormatter.date(from: resolvedAtString)
+        } else {
+            resolvedAt = nil
+        }
+        
+        shopName = try container.decodeIfPresent(String.self, forKey: .shopName)
+        shopAddress = try container.decodeIfPresent(String.self, forKey: .shopAddress)
+        userName = try container.decodeIfPresent(String.self, forKey: .userName)
+        userAvatar = try container.decodeIfPresent(String.self, forKey: .userAvatar)
     }
     
     var isActive: Bool {
@@ -166,6 +222,30 @@ struct RequestMessage: Identifiable, Codable, Hashable {
         case createdAt = "created_at"
     }
     
+    // Custom decoder to handle date parsing
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        
+        id = try container.decode(String.self, forKey: .id)
+        requestId = try container.decode(String.self, forKey: .requestId)
+        senderId = try container.decode(String.self, forKey: .senderId)
+        senderType = try container.decode(SenderType.self, forKey: .senderType)
+        content = try container.decode(String.self, forKey: .content)
+        attachmentUrl = try container.decodeIfPresent(String.self, forKey: .attachmentUrl)
+        
+        // Custom date parsing
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss"
+        dateFormatter.locale = Locale(identifier: "en_US_POSIX")
+        dateFormatter.timeZone = TimeZone(secondsFromGMT: 0)
+        
+        let createdAtString = try container.decode(String.self, forKey: .createdAt)
+        guard let createdAtDate = dateFormatter.date(from: createdAtString) else {
+            throw DecodingError.dataCorruptedError(forKey: .createdAt, in: container, debugDescription: "Date string does not match format expected by formatter.")
+        }
+        createdAt = createdAtDate
+    }
+    
     var isFromCurrentUser: Bool {
         // This should be checked against actual current user ID
         // For now, just a placeholder
@@ -184,14 +264,14 @@ struct RequestMessage: Identifiable, Codable, Hashable {
 
 // MARK: - Request DTOs
 struct CreateRequestRequest: Codable {
-    let merchantId: String
-    let type: MerchantRequest.RequestType
+    let shopId: String
+    let type: CustomerRequest.RequestType
     let title: String
-    let description: String?
+    let description: String
     let attachmentUrl: String?
     
     enum CodingKeys: String, CodingKey {
-        case merchantId = "merchant_id"
+        case shopId = "shop_id"
         case type, title, description
         case attachmentUrl = "attachment_url"
     }
@@ -208,17 +288,17 @@ struct SendMessageRequest: Codable {
 }
 
 struct UpdateRequestStatusRequest: Codable {
-    let status: MerchantRequest.RequestStatus
+    let status: CustomerRequest.RequestStatus
     let message: String? // Optional message when changing status
 }
 
 // MARK: - Response DTOs
 struct RequestResponse: Codable {
-    let request: MerchantRequest
+    let request: CustomerRequest
     let messages: [RequestMessage]
 }
 
 struct RequestListResponse: Codable {
-    let requests: [MerchantRequest]
+    let requests: [CustomerRequest]
     let total: Int
 }

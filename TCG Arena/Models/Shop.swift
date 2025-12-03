@@ -26,7 +26,7 @@ struct Shop: Identifiable, Codable {
     let ownerId: Int64
     let openingHours: String?
     let openingDays: String?
-    let tcgTypes: [TCGType]?
+    let tcgTypes: [String]?
     let services: [String]?
     let inventory: [InventoryItem]?
     
@@ -34,6 +34,131 @@ struct Shop: Identifiable, Codable {
         case id, name, description, address, latitude, longitude, phoneNumber, email
         case websiteUrl, instagramUrl, facebookUrl, twitterUrl
         case type, isVerified, active, ownerId, openingHours, openingDays, tcgTypes, services, inventory
+    }
+    
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        
+        id = try container.decode(Int64.self, forKey: .id)
+        name = try container.decode(String.self, forKey: .name)
+        description = try container.decodeIfPresent(String.self, forKey: .description)
+        address = try container.decode(String.self, forKey: .address)
+        latitude = try container.decodeIfPresent(Double.self, forKey: .latitude)
+        longitude = try container.decodeIfPresent(Double.self, forKey: .longitude)
+        phoneNumber = try container.decodeIfPresent(String.self, forKey: .phoneNumber)
+        email = try container.decodeIfPresent(String.self, forKey: .email)
+        websiteUrl = try container.decodeIfPresent(String.self, forKey: .websiteUrl)
+        instagramUrl = try container.decodeIfPresent(String.self, forKey: .instagramUrl)
+        facebookUrl = try container.decodeIfPresent(String.self, forKey: .facebookUrl)
+        twitterUrl = try container.decodeIfPresent(String.self, forKey: .twitterUrl)
+        type = try container.decode(ShopType.self, forKey: .type)
+        isVerified = try container.decode(Bool.self, forKey: .isVerified)
+        active = try container.decodeIfPresent(Bool.self, forKey: .active)
+        ownerId = try container.decode(Int64.self, forKey: .ownerId)
+        openingHours = try container.decodeIfPresent(String.self, forKey: .openingHours)
+        openingDays = try container.decodeIfPresent(String.self, forKey: .openingDays)
+        inventory = try container.decodeIfPresent([InventoryItem].self, forKey: .inventory)
+        
+        // Parse tcgTypes: can be comma-separated string or array
+        if let tcgTypesString = try? container.decode(String.self, forKey: .tcgTypes) {
+            tcgTypes = tcgTypesString.split(separator: ",").map { String($0).trimmingCharacters(in: .whitespaces) }
+        } else if let tcgTypesArray = try? container.decode([String].self, forKey: .tcgTypes) {
+            tcgTypes = tcgTypesArray
+        } else {
+            tcgTypes = nil
+        }
+        
+        // Parse services: can be comma-separated string or array
+        if let servicesString = try? container.decode(String.self, forKey: .services) {
+            services = servicesString.split(separator: ",").map { String($0).trimmingCharacters(in: .whitespaces) }
+        } else if let servicesArray = try? container.decode([String].self, forKey: .services) {
+            services = servicesArray
+        } else {
+            services = nil
+        }
+    }
+    
+    // Helper computed properties for display
+    var tcgTypesList: [TCGType] {
+        (tcgTypes ?? []).compactMap { TCGType(rawValue: $0) }
+    }
+    
+    var servicesList: [ShopServiceType] {
+        (services ?? []).compactMap { ShopServiceType(rawValue: $0) }
+    }
+    
+    // Standard init for programmatic creation (used in Previews)
+    init(
+        id: Int64,
+        name: String,
+        description: String? = nil,
+        address: String,
+        latitude: Double? = nil,
+        longitude: Double? = nil,
+        phoneNumber: String? = nil,
+        email: String? = nil,
+        websiteUrl: String? = nil,
+        instagramUrl: String? = nil,
+        facebookUrl: String? = nil,
+        twitterUrl: String? = nil,
+        type: ShopType,
+        isVerified: Bool,
+        active: Bool? = nil,
+        ownerId: Int64,
+        openingHours: String? = nil,
+        openingDays: String? = nil,
+        tcgTypes: [String]? = nil,
+        services: [String]? = nil,
+        inventory: [InventoryItem]? = nil
+    ) {
+        self.id = id
+        self.name = name
+        self.description = description
+        self.address = address
+        self.latitude = latitude
+        self.longitude = longitude
+        self.phoneNumber = phoneNumber
+        self.email = email
+        self.websiteUrl = websiteUrl
+        self.instagramUrl = instagramUrl
+        self.facebookUrl = facebookUrl
+        self.twitterUrl = twitterUrl
+        self.type = type
+        self.isVerified = isVerified
+        self.active = active
+        self.ownerId = ownerId
+        self.openingHours = openingHours
+        self.openingDays = openingDays
+        self.tcgTypes = tcgTypes
+        self.services = services
+        self.inventory = inventory
+    }
+    
+    // Preview helper
+    static var preview: Shop {
+        Shop(
+            id: 1,
+            name: "Magic Castle Games",
+            description: "Il miglior negozio di carte collezionabili di Milano",
+            address: "Via Paolo Sarpi, 42, Milano",
+            latitude: 45.4773,
+            longitude: 9.1815,
+            phoneNumber: "+39 02 1234567",
+            email: "info@magiccastle.it",
+            websiteUrl: "https://magiccastle.it",
+            instagramUrl: "https://instagram.com/magiccastle",
+            facebookUrl: nil,
+            twitterUrl: nil,
+            type: .physicalStore,
+            isVerified: true,
+            active: true,
+            ownerId: 1,
+            openingHours: "10:00-19:00",
+            openingDays: "Lun-Sab",
+            tcgTypes: ["POKEMON", "MAGIC", "YUGIOH"],
+            services: ["CARD_SALES", "TOURNAMENTS", "PLAY_AREA"],
+            inventory: nil
+        )
     }
 }
 
@@ -46,6 +171,51 @@ struct InventoryItem: Codable {
 
 enum ShopType: String, Codable {
     case localStore = "LOCAL_STORE"
+    case physicalStore = "PHYSICAL_STORE"
     case onlineStore = "ONLINE_STORE"
     case marketplace = "MARKETPLACE"
+    case hybrid = "HYBRID"
+}
+
+enum ShopServiceType: String, CaseIterable, Codable {
+    case cardSales = "CARD_SALES"
+    case buyCards = "BUY_CARDS"
+    case tournaments = "TOURNAMENTS"
+    case playArea = "PLAY_AREA"
+    case grading = "GRADING"
+    case accessories = "ACCESSORIES"
+    case preorders = "PREORDERS"
+    case onlineStore = "ONLINE_STORE"
+    case cardEvaluation = "CARD_EVALUATION"
+    case tradeIn = "TRADE_IN"
+    
+    var displayName: String {
+        switch self {
+        case .cardSales: return "Vendita Carte"
+        case .buyCards: return "Acquisto Carte"
+        case .tournaments: return "Tornei"
+        case .playArea: return "Area Gioco"
+        case .grading: return "Grading"
+        case .accessories: return "Accessori"
+        case .preorders: return "Preordini"
+        case .onlineStore: return "Store Online"
+        case .cardEvaluation: return "Valutazione Carte"
+        case .tradeIn: return "Permuta"
+        }
+    }
+    
+    var icon: String {
+        switch self {
+        case .cardSales: return "cart.fill"
+        case .buyCards: return "dollarsign.circle.fill"
+        case .tournaments: return "trophy.fill"
+        case .playArea: return "gamecontroller.fill"
+        case .grading: return "star.fill"
+        case .accessories: return "bag.fill"
+        case .preorders: return "calendar.badge.plus"
+        case .onlineStore: return "globe"
+        case .cardEvaluation: return "magnifyingglass"
+        case .tradeIn: return "arrow.triangle.2.circlepath"
+        }
+    }
 }

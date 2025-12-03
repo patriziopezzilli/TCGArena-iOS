@@ -137,7 +137,7 @@ struct CardDetailView: View {
         VStack(alignment: .leading, spacing: 12) {
             InfoRow(label: "Set", value: card.set ?? "Unknown", color: .secondary)
             InfoRow(label: "Number", value: card.cardNumber ?? "N/A", color: .secondary)
-            InfoRow(label: "Rarity", value: card.rarity.rawValue, color: card.rarity.color)
+            InfoRow(label: "Rarity", value: card.rarity.displayName, color: card.rarity.color)
         
         // Mostra sempre la condizione
         InfoRow(label: "Condition", value: card.condition.displayName, color: card.condition.color)

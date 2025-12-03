@@ -12,7 +12,7 @@ struct RequestManagementView: View {
     @EnvironmentObject var authService: AuthService
     
     @State private var selectedFilter: RequestStatusFilter = .pending
-    @State private var selectedRequest: MerchantRequest?
+    @State private var selectedRequest: CustomerRequest?
     
     enum RequestStatusFilter: String, CaseIterable {
         case pending = "Pending"
@@ -39,7 +39,7 @@ struct RequestManagementView: View {
         }
     }
     
-    var filteredRequests: [MerchantRequest] {
+    var filteredRequests: [CustomerRequest] {
         requestService.merchantRequests.filter { $0.status == selectedFilter.status }
     }
     
@@ -134,15 +134,43 @@ struct RequestManagementView: View {
         guard let shopId = authService.currentUser?.shopId else { return }
         
         Task {
-            await requestService.loadMerchantRequests(shopId: shopId)
+            do {
+                _ = try await requestService.getMerchantRequests(merchantId: String(shopId))
+            } catch {
+                // Handle error
+                print("Failed to load merchant requests: \(error)")
+            }
         }
     }
 }
 
 // MARK: - Request Row
 struct RequestRow: View {
-    let request: MerchantRequest
+    let request: CustomerRequest
     let onTap: () -> Void
+    
+    private var typeColor: Color {
+        switch request.type.color {
+        case "blue": return .indigo
+        case "green": return .green
+        case "orange": return .orange
+        case "purple": return .purple
+        case "cyan": return .cyan
+        case "gray": return .gray
+        default: return .gray
+        }
+    }
+    
+    private var statusColor: Color {
+        switch request.status.color {
+        case "orange": return .orange
+        case "blue": return .indigo
+        case "red": return .red
+        case "green": return .green
+        case "gray": return .gray
+        default: return .gray
+        }
+    }
     
     var body: some View {
         Button(action: onTap) {
@@ -151,12 +179,12 @@ struct RequestRow: View {
                 HStack(alignment: .top) {
                     // Type Icon
                     Circle()
-                        .fill(Color(request.type.color).opacity(0.2))
+                        .fill(typeColor.opacity(0.2))
                         .frame(width: 44, height: 44)
                         .overlay(
                             Image(systemName: request.type.icon)
                                 .font(.system(size: 18))
-                                .foregroundColor(Color(request.type.color))
+                                .foregroundColor(typeColor)
                         )
                     
                     VStack(alignment: .leading, spacing: 4) {
@@ -168,7 +196,7 @@ struct RequestRow: View {
                                 .padding(.vertical, 4)
                                 .background(
                                     Capsule()
-                                        .fill(Color(request.type.color))
+                                        .fill(typeColor)
                                 )
                             
                             if request.hasUnreadMessages {
@@ -180,13 +208,13 @@ struct RequestRow: View {
                             Spacer()
                             
                             Text(request.status.displayName)
-                                .font(.system(size: 11, weight: .semibold))
+                                .font(.system(size: 12, weight: .semibold))
                                 .foregroundColor(.white)
                                 .padding(.horizontal, 8)
                                 .padding(.vertical, 4)
                                 .background(
                                     Capsule()
-                                        .fill(Color(request.status.color))
+                                        .fill(statusColor)
                                 )
                         }
                         

@@ -20,7 +20,8 @@ struct CreateRequestView: View {
     @State private var description = ""
     @State private var isSubmitting = false
     @State private var errorMessage: String?
-    @State private var showingShopPicker = false
+    @State private var showSuccessMessage = false
+    @State private var successMessage = ""
     
     // Mock shops - in real app, fetch from API
     @State private var availableShops: [Shop] = []
@@ -115,6 +116,55 @@ struct CreateRequestView: View {
         .onAppear {
             loadShops()
         }
+        .overlay(
+            Group {
+                if showSuccessMessage {
+                    ZStack {
+                        Color.black.opacity(0.6)
+                            .edgesIgnoringSafeArea(.all)
+                            .onTapGesture {
+                                // Allow tapping to dismiss
+                                withAnimation {
+                                    showSuccessMessage = false
+                                }
+                            }
+                        
+                        VStack(spacing: 20) {
+                            ZStack {
+                                Circle()
+                                    .fill(Color.white.opacity(0.2))
+                                    .frame(width: 100, height: 100)
+                                
+                                Image(systemName: "checkmark.circle.fill")
+                                    .font(.system(size: 60, weight: .bold))
+                                    .foregroundColor(.white)
+                            }
+                            
+                            VStack(spacing: 8) {
+                                Text(successMessage)
+                                    .font(.system(size: 24, weight: .bold))
+                                    .foregroundColor(.white)
+                                
+                                Text("Your request has been sent successfully!")
+                                    .font(.system(size: 16))
+                                    .foregroundColor(.white.opacity(0.9))
+                                    .multilineTextAlignment(.center)
+                                    .padding(.horizontal, 20)
+                            }
+                        }
+                        .padding(40)
+                        .transition(.scale.combined(with: .opacity))
+                    }
+                    .onAppear {
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) {
+                            withAnimation(.easeOut(duration: 0.3)) {
+                                showSuccessMessage = false
+                            }
+                        }
+                    }
+                }
+            }
+        )
     }
     
     private var typeHelpText: String {
@@ -150,16 +200,25 @@ struct CreateRequestView: View {
         
         Task {
             do {
-                try await requestService.createRequest(
-                    shopId: shopId,
-                    type: selectedType,
+                let request = CreateRequestRequest(
+                    shopId: String(shopId),
+                    type: CustomerRequest.RequestType(rawValue: selectedType.rawValue) ?? .general,
                     title: title,
-                    description: description
+                    description: description.isEmpty ? "No additional details" : description,
+                    attachmentUrl: nil
                 )
+                _ = try await requestService.createRequest(request)
                 
                 await MainActor.run {
-                    onComplete(true)
-                    dismiss()
+                    successMessage = "Request Sent!"
+                    showSuccessMessage = true
+                    isSubmitting = false
+                    
+                    // Close after showing success message
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) {
+                        onComplete(true)
+                        dismiss()
+                    }
                 }
             } catch {
                 await MainActor.run {

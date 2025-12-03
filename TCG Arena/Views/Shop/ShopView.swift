@@ -171,6 +171,8 @@ class NamespaceWrapper {
 // MARK: - Shop List View
 struct ShopListView: View {
     @EnvironmentObject var shopService: ShopService
+    @EnvironmentObject var inventoryService: InventoryService
+    @EnvironmentObject var authService: AuthService
     @StateObject private var locationManager = LocationManager()
 
     var body: some View {
@@ -188,7 +190,9 @@ struct ShopListView: View {
 
                 ForEach(shopService.nearbyShops) { shop in
                     NavigationLink(destination: ShopDetailView(shop: shop)
-                        .environmentObject(shopService)) {
+                        .environmentObject(shopService)
+                        .environmentObject(inventoryService)
+                        .environmentObject(authService)) {
                         ShopCardView(shop: shop)
                     }
                     .buttonStyle(PlainButtonStyle())
@@ -259,19 +263,21 @@ struct EventListView: View {
                 }
             }
 
-            // Floating Action Button
-            Button(action: { showingCreateEvent = true }) {
-                SwiftUI.Image(systemName: "plus")
-                    .font(.system(size: 24, weight: .semibold))
-                    .foregroundColor(.white)
-                    .frame(width: 56, height: 56)
-                    .background(
-                        Circle()
-                            .fill(Color.blue)
-                            .shadow(color: Color.blue.opacity(0.3), radius: 8, x: 0, y: 4)
-                    )
+            // Floating Action Button - Only for merchants
+            if authService.currentUser?.isMerchant == true {
+                Button(action: { showingCreateEvent = true }) {
+                    SwiftUI.Image(systemName: "plus")
+                        .font(.system(size: 24, weight: .semibold))
+                        .foregroundColor(.white)
+                        .frame(width: 56, height: 56)
+                        .background(
+                            Circle()
+                                .fill(Color.blue)
+                                .shadow(color: Color.blue.opacity(0.3), radius: 8, x: 0, y: 4)
+                        )
+                }
+                .padding(20)
             }
-            .padding(20)
         }
         .sheet(isPresented: $showingCreateEvent) {
             CreateTournamentView()
@@ -380,7 +386,7 @@ struct ShopCardView: View {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 8) {
                         ForEach(shop.tcgTypes ?? [], id: \.self) { tcg in
-                            TCGTypeBadge(tcgType: tcg)
+                            TCGTypeBadge(tcgTypeString: tcg)
                         }
 
                         ForEach((shop.services ?? []).prefix(3), id: \.self) { service in
@@ -434,4 +440,6 @@ struct ShopCardView: View {
     ShopView()
         .environmentObject(ShopService())
         .environmentObject(TournamentService())
+        .environmentObject(InventoryService())
+        .environmentObject(AuthService())
 }

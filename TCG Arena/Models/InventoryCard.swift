@@ -62,6 +62,10 @@ struct InventoryCard: Identifiable, Codable {
             }
         }
         
+        var shortName: String {
+            rawValue
+        }
+        
         var description: String {
             switch self {
             case .nearMint: return "Perfect or near-perfect condition"
@@ -174,7 +178,8 @@ struct InventoryFilters {
             params["max_price"] = String(maxPrice)
         }
         if onlyAvailable {
-            params["only_available"] = "true"
+            // TODO: Backend doesn't support only_available filter yet
+            // params["only_available"] = "true"
         }
         if let searchQuery = searchQuery {
             params["search"] = searchQuery

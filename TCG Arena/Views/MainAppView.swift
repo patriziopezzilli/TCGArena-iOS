@@ -13,13 +13,18 @@ struct MainAppView: View {
     
     var body: some View {
         Group {
-            if authService.isAuthenticated {
-                // User is authenticated - full access
+            if authService.isAuthenticated && authService.currentUserId != nil {
+                // User is authenticated and has valid user ID - full access
                 ContentView()
                     .environmentObject(authService)
             } else {
-                // User is not authenticated - readonly mode
+                // User is not authenticated or missing user data - readonly mode
+                // Debug: Force logout to ensure clean state
                 ReadOnlyContentView()
+                    .onAppear {
+                        // Force logout on appear to ensure clean guest mode
+                        authService.forceLogout()
+                    }
             }
         }
     }

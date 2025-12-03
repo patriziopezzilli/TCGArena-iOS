@@ -125,11 +125,11 @@ struct ModernAuthView: View {
                         
                         // Username Field
                         VStack(alignment: .leading, spacing: 8) {
-                            Label(mode == .login ? "Username or Email" : "Username", systemImage: "person.fill")
+                            Label("Username", systemImage: "person.fill")
                                 .font(.system(size: 14, weight: .semibold))
                                 .foregroundColor(.blue)
                             
-                            TextField(mode == .login ? "Username or email" : "Choose a username", text: $username)
+                            TextField("Enter your username", text: $username)
                                 .autocapitalization(.none)
                                 .disableAutocorrection(true)
                                 .padding(16)

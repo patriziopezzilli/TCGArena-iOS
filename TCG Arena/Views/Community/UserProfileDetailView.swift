@@ -583,6 +583,8 @@ struct UserProfileDetailView: View {
         case .magic: return ["Blue Control", "Red Burn", "Green Ramp"][index % 3]
         case .yugioh: return ["Blue-Eyes", "Dark Magician", "Exodia"][index % 3]
         case .digimon: return ["Agumon Bond", "Gabumon Control", "WarGreymon Aggro"][index % 3]
+        case .dragonBall: return ["Goku Rush", "Vegeta Control", "Frieza Aggro"][index % 3]
+        case .lorcana: return ["Mickey Tempo", "Elsa Control", "Stitch Aggro"][index % 3]
         case .none: return ["Mixed Deck", "Custom Build", "Experimental"][index % 3]
         }
     }

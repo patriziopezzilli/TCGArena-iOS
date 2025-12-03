@@ -9,7 +9,6 @@ import Foundation
 
 struct UserActivity: Codable, Identifiable {
     let id: Int64
-    let userId: Int64
     let activityType: String
     let description: String
     let metadata: String?
@@ -18,7 +17,6 @@ struct UserActivity: Codable, Identifiable {
 
     enum CodingKeys: String, CodingKey {
         case id
-        case userId
         case activityType
         case description
         case metadata

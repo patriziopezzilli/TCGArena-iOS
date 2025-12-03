@@ -96,6 +96,7 @@ struct LoginView: View {
                                     .foregroundColor(AdaptiveColors.neutralDark)
                                     .font(.system(size: 16))
                                     .autocapitalization(.none)
+                                    .disableAutocorrection(true)
                             }
 
                             // Password field with icon

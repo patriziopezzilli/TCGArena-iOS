@@ -26,7 +26,7 @@ struct DeckRowView: View {
     var body: some View {
         ZStack(alignment: .bottomLeading) {
             // Background Image or Gradient
-            GeometryReader { geometry in
+            GeometryReader { geo in
                 if let imageUrl = coverImageUrl {
                     CachedAsyncImage(url: URL(string: imageUrl)) { phase in
                         switch phase {
@@ -34,25 +34,29 @@ struct DeckRowView: View {
                             image
                                 .resizable()
                                 .aspectRatio(contentMode: .fill)
-                                .frame(width: geometry.size.width, height: geometry.size.height)
+                                .frame(width: geo.size.width, height: geo.size.height)
+                                .scaleEffect(1.3) // Zoom per nascondere bordi carta
                                 .clipped()
                         case .failure, .empty:
                             fallbackBackground
+                                .frame(width: geo.size.width, height: geo.size.height)
                         @unknown default:
                             fallbackBackground
+                                .frame(width: geo.size.width, height: geo.size.height)
                         }
                     }
                 } else {
                     fallbackBackground
+                        .frame(width: geo.size.width, height: geo.size.height)
                 }
             }
             
             // Gradient Overlay for text readability
             LinearGradient(
                 gradient: Gradient(colors: [
-                    Color.black.opacity(0.8),
-                    Color.black.opacity(0.4),
-                    Color.clear
+                    Color.black.opacity(0.85),
+                    Color.black.opacity(0.5),
+                    Color.black.opacity(0.3)
                 ]),
                 startPoint: .bottom,
                 endPoint: .top

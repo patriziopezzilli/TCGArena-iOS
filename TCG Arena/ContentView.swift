@@ -17,6 +17,7 @@ struct ContentView: View {
     @StateObject private var notificationService = NotificationService()
     @StateObject private var achievementService = AchievementService()
     @StateObject private var imageService = ImageService()
+    @StateObject private var inventoryService = InventoryService()
     @EnvironmentObject private var settingsService: SettingsService
     @EnvironmentObject private var authService: AuthService
     
@@ -35,6 +36,8 @@ struct ContentView: View {
             ShopView()
                 .environmentObject(shopService)
                 .environmentObject(tournamentService)
+                .environmentObject(inventoryService)
+                .environmentObject(authService)
                 .tabItem {
                     SwiftUI.Image(systemName: "storefront")
                     Text("Stores")

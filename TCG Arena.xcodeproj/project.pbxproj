@@ -7,12 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		7883DF812EDE4BBC007D1C51 /* OnBoardingKit in Frameworks */ = {isa = PBXBuildFile; productRef = 7883DF802EDE4BBC007D1C51 /* OnBoardingKit */; };
-		7883DF862EDE4C9B007D1C51 /* WelcomeFlowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7883DF842EDE4C9B007D1C51 /* WelcomeFlowView.swift */; };
-		7883DF872EDE4C9B007D1C51 /* TCGArenaOnBoarding.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7883DF832EDE4C9B007D1C51 /* TCGArenaOnBoarding.swift */; };
-		7883DF882EDE4C9B007D1C51 /* ModernAuthView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7883DF822EDE4C9B007D1C51 /* ModernAuthView.swift */; };
-		7883DF8A2EDE53E8007D1C51 /* ButtonStyles.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7883DF892EDE53E8007D1C51 /* ButtonStyles.swift */; };
-		7A000AB32ED61E1D00A7E572 /* AdaptiveColors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A000AB12ED61E1D00A7E572 /* AdaptiveColors.swift */; };
 		784090482EDA2CD700CC6B9A /* SetDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 784090472EDA2CD700CC6B9A /* SetDetailView.swift */; };
 		7840904A2EDB96F800CC6B9A /* ImageCacheManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 784090492EDB96F800CC6B9A /* ImageCacheManager.swift */; };
 		7840904C2EDB98F000CC6B9A /* DeckSelectionModal.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7840904B2EDB98F000CC6B9A /* DeckSelectionModal.swift */; };
@@ -20,6 +14,14 @@
 		785CF4BD2EDC8B2B00BA98AD /* DeckTypeBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 785CF4BC2EDC8B2B00BA98AD /* DeckTypeBadge.swift */; };
 		785CF4BF2EDC8D3F00BA98AD /* CreateDeckView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 785CF4BE2EDC8D3F00BA98AD /* CreateDeckView.swift */; };
 		785CF4C52EDCDA6F00BA98AD /* SkeletonUI in Frameworks */ = {isa = PBXBuildFile; productRef = 785CF4C42EDCDA6F00BA98AD /* SkeletonUI */; };
+		7883DF812EDE4BBC007D1C51 /* OnBoardingKit in Frameworks */ = {isa = PBXBuildFile; productRef = 7883DF802EDE4BBC007D1C51 /* OnBoardingKit */; };
+		7883DF862EDE4C9B007D1C51 /* WelcomeFlowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7883DF842EDE4C9B007D1C51 /* WelcomeFlowView.swift */; };
+		7883DF872EDE4C9B007D1C51 /* TCGArenaOnBoarding.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7883DF832EDE4C9B007D1C51 /* TCGArenaOnBoarding.swift */; };
+		7883DF882EDE4C9B007D1C51 /* ModernAuthView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7883DF822EDE4C9B007D1C51 /* ModernAuthView.swift */; };
+		7883DF8A2EDE53E8007D1C51 /* ButtonStyles.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7883DF892EDE53E8007D1C51 /* ButtonStyles.swift */; };
+		7883DF9D2EE02C80007D1C51 /* SendRequestToShopView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7883DF9C2EE02C80007D1C51 /* SendRequestToShopView.swift */; };
+		7883DF9F2EE02C87007D1C51 /* UserRequestsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7883DF9E2EE02C87007D1C51 /* UserRequestsView.swift */; };
+		7A000AB32ED61E1D00A7E572 /* AdaptiveColors.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A000AB12ED61E1D00A7E572 /* AdaptiveColors.swift */; };
 		7A1CC91D2ED1EC3B00A61395 /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1CC91C2ED1EC3B00A61395 /* OnboardingView.swift */; };
 		7A1CC9292ED238D500A61395 /* CardModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1CC9202ED238D500A61395 /* CardModels.swift */; };
 		7A1CC92A2ED238D500A61395 /* ImageModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A1CC9222ED238D500A61395 /* ImageModels.swift */; };
@@ -128,17 +130,19 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		7883DF822EDE4C9B007D1C51 /* ModernAuthView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModernAuthView.swift; sourceTree = "<group>"; };
-		7883DF832EDE4C9B007D1C51 /* TCGArenaOnBoarding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TCGArenaOnBoarding.swift; sourceTree = "<group>"; };
-		7883DF842EDE4C9B007D1C51 /* WelcomeFlowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeFlowView.swift; sourceTree = "<group>"; };
-		7883DF892EDE53E8007D1C51 /* ButtonStyles.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ButtonStyles.swift; sourceTree = "<group>"; };
-		7A000AB12ED61E1D00A7E572 /* AdaptiveColors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdaptiveColors.swift; sourceTree = "<group>"; };
 		784090472EDA2CD700CC6B9A /* SetDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SetDetailView.swift; sourceTree = "<group>"; };
 		784090492EDB96F800CC6B9A /* ImageCacheManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageCacheManager.swift; sourceTree = "<group>"; };
 		7840904B2EDB98F000CC6B9A /* DeckSelectionModal.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeckSelectionModal.swift; sourceTree = "<group>"; };
 		7840904D2EDB9DCB00CC6B9A /* SearchCardResultView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchCardResultView.swift; sourceTree = "<group>"; };
 		785CF4BC2EDC8B2B00BA98AD /* DeckTypeBadge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeckTypeBadge.swift; sourceTree = "<group>"; };
 		785CF4BE2EDC8D3F00BA98AD /* CreateDeckView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateDeckView.swift; sourceTree = "<group>"; };
+		7883DF822EDE4C9B007D1C51 /* ModernAuthView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ModernAuthView.swift; sourceTree = "<group>"; };
+		7883DF832EDE4C9B007D1C51 /* TCGArenaOnBoarding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TCGArenaOnBoarding.swift; sourceTree = "<group>"; };
+		7883DF842EDE4C9B007D1C51 /* WelcomeFlowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeFlowView.swift; sourceTree = "<group>"; };
+		7883DF892EDE53E8007D1C51 /* ButtonStyles.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ButtonStyles.swift; sourceTree = "<group>"; };
+		7883DF9C2EE02C80007D1C51 /* SendRequestToShopView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SendRequestToShopView.swift; sourceTree = "<group>"; };
+		7883DF9E2EE02C87007D1C51 /* UserRequestsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserRequestsView.swift; sourceTree = "<group>"; };
+		7A000AB12ED61E1D00A7E572 /* AdaptiveColors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AdaptiveColors.swift; sourceTree = "<group>"; };
 		7A1CC91C2ED1EC3B00A61395 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
 		7A1CC91E2ED238D500A61395 /* AchievementModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AchievementModels.swift; sourceTree = "<group>"; };
 		7A1CC91F2ED238D500A61395 /* AuthModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthModels.swift; sourceTree = "<group>"; };
@@ -326,6 +330,8 @@
 		7A817B8E2EC7693C00500F32 /* Shop */ = {
 			isa = PBXGroup;
 			children = (
+				7883DF9E2EE02C87007D1C51 /* UserRequestsView.swift */,
+				7883DF9C2EE02C80007D1C51 /* SendRequestToShopView.swift */,
 				7AAAA2172EDD93A90035F942 /* ShopInventoryView.swift */,
 				7A817B8C2EC7693C00500F32 /* ShopDetailView.swift */,
 				7A817B8D2EC7693C00500F32 /* ShopView.swift */,
@@ -612,6 +618,7 @@
 				7AAAA20D2EDD938A0035F942 /* RequestModels.swift in Sources */,
 				7AAAA20E2EDD938A0035F942 /* InventoryCard.swift in Sources */,
 				7AAAA20F2EDD938A0035F942 /* Reservation.swift in Sources */,
+				7883DF9F2EE02C87007D1C51 /* UserRequestsView.swift in Sources */,
 				7AAAA2102EDD938A0035F942 /* TournamentExtensions.swift in Sources */,
 				A1000001 /* TCGArenaApp.swift in Sources */,
 				7AE3FF992EC90409004EE982 /* Set.swift in Sources */,
@@ -667,6 +674,7 @@
 				7A1CC92F2ED238D500A61395 /* UserActivity.swift in Sources */,
 				7A1CC9302ED238D500A61395 /* NotificationModels.swift in Sources */,
 				7A1CC9312ED238D500A61395 /* ProDeck.swift in Sources */,
+				7883DF9D2EE02C80007D1C51 /* SendRequestToShopView.swift in Sources */,
 				7A1CC9372ED238E800A61395 /* AchievementView.swift in Sources */,
 				7A1CC9382ED238E800A61395 /* NotificationView.swift in Sources */,
 				7840904E2EDB9DCB00CC6B9A /* SearchCardResultView.swift in Sources */,
@@ -946,6 +954,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		785CF4C32EDCDA6F00BA98AD /* XCRemoteSwiftPackageReference "SkeletonUI" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/CSolanaM/SkeletonUI.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.0.2;
+			};
+		};
 		7883DF7F2EDE4BBC007D1C51 /* XCRemoteSwiftPackageReference "OnBoardingKit" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/mlbonniec/OnBoardingKit";
@@ -957,29 +973,15 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
-		7883DF802EDE4BBC007D1C51 /* OnBoardingKit */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 7883DF7F2EDE4BBC007D1C51 /* XCRemoteSwiftPackageReference "OnBoardingKit" */;
-			productName = OnBoardingKit;
-		};
-/* End XCSwiftPackageProductDependency section */
-
-/* Begin XCRemoteSwiftPackageReference section */
-		785CF4C32EDCDA6F00BA98AD /* XCRemoteSwiftPackageReference "SkeletonUI" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/CSolanaM/SkeletonUI.git";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 2.0.2;
-			};
-		};
-/* End XCRemoteSwiftPackageReference section */
-
-/* Begin XCSwiftPackageProductDependency section */
 		785CF4C42EDCDA6F00BA98AD /* SkeletonUI */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 785CF4C32EDCDA6F00BA98AD /* XCRemoteSwiftPackageReference "SkeletonUI" */;
 			productName = SkeletonUI;
+		};
+		7883DF802EDE4BBC007D1C51 /* OnBoardingKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 7883DF7F2EDE4BBC007D1C51 /* XCRemoteSwiftPackageReference "OnBoardingKit" */;
+			productName = OnBoardingKit;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

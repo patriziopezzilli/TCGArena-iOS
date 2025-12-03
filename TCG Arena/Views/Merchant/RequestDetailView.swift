@@ -11,7 +11,7 @@ struct RequestDetailView: View {
     @EnvironmentObject var requestService: RequestService
     @Environment(\.dismiss) var dismiss
     
-    let request: MerchantRequest
+    let request: CustomerRequest
     
     @State private var messages: [RequestMessage] = []
     @State private var newMessage = ""
@@ -213,9 +213,9 @@ struct RequestDetailView: View {
     private func loadMessages() {
         Task {
             do {
-                let detail = try await requestService.getRequestDetail(requestId: request.id)
+                let request = try await requestService.getRequestDetail(requestId: request.id)
                 await MainActor.run {
-                    messages = detail.messages ?? []
+                    messages = [] // TODO: Load messages from separate endpoint when backend supports it
                     isLoading = false
                 }
             } catch {
@@ -347,17 +347,19 @@ struct MessageBubble: View {
 }
 
 #Preview {
-    RequestDetailView(request: MerchantRequest(
+    RequestDetailView(request: CustomerRequest(
         id: "1",
-        userId: "user1",
-        shopId: "shop1",
+        userId: 1,
+        shopId: 1,
         type: .availability,
         title: "Looking for Pikachu VMAX",
         description: "Do you have any Pikachu VMAX cards in stock?",
         status: .pending,
-        cardDetails: nil,
+        hasUnreadMessages: false,
+        messageCount: 0,
         createdAt: Date(),
-        updatedAt: Date()
+        updatedAt: Date(),
+        resolvedAt: nil
     ))
     .environmentObject(RequestService())
 }

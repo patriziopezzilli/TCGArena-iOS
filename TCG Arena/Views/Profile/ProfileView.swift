@@ -11,7 +11,9 @@ import PhotosUI
 struct ProfileView: View {
     @EnvironmentObject private var settingsService: SettingsService
     @EnvironmentObject private var authService: AuthService
+    @EnvironmentObject private var requestService: RequestService
     @State private var showingSettings = false
+    @State private var showingUserRequests = false
     @State private var userActivities: [UserActivity] = []
     @State private var userStats: UserStats?
     @State private var isLoadingActivities = false
@@ -171,6 +173,25 @@ struct ProfileView: View {
                                     .font(.system(size: UIConstants.sectionTitleFontSize, weight: .semibold))
                                     .foregroundColor(.primary)
                                 Spacer()
+                                
+                                Button(action: {
+                                    showingUserRequests = true
+                                }) {
+                                    HStack(spacing: 8) {
+                                        SwiftUI.Image(systemName: "envelope.fill")
+                                            .font(.system(size: 18, weight: .semibold))
+                                        Text("My Requests")
+                                            .font(.system(size: 16, weight: .semibold))
+                                    }
+                                    .foregroundColor(.white)
+                                    .padding(.horizontal, 20)
+                                    .padding(.vertical, 12)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 12)
+                                            .fill(Color(red: 0.0, green: 0.7, blue: 1.0))
+                                            .shadow(color: Color(red: 0.0, green: 0.7, blue: 1.0).opacity(0.3), radius: 4, x: 0, y: 2)
+                                    )
+                                }
                             }
                             .padding(.horizontal, 20)
                             
@@ -233,6 +254,14 @@ struct ProfileView: View {
             .sheet(isPresented: $showingSettings) {
                 SettingsView()
                     .environmentObject(settingsService)
+                    .environmentObject(requestService)
+            }
+            .sheet(isPresented: $showingUserRequests) {
+                NavigationView {
+                    UserRequestsView()
+                        .environmentObject(requestService)
+                        .environmentObject(authService)
+                }
             }
         }
         .onAppear {
@@ -248,8 +277,11 @@ struct ProfileView: View {
         Task {
             do {
                 userActivities = try await UserService.shared.getUserActivities(userId: userId)
+            } catch APIError.sessionExpired {
+                // Sessione scaduta, logout automatico
+                authService.signOut()
             } catch {
-                // Handle error silently
+                // Handle other errors silently
             }
             isLoadingActivities = false
         }
@@ -259,8 +291,11 @@ struct ProfileView: View {
         Task {
             do {
                 userStats = try await UserService.shared.getUserStats(userId: userId)
+            } catch APIError.sessionExpired {
+                // Sessione scaduta, logout automatico
+                authService.signOut()
             } catch {
-                // Handle error silently
+                // Handle other errors silently
             }
             isLoadingStats = false
         }
@@ -436,6 +471,7 @@ struct StatCard: View {
         @Environment(\.presentationMode) var presentationMode
         @EnvironmentObject private var settingsService: SettingsService
         @EnvironmentObject private var authService: AuthService
+        @EnvironmentObject private var requestService: RequestService
         @State private var showingTerms = false
         @State private var showingPrivacy = false
         @State private var showingFAQ = false

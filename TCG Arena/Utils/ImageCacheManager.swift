@@ -40,6 +40,36 @@ class ImageCacheManager {
         URLCache.shared = cache
     }
     
+    /// Ottieni immagine dalla cache in memoria (sincrono, per UI immediata)
+    func getFromMemoryCache(key: NSString) -> UIImage? {
+        return memoryCache.object(forKey: key)
+    }
+    
+    /// Ottieni immagine dalla cache in memoria usando URL
+    func getFromMemoryCache(url: URL) -> UIImage? {
+        let cacheKey = url.absoluteString as NSString
+        return memoryCache.object(forKey: cacheKey)
+    }
+    
+    /// Ottieni immagine dalla cache (memoria o disco) in modo sincrono
+    func getFromCache(url: URL) -> UIImage? {
+        let cacheKey = url.absoluteString as NSString
+        
+        // Controlla prima la cache in memoria
+        if let cachedImage = memoryCache.object(forKey: cacheKey) {
+            return cachedImage
+        }
+        
+        // Controlla la cache su disco
+        if let diskImage = loadFromDisk(for: cacheKey) {
+            // Salva anche in memoria per accessi futuri più veloci
+            memoryCache.setObject(diskImage, forKey: cacheKey)
+            return diskImage
+        }
+        
+        return nil
+    }
+    
     /// Carica un'immagine dall'URL con caching
     func loadImage(from url: URL) async throws -> UIImage {
         let cacheKey = url.absoluteString as NSString
@@ -131,33 +161,71 @@ class ImageCacheManager {
     }
 }
 
-/// View personalizzata per AsyncImage con caching
-struct CachedAsyncImage: View {
+/// View personalizzata per AsyncImage con caching migliorato
+struct CachedAsyncImage<Content: View>: View {
     let url: URL?
     let scale: CGFloat
-    let content: (AsyncImagePhase) -> AnyView
+    let content: (AsyncImagePhase) -> Content
     
-    init(url: URL?, scale: CGFloat = 1.0, @ViewBuilder content: @escaping (AsyncImagePhase) -> some View) {
+    @State private var phase: AsyncImagePhase = .empty
+    @State private var loadTask: Task<Void, Never>?
+    
+    init(url: URL?, scale: CGFloat = 1.0, @ViewBuilder content: @escaping (AsyncImagePhase) -> Content) {
         self.url = url
         self.scale = scale
-        self.content = { phase in AnyView(content(phase)) }
+        self.content = content
     }
     
     var body: some View {
-        if let url = url {
-            AsyncImage(url: url, scale: scale) { phase in
-                content(phase)
+        content(phase)
+            .onAppear {
+                loadImage()
             }
-            .task {
-                // Pre-carica l'immagine per il caching
-                do {
-                    _ = try await ImageCacheManager.shared.loadImage(from: url)
-                } catch {
-                    print("❌ CachedAsyncImage: Failed to cache image - \(error.localizedDescription)")
+            .onChange(of: url) { newUrl in
+                // Ricarica se l'URL cambia
+                loadImage()
+            }
+            .onDisappear {
+                loadTask?.cancel()
+            }
+    }
+    
+    private func loadImage() {
+        // Cancella task precedente
+        loadTask?.cancel()
+        
+        guard let url = url else {
+            phase = .empty
+            return
+        }
+        
+        // Controlla prima la cache (memoria + disco) per un caricamento istantaneo
+        if let cachedImage = ImageCacheManager.shared.getFromCache(url: url) {
+            phase = .success(SwiftUI.Image(uiImage: cachedImage))
+            return
+        }
+        
+        // Mostra loading state
+        phase = .empty
+        
+        // Carica l'immagine in background
+        loadTask = Task {
+            do {
+                let image = try await ImageCacheManager.shared.loadImage(from: url)
+                
+                // Aggiorna UI sul main thread
+                await MainActor.run {
+                    if !Task.isCancelled {
+                        phase = .success(SwiftUI.Image(uiImage: image))
+                    }
+                }
+            } catch {
+                await MainActor.run {
+                    if !Task.isCancelled {
+                        phase = .failure(error)
+                    }
                 }
             }
-        } else {
-            content(.empty)
         }
     }
 }

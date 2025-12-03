@@ -26,6 +26,7 @@ class APIClient: NSObject {
     }()
 
     private var _jwtToken: String?
+    private var _refreshToken: String?
 
     // JSON Decoder configurato per gestire le date dal backend
     private lazy var jsonDecoder: JSONDecoder = {
@@ -79,6 +80,24 @@ class APIClient: NSObject {
                 UserDefaults.standard.set(token, forKey: "jwtToken")
             } else {
                 UserDefaults.standard.removeObject(forKey: "jwtToken")
+            }
+            UserDefaults.standard.synchronize() // Force save
+        }
+    }
+    
+    var refreshToken: String? {
+        get {
+            if _refreshToken == nil {
+                _refreshToken = UserDefaults.standard.string(forKey: "refreshToken")
+            }
+            return _refreshToken
+        }
+        set {
+            _refreshToken = newValue
+            if let token = newValue {
+                UserDefaults.standard.set(token, forKey: "refreshToken")
+            } else {
+                UserDefaults.standard.removeObject(forKey: "refreshToken")
             }
             UserDefaults.standard.synchronize() // Force save
         }
@@ -192,9 +211,21 @@ class APIClient: NSObject {
 
         guard (200...299).contains(httpResponse.statusCode) else {
             if httpResponse.statusCode == 401 {
-                // Token scaduto, logout
+                // Prova a refreshare il token se non è già un tentativo di retry
+                if retryCount == 0 {
+                    print("🔄 APIClient: Token expired, attempting refresh...")
+                    do {
+                        if try await refreshToken() {
+                            print("✅ APIClient: Token refreshed, retrying request...")
+                            return try await rawRequest(endpoint, method: method, body: body, headers: headers, retryCount: 1)
+                        }
+                    } catch {
+                        print("🔴 APIClient: Token refresh failed with error: \(error.localizedDescription)")
+                    }
+                }
+                // Token scaduto e refresh fallito, logout
                 jwtToken = nil
-                throw APIError.unauthorized
+                throw APIError.sessionExpired
             }
             throw APIError.serverError(httpResponse.statusCode)
         }
@@ -206,12 +237,23 @@ class APIClient: NSObject {
         jwtToken = token
     }
     
+    func setRefreshToken(_ token: String) {
+        refreshToken = token
+    }
+    
     func clearJWTToken() {
         jwtToken = nil
     }
+    
+    func clearRefreshToken() {
+        refreshToken = nil
+    }
 
     private func refreshToken() async throws -> Bool {
-        guard let currentToken = jwtToken else { return false }
+        guard let currentRefreshToken = refreshToken else { 
+            print("🔴 APIClient: No refresh token available")
+            return false
+        }
 
         guard let url = URL(string: baseURL + "/api/auth/refresh-token") else {
             print("🔴 APIClient: Invalid refresh URL")
@@ -224,9 +266,8 @@ class APIClient: NSObject {
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
 
-        // NON includere nell'header Authorization per endpoint pubblici
-        // Includi solo nel body
-        let refreshBody = ["token": currentToken]
+        // Includi il refresh token nel body
+        let refreshBody = ["refreshToken": currentRefreshToken]
         request.httpBody = try? JSONEncoder().encode(refreshBody)
 
         do {
@@ -245,16 +286,17 @@ class APIClient: NSObject {
                 return false
             }
 
-            // Parse the response to get new token
+            // Parse the response to get new tokens
             let decoder = JSONDecoder()
             let refreshResponse = try decoder.decode([String: String].self, from: data)
 
-            if let newToken = refreshResponse["token"] {
+            if let newToken = refreshResponse["token"], let newRefreshToken = refreshResponse["refreshToken"] {
                 jwtToken = newToken
-                print("✅ APIClient: Token refreshed successfully")
+                refreshToken = newRefreshToken
+                print("✅ APIClient: Tokens refreshed successfully")
                 return true
             } else {
-                print("🔴 APIClient: Refresh response missing token")
+                print("🔴 APIClient: Refresh response missing token or refreshToken")
                 return false
             }
         } catch {
@@ -276,6 +318,7 @@ enum APIError: Error {
     case invalidURL
     case invalidResponse
     case unauthorized
+    case sessionExpired // Nuovo errore per sessione scaduta
     case serverError(Int)
     case decodingError
 }

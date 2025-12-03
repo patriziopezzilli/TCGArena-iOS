@@ -14,7 +14,9 @@ struct ReadOnlyContentView: View {
     @StateObject private var shopService = ShopService()
     @StateObject private var tournamentService = TournamentService()
     @StateObject private var deckService = DeckService()
+    @StateObject private var inventoryService = InventoryService()
     @EnvironmentObject private var settingsService: SettingsService
+    @EnvironmentObject private var authService: AuthService
 
     var body: some View {
         ZStack {
@@ -33,6 +35,8 @@ struct ReadOnlyContentView: View {
                 ShopView()
                     .environmentObject(shopService)
                     .environmentObject(tournamentService)
+                    .environmentObject(inventoryService)
+                    .environmentObject(authService)
                     .tabItem {
                         SwiftUI.Image(systemName: "storefront")
                         Text("Stores")

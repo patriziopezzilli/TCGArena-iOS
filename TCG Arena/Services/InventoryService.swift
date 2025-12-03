@@ -36,16 +36,19 @@ class InventoryService: ObservableObject {
         
         defer { isLoading = false }
         
-        var endpoint = "/api/inventory/merchant/\(merchantId)"
+        var endpoint = "/api/inventory"
+        
+        var queryParams = ["shopId": merchantId]
         
         if let filters = filters {
-            let queryParams = filters.queryParameters
-                .map { "\($0.key)=\($0.value)" }
-                .joined(separator: "&")
-            
-            if !queryParams.isEmpty {
-                endpoint += "?\(queryParams)"
+            for (key, value) in filters.queryParameters {
+                queryParams[key] = value
             }
+        }
+        
+        let queryString = queryParams.map { "\($0.key)=\($0.value)" }.joined(separator: "&")
+        if !queryString.isEmpty {
+            endpoint += "?\(queryString)"
         }
         
         return try await withCheckedThrowingContinuation { continuation in

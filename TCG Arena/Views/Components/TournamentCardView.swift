@@ -11,6 +11,7 @@ struct TournamentCardView: View {
     let tournament: Tournament
     let isUserRegistered: Bool
     let onRegisterTap: () -> Void
+    @EnvironmentObject var authService: AuthService
     
     var body: some View {
         HStack(spacing: 0) {
@@ -109,7 +110,7 @@ struct TournamentCardView: View {
                     
                     Spacer()
 
-                    if tournament.status == .registrationOpen {
+                    if tournament.status == .registrationOpen && authService.isAuthenticated && authService.currentUserId != nil {
                         Button(action: onRegisterTap) {
                             Text(isUserRegistered ? "Registered" : "Join")
                                 .font(.system(size: 12, weight: .semibold))

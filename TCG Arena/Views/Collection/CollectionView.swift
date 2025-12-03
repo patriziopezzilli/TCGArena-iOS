@@ -235,6 +235,9 @@ struct CollectionView: View {
     @State private var showingImportFromDecks = false
     @State private var userCards: [Card] = [] // Personal collection cards
     @State private var enrichedAllCards: [Card] = [] // Cards from all decks (enriched)
+    @State private var hasAppeared = false // For initial appearance animation
+    @State private var isAddCardButtonPressed = false
+    @State private var isCreateDeckButtonPressed = false
 
     enum ViewMode {
         case lists, allCards
@@ -384,7 +387,11 @@ struct CollectionView: View {
                         
                         group.enter()
                         // Create basic card from deck card
-                        let basicCard = cardService.convertDeckCardToCard(deckCard, deckId: deck.id!)
+                        guard let deckId = deck.id else {
+                            group.leave()
+                            return
+                        }
+                        let basicCard = cardService.convertDeckCardToCard(deckCard, deckId: deckId)
 
                         // Enrich with template data
                         cardService.enrichCardWithTemplateData(basicCard) { result in
@@ -444,13 +451,19 @@ struct CollectionView: View {
         NavigationView {
             VStack(spacing: 0) {
                 headerView
+                    .opacity(hasAppeared ? 1 : 0)
+                    .offset(y: hasAppeared ? 0 : -10)
                 searchBarView
+                    .opacity(hasAppeared ? 1 : 0)
+                    .offset(y: hasAppeared ? 0 : -8)
                 portfolioCardView
                 tcgFilterView
+                    .opacity(hasAppeared ? 1 : 0)
                 separatorView
                 discoverSectionView
                 contentView
             }
+            .animation(.easeOut(duration: 0.4), value: hasAppeared)
             .navigationTitle("")
             .navigationBarHidden(true)
             .background(cardNavigationLink)
@@ -463,7 +476,13 @@ struct CollectionView: View {
                     .environmentObject(cardService)
                     .environmentObject(deckService)
             }
-            .onAppear(perform: onAppearAction)
+            .onAppear {
+                onAppearAction()
+                // Trigger appearance animation
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                    hasAppeared = true
+                }
+            }
             .task(taskAction)
             .onChange(of: showMarketValues, perform: onChangeAction)
             .refreshable {
@@ -497,7 +516,22 @@ struct CollectionView: View {
                                 .foregroundColor(.white)
                         }
                         .shadow(color: Color.blue.opacity(0.3), radius: 4, x: 0, y: 2)
+                        .scaleEffect(isAddCardButtonPressed ? 0.85 : 1.0)
                     }
+                    .buttonStyle(PlainButtonStyle())
+                    .simultaneousGesture(
+                        DragGesture(minimumDistance: 0)
+                            .onChanged { _ in
+                                withAnimation(.easeOut(duration: 0.1)) {
+                                    isAddCardButtonPressed = true
+                                }
+                            }
+                            .onEnded { _ in
+                                withAnimation(.spring(response: 0.3, dampingFraction: 0.5)) {
+                                    isAddCardButtonPressed = false
+                                }
+                            }
+                    )
 
                     // Create Deck Button
                     Button(action: { showingCreateDeck = true }) {
@@ -511,7 +545,22 @@ struct CollectionView: View {
                                 .foregroundColor(.white)
                         }
                         .shadow(color: Color.green.opacity(0.3), radius: 4, x: 0, y: 2)
+                        .scaleEffect(isCreateDeckButtonPressed ? 0.85 : 1.0)
                     }
+                    .buttonStyle(PlainButtonStyle())
+                    .simultaneousGesture(
+                        DragGesture(minimumDistance: 0)
+                            .onChanged { _ in
+                                withAnimation(.easeOut(duration: 0.1)) {
+                                    isCreateDeckButtonPressed = true
+                                }
+                            }
+                            .onEnded { _ in
+                                withAnimation(.spring(response: 0.3, dampingFraction: 0.5)) {
+                                    isCreateDeckButtonPressed = false
+                                }
+                            }
+                    )
                 }
         }
         .padding(.horizontal, 20)
@@ -524,6 +573,7 @@ struct CollectionView: View {
             .pickerStyle(.segmented)
             .padding(.horizontal, 20)
             .padding(.bottom, 8)
+            .animation(.easeInOut(duration: 0.2), value: viewMode)
         }
     }
 
@@ -571,6 +621,11 @@ struct CollectionView: View {
                 PortfolioCard(portfolio: portfolio)
                     .padding(.horizontal, 20)
                     .padding(.top, 16)
+                    .transition(.asymmetric(
+                        insertion: .opacity.combined(with: .scale(scale: 0.95)).combined(with: .offset(y: -10)),
+                        removal: .opacity
+                    ))
+                    .animation(.spring(response: 0.4, dampingFraction: 0.8), value: portfolio.totalValue)
             }
         }
     }
@@ -630,19 +685,30 @@ struct CollectionView: View {
             if viewMode == .lists {
                 if filteredDecks.isEmpty && !isLoadingDecks {
                     emptyDecksView
+                        .transition(.opacity.combined(with: .scale(scale: 0.95)))
                 } else {
                     decksListView
                         .skeleton(with: isLoadingDecks)
+                        .transition(.asymmetric(
+                            insertion: .opacity.combined(with: .move(edge: .leading)),
+                            removal: .opacity.combined(with: .move(edge: .trailing))
+                        ))
                 }
             } else {
                 if filteredCards.isEmpty && !isLoadingCards {
                     emptyCardsView
+                        .transition(.opacity.combined(with: .scale(scale: 0.95)))
                 } else {
                     cardsListView
                         .skeleton(with: isLoadingCards)
+                        .transition(.asymmetric(
+                            insertion: .opacity.combined(with: .move(edge: .trailing)),
+                            removal: .opacity.combined(with: .move(edge: .leading))
+                        ))
                 }
             }
         }
+        .animation(.spring(response: 0.4, dampingFraction: 0.8), value: viewMode)
     }
 
     private var emptyDecksView: some View {
@@ -656,6 +722,8 @@ struct CollectionView: View {
                     .font(.system(size: 50, weight: .medium))
                     .foregroundColor(.blue)
             }
+            .scaleEffect(1.0)
+            .animation(.spring(response: 0.6, dampingFraction: 0.6).delay(0.1), value: isLoadingDecks)
 
             VStack(spacing: 12) {
                 Text("No Lists Yet")
@@ -668,23 +736,27 @@ struct CollectionView: View {
                     .multilineTextAlignment(.center)
                     .lineLimit(nil)
             }
+            .opacity(1.0)
+            .animation(.easeOut(duration: 0.4).delay(0.2), value: isLoadingDecks)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
         .padding(.horizontal, 40)
     }
 
     private var decksListView: some View {
-        List(filteredDecks) { deck in
-            ZStack {
-                NavigationLink(destination: DeckDetailView(deck: deck)) {
-                    EmptyView()
-                }
-                .opacity(0)
+        List {
+            ForEach(Array(filteredDecks.enumerated()), id: \.element.id) { index, deck in
+                ZStack {
+                    NavigationLink(destination: DeckDetailView(deck: deck)) {
+                        EmptyView()
+                    }
+                    .opacity(0)
 
-                DeckRowView(deck: deck)
+                    DeckRowView(deck: deck)
+                }
+                .listRowSeparator(.hidden)
+                .listRowInsets(EdgeInsets(top: 4, leading: 20, bottom: 4, trailing: 20))
             }
-            .listRowSeparator(.hidden)
-            .listRowInsets(EdgeInsets(top: 4, leading: 20, bottom: 4, trailing: 20))
         }
         .listStyle(PlainListStyle())
         .background(Color(.systemBackground))
@@ -704,6 +776,7 @@ struct CollectionView: View {
                         .font(.system(size: 50, weight: .medium))
                         .foregroundColor(Color(red: 0.0, green: 0.7, blue: 1.0))
                 }
+                .transition(.opacity.combined(with: .scale(scale: 0.8)))
 
                 VStack(spacing: 12) {
                     Text(viewMode == .allCards ? "No Cards in Your Decks" : "No Cards in Collection")
@@ -718,6 +791,7 @@ struct CollectionView: View {
                         .multilineTextAlignment(.center)
                         .lineLimit(nil)
                 }
+                .transition(.opacity.combined(with: .offset(y: 10)))
 
                 // Show import option only for collection view
                 if viewMode != .allCards && hasCardsInDecks() {
@@ -735,8 +809,10 @@ struct CollectionView: View {
                         .background(Color.blue.opacity(0.1))
                         .clipShape(Capsule())
                     }
+                    .transition(.opacity.combined(with: .scale(scale: 0.9)))
                 }
             }
+            .animation(.spring(response: 0.5, dampingFraction: 0.7), value: viewMode)
 
         }
         .padding(.horizontal, 40)
@@ -754,14 +830,14 @@ struct CollectionView: View {
         List {
             if isLoadingCards {
                 // Show skeleton cards while loading
-                ForEach(0..<8, id: \.self) { _ in
+                ForEach(0..<8, id: \.self) { index in
                     CardRowSkeletonView()
                         .listRowSeparator(.hidden)
                         .listRowInsets(EdgeInsets(top: 4, leading: 20, bottom: 4, trailing: 20))
                         .listRowBackground(Color.clear)
                 }
             } else {
-                ForEach(filteredCards) { card in
+                ForEach(filteredCards, id: \.id) { card in
                     ZStack {
                         NavigationLink(destination: CardDetailView(card: card, isFromDiscover: false) { updatedCard in
                             // Update local state immediately for instant UI feedback
@@ -782,6 +858,7 @@ struct CollectionView: View {
         }
         .listStyle(PlainListStyle())
         .background(Color(.systemGroupedBackground))
+        .animation(.easeInOut(duration: 0.25), value: isLoadingCards)
     }
 
     private var cardNavigationLink: some View {

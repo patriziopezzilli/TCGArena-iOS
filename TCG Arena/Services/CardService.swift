@@ -118,7 +118,11 @@ class CardService: ObservableObject {
             switch deckResult {
             case .success(let deck):
                 // Convert deck cards to Card objects and enrich with template data
-                let cards = deck.cards.map { self.convertDeckCardToCard($0, deckId: deck.id!) }
+                guard let deckId = deck.id else {
+                    completion(.failure(NSError(domain: "CardService", code: -1, userInfo: [NSLocalizedDescriptionKey: "Deck ID is nil"])))
+                    return
+                }
+                let cards = deck.cards.map { self.convertDeckCardToCard($0, deckId: deckId) }
 
                 // Enrich cards with template data
                 let group = DispatchGroup()

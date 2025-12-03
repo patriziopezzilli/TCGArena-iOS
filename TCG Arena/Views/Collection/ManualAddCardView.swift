@@ -35,128 +35,122 @@ struct ManualAddCardView: View {
     }
     
     var body: some View {
-        ZStack {
-            // Background
-            accentColor
-                .opacity(0.05)
-                .ignoresSafeArea()
-            
-            VStack(spacing: 0) {
-                // Header Section
-                VStack(spacing: 20) {
-                    // Title
-                    VStack(spacing: 4) {
-                        Text("Aggiungi Carta")
-                            .font(.system(size: 28, weight: .bold, design: .rounded))
-                            .foregroundColor(.primary)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                        
-                        Text("Cerca e aggiungi alla tua collezione")
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                    }
-                    .padding(.horizontal, 20)
+        VStack(spacing: 0) {
+            // Header Section
+            VStack(spacing: 20) {
+                // Title
+                VStack(spacing: 4) {
+                    Text("Aggiungi Carta")
+                        .font(.system(size: 28, weight: .bold, design: .rounded))
+                        .foregroundColor(.primary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
                     
-                    // Deck Selector
-                    if !deckService.userDecks.isEmpty {
-                        ScrollView(.horizontal, showsIndicators: false) {
-                            HStack(spacing: 12) {
-                                ForEach(deckService.userDecks) { deck in
-                                    DeckSelectionPill(
-                                        deck: deck,
-                                        isSelected: selectedDeckId == deck.id,
-                                        accentColor: deck.tcgType.themeColor
-                                    ) {
-                                        withAnimation { selectedDeckId = deck.id }
-                                    }
-                                }
-                            }
-                            .padding(.horizontal, 20)
-                            .padding(.vertical, 4)
-                        }
-                        .frame(height: 50)
-                    }
-                    
-                    // Search Bar
-                    HStack(spacing: 12) {
-                        SwiftUI.Image(systemName: "magnifyingglass")
-                            .font(.system(size: 18, weight: .medium))
-                            .foregroundColor(accentColor)
-                        
-                        TextField("Cerca carta...", text: $searchText)
-                            .font(.system(size: 16))
-                            .onChange(of: searchText) { newValue in
-                                performSearch(query: newValue)
-                            }
-                        
-                        if !searchText.isEmpty {
-                            Button(action: { searchText = "" }) {
-                                SwiftUI.Image(systemName: "xmark.circle.fill")
-                                    .foregroundColor(.secondary)
-                            }
-                        }
-                    }
-                    .padding(16)
-                    .background(
-                        RoundedRectangle(cornerRadius: 16)
-                            .fill(Color(.systemBackground))
-                            .shadow(color: Color.black.opacity(0.05), radius: 10, x: 0, y: 5)
-                    )
-                    .padding(.horizontal, 20)
+                    Text("Cerca e aggiungi alla tua collezione")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
                 }
-                .padding(.top, 10)
-                .padding(.bottom, 20)
-                .background(
-                    Color(.systemBackground).opacity(0.0)
-                )
+                .padding(.horizontal, 20)
                 
-                // Results Area
-                ZStack {
-                    if isSearching {
-                        ProgressView()
-                            .tint(accentColor)
-                    } else if searchResults.isEmpty && !searchText.isEmpty {
-                        ManualAddEmptyStateView(
-                            icon: "magnifyingglass",
-                            title: "Nessun risultato",
-                            message: "Prova a cercare con un nome diverso",
-                            color: .orange
-                        )
-                    } else if searchResults.isEmpty {
-                        ManualAddEmptyStateView(
-                            icon: "sparkles",
-                            title: "Inizia la ricerca",
-                            message: "Digita il nome della carta che vuoi aggiungere",
-                            color: accentColor
-                        )
-                    } else {
-                        ScrollView {
-                            LazyVStack(spacing: 12) {
-                                ForEach(searchResults) { card in
-                                    CardResultRow(
-                                        card: card,
-                                        isTapped: tappedCardId == card.id,
-                                        isAdding: isAddingCard && tappedCardId == card.id,
-                                        accentColor: accentColor
-                                    )
-                                    .onTapGesture(count: 2) {
-                                        addCardToDeck(card)
-                                    }
-                                    .onTapGesture(count: 1) {
-                                        handleSingleTap(card)
-                                    }
+                // Deck Selector
+                if !deckService.userDecks.isEmpty {
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 12) {
+                            ForEach(deckService.userDecks) { deck in
+                                DeckSelectionPill(
+                                    deck: deck,
+                                    isSelected: selectedDeckId == deck.id,
+                                    accentColor: deck.tcgType.themeColor
+                                ) {
+                                    withAnimation { selectedDeckId = deck.id }
                                 }
                             }
-                            .padding(.horizontal, 20)
-                            .padding(.top, 10)
-                            .padding(.bottom, 20)
+                        }
+                        .padding(.horizontal, 20)
+                        .padding(.vertical, 4)
+                    }
+                    .frame(height: 50)
+                }
+                
+                // Search Bar
+                HStack(spacing: 12) {
+                    SwiftUI.Image(systemName: "magnifyingglass")
+                        .font(.system(size: 18, weight: .medium))
+                        .foregroundColor(accentColor)
+                    
+                    TextField("Cerca carta...", text: $searchText)
+                        .font(.system(size: 16))
+                        .onChange(of: searchText) { newValue in
+                            performSearch(query: newValue)
+                        }
+                    
+                    if !searchText.isEmpty {
+                        Button(action: { searchText = "" }) {
+                            SwiftUI.Image(systemName: "xmark.circle.fill")
+                                .foregroundColor(.secondary)
                         }
                     }
                 }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .padding(16)
+                .background(
+                    RoundedRectangle(cornerRadius: 16)
+                        .fill(Color(.secondarySystemBackground))
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 16)
+                        .stroke(accentColor.opacity(0.3), lineWidth: 1.5)
+                )
+                .padding(.horizontal, 20)
             }
+            .padding(.top, 10)
+            .padding(.bottom, 20)
+            
+            // Results Area
+            ZStack {
+                if isSearching {
+                    ProgressView()
+                        .tint(accentColor)
+                } else if searchResults.isEmpty && !searchText.isEmpty {
+                    ManualAddEmptyStateView(
+                        icon: "magnifyingglass",
+                        title: "Nessun risultato",
+                        message: "Prova a cercare con un nome diverso",
+                        color: .orange
+                    )
+                } else if searchResults.isEmpty {
+                    ManualAddEmptyStateView(
+                        icon: "sparkles",
+                        title: "Inizia la ricerca",
+                        message: "Digita il nome della carta che vuoi aggiungere",
+                        color: accentColor
+                    )
+                } else {
+                    ScrollView {
+                        LazyVStack(spacing: 12) {
+                            ForEach(searchResults) { card in
+                                CardResultRow(
+                                    card: card,
+                                    isTapped: tappedCardId == card.id,
+                                    isAdding: isAddingCard && tappedCardId == card.id,
+                                    accentColor: accentColor
+                                )
+                                .onTapGesture(count: 2) {
+                                    addCardToDeck(card)
+                                }
+                                .onTapGesture(count: 1) {
+                                    handleSingleTap(card)
+                                }
+                            }
+                        }
+                        .padding(.horizontal, 20)
+                        .padding(.top, 10)
+                        .padding(.bottom, 20)
+                    }
+                }
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
+        .background(Color(.systemBackground))
         .overlay(alignment: .bottom) {
             // Success Toast
             if showSuccessToast {

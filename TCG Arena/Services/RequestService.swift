@@ -10,10 +10,12 @@ import Combine
 
 @MainActor
 class RequestService: ObservableObject {
-    @Published var requests: [MerchantRequest] = []
-    @Published var activeRequests: [MerchantRequest] = []
+    @Published var requests: [CustomerRequest] = []
+    @Published var merchantRequests: [CustomerRequest] = []
+    @Published var activeRequests: [CustomerRequest] = []
     @Published var isLoading = false
     @Published var errorMessage: String?
+    @Published var unreadCount: Int = 0
     
     private let apiClient: APIClient
     private var cancellables = Set<AnyCancellable>()
@@ -22,8 +24,14 @@ class RequestService: ObservableObject {
         self.apiClient = apiClient
     }
     
+    // MARK: - Helper Methods
+    private func createConfiguredDecoder() -> JSONDecoder {
+        let decoder = JSONDecoder()
+        return decoder
+    }
+    
     // MARK: - Create Request
-    func createRequest(_ request: CreateRequestRequest) async throws -> MerchantRequest {
+    func createRequest(_ request: CreateRequestRequest) async throws -> CustomerRequest {
         isLoading = true
         errorMessage = nil
         
@@ -38,17 +46,14 @@ class RequestService: ObservableObject {
                 switch result {
                 case .success(let data):
                     do {
-                        let decoder = JSONDecoder()
-                        decoder.keyDecodingStrategy = .convertFromSnakeCase
-                        decoder.dateDecodingStrategy = .iso8601
-                        
-                        let response = try decoder.decode(RequestResponse.self, from: data)
+                        let decoder = self.createConfiguredDecoder()
+                        let createdRequest = try decoder.decode(CustomerRequest.self, from: data)
                         
                         Task { @MainActor in
-                            self.requests.insert(response.request, at: 0)
+                            self.requests.insert(createdRequest, at: 0)
                             self.updateActiveRequests()
                         }
-                        continuation.resume(returning: response.request)
+                        continuation.resume(returning: createdRequest)
                     } catch {
                         Task { @MainActor in
                             self.errorMessage = "Failed to create request: \(error.localizedDescription)"
@@ -66,7 +71,7 @@ class RequestService: ObservableObject {
     }
     
     // MARK: - Get User Requests
-    func getUserRequests(userId: String) async throws -> [MerchantRequest] {
+    func getUserRequests(userId: String) async throws -> [CustomerRequest] {
         isLoading = true
         errorMessage = nil
         
@@ -77,10 +82,7 @@ class RequestService: ObservableObject {
                 switch result {
                 case .success(let data):
                     do {
-                        let decoder = JSONDecoder()
-                        decoder.keyDecodingStrategy = .convertFromSnakeCase
-                        decoder.dateDecodingStrategy = .iso8601
-                        
+                        let decoder = self.createConfiguredDecoder()
                         let response = try decoder.decode(RequestListResponse.self, from: data)
                         
                         Task { @MainActor in
@@ -105,7 +107,7 @@ class RequestService: ObservableObject {
     }
     
     // MARK: - Get Merchant Requests
-    func getMerchantRequests(merchantId: String, status: MerchantRequest.RequestStatus? = nil) async throws -> [MerchantRequest] {
+    func getMerchantRequests(merchantId: String, status: CustomerRequest.RequestStatus? = nil) async throws -> [CustomerRequest] {
         isLoading = true
         errorMessage = nil
         
@@ -121,15 +123,13 @@ class RequestService: ObservableObject {
                 switch result {
                 case .success(let data):
                     do {
-                        let decoder = JSONDecoder()
-                        decoder.keyDecodingStrategy = .convertFromSnakeCase
-                        decoder.dateDecodingStrategy = .iso8601
-                        
+                        let decoder = self.createConfiguredDecoder()
                         let response = try decoder.decode(RequestListResponse.self, from: data)
                         
                         Task { @MainActor in
-                            self.requests = response.requests
+                            self.merchantRequests = response.requests
                             self.updateActiveRequests()
+                            self.updateUnreadCount()
                         }
                         continuation.resume(returning: response.requests)
                     } catch {
@@ -149,7 +149,7 @@ class RequestService: ObservableObject {
     }
     
     // MARK: - Get Request Detail with Messages
-    func getRequestDetail(id: String) async throws -> RequestResponse {
+    func getRequestDetail(id: String) async throws -> CustomerRequest {
         isLoading = true
         errorMessage = nil
         
@@ -160,12 +160,9 @@ class RequestService: ObservableObject {
                 switch result {
                 case .success(let data):
                     do {
-                        let decoder = JSONDecoder()
-                        decoder.keyDecodingStrategy = .convertFromSnakeCase
-                        decoder.dateDecodingStrategy = .iso8601
-                        
-                        let response = try decoder.decode(RequestResponse.self, from: data)
-                        continuation.resume(returning: response)
+                        let decoder = self.createConfiguredDecoder()
+                        let request = try decoder.decode(CustomerRequest.self, from: data)
+                        continuation.resume(returning: request)
                     } catch {
                         Task { @MainActor in
                             self.errorMessage = "Failed to load request: \(error.localizedDescription)"
@@ -195,14 +192,11 @@ class RequestService: ObservableObject {
         let body = try encoder.encode(request)
         
         return try await withCheckedThrowingContinuation { continuation in
-            apiClient.request(endpoint: "/api/requests/\(requestId)/message", method: .post, body: body) { result in
+            apiClient.request(endpoint: "/api/requests/\(requestId)/messages", method: .post, body: body) { result in
                 switch result {
                 case .success(let data):
                     do {
-                        let decoder = JSONDecoder()
-                        decoder.keyDecodingStrategy = .convertFromSnakeCase
-                        decoder.dateDecodingStrategy = .iso8601
-                        
+                        let decoder = self.createConfiguredDecoder()
                         let message = try decoder.decode(RequestMessage.self, from: data)
                         continuation.resume(returning: message)
                     } catch {
@@ -222,7 +216,7 @@ class RequestService: ObservableObject {
     }
     
     // MARK: - Update Request Status
-    func updateRequestStatus(id: String, status: MerchantRequest.RequestStatus, message: String? = nil) async throws -> MerchantRequest {
+    func updateRequestStatus(id: String, status: CustomerRequest.RequestStatus, message: String? = nil) async throws -> CustomerRequest {
         isLoading = true
         errorMessage = nil
         
@@ -238,11 +232,8 @@ class RequestService: ObservableObject {
                 switch result {
                 case .success(let data):
                     do {
-                        let decoder = JSONDecoder()
-                        decoder.keyDecodingStrategy = .convertFromSnakeCase
-                        decoder.dateDecodingStrategy = .iso8601
-                        
-                        let updatedRequest = try decoder.decode(MerchantRequest.self, from: data)
+                        let decoder = self.createConfiguredDecoder()
+                        let updatedRequest = try decoder.decode(CustomerRequest.self, from: data)
                         
                         Task { @MainActor in
                             if let index = self.requests.firstIndex(where: { $0.id == id }) {
@@ -268,22 +259,22 @@ class RequestService: ObservableObject {
     }
     
     // MARK: - Accept Request
-    func acceptRequest(id: String, message: String? = nil) async throws -> MerchantRequest {
+    func acceptRequest(id: String, message: String? = nil) async throws -> CustomerRequest {
         return try await updateRequestStatus(id: id, status: .accepted, message: message)
     }
     
     // MARK: - Reject Request
-    func rejectRequest(id: String, message: String? = nil) async throws -> MerchantRequest {
+    func rejectRequest(id: String, message: String? = nil) async throws -> CustomerRequest {
         return try await updateRequestStatus(id: id, status: .rejected, message: message)
     }
     
     // MARK: - Complete Request
-    func completeRequest(id: String, message: String? = nil) async throws -> MerchantRequest {
+    func completeRequest(id: String, message: String? = nil) async throws -> CustomerRequest {
         return try await updateRequestStatus(id: id, status: .completed, message: message)
     }
     
     // MARK: - Cancel Request
-    func cancelRequest(id: String) async throws -> MerchantRequest {
+    func cancelRequest(id: String) async throws -> CustomerRequest {
         return try await updateRequestStatus(id: id, status: .cancelled)
     }
     
@@ -297,8 +288,7 @@ class RequestService: ObservableObject {
     }
     
     // Get unread count for notifications
-    func getUnreadCount(for merchantId: String) -> Int {
-        // This would need to be enhanced with actual unread tracking
-        return activeRequests.count
+    func updateUnreadCount() {
+        unreadCount = merchantRequests.filter { $0.hasUnreadMessages }.count
     }
 }

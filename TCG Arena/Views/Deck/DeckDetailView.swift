@@ -35,6 +35,7 @@ struct DeckDetailView: View {
         
         // Convert deck cards to basic Card objects and enrich with template data
         let group = DispatchGroup()
+        let serialQueue = DispatchQueue(label: "com.tcgarena.deckCardEnrichment")
         var enrichedCards: [Card] = []
         
         for deckCard in deck.cards {
@@ -44,21 +45,25 @@ struct DeckDetailView: View {
             
             // Enrich with template data
             CardService.shared.enrichCardWithTemplateData(basicCard) { result in
-                switch result {
-                case .success(let enrichedCard):
-                    enrichedCards.append(enrichedCard)
-                case .failure(let error):
-                    print("Failed to enrich card \(deckCard.cardName): \(error.localizedDescription)")
-                    // Use basic card if enrichment fails
-                    enrichedCards.append(basicCard)
+                serialQueue.async {
+                    switch result {
+                    case .success(let enrichedCard):
+                        enrichedCards.append(enrichedCard)
+                    case .failure(let error):
+                        print("Failed to enrich card \(deckCard.cardName): \(error.localizedDescription)")
+                        // Use basic card if enrichment fails
+                        enrichedCards.append(basicCard)
+                    }
+                    group.leave()
                 }
-                group.leave()
             }
         }
         
         group.notify(queue: .main) {
             // Sort cards by name for consistent ordering
-            self.deckCards = enrichedCards.sorted { $0.name < $1.name }
+            serialQueue.sync {
+                self.deckCards = enrichedCards.sorted { $0.name < $1.name }
+            }
             self.isLoadingCards = false
         }
     }
@@ -91,11 +96,13 @@ struct DeckDetailView: View {
     }
     
     var body: some View {
-        VStack(spacing: 0) {
-            // Fixed Header
-            ZStack(alignment: .bottomLeading) {
-                // Background Image
-                GeometryReader { geometry in
+        GeometryReader { geometry in
+            let safeAreaTop = geometry.safeAreaInsets.top
+            
+            ZStack(alignment: .top) {
+                // Fixed Header
+                ZStack(alignment: .bottomLeading) {
+                    // Background Image - estesa fino alla Dynamic Island
                     if let imageUrl = coverImageUrl {
                         CachedAsyncImage(url: URL(string: imageUrl)) { phase in
                             switch phase {
@@ -103,29 +110,32 @@ struct DeckDetailView: View {
                                 image
                                     .resizable()
                                     .aspectRatio(contentMode: .fill)
-                                    .frame(width: geometry.size.width, height: geometry.size.height)
+                                    .frame(width: geometry.size.width, height: 280 + safeAreaTop)
+                                    .scaleEffect(1.3) // Zoom per nascondere bordi carta
                                     .clipped()
                             case .failure, .empty:
                                 fallbackHeaderBackground
+                                    .frame(width: geometry.size.width, height: 280 + safeAreaTop)
                             @unknown default:
                                 fallbackHeaderBackground
+                                    .frame(width: geometry.size.width, height: 280 + safeAreaTop)
                             }
                         }
                     } else {
                         fallbackHeaderBackground
+                            .frame(width: geometry.size.width, height: 280 + safeAreaTop)
                     }
-                }
-                
-                // Gradient Overlay
-                LinearGradient(
-                    gradient: Gradient(colors: [
-                        Color.black.opacity(0.9),
-                        Color.black.opacity(0.5),
-                        Color.clear
-                    ]),
-                    startPoint: .bottom,
-                    endPoint: .top
-                )
+                    
+                    // Gradient Overlay
+                    LinearGradient(
+                        gradient: Gradient(colors: [
+                            Color.black.opacity(0.85),
+                            Color.black.opacity(0.5),
+                            Color.black.opacity(0.3)
+                        ]),
+                        startPoint: .bottom,
+                        endPoint: .top
+                    )
                 
                 // Header Content
                 VStack(alignment: .leading, spacing: 8) {
@@ -171,10 +181,13 @@ struct DeckDetailView: View {
                             .shadow(radius: 2)
                     }
                 }
-                .padding(20)
+                .padding(.horizontal, 20)
+                .padding(.bottom, 20)
+                .padding(.top, safeAreaTop + 50) // Spazio dinamico per Dynamic Island
             }
-            .frame(height: 250)
-            .clipped()
+            .frame(height: 280 + safeAreaTop) // Altezza dinamica
+            .frame(maxWidth: .infinity)
+            .ignoresSafeArea(edges: .top)
             .overlay(
                 // Custom Back Button and Menu
                 HStack {
@@ -220,9 +233,11 @@ struct DeckDetailView: View {
                     }
                 }
                 .padding(.horizontal, 16)
-                .padding(.top, 60), // Increased padding to avoid Dynamic Island
+                .padding(.top, safeAreaTop + 8), // Padding dinamico per Dynamic Island
                 alignment: .topLeading
-            )            // Scrollable Content
+            )
+            
+            // Scrollable Content
             List {
                 if isLoadingCards {
                     ProgressView()
@@ -262,9 +277,10 @@ struct DeckDetailView: View {
             }
             .listStyle(PlainListStyle())
             .background(Color(.systemGroupedBackground))
+            .padding(.top, 270 + safeAreaTop) // Match header height
+        }
         }
         .navigationBarHidden(true)
-        .edgesIgnoringSafeArea(.top)
         .alert("Delete Deck", isPresented: $showingDeleteAlert) {
             Button("Cancel", role: .cancel) { }
             Button("Delete", role: .destructive) {

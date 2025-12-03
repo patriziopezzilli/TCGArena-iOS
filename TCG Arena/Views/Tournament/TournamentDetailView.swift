@@ -126,8 +126,8 @@ struct TournamentDetailView: View {
                                     .shadow(color: Color.black.opacity(0.08), radius: 12, x: 0, y: 4)
                             )
                             .padding(.horizontal, 20)
-                        } else if tournament.status == .registrationOpen {
-                            // Prominent Registration Button
+                        } else if tournament.status == .registrationOpen && authService.isAuthenticated && authService.currentUserId != nil {
+                            // Prominent Registration Button - only for authenticated users
                             Button(action: registerForTournament) {
                                 HStack(spacing: 10) {
                                     if isRegistering {
@@ -157,6 +157,42 @@ struct TournamentDetailView: View {
                             }
                             .buttonStyle(ScaleButtonStyle())
                             .disabled(isRegistering)
+                            .padding(.horizontal, 20)
+                        } else if tournament.status == .registrationOpen && !(authService.isAuthenticated && authService.currentUserId != nil) {
+                            // Disabled registration button for non-authenticated users
+                            ZStack {
+                                HStack(spacing: 10) {
+                                    SwiftUI.Image(systemName: tournament.isFull ? "clock.badge.checkmark" : "checkmark.circle.fill")
+                                        .font(.system(size: 20))
+                                        .foregroundColor(.gray)
+                                    Text(tournament.isFull ? "Join Waiting List" : "Register for Tournament")
+                                        .font(.system(size: 17, weight: .semibold))
+                                        .foregroundColor(.gray)
+                                }
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 16)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 16)
+                                        .fill(Color.gray.opacity(0.2))
+                                )
+                                
+                                // Login Required Badge
+                                VStack {
+                                    Spacer()
+                                    HStack {
+                                        Spacer()
+                                        Text("Registrati o fai login")
+                                            .font(.system(size: 11, weight: .semibold))
+                                            .foregroundColor(.white)
+                                            .padding(.horizontal, 8)
+                                            .padding(.vertical, 4)
+                                            .background(Color.orange)
+                                            .cornerRadius(8)
+                                            .shadow(radius: 2)
+                                    }
+                                    .padding(8)
+                                }
+                            }
                             .padding(.horizontal, 20)
                         }
 
