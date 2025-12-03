@@ -127,9 +127,17 @@ struct ShopDetailView: View {
                                     
                                     // Unsubscribe Button
                                     Button(action: {
-                                        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                                            shopService.toggleSubscription(for: String(shop.id))
-                                            showingSubscribeAlert = true
+                                        shopService.unsubscribeFromShop(shopId: String(shop.id)) { result in
+                                            DispatchQueue.main.async {
+                                                switch result {
+                                                case .success:
+                                                    shopService.subscribedShops.remove(String(shop.id))
+                                                    showingSubscribeAlert = true
+                                                case .failure(let error):
+                                                    print("Error unsubscribing: \(error.localizedDescription)")
+                                                    // TODO: Show error alert
+                                                }
+                                            }
                                         }
                                     }) {
                                         HStack {
@@ -150,9 +158,17 @@ struct ShopDetailView: View {
                                 } else {
                                     // Subscribe Button
                                     Button(action: {
-                                        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                                            shopService.toggleSubscription(for: String(shop.id))
-                                            showingSubscribeAlert = true
+                                        shopService.subscribeToShop(shopId: String(shop.id)) { result in
+                                            DispatchQueue.main.async {
+                                                switch result {
+                                                case .success:
+                                                    shopService.subscribedShops.insert(String(shop.id))
+                                                    showingSubscribeAlert = true
+                                                case .failure(let error):
+                                                    print("Error subscribing: \(error.localizedDescription)")
+                                                    // TODO: Show error alert
+                                                }
+                                            }
                                         }
                                     }) {
                                         HStack {

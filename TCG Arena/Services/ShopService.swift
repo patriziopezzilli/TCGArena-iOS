@@ -212,18 +212,73 @@ class ShopService: ObservableObject {
         ]
     }
     
-    // MARK: - Shop Subscription (Mock for now - backend may not have this endpoint)
+    // MARK: - Shop Subscription (Real API calls)
     
-    func subscribeToShop(_ shopId: String) {
-        subscribedShops.insert(shopId)
+    func subscribeToShop(shopId: String, completion: @escaping (Result<Void, Error>) -> Void) {
+        apiClient.request(endpoint: "/api/shops/\(shopId)/subscribe", method: .post) { result in
+            switch result {
+            case .success:
+                // Update local state
+                self.subscribedShops.insert(shopId)
+                completion(.success(()))
+            case .failure(let error):
+                completion(.failure(error))
+            }
+        }
     }
     
-    func unsubscribeFromShop(_ shopId: String) {
-        subscribedShops.remove(shopId)
+    func unsubscribeFromShop(shopId: String, completion: @escaping (Result<Void, Error>) -> Void) {
+        apiClient.request(endpoint: "/api/shops/\(shopId)/subscribe", method: .delete) { result in
+            switch result {
+            case .success:
+                // Update local state
+                self.subscribedShops.remove(shopId)
+                completion(.success(()))
+            case .failure(let error):
+                completion(.failure(error))
+            }
+        }
     }
     
-    func isSubscribedToShop(_ shopId: String) -> Bool {
-        return subscribedShops.contains(shopId)
+    func checkSubscriptionStatus(shopId: String, completion: @escaping (Result<Bool, Error>) -> Void) {
+        apiClient.request(endpoint: "/api/shops/\(shopId)/subscription", method: .get) { result in
+            switch result {
+            case .success(let data):
+                do {
+                    let response = try JSONDecoder().decode([String: Bool].self, from: data)
+                    let isSubscribed = response["subscribed"] ?? false
+                    // Update local state
+                    if isSubscribed {
+                        self.subscribedShops.insert(shopId)
+                    } else {
+                        self.subscribedShops.remove(shopId)
+                    }
+                    completion(.success(isSubscribed))
+                } catch {
+                    completion(.failure(error))
+                }
+            case .failure(let error):
+                completion(.failure(error))
+            }
+        }
+    }
+    
+    func loadUserSubscriptions(completion: @escaping (Result<Void, Error>) -> Void) {
+        apiClient.request(endpoint: "/api/shops/subscriptions", method: .get) { result in
+            switch result {
+            case .success(let data):
+                do {
+                    // Parse subscriptions and update local state
+                    let subscriptions = try JSONDecoder().decode([ShopSubscription].self, from: data)
+                    self.subscribedShops = Set(subscriptions.compactMap { String($0.shopId) })
+                    completion(.success(()))
+                } catch {
+                    completion(.failure(error))
+                }
+            case .failure(let error):
+                completion(.failure(error))
+            }
+        }
     }
     
     // MARK: - Mock Data Setup
