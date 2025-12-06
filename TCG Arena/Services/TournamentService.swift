@@ -15,14 +15,31 @@ class TournamentService: ObservableObject {
     static let shared = TournamentService()
     private let apiClient = APIClient.shared
     
-    @Published var tournaments: [Tournament] = []
-    @Published var nearbyTournaments: [Tournament] = []
-    @Published var isLoading = false
+    @Published var tournaments: [Tournament] = [] {
+        didSet {
+            print("TournamentService: tournaments changed from \(oldValue.count) to \(tournaments.count)")
+        }
+    }
+    @Published var nearbyTournaments: [Tournament] = [] {
+        didSet {
+            print("TournamentService: nearbyTournaments changed from \(oldValue.count) to \(nearbyTournaments.count)")
+        }
+    }
+    @Published var pastTournaments: [Tournament] = [] {
+        didSet {
+            print("TournamentService: pastTournaments changed from \(oldValue.count) to \(pastTournaments.count)")
+        }
+    }
+    @Published var isLoading = false {
+        didSet {
+            print("TournamentService: isLoading changed from \(oldValue) to \(isLoading)")
+        }
+    }
     @Published var errorMessage: String?
+    @Published var hasLoadedInitialData = false
     
     init() {
-        // Load initial data
-        loadTournaments()
+        // Don't load data here - let views control when to load
     }
     
     // MARK: - Tournament Operations
@@ -57,6 +74,12 @@ class TournamentService: ObservableObject {
                 completion(.failure(error))
             }
         }
+    }
+    
+    // Async version for SwiftUI
+    @MainActor
+    func getTournamentById(_ id: Int64) async throws -> Tournament {
+        return try await apiClient.request("/api/tournaments/\(id)", method: "GET")
     }
     
     func getUpcomingTournaments(completion: @escaping (Result<[Tournament], Error>) -> Void) {
@@ -176,7 +199,12 @@ class TournamentService: ObservableObject {
                 case .success(let tournaments):
                     self.tournaments = tournaments
                 case .failure(let error):
-                    self.errorMessage = error.localizedDescription
+                    // Check if this is a cancelled request (not a real error)
+                    if let urlError = error as? URLError, urlError.code == .cancelled {
+                        print("Tournaments request was cancelled")
+                    } else {
+                        self.errorMessage = error.localizedDescription
+                    }
                 }
                 self.isLoading = false
             }
@@ -192,10 +220,15 @@ class TournamentService: ObservableObject {
         do {
             let result = try await getTournaments()
             self.tournaments = result.tournaments
-            print("Loaded \(result.tournaments.count) tournaments")
+            print("Loaded \(result.tournaments.count) tournaments from /api/tournaments")
         } catch {
-            self.errorMessage = error.localizedDescription
-            print("Error loading tournaments: \(error)")
+            // Check if this is a cancelled request (not a real error)
+            if let urlError = error as? URLError, urlError.code == .cancelled {
+                print("Tournaments request was cancelled")
+            } else {
+                self.errorMessage = error.localizedDescription
+                print("Error loading tournaments: \(error)")
+            }
         }
         
         isLoading = false
@@ -209,15 +242,15 @@ class TournamentService: ObservableObject {
             DispatchQueue.main.async {
                 switch result {
                 case .success(let tournaments):
-                    // If nearby returns empty and we have tournaments loaded, use those instead
-                    if tournaments.isEmpty && !self.tournaments.isEmpty {
-                        print("No nearby tournaments with coordinates, showing all tournaments")
-                        self.nearbyTournaments = self.tournaments
-                    } else {
-                        self.nearbyTournaments = tournaments
-                    }
+                    print("Loaded \(tournaments.count) nearby tournaments (or all tournaments sorted by distance)")
+                    self.nearbyTournaments = tournaments
                 case .failure(let error):
-                    self.errorMessage = error.localizedDescription
+                    // Check if this is a cancelled request (not a real error)
+                    if let urlError = error as? URLError, urlError.code == .cancelled {
+                        print("Nearby tournaments request was cancelled, using all tournaments as fallback")
+                    } else {
+                        self.errorMessage = error.localizedDescription
+                    }
                     // Fallback to all tournaments if nearby fails
                     self.nearbyTournaments = self.tournaments
                 }
@@ -232,28 +265,50 @@ class TournamentService: ObservableObject {
         isLoading = true
         errorMessage = nil
         
-        // First ensure we have all tournaments loaded
-        if tournaments.isEmpty {
-            await loadTournaments()
-        }
+        // Assume tournaments are already loaded by the view
+        // If not, the fallback will handle it
         
-        // Then try to get nearby ones
+        // Try to get nearby ones
         do {
             let nearbyResult = try await apiClient.request("/api/tournaments/nearby?latitude=\(userLocation.coordinate.latitude)&longitude=\(userLocation.coordinate.longitude)&radiusKm=\(radius)", method: "GET") as [Tournament]
             
-            // If nearby returns empty but we have tournaments loaded, use those instead
-            if nearbyResult.isEmpty && !self.tournaments.isEmpty {
-                print("No nearby tournaments with coordinates, showing all \(self.tournaments.count) tournaments")
-                self.nearbyTournaments = self.tournaments
-            } else {
-                print("Loaded \(nearbyResult.count) nearby tournaments")
-                self.nearbyTournaments = nearbyResult
-            }
+            print("Loaded \(nearbyResult.count) nearby tournaments from /api/tournaments/nearby")
+            self.nearbyTournaments = nearbyResult
         } catch {
-            print("Error loading nearby tournaments: \(error), using all tournaments as fallback")
-            self.errorMessage = error.localizedDescription
+            // Check if this is a cancelled request (not a real error)
+            if let urlError = error as? URLError, urlError.code == .cancelled {
+                print("Nearby tournaments request was cancelled, using all tournaments as fallback")
+            } else {
+                print("Error loading nearby tournaments: \(error), using all tournaments as fallback")
+                self.errorMessage = error.localizedDescription
+            }
             // Fallback to all tournaments if nearby fails
             self.nearbyTournaments = self.tournaments
+            print("Using \(self.nearbyTournaments.count) tournaments as fallback")
+        }
+        
+        isLoading = false
+    }
+    
+    // Async version for SwiftUI tasks
+    @MainActor
+    func loadPastTournaments() async {
+        isLoading = true
+        errorMessage = nil
+        
+        do {
+            let pastResult = try await apiClient.request("/api/tournaments/past", method: "GET") as [Tournament]
+            
+            print("Loaded \(pastResult.count) past tournaments from /api/tournaments/past")
+            self.pastTournaments = pastResult
+        } catch {
+            // Check if this is a cancelled request (not a real error)
+            if let urlError = error as? URLError, urlError.code == .cancelled {
+                print("Past tournaments request was cancelled")
+            } else {
+                print("Error loading past tournaments: \(error)")
+                self.errorMessage = error.localizedDescription
+            }
         }
         
         isLoading = false
@@ -386,8 +441,8 @@ class TournamentService: ObservableObject {
         getTournamentById(tournamentId) { tournamentResult in
             switch tournamentResult {
             case .success(var tournament):
-                // Then get participants
-                self.getTournamentParticipants(tournamentId: tournamentId) { participantsResult in
+                // Then get participants with details
+                self.getTournamentParticipantsWithDetails(tournamentId: tournamentId) { participantsResult in
                     switch participantsResult {
                     case .success(let participants):
                         tournament.tournamentParticipants = participants
@@ -624,5 +679,111 @@ class TournamentService: ObservableObject {
                 completion(.failure(error))
             }
         }
+    }
+    
+    // MARK: - Tournament Check-in
+    
+    /// Check-in participant using QR code
+    func checkInParticipant(checkInCode: String, completion: @escaping (Result<TournamentParticipant, Error>) -> Void) {
+        let parameters = ["code": checkInCode]
+        do {
+            let data = try JSONSerialization.data(withJSONObject: parameters)
+            apiClient.request(endpoint: "/api/tournaments/checkin", method: .post, body: data) { result in
+                switch result {
+                case .success(let data):
+                    do {
+                        let participant = try JSONDecoder().decode(TournamentParticipant.self, from: data)
+                        completion(.success(participant))
+                    } catch {
+                        completion(.failure(error))
+                    }
+                case .failure(let error):
+                    completion(.failure(error))
+                }
+            }
+        } catch {
+            completion(.failure(error))
+        }
+    }
+    
+    /// Async version for check-in
+    @MainActor
+    func checkInParticipant(checkInCode: String) async throws -> TournamentParticipant {
+        let participant: TournamentParticipant = try await apiClient.request("/api/tournaments/checkin?code=\(checkInCode)", method: "POST")
+        return participant
+    }
+    
+    /// Self check-in - allows user to check themselves in for a tournament
+    @MainActor
+    func checkIn(tournamentId: Int64) async throws {
+        let _: TournamentParticipant = try await apiClient.request("/api/tournaments/\(tournamentId)/self-checkin", method: "POST")
+        print("Successfully checked in for tournament \(tournamentId)")
+    }
+    
+    /// Get tournament participants with user details (for organizers)
+    func getTournamentParticipantsWithDetails(tournamentId: Int64, completion: @escaping (Result<[TournamentParticipantWithUser], Error>) -> Void) {
+        apiClient.request(endpoint: "/api/tournaments/\(tournamentId)/participants/detailed", method: .get) { result in
+            switch result {
+            case .success(let data):
+                do {
+                    let participants = try JSONDecoder().decode([TournamentParticipantWithUser].self, from: data)
+                    completion(.success(participants))
+                } catch {
+                    completion(.failure(error))
+                }
+            case .failure(let error):
+                completion(.failure(error))
+            }
+        }
+    }
+    
+    /// Async version for getting participants with details
+    @MainActor
+    func getTournamentParticipantsWithDetails(tournamentId: Int64) async throws -> [TournamentParticipantWithUser] {
+        let participants: [TournamentParticipantWithUser] = try await apiClient.request("/api/tournaments/\(tournamentId)/participants/detailed", method: "GET")
+        return participants
+    }
+    
+    // MARK: - Shop Tournament Management
+    
+    /// Load tournaments for a specific shop (merchant)
+    @MainActor
+    func loadShopTournaments(shopId: String) async {
+        isLoading = true
+        errorMessage = nil
+        
+        do {
+            guard let shopIdInt = Int64(shopId) else {
+                self.errorMessage = "Invalid shop ID format"
+                isLoading = false
+                return
+            }
+            let result = try await getTournaments(shopId: shopIdInt)
+            self.tournaments = result.tournaments
+            print("Loaded \(result.tournaments.count) shop tournaments")
+        } catch {
+            self.errorMessage = error.localizedDescription
+            print("Error loading shop tournaments: \(error)")
+        }
+        
+        isLoading = false
+    }
+    // MARK: - Manual Registration
+    
+    struct ManualRegistrationRequest: Encodable {
+        let firstName: String
+        let lastName: String
+        let email: String?
+    }
+    
+    @MainActor
+    func registerManualParticipant(tournamentId: Int64, firstName: String, lastName: String, email: String? = nil) async throws -> TournamentParticipant {
+        let request = ManualRegistrationRequest(firstName: firstName, lastName: lastName, email: email)
+        let encoder = JSONEncoder()
+        encoder.keyEncodingStrategy = .convertToSnakeCase
+        let data = try encoder.encode(request)
+        
+        let participant: TournamentParticipant = try await apiClient.request("/api/tournaments/\(tournamentId)/participants/manual", method: "POST", body: data)
+        return participant
     }
 }

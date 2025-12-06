@@ -10,24 +10,36 @@ import Foundation
 /// Represents a card in a merchant's inventory
 struct InventoryCard: Identifiable, Codable {
     let id: String
-    let cardTemplateId: String  // Reference to the card template
-    let shopId: String
+    let cardTemplateId: Int  // Reference to the card template
+    let shopId: Int
     let condition: CardCondition
     let price: Double
     let quantity: Int
     let notes: String?
+    let nationality: String?
     let createdAt: Date
     let updatedAt: Date
     
     // Populated from CardTemplate (not stored, loaded via join/expansion)
-    var cardTemplate: Card?  // The actual card data
+    var cardTemplate: CardTemplate?  // The actual card data
     
     // Convenience accessors (delegate to cardTemplate)
     var name: String { cardTemplate?.name ?? "Unknown Card" }
-    var setName: String? { cardTemplate?.set }
+    var setName: String? { cardTemplate?.setCode }
     var tcgType: TCGType { cardTemplate?.tcgType ?? .pokemon }
-    var imageUrl: String? { cardTemplate?.imageURL }
+    var imageUrl: String? { cardTemplate?.imageUrl }
     var marketPrice: Double? { cardTemplate?.marketPrice }
+    
+    // Computed property per ottenere l'URL completo dell'immagine
+    var fullImageURL: String? {
+        guard let baseUrl = imageUrl else { return nil }
+        // Se l'URL è già completo (contiene "/high.webp"), restituiscilo così com'è
+        if baseUrl.contains("/high.webp") {
+            return baseUrl
+        }
+        // Altrimenti, aggiungi qualità "high" e formato "webp"
+        return "\(baseUrl)/high.webp"
+    }
     
     var formattedPrice: String {
         String(format: "€%.2f", price)
@@ -42,47 +54,78 @@ struct InventoryCard: Identifiable, Codable {
     }
     
     var cardId: String {
-        cardTemplateId
+        String(cardTemplateId)
+    }
+    
+    var nationalityDisplayName: String? {
+        guard let nationality = nationality else { return nil }
+        switch nationality {
+        case "JPN": return "Japanese"
+        case "ITA": return "Italian"
+        case "EN": return "English"
+        case "COR": return "Korean"
+        case "FRA": return "French"
+        case "GER": return "German"
+        case "SPA": return "Spanish"
+        case "POR": return "Portuguese"
+        case "CHI": return "Chinese"
+        case "RUS": return "Russian"
+        default: return nationality
+        }
     }
     
     enum CardCondition: String, Codable, CaseIterable {
-        case nearMint = "NM"
-        case slightlyPlayed = "SP"
-        case moderatelyPlayed = "MP"
-        case heavilyPlayed = "HP"
-        case damaged = "DMG"
+        case mint = "MINT"
+        case nearMint = "NEAR_MINT"
+        case excellent = "EXCELLENT"
+        case good = "GOOD"
+        case lightPlayed = "LIGHT_PLAYED"
+        case played = "PLAYED"
+        case poor = "POOR"
         
         var displayName: String {
             switch self {
+            case .mint: return "Mint"
             case .nearMint: return "Near Mint"
-            case .slightlyPlayed: return "Slightly Played"
-            case .moderatelyPlayed: return "Moderately Played"
-            case .heavilyPlayed: return "Heavily Played"
-            case .damaged: return "Damaged"
+            case .excellent: return "Excellent"
+            case .good: return "Good"
+            case .lightPlayed: return "Light Played"
+            case .played: return "Played"
+            case .poor: return "Poor"
             }
         }
         
         var shortName: String {
-            rawValue
+            switch self {
+            case .mint: return "M"
+            case .nearMint: return "NM"
+            case .excellent: return "EX"
+            case .good: return "GD"
+            case .lightPlayed: return "LP"
+            case .played: return "PL"
+            case .poor: return "P"
+            }
         }
         
         var description: String {
             switch self {
-            case .nearMint: return "Perfect or near-perfect condition"
-            case .slightlyPlayed: return "Minor wear visible"
-            case .moderatelyPlayed: return "Moderate wear, still playable"
-            case .heavilyPlayed: return "Significant wear"
-            case .damaged: return "Major damage or creases"
+            case .mint: return "Perfect condition"
+            case .nearMint: return "Near perfect condition"
+            case .excellent: return "Excellent condition"
+            case .good: return "Good condition"
+            case .lightPlayed: return "Lightly played"
+            case .played: return "Played"
+            case .poor: return "Poor condition"
             }
         }
         
         var color: String {
             switch self {
-            case .nearMint: return "green"
-            case .slightlyPlayed: return "blue"
-            case .moderatelyPlayed: return "yellow"
-            case .heavilyPlayed: return "orange"
-            case .damaged: return "red"
+            case .mint, .nearMint: return "green"
+            case .excellent, .good: return "blue"
+            case .lightPlayed: return "yellow"
+            case .played: return "orange"
+            case .poor: return "red"
             }
         }
     }
@@ -91,7 +134,7 @@ struct InventoryCard: Identifiable, Codable {
         case id
         case cardTemplateId = "card_template_id"
         case shopId = "shop_id"
-        case condition, price, quantity, notes
+        case condition, price, quantity, notes, nationality
         case createdAt = "created_at"
         case updatedAt = "updated_at"
         case cardTemplate = "card_template"
@@ -112,17 +155,18 @@ extension InventoryCard: Hashable, Equatable {}
 
 // MARK: - Create/Update DTOs
 struct CreateInventoryCardRequest: Codable {
-    let cardTemplateId: String
-    let shopId: String
+    let cardTemplateId: Int
+    let shopId: Int
     let condition: InventoryCard.CardCondition
     let price: Double
     let quantity: Int
     let notes: String?
+    let nationality: String?
     
     enum CodingKeys: String, CodingKey {
         case cardTemplateId = "card_template_id"
         case shopId = "shop_id"
-        case condition, price, quantity, notes
+        case condition, price, quantity, notes, nationality
     }
 }
 
@@ -137,7 +181,13 @@ struct InventoryQuantityUpdate: Codable {
     let delta: Int
 }
 
-// MARK: - Filters
+// MARK: - API Response DTOs
+struct InventoryResponse: Codable {
+    let inventory: [InventoryCard]
+    let total: Int
+    let page: Int
+    let pageSize: Int
+}
 struct InventoryFilters {
     var tcgType: TCGType?
     var condition: InventoryCard.CardCondition?

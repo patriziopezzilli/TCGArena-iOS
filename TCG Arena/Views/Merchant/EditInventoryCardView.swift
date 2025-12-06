@@ -19,8 +19,6 @@ struct EditInventoryCardView: View {
     @State private var notes: String
     
     @State private var showDeleteConfirmation = false
-    @State private var showError = false
-    @State private var errorMessage = ""
     @State private var isSaving = false
     @State private var isDeleting = false
     
@@ -248,11 +246,6 @@ struct EditInventoryCardView: View {
             } message: {
                 Text("Are you sure you want to delete this card from your inventory? This action cannot be undone.")
             }
-            .alert("Error", isPresented: $showError) {
-                Button("OK", role: .cancel) {}
-            } message: {
-                Text(errorMessage)
-            }
         }
     }
     
@@ -284,8 +277,7 @@ struct EditInventoryCardView: View {
             } catch {
                 await MainActor.run {
                     isSaving = false
-                    errorMessage = error.localizedDescription
-                    showError = true
+                    ToastManager.shared.showError(error.localizedDescription)
                 }
             }
         }
@@ -305,8 +297,7 @@ struct EditInventoryCardView: View {
             } catch {
                 await MainActor.run {
                     isDeleting = false
-                    errorMessage = error.localizedDescription
-                    showError = true
+                    ToastManager.shared.showError(error.localizedDescription)
                 }
             }
         }
@@ -332,3 +323,4 @@ struct EditInventoryCardView: View {
     ))
     .environmentObject(InventoryService())
 }
+.withToastSupport()

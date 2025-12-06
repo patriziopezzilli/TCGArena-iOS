@@ -15,8 +15,6 @@ struct LoginView: View {
     @State private var showForgotPassword = false
     @State private var showRegister = false
     @State private var isLoading = false
-    @State private var showError = false
-    @State private var errorMessage = ""
 
     init(username: String = "") {
         _username = State(initialValue: username)
@@ -203,11 +201,6 @@ struct LoginView: View {
                 }
             }
         }
-        .alert("Login Error", isPresented: $showError) {
-            Button("OK", role: .cancel) {}
-        } message: {
-            Text(errorMessage)
-        }
         .sheet(isPresented: $showForgotPassword) {
             ForgotPasswordView()
         }
@@ -229,8 +222,7 @@ struct LoginView: View {
                 UserDefaults.standard.set(true, forKey: "hasCompletedOnboarding")
                 dismiss()
             } else if let error = authService.errorMessage {
-                errorMessage = error
-                showError = true
+                ToastManager.shared.showError(error)
             }
             isLoading = false
         }

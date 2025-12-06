@@ -46,7 +46,7 @@ struct RequestDetailView: View {
                 }
                 
                 // Message Input
-                if request.status != .rejected && request.status != .completed {
+                if request.status != .rejected && request.status != .completed && request.status != .cancelled {
                     messageInput
                 }
             }
@@ -233,7 +233,7 @@ struct RequestDetailView: View {
         
         Task {
             do {
-                let message = try await requestService.sendMessage(
+                let message = try await requestService.sendMessageAsMerchant(
                     requestId: request.id,
                     content: messageText
                 )

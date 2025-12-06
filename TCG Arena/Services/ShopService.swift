@@ -168,19 +168,26 @@ class ShopService: ObservableObject {
     // Async version for SwiftUI tasks
     @MainActor
     func loadNearbyShops(userLocation: CLLocation, radius: Double = 50000) async {
+        // Prevent concurrent requests
+        guard !isLoading else {
+            print("Already loading shops, skipping request")
+            return
+        }
+        
         isLoading = true
         errorMessage = nil
         
         do {
+            print("🌐 APIClient: Making GET request to: /api/shops")
             let shops: [Shop] = try await apiClient.request("/api/shops", method: "GET")
             
             // Filter shops within radius (only those with valid coordinates)
-            self.nearbyShops = shops.compactMap { shop in
+            let filteredShops = shops.compactMap { shop in
                 guard let latitude = shop.latitude, let longitude = shop.longitude else { return nil }
                 let shopLocation = CLLocation(latitude: latitude, longitude: longitude)
                 let distance = userLocation.distance(from: shopLocation)
                 return distance <= radius ? shop : nil
-            }.sorted { shop1, shop2 in
+            }.sorted { (shop1: Shop, shop2: Shop) -> Bool in
                 guard let lat1 = shop1.latitude, let lon1 = shop1.longitude,
                       let lat2 = shop2.latitude, let lon2 = shop2.longitude else { return false }
                 let location1 = CLLocation(latitude: lat1, longitude: lon1)
@@ -188,13 +195,43 @@ class ShopService: ObservableObject {
                 return userLocation.distance(from: location1) < userLocation.distance(from: location2)
             }
             
-            print("Loaded \(self.nearbyShops.count) nearby shops")
+            // Update on main thread
+            await MainActor.run {
+                self.nearbyShops = filteredShops
+                self.isLoading = false
+            }
+            
+            print("Loaded \(filteredShops.count) nearby shops")
         } catch {
-            self.errorMessage = error.localizedDescription
-            print("Error loading nearby shops: \(error)")
+            await MainActor.run {
+                // Check if this is a cancelled request (not a real error)
+                if let urlError = error as? URLError, urlError.code == .cancelled {
+                    print("Nearby shops request was cancelled, using fallback data")
+                } else {
+                    self.errorMessage = "Unable to load shops from server. Showing nearby stores."
+                    print("Error loading nearby shops: \(error)")
+                }
+                self.isLoading = false
+                
+                // If API fails, fall back to mock data
+                if self.nearbyShops.isEmpty {
+                    print("Falling back to mock data")
+                    self.setupMockData()
+                    self.nearbyShops = self.shops.filter { shop in
+                        guard let latitude = shop.latitude, let longitude = shop.longitude else { return false }
+                        let shopLocation = CLLocation(latitude: latitude, longitude: longitude)
+                        let distance = userLocation.distance(from: shopLocation)
+                        return distance <= radius
+                    }.sorted { (shop1: Shop, shop2: Shop) -> Bool in
+                        guard let lat1 = shop1.latitude, let lon1 = shop1.longitude,
+                              let lat2 = shop2.latitude, let lon2 = shop2.longitude else { return false }
+                        let location1 = CLLocation(latitude: lat1, longitude: lon1)
+                        let location2 = CLLocation(latitude: lat2, longitude: lon2)
+                        return userLocation.distance(from: location1) < userLocation.distance(from: location2)
+                    }
+                }
+            }
         }
-        
-        isLoading = false
     }
     
     // MARK: - Shop News (Mock for now - backend may not have this endpoint)
@@ -210,6 +247,40 @@ class ShopService: ObservableObject {
                 ShopNews(shopID: Int64("2")!, title: "Magic: The Gathering Pre-orders", content: "Pre-order your copies of the latest MTG set now!", newsType: .announcement, publishedDate: Date(), expiryDate: nil, imageURL: nil, isPinned: false)
             ]
         ]
+    }
+    
+    // MARK: - Shop News API
+    
+    /// Load active news for a specific shop from the API
+    func loadShopNewsFromAPI(shopId: String) async {
+        do {
+            print("🌐 Loading news for shop: \(shopId)")
+            let newsItems: [ShopNewsAPIResponse] = try await apiClient.request("/api/shops/\(shopId)/news", method: "GET")
+            
+            // Convert API response to ShopNews model
+            let news = newsItems.compactMap { item -> ShopNews? in
+                guard let shopID = Int64(shopId) else { return nil }
+                return ShopNews(
+                    id: item.id,
+                    shopID: shopID,
+                    title: item.title,
+                    content: item.content,
+                    newsType: ShopNews.NewsType(rawValue: item.newsType) ?? .general,
+                    publishedDate: item.startDate,
+                    expiryDate: item.expiryDate,
+                    imageURL: item.imageUrl,
+                    isPinned: item.isPinned
+                )
+            }
+            
+            // Update on main thread (class is @MainActor so this is already on main)
+            self.shopNews[shopId] = news
+            
+            print("✅ Loaded \(news.count) news items for shop \(shopId)")
+        } catch {
+            print("❌ Error loading shop news: \(error)")
+            // Keep existing mock data if API fails
+        }
     }
     
     // MARK: - Shop Subscription (Real API calls)
@@ -268,11 +339,12 @@ class ShopService: ObservableObject {
             switch result {
             case .success(let data):
                 do {
-                    // Parse subscriptions and update local state
-                    let subscriptions = try JSONDecoder().decode([ShopSubscription].self, from: data)
-                    self.subscribedShops = Set(subscriptions.compactMap { String($0.shopId) })
+                    // Parse as array of ShopSubscriptionResponse objects
+                    let subscriptions = try JSONDecoder().decode([ShopSubscriptionResponse].self, from: data)
+                    self.subscribedShops = Set(subscriptions.map { String($0.shopId) })
                     completion(.success(()))
                 } catch {
+                    print("Error decoding subscriptions: \(error)")
                     completion(.failure(error))
                 }
             case .failure(let error):
@@ -296,6 +368,7 @@ class ShopService: ObservableObject {
             instagramUrl: "@magiccastlegames",
             facebookUrl: "facebook.com/magiccastlegames",
             twitterUrl: "@magiccastlegames",
+            photoBase64: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==", // Placeholder transparent image
             type: .localStore,
             isVerified: true,
             active: true,
@@ -517,5 +590,167 @@ class ShopService: ObservableObject {
     
     func isSubscribed(to shopID: String) -> Bool {
         return subscribedShops.contains(shopID)
+    }
+}
+
+// MARK: - Internal Models
+
+private struct ShopSubscriptionResponse: Codable {
+    let id: Int64
+    let userId: Int64
+    let shopId: Int64
+    let subscribedAt: Date
+    let isActive: Bool
+    
+    enum CodingKeys: String, CodingKey {
+        case id
+        case userId
+        case shopId
+        case subscribedAt
+        case isActive
+    }
+    
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        
+        id = try container.decode(Int64.self, forKey: .id)
+        userId = try container.decode(Int64.self, forKey: .userId)
+        shopId = try container.decode(Int64.self, forKey: .shopId)
+        isActive = try container.decode(Bool.self, forKey: .isActive)
+        
+        // Handle date parsing
+        let dateString = try container.decode(String.self, forKey: .subscribedAt)
+        
+        // 1. Try standard ISO8601 (with timezone)
+        let isoFormatter = ISO8601DateFormatter()
+        isoFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        
+        if let date = isoFormatter.date(from: dateString) {
+            subscribedAt = date
+            return
+        }
+        
+        isoFormatter.formatOptions = [.withInternetDateTime]
+        if let date = isoFormatter.date(from: dateString) {
+            subscribedAt = date
+            return
+        }
+        
+        // 2. Try specific format from server (no timezone, e.g. "2025-12-03T22:53:02")
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss"
+        dateFormatter.locale = Locale(identifier: "en_US_POSIX")
+        dateFormatter.timeZone = TimeZone(secondsFromGMT: 0) // Assume UTC if no timezone
+        
+        if let date = dateFormatter.date(from: dateString) {
+            subscribedAt = date
+            return
+        }
+        
+        // 3. Try with fractional seconds but no timezone
+        dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSS"
+        if let date = dateFormatter.date(from: dateString) {
+            subscribedAt = date
+            return
+        }
+        
+        throw DecodingError.dataCorruptedError(
+            forKey: .subscribedAt,
+            in: container,
+            debugDescription: "Date string does not match expected format: \(dateString)"
+        )
+    }
+}
+
+// MARK: - Shop News API Response
+
+private struct ShopNewsAPIResponse: Decodable {
+    let id: Int64
+    let shopId: Int64
+    let title: String
+    let content: String
+    let newsType: String
+    let startDate: Date
+    let expiryDate: Date?
+    let imageUrl: String?
+    let isPinned: Bool
+    let createdAt: Date
+    let updatedAt: Date
+    
+    enum CodingKeys: String, CodingKey {
+        case id
+        case shopId
+        case title
+        case content
+        case newsType
+        case startDate
+        case expiryDate
+        case imageUrl
+        case isPinned
+        case createdAt
+        case updatedAt
+    }
+    
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        
+        id = try container.decode(Int64.self, forKey: .id)
+        shopId = try container.decode(Int64.self, forKey: .shopId)
+        title = try container.decode(String.self, forKey: .title)
+        content = try container.decode(String.self, forKey: .content)
+        newsType = try container.decode(String.self, forKey: .newsType)
+        imageUrl = try container.decodeIfPresent(String.self, forKey: .imageUrl)
+        isPinned = try container.decode(Bool.self, forKey: .isPinned)
+        
+        // Parse dates with flexible formatter
+        let dateFormatter = DateFormatter()
+        dateFormatter.locale = Locale(identifier: "en_US_POSIX")
+        dateFormatter.timeZone = TimeZone(secondsFromGMT: 0)
+        
+        func parseDate(_ string: String) -> Date? {
+            // Try various formats
+            let formats = [
+                "yyyy-MM-dd'T'HH:mm:ss.SSSSSS",
+                "yyyy-MM-dd'T'HH:mm:ss.SSS",
+                "yyyy-MM-dd'T'HH:mm:ss",
+                "yyyy-MM-dd'T'HH:mm:ssZ",
+                "yyyy-MM-dd'T'HH:mm:ss.SSSZ"
+            ]
+            
+            for format in formats {
+                dateFormatter.dateFormat = format
+                if let date = dateFormatter.date(from: string) {
+                    return date
+                }
+            }
+            
+            // Try ISO8601DateFormatter as fallback
+            let iso8601 = ISO8601DateFormatter()
+            iso8601.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+            if let date = iso8601.date(from: string) {
+                return date
+            }
+            
+            iso8601.formatOptions = [.withInternetDateTime]
+            return iso8601.date(from: string)
+        }
+        
+        let startDateString = try container.decode(String.self, forKey: .startDate)
+        guard let parsedStartDate = parseDate(startDateString) else {
+            throw DecodingError.dataCorruptedError(forKey: .startDate, in: container, debugDescription: "Invalid date format: \(startDateString)")
+        }
+        startDate = parsedStartDate
+        
+        if let expiryDateString = try container.decodeIfPresent(String.self, forKey: .expiryDate) {
+            expiryDate = parseDate(expiryDateString)
+        } else {
+            expiryDate = nil
+        }
+        
+        let createdAtString = try container.decode(String.self, forKey: .createdAt)
+        createdAt = parseDate(createdAtString) ?? Date()
+        
+        let updatedAtString = try container.decode(String.self, forKey: .updatedAt)
+        updatedAt = parseDate(updatedAtString) ?? Date()
     }
 }

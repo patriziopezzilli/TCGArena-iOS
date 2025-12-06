@@ -12,48 +12,48 @@ struct NotificationView: View {
     @State private var notifications: [Notification] = []
     @State private var isLoading = false
     @State private var errorMessage: String?
-
+    
     var body: some View {
-        NavigationView {
-            VStack {
-                if isLoading {
-                    ProgressView("Loading notifications...")
-                } else if let error = errorMessage {
-                    Text("Error: \(error)")
+        ZStack {
+            Color(.systemGroupedBackground)
+                .ignoresSafeArea()
+            
+            if isLoading {
+                ProgressView()
+            } else if let error = errorMessage {
+                VStack(spacing: 16) {
+                    SwiftUI.Image(systemName: "exclamationmark.triangle")
+                        .font(.system(size: 40))
                         .foregroundColor(.red)
-                } else if notifications.isEmpty {
-                    VStack(spacing: 20) {
-                        SwiftUI.Image(systemName: "bell.slash")
-                            .font(.system(size: 50))
-                            .foregroundColor(.gray)
-                        Text("No notifications yet")
-                            .font(.headline)
-                        Text("You'll see updates about tournaments, rewards, and more here.")
-                            .multilineTextAlignment(.center)
-                            .foregroundColor(.secondary)
+                    Text(error)
+                        .multilineTextAlignment(.center)
+                        .foregroundColor(.secondary)
+                    Button("Retry") {
+                        loadNotifications()
                     }
-                    .padding()
-                } else {
-                    List(notifications) { notification in
-                        NotificationRow(notification: notification)
-                            .onTapGesture {
+                }
+                .padding()
+            } else if notifications.isEmpty {
+                EmptyStateView(
+                    icon: "bell.slash",
+                    title: "No Notifications",
+                    message: "You're all caught up! Check back later for updates."
+                )
+            } else {
+                ScrollView {
+                    LazyVStack(spacing: 12) {
+                        ForEach(notifications) { notification in
+                            NotificationCard(notification: notification) {
                                 markAsRead(notification)
                             }
+                        }
                     }
-                    .listStyle(PlainListStyle())
+                    .padding(20)
                 }
             }
-            .navigationTitle("Notifications")
-            .navigationBarTitleDisplayMode(.inline)
-            .navigationBarItems(trailing: Button(action: {
-                sendTestPushNotification()
-            }) {
-                SwiftUI.Image(systemName: "bell.badge")
-                    .foregroundColor(.blue)
-            })
-            .onAppear {
-                loadNotifications()
-            }
+        }
+        .onAppear {
+            loadNotifications()
         }
     }
     
@@ -75,84 +75,109 @@ struct NotificationView: View {
     }
     
     private func markAsRead(_ notification: Notification) {
+        guard !notification.isRead else { return }
+        
         notificationService.markAsRead(notificationId: notification.id) { result in
-            // Update local state
-            if let index = notifications.firstIndex(where: { $0.id == notification.id }) {
-                notifications[index] = Notification(id: notification.id, userId: notification.userId, title: notification.title, message: notification.message, isRead: true, createdAt: notification.createdAt, type: notification.type)
-            }
-        }
-    }
-    
-    private func sendTestPushNotification() {
-        notificationService.sendTestPushNotification { result in
-            DispatchQueue.main.async {
-                switch result {
-                case .success(_):
-                    // Reload notifications to show the new test notification
-                    loadNotifications()
-                case .failure(let error):
-                    self.errorMessage = "Failed to send test notification: \(error.localizedDescription)"
+            if case .success = result {
+                DispatchQueue.main.async {
+                    if let index = notifications.firstIndex(where: { $0.id == notification.id }) {
+                        var updatedNotification = notification
+                        updatedNotification = Notification(
+                            id: notification.id,
+                            userId: notification.userId,
+                            title: notification.title,
+                            message: notification.message,
+                            isRead: true,
+                            createdAt: notification.createdAt,
+                            type: notification.type
+                        )
+                        notifications[index] = updatedNotification
+                    }
                 }
             }
         }
     }
 }
 
-struct NotificationRow: View {
+struct NotificationCard: View {
     let notification: Notification
+    let onTap: () -> Void
     
     var body: some View {
-        HStack(spacing: 12) {
-            SwiftUI.Image(systemName: iconForType(notification.type))
-                .font(.system(size: 20))
-                .foregroundColor(.blue)
-                .frame(width: 40, height: 40)
-                .background(Color.blue.opacity(0.1))
-                .clipShape(Circle())
-            
-            VStack(alignment: .leading, spacing: 4) {
-                Text(notification.title)
-                    .font(.headline)
-                    .foregroundColor(notification.isRead ? .secondary : .primary)
+        Button(action: onTap) {
+            HStack(alignment: .top, spacing: 16) {
+                // Icon
+                ZStack {
+                    Circle()
+                        .fill(iconColor.opacity(0.1))
+                        .frame(width: 48, height: 48)
+                    
+                    SwiftUI.Image(systemName: iconName)
+                        .font(.system(size: 20))
+                        .foregroundColor(iconColor)
+                }
                 
-                Text(notification.message)
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
-                    .lineLimit(2)
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack {
+                        Text(notification.title)
+                            .font(.system(size: 16, weight: .semibold))
+                            .foregroundColor(.primary)
+                        
+                        Spacer()
+                        
+                        Text(timeAgo)
+                            .font(.system(size: 12))
+                            .foregroundColor(.secondary)
+                    }
+                    
+                    Text(notification.message)
+                        .font(.system(size: 14))
+                        .foregroundColor(.secondary)
+                        .lineLimit(3)
+                        .multilineTextAlignment(.leading)
+                }
                 
-                Text(formatDate(notification.createdAt))
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+                if !notification.isRead {
+                    Circle()
+                        .fill(Color.blue)
+                        .frame(width: 8, height: 8)
+                        .padding(.top, 6)
+                }
             }
-            
-            Spacer()
-            
-            if !notification.isRead {
-                Circle()
-                    .fill(Color.blue)
-                    .frame(width: 8, height: 8)
-            }
+            .padding(16)
+            .background(Color(.systemBackground))
+            .cornerRadius(16)
+            .shadow(color: Color.black.opacity(0.03), radius: 4, x: 0, y: 2)
         }
-        .padding(.vertical, 8)
+        .buttonStyle(PlainButtonStyle())
     }
     
-    private func iconForType(_ type: String?) -> String {
-        switch type {
-        case "tournament": return "trophy"
-        case "reward": return "gift"
-        case "achievement": return "star"
-        case "friend": return "person.2"
-        default: return "bell"
+    private var iconName: String {
+        switch notification.type {
+        case "tournament": return "trophy.fill"
+        case "reward": return "gift.fill"
+        case "achievement": return "star.fill"
+        case "friend": return "person.2.fill"
+        default: return "bell.fill"
         }
     }
     
-    private func formatDate(_ dateString: String) -> String {
-        // Simple date formatting - in real app, use proper DateFormatter
-        return String(dateString.prefix(10)) // Just show date part
+    private var iconColor: Color {
+        switch notification.type {
+        case "tournament": return .yellow
+        case "reward": return .purple
+        case "achievement": return .orange
+        case "friend": return .blue
+        default: return .gray
+        }
     }
-}
-
-#Preview {
-    NotificationView()
-        .environmentObject(NotificationService.shared)
+    
+    private var timeAgo: String {
+        // Simple formatter, in real app use RelativeDateTimeFormatter
+        let formatter = DateFormatter()
+        formatter.dateFormat = "MMM d"
+        // Assuming createdAt is ISO string, need parsing logic here
+        // For simplicity returning raw date prefix
+        return String(notification.createdAt.prefix(10))
+    }
 }

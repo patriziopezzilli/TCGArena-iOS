@@ -402,11 +402,11 @@ private struct RequestDetailView: View {
             .task {
                 await loadDetails()
             }
-            .alert("Cancel Request?", isPresented: $showCancelAlert) {
-                Button("Keep", role: .cancel) { }
+            .confirmationDialog("Cancel Request?", isPresented: $showCancelAlert) {
                 Button("Cancel Request", role: .destructive) {
                     cancelRequest()
                 }
+                Button("Keep", role: .cancel) { }
             } message: {
                 Text("Are you sure you want to cancel this request?")
             }
@@ -503,6 +503,9 @@ private struct RequestDetailView: View {
             }
             .padding(16)
         }
+        .refreshable {
+            await loadMessages()
+        }
     }
     
     // MARK: - Message Input
@@ -541,11 +544,29 @@ private struct RequestDetailView: View {
     private func loadDetails() async {
         do {
             let request = try await requestService.getRequestDetail(id: request.id)
-            messages = [] // TODO: Load messages from separate endpoint when backend supports it
+            let loadedMessages = try await requestService.getMessages(requestId: request.id)
+            await MainActor.run {
+                messages = loadedMessages
+            }
+            // Mark as read if there are unread messages
+            if request.hasUnreadMessages {
+                try await requestService.markAsRead(requestId: request.id)
+            }
         } catch {
             print("Error loading request details: \(error)")
         }
         isLoading = false
+    }
+    
+    private func loadMessages() async {
+        do {
+            let loadedMessages = try await requestService.getMessages(requestId: request.id)
+            await MainActor.run {
+                messages = loadedMessages
+            }
+        } catch {
+            print("Error loading messages: \(error)")
+        }
     }
     
     private func sendMessage() {
@@ -557,10 +578,11 @@ private struct RequestDetailView: View {
         
         Task {
             do {
-                let message = try await requestService.sendMessage(requestId: request.id, content: messageText)
+                _ = try await requestService.sendMessage(requestId: request.id, content: messageText)
                 await MainActor.run {
-                    messages.append(message)
                     isSending = false
+                    // Reload messages to show the new message
+                    Task { await loadMessages() }
                 }
             } catch {
                 await MainActor.run {

@@ -23,6 +23,9 @@ struct User: Identifiable, Codable {
     let isPremium: Bool
     let isMerchant: Bool
     let shopId: Int64?
+    let points: Int?
+    let favoriteTCGTypesString: String?
+    let deviceToken: String?
     let favoriteGame: TCGType?
     let favoriteGames: [TCGType]?
     let location: UserLocation?
@@ -42,6 +45,9 @@ struct User: Identifiable, Codable {
         case isPremium
         case isMerchant
         case shopId
+        case points
+        case favoriteTCGTypesString
+        case deviceToken
         case favoriteGame = "favorite_game"
         case favoriteGames = "favorite_games"
         case location
@@ -60,6 +66,9 @@ struct User: Identifiable, Codable {
         isPremium = try container.decode(Bool.self, forKey: .isPremium)
         isMerchant = try container.decode(Bool.self, forKey: .isMerchant)
         shopId = try container.decodeIfPresent(Int64.self, forKey: .shopId)
+        points = try container.decodeIfPresent(Int.self, forKey: .points)
+        favoriteTCGTypesString = try container.decodeIfPresent(String.self, forKey: .favoriteTCGTypesString)
+        deviceToken = try container.decodeIfPresent(String.self, forKey: .deviceToken)
         favoriteGame = try container.decodeIfPresent(TCGType.self, forKey: .favoriteGame)
 
         // Decodifica favorite_games come array di oggetti UserFavoriteTCG
@@ -105,6 +114,9 @@ struct User: Identifiable, Codable {
         try container.encode(isPremium, forKey: .isPremium)
         try container.encode(isMerchant, forKey: .isMerchant)
         try container.encodeIfPresent(shopId, forKey: .shopId)
+        try container.encodeIfPresent(points, forKey: .points)
+        try container.encodeIfPresent(favoriteTCGTypesString, forKey: .favoriteTCGTypesString)
+        try container.encodeIfPresent(deviceToken, forKey: .deviceToken)
         try container.encodeIfPresent(favoriteGame, forKey: .favoriteGame)
         try container.encodeIfPresent(favoriteGames, forKey: .favoriteGames)
         try container.encodeIfPresent(location, forKey: .location)

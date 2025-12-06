@@ -11,19 +11,39 @@ import Foundation
 struct Reservation: Identifiable, Codable {
     let id: String
     let cardId: String
-    let userId: String
-    let merchantId: String
+    let userId: Int
+    let merchantId: Int
     let status: ReservationStatus
     let qrCode: String
     let expiresAt: Date
     let createdAt: Date
     let validatedAt: Date?
     let pickedUpAt: Date?
+    let updatedAt: Date?
     
-    // Optional embedded data for UI
+    // Flat data from API response
+    let cardName: String?
+    let cardRarity: String?
+    let cardSet: String?
+    let cardImageUrl: String?
+    let shopName: String?
+    let shopLocation: String?
+    
+    // Optional embedded data for UI (backward compatibility)
     var card: InventoryCard?
     var user: User?
     var shop: Shop?
+    
+    // Computed property per ottenere l'URL completo dell'immagine della carta
+    var fullImageURL: String? {
+        guard let baseUrl = cardImageUrl else { return nil }
+        // Se l'URL è già completo (contiene "/high.webp"), restituiscilo così com'è
+        if baseUrl.contains("/high.webp") {
+            return baseUrl
+        }
+        // Altrimenti, aggiungi qualità "high" e formato "webp"
+        return "\(baseUrl)/high.webp"
+    }
     
     enum ReservationStatus: String, Codable, CaseIterable {
         case pending = "PENDING"
@@ -74,6 +94,115 @@ struct Reservation: Identifiable, Codable {
         case createdAt = "created_at"
         case validatedAt = "validated_at"
         case pickedUpAt = "picked_up_at"
+        case updatedAt = "updated_at"
+        case cardName = "card_name"
+        case cardRarity = "card_rarity"
+        case cardSet = "card_set"
+        case cardImageUrl = "card_image_url"
+        case shopName = "shop_name"
+        case shopLocation = "shop_location"
+    }
+    
+    // Custom date formatter for dates without timezone
+    private static let dateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss"
+        formatter.timeZone = TimeZone(secondsFromGMT: 0) // UTC
+        return formatter
+    }()
+    
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        
+        id = try container.decode(String.self, forKey: .id)
+        cardId = try container.decode(String.self, forKey: .cardId)
+        userId = try container.decode(Int.self, forKey: .userId)
+        merchantId = try container.decode(Int.self, forKey: .merchantId)
+        status = try container.decode(ReservationStatus.self, forKey: .status)
+        qrCode = try container.decode(String.self, forKey: .qrCode)
+        
+        // Flat fields from API
+        cardName = try container.decodeIfPresent(String.self, forKey: .cardName)
+        cardRarity = try container.decodeIfPresent(String.self, forKey: .cardRarity)
+        cardSet = try container.decodeIfPresent(String.self, forKey: .cardSet)
+        cardImageUrl = try container.decodeIfPresent(String.self, forKey: .cardImageUrl)
+        shopName = try container.decodeIfPresent(String.self, forKey: .shopName)
+        shopLocation = try container.decodeIfPresent(String.self, forKey: .shopLocation)
+        
+        // Custom date decoding
+        let expiresAtString = try container.decode(String.self, forKey: .expiresAt)
+        expiresAt = Reservation.dateFormatter.date(from: expiresAtString) ?? Date()
+        
+        let createdAtString = try container.decode(String.self, forKey: .createdAt)
+        createdAt = Reservation.dateFormatter.date(from: createdAtString) ?? Date()
+        
+        // Optional dates
+        if let validatedAtString = try container.decodeIfPresent(String.self, forKey: .validatedAt) {
+            validatedAt = Reservation.dateFormatter.date(from: validatedAtString)
+        } else {
+            validatedAt = nil
+        }
+        
+        if let pickedUpAtString = try container.decodeIfPresent(String.self, forKey: .pickedUpAt) {
+            pickedUpAt = Reservation.dateFormatter.date(from: pickedUpAtString)
+        } else {
+            pickedUpAt = nil
+        }
+        
+        if let updatedAtString = try container.decodeIfPresent(String.self, forKey: .updatedAt) {
+            updatedAt = Reservation.dateFormatter.date(from: updatedAtString)
+        } else {
+            updatedAt = nil
+        }
+    }
+    
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        
+        try container.encode(id, forKey: .id)
+        try container.encode(cardId, forKey: .cardId)
+        try container.encode(userId, forKey: .userId)
+        try container.encode(merchantId, forKey: .merchantId)
+        try container.encode(status, forKey: .status)
+        try container.encode(qrCode, forKey: .qrCode)
+        
+        try container.encodeIfPresent(cardName, forKey: .cardName)
+        try container.encodeIfPresent(cardRarity, forKey: .cardRarity)
+        try container.encodeIfPresent(cardSet, forKey: .cardSet)
+        try container.encodeIfPresent(cardImageUrl, forKey: .cardImageUrl)
+        try container.encodeIfPresent(shopName, forKey: .shopName)
+        try container.encodeIfPresent(shopLocation, forKey: .shopLocation)
+        
+        // Custom date encoding
+        try container.encode(Reservation.dateFormatter.string(from: expiresAt), forKey: .expiresAt)
+        try container.encode(Reservation.dateFormatter.string(from: createdAt), forKey: .createdAt)
+        
+        if let validatedAt = validatedAt {
+            try container.encode(Reservation.dateFormatter.string(from: validatedAt), forKey: .validatedAt)
+        }
+        if let pickedUpAt = pickedUpAt {
+            try container.encode(Reservation.dateFormatter.string(from: pickedUpAt), forKey: .pickedUpAt)
+        }
+        if let updatedAt = updatedAt {
+            try container.encode(Reservation.dateFormatter.string(from: updatedAt), forKey: .updatedAt)
+        }
+    }
+    
+    // Computed properties for backward compatibility
+    var displayCardName: String {
+        card?.name ?? cardName ?? "Unknown Card"
+    }
+    
+    var displayShopName: String {
+        shop?.name ?? shopName ?? "Unknown Shop"
+    }
+    
+    var displayShopLocation: String {
+        shop?.address ?? shopLocation ?? ""
+    }
+    
+    var displayCardSet: String? {
+        card?.setName ?? cardSet
     }
     
     // Computed properties

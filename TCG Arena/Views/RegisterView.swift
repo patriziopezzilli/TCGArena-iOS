@@ -15,10 +15,23 @@ struct RegisterView: View {
     @State private var password = ""
     @State private var confirmPassword = ""
     @State private var isLoading = false
-    @State private var showError = false
-    @State private var errorMessage = ""
     @State private var agreedToTerms = false
     @State private var selectedTCGs: Set<TCGType> = []
+
+    // MARK: - Computed Properties
+    
+    private var backgroundGradient: some View {
+        LinearGradient(
+            gradient: Gradient(colors: [
+                AdaptiveColors.brandPrimary.opacity(0.1),
+                AdaptiveColors.brandSecondary.opacity(0.05),
+                AdaptiveColors.background
+            ]),
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
+        .ignoresSafeArea()
+    }
 
     init(email: String = "", selectedTCG: TCGType? = nil) {
         _email = State(initialValue: email)
@@ -30,16 +43,7 @@ struct RegisterView: View {
     var body: some View {
         ZStack {
             // Background gradient
-            LinearGradient(
-                gradient: Gradient(colors: [
-                    AdaptiveColors.brandPrimary.opacity(0.1),
-                    AdaptiveColors.brandSecondary.opacity(0.05),
-                    AdaptiveColors.background
-                ]),
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-            .ignoresSafeArea()
+            backgroundGradient
 
             ScrollView {
                 VStack(spacing: 32) {
@@ -302,11 +306,6 @@ struct RegisterView: View {
                 }
             }
         }
-        .alert("Registration Error", isPresented: $showError) {
-            Button("OK", role: .cancel) {}
-        } message: {
-            Text(errorMessage)
-        }
     }
 
     // MARK: - Subviews
@@ -373,10 +372,10 @@ struct RegisterView: View {
                     HStack(spacing: 6) {
                         Text("Sign In")
                             .font(.system(size: 16, weight: .semibold, design: .rounded))
-                            .foregroundColor(AdaptiveColors.accent)
+                            .foregroundColor(AdaptiveColors.brandPrimary)
                         SwiftUI.Image(systemName: "arrow.right")
                             .font(.system(size: 14, weight: .semibold))
-                            .foregroundColor(AdaptiveColors.accent)
+                            .foregroundColor(AdaptiveColors.brandPrimary)
                     }
                 }
             }
@@ -429,8 +428,7 @@ struct RegisterView: View {
                 UserDefaults.standard.set(true, forKey: "hasCompletedOnboarding")
                 dismiss()
             } else {
-                errorMessage = authService.errorMessage!
-                showError = true
+                ToastManager.shared.showError(authService.errorMessage!)
             }
             isLoading = false
         }

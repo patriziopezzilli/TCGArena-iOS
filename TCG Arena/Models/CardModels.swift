@@ -97,7 +97,9 @@ struct CardTemplate: Identifiable, Codable {
         
         // Gestisci conversione data
         if let dateString = try? container.decode(String.self, forKey: .dateCreated) {
-            let formatter = ISO8601DateFormatter()
+            let formatter = DateFormatter()
+            formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss"
+            formatter.timeZone = TimeZone(secondsFromGMT: 0) // UTC
             dateCreated = formatter.date(from: dateString) ?? Date()
         } else {
             dateCreated = Date()

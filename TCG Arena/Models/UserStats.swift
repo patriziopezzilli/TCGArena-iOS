@@ -7,7 +7,9 @@
 
 import Foundation
 
-struct UserStats: Codable {
+struct UserStats: Codable, Identifiable {
+    let id: Int
+    let user: User
     let totalCards: Int
     let totalDecks: Int
     let totalTournaments: Int
@@ -19,6 +21,8 @@ struct UserStats: Codable {
     let lastActivity: String?
 
     enum CodingKeys: String, CodingKey {
+        case id
+        case user
         case totalCards
         case totalDecks
         case totalTournaments

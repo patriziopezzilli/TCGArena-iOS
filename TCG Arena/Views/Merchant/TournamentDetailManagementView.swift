@@ -130,7 +130,7 @@ struct TournamentDetailManagementView: View {
             
             // Quick Stats
             HStack(spacing: 16) {
-                StatBox(icon: "person.2.fill", value: "\(tournament.currentParticipants)/\(tournament.maxParticipants)", label: "Players")
+                StatBox(icon: "person.2.fill", value: "\(tournament.registeredParticipantsCount)/\(tournament.maxParticipants)", label: "Players")
                 StatBox(icon: "calendar", value: tournament.date.formatted(date: .abbreviated, time: .omitted), label: "Date")
                 if let prize = tournament.prizePool {
                     StatBox(icon: "trophy.fill", value: prize, label: "Prize")
@@ -138,7 +138,7 @@ struct TournamentDetailManagementView: View {
             }
             
             // Action Button
-            if tournament.status == .registrationOpen && tournament.currentParticipants >= 4 {
+            if tournament.status == .registrationOpen && tournament.registeredParticipantsCount >= 4 {
                 Button(action: { showStartConfirmation = true }) {
                     HStack {
                         Image(systemName: "play.circle.fill")
@@ -178,32 +178,32 @@ struct TournamentDetailManagementView: View {
     }
 }
 
-// MARK: - Stat Box
-struct StatBox: View {
+// MARK: - Check-in Stat Box
+struct CheckInStatBox: View {
     let icon: String
     let value: String
     let label: String
+    let color: Color
     
     var body: some View {
         VStack(spacing: 6) {
             Image(systemName: icon)
                 .font(.system(size: 16))
-                .foregroundColor(AdaptiveColors.brandPrimary)
+                .foregroundColor(color)
             
             Text(value)
-                .font(.system(size: 14, weight: .bold))
+                .font(.system(size: 18, weight: .bold))
                 .foregroundColor(.primary)
-                .lineLimit(1)
             
             Text(label)
-                .font(.system(size: 11))
+                .font(.system(size: 12))
                 .foregroundColor(.secondary)
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 12)
         .background(
             RoundedRectangle(cornerRadius: 12)
-                .fill(AdaptiveColors.backgroundPrimary)
+                .fill(color.opacity(0.1))
         )
     }
 }
@@ -285,11 +285,90 @@ struct TournamentParticipantsTab: View {
     @EnvironmentObject var tournamentService: TournamentService
     let tournament: Tournament
     
-    @State private var participants: [TournamentRegistration] = []
+    @State private var participants: [TournamentParticipantWithUser] = []
     @State private var isLoading = true
+    @State private var showQRScanner = false
+    @State private var showManualRegistration = false
+    
+    var checkedInCount: Int {
+        participants.filter { $0.isCheckedIn }.count
+    }
     
     var body: some View {
         VStack {
+            // Check-in Header
+            if tournament.status == .registrationOpen || tournament.status == .scheduled {
+                VStack(spacing: 12) {
+                    HStack {
+                        Text("Check-in Status")
+                            .font(.system(size: 16, weight: .semibold))
+                            .foregroundColor(.primary)
+                        
+                        Spacer()
+                        
+                        HStack(spacing: 8) {
+                            Button(action: { showManualRegistration = true }) {
+                                HStack(spacing: 6) {
+                                    SwiftUI.Image(systemName: "person.badge.plus")
+                                    Text("Add")
+                                }
+                                .font(.system(size: 14, weight: .semibold))
+                                .foregroundColor(.white)
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 8)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 10)
+                                        .fill(AdaptiveColors.brandSecondary)
+                                )
+                            }
+                            
+                            Button(action: { showQRScanner = true }) {
+                                HStack(spacing: 6) {
+                                    SwiftUI.Image(systemName: "qrcode.viewfinder")
+                                    Text("Scan")
+                                }
+                                .font(.system(size: 14, weight: .semibold))
+                                .foregroundColor(.white)
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 8)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 10)
+                                        .fill(AdaptiveColors.brandPrimary)
+                                )
+                            }
+                        }
+                    }
+                    
+                    HStack(spacing: 16) {
+                        CheckInStatBox(
+                            icon: "person.2.fill",
+                            value: "\(participants.count)",
+                            label: "Registered",
+                            color: AdaptiveColors.brandPrimary
+                        )
+                        
+                        CheckInStatBox(
+                            icon: "checkmark.circle.fill",
+                            value: "\(checkedInCount)",
+                            label: "Checked In",
+                            color: AdaptiveColors.success
+                        )
+                        
+                        CheckInStatBox(
+                            icon: "clock.fill",
+                            value: "\(participants.count - checkedInCount)",
+                            label: "Pending",
+                            color: AdaptiveColors.warning
+                        )
+                    }
+                }
+                .padding(.horizontal, 20)
+                .padding(.vertical, 16)
+                .background(AdaptiveColors.backgroundSecondary)
+                
+                Divider()
+            }
+            
             if isLoading {
                 ProgressView()
                     .frame(maxHeight: .infinity)
@@ -304,10 +383,22 @@ struct TournamentParticipantsTab: View {
                 ScrollView {
                     LazyVStack(spacing: 12) {
                         ForEach(participants) { participant in
-                            ParticipantRow(participant: participant, tournament: tournament)
+                            ParticipantWithCheckInRow(participant: participant)
                         }
                     }
                     .padding(20)
+                }
+            }
+        }
+        .sheet(isPresented: $showQRScanner) {
+            QRScannerView { code in
+                handleCheckIn(code: code)
+            }
+        }
+        .sheet(isPresented: $showManualRegistration) {
+            if let id = tournament.id {
+                ManualRegistrationView(tournamentId: id) {
+                    loadParticipants()
                 }
             }
         }
@@ -318,52 +409,126 @@ struct TournamentParticipantsTab: View {
     
     private func loadParticipants() {
         Task {
-            // Load participants from service
-            // participants = await tournamentService.getParticipants(tournamentId: tournament.id)
-            isLoading = false
+            do {
+                guard let tournamentId = tournament.id else {
+                    print("Tournament ID is nil")
+                    isLoading = false
+                    return
+                }
+                participants = try await tournamentService.getTournamentParticipantsWithDetails(tournamentId: tournamentId)
+                isLoading = false
+            } catch {
+                print("Error loading participants: \(error)")
+                isLoading = false
+            }
+        }
+    }
+    
+    private func handleCheckIn(code: String) {
+        Task {
+            do {
+                let checkedInParticipant = try await tournamentService.checkInParticipant(checkInCode: code)
+                
+                // Update the participant in the list
+                if let index = participants.firstIndex(where: { $0.id == checkedInParticipant.id }) {
+                    // Reload participants to get updated data
+                    await loadParticipants()
+                }
+                
+                // Show success feedback
+                print("Successfully checked in participant")
+            } catch {
+                print("Error checking in participant: \(error)")
+                // Show error feedback
+            }
         }
     }
 }
 
-// MARK: - Participant Row
-struct ParticipantRow: View {
-    let participant: TournamentRegistration
-    let tournament: Tournament
+// MARK: - Participant with Check-in Row
+struct ParticipantWithCheckInRow: View {
+    let participant: TournamentParticipantWithUser
     
     var body: some View {
         HStack(spacing: 12) {
             // Avatar
             Circle()
-                .fill(AdaptiveColors.brandPrimary.opacity(0.2))
+                .fill(participant.isCheckedIn ? AdaptiveColors.success.opacity(0.2) : AdaptiveColors.brandPrimary.opacity(0.2))
                 .frame(width: 44, height: 44)
                 .overlay(
-                    Text(participant.user?.displayName.prefix(1).uppercased() ?? "?")
+                    Text(participant.displayName.prefix(1).uppercased())
                         .font(.system(size: 18, weight: .bold))
-                        .foregroundColor(AdaptiveColors.brandPrimary)
+                        .foregroundColor(participant.isCheckedIn ? AdaptiveColors.success : AdaptiveColors.brandPrimary)
                 )
             
             VStack(alignment: .leading, spacing: 4) {
-                Text(participant.user?.displayName ?? "Unknown")
+                Text(participant.displayName)
                     .font(.system(size: 16, weight: .semibold))
                     .foregroundColor(.primary)
                 
-                Text("Registered: \(participant.registeredAt.formatted(date: .abbreviated, time: .shortened))")
+                Text(participant.email)
+                    .font(.system(size: 13))
+                    .foregroundColor(.secondary)
+                
+                Text("Registered: \(participant.registrationDateFormatted?.formatted(date: .abbreviated, time: .shortened) ?? "Unknown")")
                     .font(.system(size: 12))
                     .foregroundColor(.secondary)
             }
             
             Spacer()
             
-            // Status Badge
-            Text(participant.status.displayName)
-                .font(.system(size: 11, weight: .semibold))
-                .foregroundColor(.white)
-                .padding(.horizontal, 10)
-                .padding(.vertical, 5)
-                .background(
-                    Capsule()
-                        .fill(Color(participant.status.color))
-                )
+            // Status & Check-in
+            VStack(alignment: .trailing, spacing: 4) {
+                // Registration Status Badge
+                if participant.status == .WAITING_LIST {
+                    HStack(spacing: 4) {
+                        SwiftUI.Image(systemName: "clock.fill")
+                            .font(.system(size: 12))
+                            .foregroundColor(.orange)
+                        Text("Waiting List")
+                            .font(.system(size: 12, weight: .bold))
+                            .foregroundColor(.orange)
+                    }
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 2)
+                    .background(Capsule().fill(Color.orange.opacity(0.1)))
+                } else if participant.status == .REGISTERED {
+                    HStack(spacing: 4) {
+                        SwiftUI.Image(systemName: "checkmark.circle")
+                            .font(.system(size: 12))
+                            .foregroundColor(.blue)
+                        Text("Registered")
+                            .font(.system(size: 12, weight: .bold))
+                            .foregroundColor(.blue)
+                    }
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 2)
+                    .background(Capsule().fill(Color.blue.opacity(0.1)))
+                }
+                
+                // Check-in Status
+                if participant.isCheckedIn {
+                    HStack(spacing: 4) {
+                        SwiftUI.Image(systemName: "checkmark.circle.fill")
+                            .font(.system(size: 14))
+                            .foregroundColor(AdaptiveColors.success)
+                        
+                        Text("Checked In")
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundColor(AdaptiveColors.success)
+                    }
+                    
+                    if let checkedInDate = participant.checkedInDate {
+                        Text(checkedInDate.formatted(date: .omitted, time: .shortened))
+                            .font(.system(size: 11))
+                            .foregroundColor(.secondary)
+                    }
+                } else if participant.status != .WAITING_LIST {
+                    Text("Not Checked In")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundColor(AdaptiveColors.warning)
+                }
+            }
         }
         .padding(12)
         .background(
@@ -633,4 +798,96 @@ struct StandingRow: View {
         createdAt: Date()
     ))
     .environmentObject(TournamentService.shared)
+}
+// MARK: - Manual Registration View
+struct ManualRegistrationView: View {
+    @EnvironmentObject var tournamentService: TournamentService
+    @Environment(\.dismiss) var dismiss
+    
+    let tournamentId: Int64
+    let onComplete: () -> Void
+    
+    @State private var firstName = ""
+    @State private var lastName = ""
+    @State private var email = ""
+    @State private var isSubmitting = false
+    @State private var errorMessage: String?
+    
+    var isValid: Bool {
+        !firstName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
+        !lastName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    }
+    
+    var body: some View {
+        NavigationView {
+            Form {
+                Section(header: Text("Participant Details")) {
+                    TextField("First Name", text: $firstName)
+                    TextField("Last Name", text: $lastName)
+                    TextField("Email (Optional)", text: $email)
+                        .keyboardType(.emailAddress)
+                        .autocapitalization(.none)
+                }
+                
+                if let error = errorMessage {
+                    Section {
+                        Text(error)
+                            .foregroundColor(.red)
+                            .font(.caption)
+                    }
+                }
+                
+                Section {
+                    Button(action: register) {
+                        if isSubmitting {
+                            ProgressView()
+                                .frame(maxWidth: .infinity)
+                        } else {
+                            Text("Register Participant")
+                                .frame(maxWidth: .infinity)
+                                .foregroundColor(isValid ? .white : .secondary)
+                        }
+                    }
+                    .disabled(!isValid || isSubmitting)
+                    .listRowBackground(isValid ? AdaptiveColors.brandPrimary : Color.gray.opacity(0.2))
+                }
+            }
+            .navigationTitle("Add Participant")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button("Cancel") {
+                        dismiss()
+                    }
+                }
+            }
+        }
+    }
+    
+    private func register() {
+        isSubmitting = true
+        errorMessage = nil
+        
+        Task {
+            do {
+                _ = try await tournamentService.registerManualParticipant(
+                    tournamentId: tournamentId,
+                    firstName: firstName,
+                    lastName: lastName,
+                    email: email.isEmpty ? nil : email
+                )
+                
+                await MainActor.run {
+                    isSubmitting = false
+                    onComplete()
+                    dismiss()
+                }
+            } catch {
+                await MainActor.run {
+                    isSubmitting = false
+                    errorMessage = "Failed to register: \(error.localizedDescription)"
+                }
+            }
+        }
+    }
 }

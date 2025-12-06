@@ -14,6 +14,8 @@ struct ShopInventoryView: View {
     @State private var searchText = ""
     @State private var selectedTCG: TCGType?
     @State private var selectedCard: InventoryCard?
+    @State private var showToast = false
+    @State private var toastMessage = ""
     
     var filteredInventory: [InventoryCard] {
         inventoryService.inventory.filter { card in
@@ -63,7 +65,9 @@ struct ShopInventoryView: View {
             Divider()
             
             // Inventory Grid
-            if filteredInventory.isEmpty {
+            if let errorMessage = inventoryService.errorMessage {
+                errorStateView(errorMessage: errorMessage)
+            } else if filteredInventory.isEmpty {
                 emptyStateView
             } else {
                 ScrollView {
@@ -83,10 +87,37 @@ struct ShopInventoryView: View {
         }
         .background(Color(.systemGroupedBackground))
         .sheet(item: $selectedCard) { card in
-            CardReservationView(card: card, shopId: shopId)
+            CardReservationView(card: card, shopId: shopId) {
+                // Reservation successful callback
+                toastMessage = "Prenotazione creata con successo! Hai 30 minuti per ritirare la carta."
+                withAnimation {
+                    showToast = true
+                }
+                // Hide toast after 3 seconds
+                DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+                    withAnimation {
+                        showToast = false
+                    }
+                }
+            }
         }
         .onAppear {
             loadInventory()
+        }
+        .overlay(toastOverlay)
+    }
+    
+    // Toast overlay
+    private var toastOverlay: some View {
+        Group {
+            if showToast {
+                VStack {
+                    Spacer()
+                    ToastView(message: toastMessage, icon: "checkmark.circle.fill", color: .green)
+                }
+                .transition(.move(edge: .bottom).combined(with: .opacity))
+                .animation(.easeInOut, value: showToast)
+            }
         }
     }
     
@@ -121,7 +152,49 @@ struct ShopInventoryView: View {
         }
     }
     
+    private func errorStateView(errorMessage: String) -> some View {
+        VStack(spacing: 20) {
+            Spacer()
+            
+            ZStack {
+                Circle()
+                    .fill(Color.red.opacity(0.1))
+                    .frame(width: 100, height: 100)
+                
+                SwiftUI.Image(systemName: "exclamationmark.triangle.fill")
+                    .font(.system(size: 40))
+                    .foregroundColor(.red)
+            }
+            
+            VStack(spacing: 8) {
+                Text("Error Loading Inventory")
+                    .font(.system(size: 20, weight: .bold))
+                    .foregroundColor(.primary)
+                
+                Text(errorMessage)
+                    .font(.system(size: 15))
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 40)
+            }
+            
+            Button(action: loadInventory) {
+                Text("Try Again")
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 24)
+                    .padding(.vertical, 12)
+                    .background(Color.indigo)
+                    .cornerRadius(12)
+            }
+            
+            Spacer()
+            Spacer()
+        }
+    }
+    
     private func loadInventory() {
+        inventoryService.clearError()
         Task {
             await inventoryService.loadInventory(shopId: shopId, filters: InventoryFilters(onlyAvailable: true))
         }
@@ -158,10 +231,10 @@ private struct InventoryCardCell: View {
     private var conditionColor: Color {
         switch card.condition {
         case .nearMint: return .green
-        case .slightlyPlayed: return .blue
-        case .moderatelyPlayed: return .yellow
-        case .heavilyPlayed: return .orange
-        case .damaged: return .red
+        case .lightPlayed: return .yellow
+        case .played: return .orange
+        case .poor: return .red
+        default: return .gray
         }
     }
     
@@ -169,7 +242,7 @@ private struct InventoryCardCell: View {
         Button(action: onTap) {
             VStack(spacing: 0) {
                 // Card Image
-                AsyncImage(url: URL(string: card.imageUrl ?? "")) { image in
+                AsyncImage(url: URL(string: card.fullImageURL ?? "")) { image in
                     image
                         .resizable()
                         .aspectRatio(contentMode: .fit)
@@ -215,9 +288,19 @@ private struct InventoryCardCell: View {
                         
                         Spacer()
                         
-                        Text(card.formattedPrice)
-                            .font(.system(size: 15, weight: .bold))
-                            .foregroundColor(.indigo)
+                        VStack(alignment: .trailing, spacing: 2) {
+                            Text(card.formattedPrice)
+                                .font(.system(size: 15, weight: .bold))
+                                .foregroundColor(.indigo)
+                            
+                            HStack(spacing: 3) {
+                                SwiftUI.Image(systemName: "square.stack.3d.up.fill")
+                                    .font(.system(size: 9))
+                                Text("\(card.quantity) disp.")
+                                    .font(.system(size: 11, weight: .semibold))
+                            }
+                            .foregroundColor(card.quantity > 0 ? .green : .red)
+                        }
                     }
                 }
                 .padding(12)
@@ -237,19 +320,17 @@ struct CardReservationView: View {
     
     let card: InventoryCard
     let shopId: String
+    let onReservationSuccess: () -> Void
     
     @State private var isReserving = false
-    @State private var showSuccess = false
-    @State private var showError = false
-    @State private var errorMessage = ""
     
     private var conditionColor: Color {
         switch card.condition {
         case .nearMint: return .green
-        case .slightlyPlayed: return .blue
-        case .moderatelyPlayed: return .yellow
-        case .heavilyPlayed: return .orange
-        case .damaged: return .red
+        case .lightPlayed: return .yellow
+        case .played: return .orange
+        case .poor: return .red
+        default: return .gray
         }
     }
     
@@ -263,7 +344,7 @@ struct CardReservationView: View {
                     VStack(spacing: 20) {
                         // Card Preview
                         HStack(spacing: 16) {
-                            AsyncImage(url: URL(string: card.imageUrl ?? "")) { image in
+                            AsyncImage(url: URL(string: card.fullImageURL ?? "")) { image in
                                 image
                                     .resizable()
                                     .aspectRatio(contentMode: .fit)
@@ -292,6 +373,15 @@ struct CardReservationView: View {
                                     .padding(.horizontal, 10)
                                     .padding(.vertical, 5)
                                     .background(Capsule().fill(Color.indigo))
+                                
+                                if let nationalityDisplayName = card.nationalityDisplayName {
+                                    Text(nationalityDisplayName)
+                                        .font(.system(size: 12, weight: .semibold))
+                                        .foregroundColor(.white)
+                                        .padding(.horizontal, 10)
+                                        .padding(.vertical, 5)
+                                        .background(Capsule().fill(Color.blue))
+                                }
                             }
                             
                             Spacer()
@@ -337,6 +427,20 @@ struct CardReservationView: View {
                                     .foregroundColor(.primary)
                             }
                             
+                            if let nationalityDisplayName = card.nationalityDisplayName {
+                                Divider()
+                                
+                                HStack {
+                                    Text("Country")
+                                        .font(.system(size: 14))
+                                        .foregroundColor(.secondary)
+                                    Spacer()
+                                    Text(nationalityDisplayName)
+                                        .font(.system(size: 14, weight: .semibold))
+                                        .foregroundColor(.primary)
+                                }
+                            }
+                            
                             if let notes = card.notes {
                                 Divider()
                                 
@@ -373,6 +477,7 @@ struct CardReservationView: View {
                             }
                         }
                         .padding(16)
+                        .frame(maxWidth: .infinity)
                         .background(Color.indigo.opacity(0.1))
                         .cornerRadius(16)
                         
@@ -413,21 +518,6 @@ struct CardReservationView: View {
                     }
                 }
             }
-            .alert("Success!", isPresented: $showSuccess) {
-                Button("View Reservation") {
-                    dismiss()
-                }
-                Button("OK", role: .cancel) {
-                    dismiss()
-                }
-            } message: {
-                Text("Your reservation has been created. You have 30 minutes to pick it up.")
-            }
-            .alert("Error", isPresented: $showError) {
-                Button("OK", role: .cancel) {}
-            } message: {
-                Text(errorMessage)
-            }
         }
     }
     
@@ -438,18 +528,20 @@ struct CardReservationView: View {
             do {
                 _ = try await reservationService.createReservation(
                     cardId: card.id,
-                    quantity: 1
+                    quantity: 1,
+                    availableQuantity: card.quantity
                 )
                 
                 await MainActor.run {
                     isReserving = false
-                    showSuccess = true
+                    // Call success callback and dismiss immediately
+                    onReservationSuccess()
+                    dismiss()
                 }
             } catch {
                 await MainActor.run {
                     isReserving = false
-                    errorMessage = error.localizedDescription
-                    showError = true
+                    ToastManager.shared.showError(error.localizedDescription)
                 }
             }
         }
@@ -477,4 +569,5 @@ private struct ReservationInfoRow: View {
 #Preview {
     ShopInventoryView(shopId: "shop1")
         .environmentObject(InventoryService())
+        .withToastSupport()
 }

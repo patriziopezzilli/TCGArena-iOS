@@ -134,26 +134,70 @@ class DiscoverService: ObservableObject {
         loadData()
     }
     
+    func getLeaderboard(type: LeaderboardType, completion: @escaping (Result<[UserStats], Error>) -> Void) {
+        let endpoint: String
+        switch type {
+        case .tournaments:
+            endpoint = "/api/users/leaderboard/tournaments"
+        case .collection:
+            endpoint = "/api/users/leaderboard/collection"
+        case .community:
+            endpoint = "/api/users/leaderboard/active" // Using active players as proxy for community
+        case .level:
+            endpoint = "/api/users/leaderboard" // Using overall points as proxy for level
+        }
+        
+        apiClient.request(endpoint: endpoint, method: .get) { result in
+            switch result {
+            case .success(let data):
+                do {
+                    let stats = try JSONDecoder().decode([UserStats].self, from: data)
+                    completion(.success(stats))
+                } catch {
+                    completion(.failure(error))
+                }
+            case .failure(let error):
+                completion(.failure(error))
+            }
+        }
+    }
+
     private func loadLeaderboards() {
-        // For now, create mock leaderboards based on real users
-        // In future, backend can provide different leaderboard types
-        // Mock leaderboard entries using featured users
-        let mockUsers = featuredUsers.isEmpty ? activeUsers : featuredUsers
+        let group = DispatchGroup()
         
-        let tournamentEntries = mockUsers.enumerated().map { index, user in
-            LeaderboardEntry(id: "tournament-\(index)", userProfile: user.toUserProfile(), rank: index + 1, score: 100 - index, change: nil)
+        for type in LeaderboardType.allCases {
+            group.enter()
+            getLeaderboard(type: type) { result in
+                switch result {
+                case .success(let stats):
+                    // Convert UserStats to LeaderboardEntry
+                    let entries = stats.enumerated().map { index, stat in
+                        LeaderboardEntry(
+                            id: "\(type.rawValue)-\(stat.id)",
+                            userProfile: stat.user.toUserProfile(),
+                            rank: index + 1,
+                            score: self.getScore(for: type, stat: stat),
+                            change: nil
+                        )
+                    }
+                    DispatchQueue.main.async {
+                        self.leaderboards[type] = entries
+                    }
+                case .failure(let error):
+                    print("Error loading \(type) leaderboard: \(error)")
+                }
+                group.leave()
+            }
         }
-        let collectionEntries = mockUsers.enumerated().map { index, user in
-            LeaderboardEntry(id: "collection-\(index)", userProfile: user.toUserProfile(), rank: index + 1, score: 100 - index, change: nil)
+    }
+    
+    private func getScore(for type: LeaderboardType, stat: UserStats) -> Int {
+        switch type {
+        case .tournaments: return stat.totalWins * 10 // Example scoring
+        case .collection: return stat.totalCards
+        case .community: return Int(stat.winRate * 100)
+        case .level: return stat.user.points ?? 0
         }
-        let achievementEntries = mockUsers.enumerated().map { index, user in
-            LeaderboardEntry(id: "achievement-\(index)", userProfile: user.toUserProfile(), rank: index + 1, score: 100 - index, change: nil)
-        }
-        
-        leaderboards[.tournaments] = tournamentEntries
-        leaderboards[.collection] = collectionEntries
-        leaderboards[.community] = achievementEntries
-        leaderboards[.level] = tournamentEntries // Mock level leaderboard
     }
     
     private func loadRecentActivities() {

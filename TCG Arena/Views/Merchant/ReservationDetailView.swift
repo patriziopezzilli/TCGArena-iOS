@@ -9,6 +9,7 @@ import SwiftUI
 
 struct ReservationDetailView: View {
     @EnvironmentObject var reservationService: ReservationService
+    @EnvironmentObject var inventoryService: InventoryService
     @Environment(\.dismiss) var dismiss
     
     let reservation: Reservation
@@ -16,8 +17,6 @@ struct ReservationDetailView: View {
     @State private var showConfirmPickup = false
     @State private var showCancelConfirmation = false
     @State private var isProcessing = false
-    @State private var showError = false
-    @State private var errorMessage = ""
     
     var body: some View {
         NavigationView {
@@ -124,11 +123,6 @@ struct ReservationDetailView: View {
             } message: {
                 Text("Are you sure you want to cancel this reservation?")
             }
-            .alert("Error", isPresented: $showError) {
-                Button("OK", role: .cancel) {}
-            } message: {
-                Text(errorMessage)
-            }
         }
     }
     
@@ -180,7 +174,8 @@ struct ReservationDetailView: View {
                 .foregroundColor(.primary)
             
             HStack(spacing: 12) {
-                if let imageUrl = reservation.card?.imageUrl {
+                // Card Image - Only show for non-expired reservations
+                if reservation.status != .expired, let imageUrl = reservation.card?.imageUrl {
                     AsyncImage(url: URL(string: imageUrl)) { image in
                         image
                             .resizable()
@@ -189,7 +184,7 @@ struct ReservationDetailView: View {
                         Rectangle()
                             .fill(AdaptiveColors.backgroundSecondary)
                     }
-                    .frame(width: 100, height: 140)
+                    .frame(width: 80, height: 112) // Reduced from 100x140
                     .clipShape(RoundedRectangle(cornerRadius: 12))
                 }
                 
@@ -316,10 +311,10 @@ struct ReservationDetailView: View {
             VStack(spacing: 12) {
                 // Generate and display QR code
                 Image(systemName: "qrcode")
-                    .font(.system(size: 120))
+                    .font(.system(size: 100)) // Reduced from 120
                     .foregroundColor(AdaptiveColors.brandPrimary)
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, 30)
+                    .padding(.vertical, 20) // Reduced from 30
                 
                 Text(reservation.qrCode)
                     .font(.system(size: 16, weight: .mono, design: .monospaced))
@@ -340,15 +335,18 @@ struct ReservationDetailView: View {
         
         Task {
             do {
-                try await reservationService.validateReservation(code: reservation.qrCode)
+                let validatedReservation = try await reservationService.validateReservation(code: reservation.qrCode)
+                
+                // Update inventory quantity after successful validation
+                try await inventoryService.updateQuantity(cardId: validatedReservation.cardId, delta: -1)
+                
                 await MainActor.run {
                     isProcessing = false
                 }
             } catch {
                 await MainActor.run {
                     isProcessing = false
-                    errorMessage = error.localizedDescription
-                    showError = true
+                    ToastManager.shared.showError("Failed to validate reservation: \(error.localizedDescription)")
                 }
             }
         }
@@ -367,8 +365,7 @@ struct ReservationDetailView: View {
             } catch {
                 await MainActor.run {
                     isProcessing = false
-                    errorMessage = error.localizedDescription
-                    showError = true
+                    ToastManager.shared.showError("Failed to confirm pickup: \(error.localizedDescription)")
                 }
             }
         }
@@ -387,8 +384,7 @@ struct ReservationDetailView: View {
             } catch {
                 await MainActor.run {
                     isProcessing = false
-                    errorMessage = error.localizedDescription
-                    showError = true
+                    ToastManager.shared.showError("Failed to cancel reservation: \(error.localizedDescription)")
                 }
             }
         }

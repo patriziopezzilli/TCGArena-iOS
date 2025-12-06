@@ -18,14 +18,18 @@ struct ContentView: View {
     @StateObject private var achievementService = AchievementService()
     @StateObject private var imageService = ImageService()
     @StateObject private var inventoryService = InventoryService()
+    @StateObject private var reservationService = ReservationService()
+    @StateObject private var marketService = MarketDataService()
     @EnvironmentObject private var settingsService: SettingsService
     @EnvironmentObject private var authService: AuthService
+    // @StateObject private var toastManager = ToastManager.shared
     
     var body: some View {
         TabView(selection: $selectedTab) {
             CollectionView()
                 .environmentObject(cardService)
                 .environmentObject(deckService)
+                .environmentObject(marketService)
                 .environmentObject(authService)
                 .tabItem {
                     SwiftUI.Image(systemName: "rectangle.stack")
@@ -37,6 +41,7 @@ struct ContentView: View {
                 .environmentObject(shopService)
                 .environmentObject(tournamentService)
                 .environmentObject(inventoryService)
+                .environmentObject(reservationService)
                 .environmentObject(authService)
                 .tabItem {
                     SwiftUI.Image(systemName: "storefront")
@@ -62,6 +67,7 @@ struct ContentView: View {
                 .tag(3)
             
             ProfileView()
+                .environmentObject(reservationService)
                 .tabItem {
                     SwiftUI.Image(systemName: "person.crop.circle")
                     Text("Profile")

@@ -7,6 +7,7 @@
 
 import Foundation
 
+@MainActor
 class RewardsService: ObservableObject {
     static let shared = RewardsService()
     private let apiClient = APIClient.shared
@@ -16,6 +17,14 @@ class RewardsService: ObservableObject {
     // MARK: - Reward Operations
 
     func getAllActiveRewards(completion: @escaping (Result<[Reward], Error>) -> Void) {
+        // Check if user is authenticated before making API call
+        guard AuthService.shared.isAuthenticated else {
+            print("⚠️ RewardsService: User not authenticated, cannot fetch rewards")
+            completion(.failure(APIError.unauthorized))
+            return
+        }
+        
+        print("🎁 RewardsService: Fetching active rewards for authenticated user")
         apiClient.request(endpoint: "/api/rewards", method: .get) { result in
             switch result {
             case .success(let data):
@@ -31,7 +40,56 @@ class RewardsService: ObservableObject {
         }
     }
 
+    func getAllPartners(completion: @escaping (Result<[Partner], Error>) -> Void) {
+        guard AuthService.shared.isAuthenticated else {
+            completion(.failure(APIError.unauthorized))
+            return
+        }
+        
+        apiClient.request(endpoint: "/api/partners", method: .get) { result in
+            switch result {
+            case .success(let data):
+                do {
+                    let partners = try JSONDecoder().decode([Partner].self, from: data)
+                    completion(.success(partners))
+                } catch {
+                    completion(.failure(error))
+                }
+            case .failure(let error):
+                completion(.failure(error))
+            }
+        }
+    }
+
+    func getRewardsByPartner(partnerId: Int, completion: @escaping (Result<[Reward], Error>) -> Void) {
+        guard AuthService.shared.isAuthenticated else {
+            completion(.failure(APIError.unauthorized))
+            return
+        }
+        
+        apiClient.request(endpoint: "/api/rewards/partner/\(partnerId)", method: .get) { result in
+            switch result {
+            case .success(let data):
+                do {
+                    let rewards = try JSONDecoder().decode([Reward].self, from: data)
+                    completion(.success(rewards))
+                } catch {
+                    completion(.failure(error))
+                }
+            case .failure(let error):
+                completion(.failure(error))
+            }
+        }
+    }
+
     func getRewardById(_ id: Int, completion: @escaping (Result<Reward, Error>) -> Void) {
+        // Check if user is authenticated before making API call
+        guard AuthService.shared.isAuthenticated else {
+            print("⚠️ RewardsService: User not authenticated, cannot fetch reward")
+            completion(.failure(APIError.unauthorized))
+            return
+        }
+        
         apiClient.request(endpoint: "/api/rewards/\(id)", method: .get) { result in
             switch result {
             case .success(let data):
@@ -48,6 +106,13 @@ class RewardsService: ObservableObject {
     }
 
     func redeemReward(_ rewardId: Int, completion: @escaping (Result<[String: String], Error>) -> Void) {
+        // Check if user is authenticated before making API call
+        guard AuthService.shared.isAuthenticated else {
+            print("⚠️ RewardsService: User not authenticated, cannot redeem reward")
+            completion(.failure(APIError.unauthorized))
+            return
+        }
+        
         apiClient.request(endpoint: "/api/rewards/\(rewardId)/redeem", method: .post) { result in
             switch result {
             case .success(let data):
@@ -66,6 +131,13 @@ class RewardsService: ObservableObject {
     // MARK: - Points Operations
 
     func getUserPoints(completion: @escaping (Result<UserPoints, Error>) -> Void) {
+        // Check if user is authenticated before making API call
+        guard AuthService.shared.isAuthenticated else {
+            print("⚠️ RewardsService: User not authenticated, cannot fetch user points")
+            completion(.failure(APIError.unauthorized))
+            return
+        }
+        
         apiClient.request(endpoint: "/api/rewards/points", method: .get) { result in
             switch result {
             case .success(let data):
@@ -84,6 +156,13 @@ class RewardsService: ObservableObject {
     // MARK: - Transaction History
 
     func getTransactionHistory(completion: @escaping (Result<[RewardTransaction], Error>) -> Void) {
+        // Check if user is authenticated before making API call
+        guard AuthService.shared.isAuthenticated else {
+            print("⚠️ RewardsService: User not authenticated, cannot fetch transaction history")
+            completion(.failure(APIError.unauthorized))
+            return
+        }
+        
         apiClient.request(endpoint: "/api/rewards/history", method: .get) { result in
             switch result {
             case .success(let data):

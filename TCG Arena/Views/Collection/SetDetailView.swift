@@ -40,6 +40,7 @@ class SetCardsCache {
 struct SetDetailView: View {
     let set: TCGSet
     @StateObject private var expansionService = ExpansionService()
+    @EnvironmentObject private var marketService: MarketDataService
     @State private var cards: [CardTemplate] = []
     @State private var isLoading = true
     @State private var searchText = ""
@@ -215,7 +216,7 @@ struct SetDetailView: View {
                 
                 LazyVGrid(columns: columns, spacing: 16) {
                     ForEach(filteredCards) { card in
-                        NavigationLink(destination: CardDetailView(card: Card(from: card), isFromDiscover: true)) {
+                        NavigationLink(destination: CardDetailView(card: Card(from: card), isFromDiscover: true).environmentObject(marketService)) {
                             SetDetailCardView(card: Card(from: card))
                         }
                     }

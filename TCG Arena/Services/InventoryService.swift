@@ -57,13 +57,15 @@ class InventoryService: ObservableObject {
                 case .success(let data):
                     do {
                         let decoder = JSONDecoder()
-                        decoder.keyDecodingStrategy = .convertFromSnakeCase
-                        decoder.dateDecodingStrategy = .iso8601
-                        let cards = try decoder.decode([InventoryCard].self, from: data)
+                        let dateFormatter = DateFormatter()
+                        dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss"
+                        dateFormatter.timeZone = TimeZone(secondsFromGMT: 0)
+                        decoder.dateDecodingStrategy = .formatted(dateFormatter)
+                        let response = try decoder.decode(InventoryResponse.self, from: data)
                         Task { @MainActor in
-                            self.inventory = cards
+                            self.inventory = response.inventory
                         }
-                        continuation.resume(returning: cards)
+                        continuation.resume(returning: response.inventory)
                     } catch {
                         Task { @MainActor in
                             self.errorMessage = "Failed to decode inventory: \(error.localizedDescription)"
@@ -87,7 +89,12 @@ class InventoryService: ObservableObject {
                 switch result {
                 case .success(let data):
                     do {
-                        let card = try JSONDecoder().decode(InventoryCard.self, from: data)
+                        let decoder = JSONDecoder()
+                        let dateFormatter = DateFormatter()
+                        dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss"
+                        dateFormatter.timeZone = TimeZone(secondsFromGMT: 0)
+                        decoder.dateDecodingStrategy = .formatted(dateFormatter)
+                        let card = try decoder.decode(InventoryCard.self, from: data)
                         continuation.resume(returning: card)
                     } catch {
                         continuation.resume(throwing: error)
@@ -116,8 +123,10 @@ class InventoryService: ObservableObject {
                 case .success(let data):
                     do {
                         let decoder = JSONDecoder()
-                        decoder.keyDecodingStrategy = .convertFromSnakeCase
-                        decoder.dateDecodingStrategy = .iso8601
+                        let dateFormatter = DateFormatter()
+                        dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss"
+                        dateFormatter.timeZone = TimeZone(secondsFromGMT: 0)
+                        decoder.dateDecodingStrategy = .formatted(dateFormatter)
                         let card = try decoder.decode(InventoryCard.self, from: data)
                         
                         Task { @MainActor in
@@ -157,8 +166,10 @@ class InventoryService: ObservableObject {
                 case .success(let data):
                     do {
                         let decoder = JSONDecoder()
-                        decoder.keyDecodingStrategy = .convertFromSnakeCase
-                        decoder.dateDecodingStrategy = .iso8601
+                        let dateFormatter = DateFormatter()
+                        dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss"
+                        dateFormatter.timeZone = TimeZone(secondsFromGMT: 0)
+                        decoder.dateDecodingStrategy = .formatted(dateFormatter)
                         let card = try decoder.decode(InventoryCard.self, from: data)
                         
                         Task { @MainActor in
@@ -224,8 +235,10 @@ class InventoryService: ObservableObject {
                 case .success(let data):
                     do {
                         let decoder = JSONDecoder()
-                        decoder.keyDecodingStrategy = .convertFromSnakeCase
-                        decoder.dateDecodingStrategy = .iso8601
+                        let dateFormatter = DateFormatter()
+                        dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss"
+                        dateFormatter.timeZone = TimeZone(secondsFromGMT: 0)
+                        decoder.dateDecodingStrategy = .formatted(dateFormatter)
                         let card = try decoder.decode(InventoryCard.self, from: data)
                         
                         Task { @MainActor in

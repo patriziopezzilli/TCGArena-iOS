@@ -14,6 +14,7 @@ struct ProfileView: View {
     @EnvironmentObject private var requestService: RequestService
     @State private var showingSettings = false
     @State private var showingUserRequests = false
+    @State private var showingMyReservations = false
     @State private var userActivities: [UserActivity] = []
     @State private var userStats: UserStats?
     @State private var isLoadingActivities = false
@@ -54,82 +55,64 @@ struct ProfileView: View {
                 .padding(.top, 20)
                 
                 ScrollView {
-                    VStack(spacing: 24) {
-                        // Simple Profile Card
+                    VStack(spacing: 20) {
+                        // Compact Profile Header
                         HStack(spacing: 16) {
-                            // Profile Image
+                            // Profile Image (smaller)
                             if let profileImageUrl = authService.currentUser?.profileImageUrl,
                                let url = URL(string: profileImageUrl) {
                                 AsyncImage(url: url) { image in
                                     image
                                         .resizable()
                                         .scaledToFill()
-                                        .frame(width: 80, height: 80)
+                                        .frame(width: 60, height: 60)
                                         .clipShape(Circle())
-                                        .overlay(Circle().stroke(Color.white, lineWidth: 3))
-                                        .shadow(radius: 3)
+                                        .overlay(Circle().stroke(Color.white, lineWidth: 2))
+                                        .shadow(radius: 2)
                                 } placeholder: {
                                     Circle()
                                         .fill(Color(red: 0.0, green: 0.7, blue: 1.0))
-                                        .frame(width: 80, height: 80)
+                                        .frame(width: 60, height: 60)
                                         .overlay(
                                             Text(authService.currentUser?.displayName.prefix(2).uppercased() ?? "TC")
-                                                .font(.system(size: 28, weight: .bold))
+                                                .font(.system(size: 22, weight: .bold))
                                                 .foregroundColor(.white)
                                         )
                                 }
                             } else {
                                 Circle()
                                     .fill(Color(red: 0.0, green: 0.7, blue: 1.0))
-                                    .frame(width: 80, height: 80)
+                                    .frame(width: 60, height: 60)
                                     .overlay(
                                         Text(authService.currentUser?.displayName.prefix(2).uppercased() ?? "TC")
-                                            .font(.system(size: 28, weight: .bold))
+                                            .font(.system(size: 22, weight: .bold))
                                             .foregroundColor(.white)
                                     )
                             }
                             
-                            VStack(alignment: .leading, spacing: 8) {
+                            VStack(alignment: .leading, spacing: 4) {
                                 Text(authService.currentUser?.displayName ?? "TCG Collector")
-                                    .font(.system(size: 24, weight: .bold))
+                                    .font(.system(size: 20, weight: .bold))
                                     .foregroundColor(.primary)
                                 
-                                HStack(spacing: 12) {
-                                    if let user = authService.currentUser {
+                                if let user = authService.currentUser {
+                                    HStack(spacing: 8) {
                                         HStack(spacing: 4) {
                                             SwiftUI.Image(systemName: "star.fill")
+                                                .font(.system(size: 10, weight: .semibold))
+                                            Text(user.isPremium ? "Premium" : "Member")
                                                 .font(.system(size: 12, weight: .semibold))
-                                            Text("Member")
-                                                .font(.system(size: 14, weight: .semibold))
                                         }
                                         .foregroundColor(.white)
-                                        .padding(.horizontal, 10)
-                                        .padding(.vertical, 4)
+                                        .padding(.horizontal, 8)
+                                        .padding(.vertical, 3)
                                         .background(
                                             Capsule()
-                                                .fill(user.isPremium ? Color(red: 1.0, green: 0.7, blue: 0.0) : Color.gray)
+                                                .fill(user.isPremium ? Color.orange : Color.gray)
                                         )
                                         
                                         Text("Joined \(formattedJoinDate(parseDate(user.dateJoined)))")
-                                            .font(.system(size: 14, weight: .medium))
-                                            .foregroundColor(.secondary)
-                                    } else {
-                                        HStack(spacing: 4) {
-                                            SwiftUI.Image(systemName: "star.fill")
-                                                .font(.system(size: 12, weight: .semibold))
-                                            Text("Level 12")
-                                                .font(.system(size: 14, weight: .semibold))
-                                        }
-                                        .foregroundColor(.white)
-                                        .padding(.horizontal, 10)
-                                        .padding(.vertical, 4)
-                                        .background(
-                                            Capsule()
-                                                .fill(Color(red: 1.0, green: 0.7, blue: 0.0))
-                                        )
-                                        
-                                        Text(userStats?.joinDate ?? "Joined Nov 2025")
-                                            .font(.system(size: 14, weight: .medium))
+                                            .font(.system(size: 12, weight: .medium))
                                             .foregroundColor(.secondary)
                                     }
                                 }
@@ -137,115 +120,193 @@ struct ProfileView: View {
                             
                             Spacer()
                         }
-                        .padding(20)
+                        .padding(16)
                         .background(
-                            RoundedRectangle(cornerRadius: UIConstants.cornerRadius)
+                            RoundedRectangle(cornerRadius: 16)
                                 .fill(Color(.systemBackground))
-                                .shadow(
-                                    color: Color.black.opacity(UIConstants.shadowOpacity),
-                                    radius: UIConstants.shadowRadius,
-                                    x: 0,
-                                    y: 2
-                                )
-                        )
-                        .overlay(
-                            RoundedRectangle(cornerRadius: UIConstants.cornerRadius)
-                                .stroke(Color(.systemGray6), lineWidth: 1)
+                                .shadow(color: Color.black.opacity(0.06), radius: 8, x: 0, y: 2)
                         )
                         .padding(.horizontal, 20)
                         
-                        // Stats Grid
-                        LazyVGrid(columns: [
-                            GridItem(.flexible()),
-                            GridItem(.flexible())
-                        ], spacing: 16) {
-                            MinimalStatCard(title: "Cards", value: "\(userStats?.totalCards ?? 247)", icon: "rectangle.stack", color: Color(red: 0.0, green: 0.7, blue: 1.0))
-                            MinimalStatCard(title: "Decks", value: "\(userStats?.totalDecks ?? 12)", icon: "rectangle.stack.fill", color: Color(red: 0.8, green: 0.0, blue: 1.0))
-                            MinimalStatCard(title: "Tournaments", value: "\(userStats?.totalTournaments ?? 8)", icon: "trophy", color: Color(red: 1.0, green: 0.7, blue: 0.0))
-                            MinimalStatCard(title: "Wins", value: "\(userStats?.totalWins ?? 23)", icon: "checkmark.circle", color: Color(red: 0.2, green: 0.8, blue: 0.4))
+                        // MARK: - Quick Actions Section (Prominent)
+                        VStack(spacing: 12) {
+                            // My Reservations Card
+                            Button(action: { showingMyReservations = true }) {
+                                HStack(spacing: 16) {
+                                    ZStack {
+                                        RoundedRectangle(cornerRadius: 12)
+                                            .fill(Color.orange.opacity(0.15))
+                                            .frame(width: 50, height: 50)
+                                        SwiftUI.Image(systemName: "qrcode.viewfinder")
+                                            .font(.system(size: 24, weight: .semibold))
+                                            .foregroundColor(.orange)
+                                    }
+                                    
+                                    VStack(alignment: .leading, spacing: 4) {
+                                        Text("Le mie Prenotazioni")
+                                            .font(.system(size: 17, weight: .bold))
+                                            .foregroundColor(.primary)
+                                        Text("Visualizza le tue prenotazioni attive")
+                                            .font(.system(size: 14))
+                                            .foregroundColor(.secondary)
+                                    }
+                                    
+                                    Spacer()
+                                    
+                                    SwiftUI.Image(systemName: "chevron.right")
+                                        .font(.system(size: 14, weight: .semibold))
+                                        .foregroundColor(.secondary)
+                                }
+                                .padding(16)
+                                .frame(height: 80) // Altezza fissa per uniformità
+                                .background(
+                                    RoundedRectangle(cornerRadius: 16)
+                                        .fill(Color(.systemBackground))
+                                        .shadow(color: Color.black.opacity(0.06), radius: 8, x: 0, y: 2)
+                                )
+                            }
+                            .buttonStyle(PlainButtonStyle())
+                            
+                            // My Requests Card
+                            Button(action: { showingUserRequests = true }) {
+                                HStack(spacing: 16) {
+                                    ZStack {
+                                        RoundedRectangle(cornerRadius: 12)
+                                            .fill(Color.blue.opacity(0.15))
+                                            .frame(width: 50, height: 50)
+                                        SwiftUI.Image(systemName: "envelope.badge")
+                                            .font(.system(size: 24, weight: .semibold))
+                                            .foregroundColor(.blue)
+                                    }
+                                    
+                                    VStack(alignment: .leading, spacing: 4) {
+                                        Text("Le mie Richieste")
+                                            .font(.system(size: 17, weight: .bold))
+                                            .foregroundColor(.primary)
+                                        Text("Gestisci le richieste inviate")
+                                            .font(.system(size: 14))
+                                            .foregroundColor(.secondary)
+                                    }
+                                    
+                                    Spacer()
+                                    
+                                    SwiftUI.Image(systemName: "chevron.right")
+                                        .font(.system(size: 14, weight: .semibold))
+                                        .foregroundColor(.secondary)
+                                }
+                                .padding(16)
+                                .frame(height: 80) // Altezza fissa per uniformità
+                                .background(
+                                    RoundedRectangle(cornerRadius: 16)
+                                        .fill(Color(.systemBackground))
+                                        .shadow(color: Color.black.opacity(0.06), radius: 8, x: 0, y: 2)
+                                )
+                            }
+                            .buttonStyle(PlainButtonStyle())
                         }
                         .padding(.horizontal, 20)
                         
-                        // Recent Activity Section
-                        VStack(alignment: .leading, spacing: 16) {
+                        // MARK: - Recent Activity Section
+                        VStack(alignment: .leading, spacing: 12) {
                             HStack {
-                                Text("Recent Activity")
-                                    .font(.system(size: UIConstants.sectionTitleFontSize, weight: .semibold))
+                                SwiftUI.Image(systemName: "clock.arrow.circlepath")
+                                    .font(.system(size: 18, weight: .semibold))
+                                    .foregroundColor(.purple)
+                                Text("Attività Recenti")
+                                    .font(.system(size: 17, weight: .bold))
                                     .foregroundColor(.primary)
                                 Spacer()
-                                
-                                Button(action: {
-                                    showingUserRequests = true
-                                }) {
-                                    HStack(spacing: 8) {
-                                        SwiftUI.Image(systemName: "envelope.fill")
-                                            .font(.system(size: 18, weight: .semibold))
-                                        Text("My Requests")
-                                            .font(.system(size: 16, weight: .semibold))
-                                    }
-                                    .foregroundColor(.white)
-                                    .padding(.horizontal, 20)
-                                    .padding(.vertical, 12)
-                                    .background(
-                                        RoundedRectangle(cornerRadius: 12)
-                                            .fill(Color(red: 0.0, green: 0.7, blue: 1.0))
-                                            .shadow(color: Color(red: 0.0, green: 0.7, blue: 1.0).opacity(0.3), radius: 4, x: 0, y: 2)
-                                    )
-                                }
                             }
                             .padding(.horizontal, 20)
                             
-                            Group {
+                            VStack(spacing: 0) {
                                 if isLoadingActivities {
-                                    ProgressView()
-                                        .frame(maxWidth: .infinity, alignment: .center)
-                                        .padding(.vertical, 20)
+                                    HStack {
+                                        Spacer()
+                                        ProgressView()
+                                        Spacer()
+                                    }
+                                    .padding(.vertical, 20)
                                 } else if userActivities.isEmpty {
-                                    Text("No recent activity")
-                                        .font(.body)
-                                        .foregroundColor(.secondary)
-                                        .frame(maxWidth: .infinity, alignment: .center)
-                                        .padding(.vertical, 20)
+                                    HStack {
+                                        Spacer()
+                                        VStack(spacing: 8) {
+                                            SwiftUI.Image(systemName: "clock")
+                                                .font(.system(size: 32))
+                                                .foregroundColor(.secondary.opacity(0.5))
+                                            Text("Nessuna attività recente")
+                                                .font(.system(size: 14))
+                                                .foregroundColor(.secondary)
+                                        }
+                                        Spacer()
+                                    }
+                                    .padding(.vertical, 24)
                                 } else {
-                                    VStack(spacing: 0) {
-                                        ForEach(userActivities.prefix(5), id: \.id) { activity in
-                                            ActivityRow(
-                                                icon: iconForActivityType(activity.activityType),
-                                                title: activity.description,
-                                                time: formatTimestamp(activity.timestamp),
-                                                iconColor: colorForActivityType(activity.activityType)
-                                            )
-                                            .padding(.horizontal, 20)
-                                            .padding(.vertical, 12)
+                                    ForEach(userActivities.prefix(5), id: \.id) { activity in
+                                        HStack(spacing: 12) {
+                                            SwiftUI.Image(systemName: iconForActivityType(activity.activityType))
+                                                .font(.system(size: 14, weight: .semibold))
+                                                .foregroundColor(colorForActivityType(activity.activityType))
+                                                .frame(width: 28, height: 28)
+                                                .background(
+                                                    Circle()
+                                                        .fill(colorForActivityType(activity.activityType).opacity(0.15))
+                                                )
                                             
-                                            if activity.id != userActivities.prefix(5).last?.id {
-                                                Divider()
-                                                    .padding(.leading, 64)
-                                                    .padding(.trailing, 20)
+                                            VStack(alignment: .leading, spacing: 2) {
+                                                Text(activity.description)
+                                                    .font(.system(size: 14, weight: .medium))
+                                                    .foregroundColor(.primary)
+                                                    .lineLimit(1)
+                                                Text(formatTimestamp(activity.timestamp))
+                                                    .font(.system(size: 12))
+                                                    .foregroundColor(.secondary)
                                             }
+                                            
+                                            Spacer()
+                                        }
+                                        .padding(.horizontal, 16)
+                                        .padding(.vertical, 10)
+                                        
+                                        if activity.id != userActivities.prefix(5).last?.id {
+                                            Divider()
+                                                .padding(.leading, 56)
                                         }
                                     }
                                 }
                             }
                             .background(
-                                RoundedRectangle(cornerRadius: UIConstants.cornerRadius)
+                                RoundedRectangle(cornerRadius: 16)
                                     .fill(Color(.systemBackground))
-                                    .shadow(
-                                        color: Color.black.opacity(UIConstants.shadowOpacity),
-                                        radius: UIConstants.shadowRadius,
-                                        x: 0,
-                                        y: 2
-                                    )
-                            )
-                            .overlay(
-                                RoundedRectangle(cornerRadius: UIConstants.cornerRadius)
-                                    .stroke(Color(.systemGray6), lineWidth: 1)
+                                    .shadow(color: Color.black.opacity(0.06), radius: 8, x: 0, y: 2)
                             )
                             .padding(.horizontal, 20)
                         }
+                        
+                        // MARK: - Statistics Section (Compact, at bottom)
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text("Statistiche")
+                                .font(.system(size: 15, weight: .semibold))
+                                .foregroundColor(.secondary)
+                                .padding(.horizontal, 20)
+                            
+                            LazyVGrid(columns: [
+                                GridItem(.flexible()),
+                                GridItem(.flexible()),
+                                GridItem(.flexible()),
+                                GridItem(.flexible())
+                            ], spacing: 12) {
+                                CompactStatItem(value: "\(userStats?.totalCards ?? 0)", label: "Carte", icon: "rectangle.stack")
+                                CompactStatItem(value: "\(userStats?.totalDecks ?? 0)", label: "Deck", icon: "rectangle.stack.fill")
+                                CompactStatItem(value: "\(userStats?.totalTournaments ?? 0)", label: "Tornei", icon: "trophy")
+                                CompactStatItem(value: "\(userStats?.totalWins ?? 0)", label: "Vittorie", icon: "checkmark.circle")
+                            }
+                            .padding(.horizontal, 20)
+                        }
+                        .padding(.top, 8)
                     }
-                .padding(.top, 16)
-                .padding(.bottom, 32)
+                    .padding(.top, 16)
+                    .padding(.bottom, 32)
                 }
             }
             .background(Color(.systemBackground))
@@ -260,6 +321,13 @@ struct ProfileView: View {
                 NavigationView {
                     UserRequestsView()
                         .environmentObject(requestService)
+                        .environmentObject(authService)
+                }
+            }
+            .sheet(isPresented: $showingMyReservations) {
+                NavigationView {
+                    MyReservationsView()
+                        .environmentObject(ReservationService())
                         .environmentObject(authService)
                 }
             }
@@ -384,6 +452,34 @@ struct MinimalStatCard: View {
     }
 }
 
+struct CompactStatItem: View {
+    let value: String
+    let label: String
+    let icon: String
+    
+    var body: some View {
+        VStack(spacing: 6) {
+            SwiftUI.Image(systemName: icon)
+                .font(.system(size: 16, weight: .medium))
+                .foregroundColor(.secondary)
+            
+            Text(value)
+                .font(.system(size: 18, weight: .bold))
+                .foregroundColor(.primary)
+            
+            Text(label)
+                .font(.system(size: 11, weight: .medium))
+                .foregroundColor(.secondary)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 12)
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(Color(.systemGray6))
+        )
+    }
+}
+
 struct StatCard: View {
         let title: String
         let value: String
@@ -476,9 +572,7 @@ struct StatCard: View {
         @State private var showingPrivacy = false
         @State private var showingFAQ = false
         @State private var showingSupport = false
-        @State private var showingScannerSettings = false
         @State private var showingEditProfile = false
-        @State private var showingExportOptions = false
         @State private var showingSignOutAlert = false
         @State private var showingDeleteAlert = false
         @State private var notificationsEnabled = true
@@ -515,38 +609,6 @@ struct StatCard: View {
                                     .labelsHidden()
                             }
                         )
-                        
-                        SettingsRow(
-                            title: "Card Scanner",
-                            icon: "camera.fill"
-                        ) {
-                            showingScannerSettings = true
-                        }
-                        
-                        SettingsRow(
-                            title: "Market Values",
-                            icon: "chart.line.uptrend.xyaxis"
-                        ) {
-                            // Il toggle gestisce già il cambio di stato
-                        }
-                        .overlay(
-                            HStack {
-                                Spacer()
-                                Toggle("", isOn: $settingsService.showMarketValues)
-                                    .labelsHidden()
-                            }
-                        )
-                        
-                        if settingsService.showMarketValues {
-                            HStack {
-                                Text("Show real-time card values and portfolio tracking")
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
-                                Spacer()
-                            }
-                            .padding(.leading, 50)
-                            .padding(.top, -8)
-                        }
                     }
                     
                     // Account Section
@@ -556,20 +618,6 @@ struct StatCard: View {
                             icon: "person.circle.fill"
                         ) {
                             showingEditProfile = true
-                        }
-                        
-                        SettingsRow(
-                            title: "Privacy Settings",
-                            icon: "lock.fill"
-                        ) {
-                            showingPrivacy = true
-                        }
-                        
-                        SettingsRow(
-                            title: "Export Collection",
-                            icon: "square.and.arrow.up.fill"
-                        ) {
-                            showingExportOptions = true
                         }
                     }
                     
@@ -631,6 +679,13 @@ struct StatCard: View {
                         .padding(.vertical, 4)
                     }
                     
+                    // TCG Rules Section
+                    Section("Regolamenti TCG") {
+                        ForEach(TCGType.allCases, id: \.self) { tcgType in
+                            TCGRulesRow(tcgType: tcgType)
+                        }
+                    }
+                    
                     // Danger Zone
                     Section("Account Actions") {
                         SettingsRow(
@@ -669,32 +724,34 @@ struct StatCard: View {
                 .sheet(isPresented: $showingSupport) {
                     SupportView()
                 }
-                .sheet(isPresented: $showingScannerSettings) {
-                    ScannerSettingsView()
-                }
                 .sheet(isPresented: $showingEditProfile) {
                     EditProfileView()
                 }
-                .sheet(isPresented: $showingExportOptions) {
-                    ExportOptionsView()
-                }
-                .alert("Sign Out", isPresented: $showingSignOutAlert) {
-                    Button("Cancel", role: .cancel) { }
+                .confirmationDialog("Sign Out", isPresented: $showingSignOutAlert) {
                     Button("Sign Out", role: .destructive) {
                         authService.signOut()
                     }
+                    Button("Cancel", role: .cancel) { }
                 } message: {
                     Text("Are you sure you want to sign out? You'll need to sign back in to access your collection.")
                 }
-                .alert("Delete Account", isPresented: $showingDeleteAlert) {
-                    Button("Cancel", role: .cancel) { }
+                .confirmationDialog("Delete Account", isPresented: $showingDeleteAlert) {
                     Button("Delete", role: .destructive) {
                         // Handle account deletion
                         presentationMode.wrappedValue.dismiss()
                     }
+                    Button("Cancel", role: .cancel) { }
                 } message: {
                     Text("This action cannot be undone. All your collection data, decks, and progress will be permanently deleted.")
                 }
+                .overlay(
+                    ToastManager.shared.currentToast.map { toast in
+                        ToastNotificationView(toast: toast)
+                            .transition(.move(edge: .bottom).combined(with: .opacity))
+                            .animation(.easeInOut, value: toast.id)
+                    },
+                    alignment: .bottom
+                )
             }
         }
     }
@@ -774,39 +831,39 @@ struct StatCard: View {
                             .padding(.bottom)
                         
                         Group {
-                            Text("Information We Collect")
+                            Text("Dati Raccolti")
                                 .font(.headline)
                                 .fontWeight(.semibold)
                             
-                            Text("• Collection Data: Information about your trading cards, including names, conditions, and values\n• Usage Data: How you interact with the app to improve functionality\n• Device Information: Basic device and app version information for support purposes")
+                            Text("• Dati Collezione: informazioni sulle tue carte, condizioni e valori\n• Dati Utilizzo: come interagisci con l'app per migliorare le funzionalità\n• Dati Dispositivo: informazioni di base per supporto tecnico\n• Posizione: solo se autorizzata, per trovare negozi e tornei vicini")
                                 .font(.body)
                             
-                            Text("How We Use Information")
+                            Text("Utilizzo dei Dati")
                                 .font(.headline)
                                 .fontWeight(.semibold)
                             
-                            Text("• Provide and maintain app functionality\n• Sync your collection across devices\n• Provide customer support\n• Improve app features and performance")
+                            Text("• Fornire e mantenere le funzionalità dell'app\n• Sincronizzare la collezione tra dispositivi\n• Mostrare negozi e tornei nella tua zona\n• Gestire prenotazioni e iscrizioni\n• Migliorare l'esperienza utente")
                                 .font(.body)
                             
-                            Text("Data Security")
+                            Text("Sicurezza")
                                 .font(.headline)
                                 .fontWeight(.semibold)
                             
-                            Text("We implement appropriate security measures to protect your personal information. Your data is encrypted in transit and at rest using industry-standard protocols.")
+                            Text("I tuoi dati sono protetti con crittografia in transito e a riposo. Utilizziamo protocolli standard del settore.")
                                 .font(.body)
                             
-                            Text("Third-Party Services")
+                            Text("I Tuoi Diritti")
                                 .font(.headline)
                                 .fontWeight(.semibold)
                             
-                            Text("We use secure backend services for authentication and data storage. Your data is protected with industry-standard security measures.")
+                            Text("Hai il diritto di accedere, modificare o eliminare i tuoi dati personali. Contattaci per esercitare questi diritti.")
                                 .font(.body)
                             
-                            Text("Your Rights")
+                            Text("Contatti")
                                 .font(.headline)
                                 .fontWeight(.semibold)
                             
-                            Text("You have the right to access, update, or delete your personal information. Contact us if you wish to exercise these rights.")
+                            Text("Per domande sulla privacy: privacy@tcgarena.com")
                                 .font(.body)
                         }
                     }
@@ -815,7 +872,7 @@ struct StatCard: View {
                 .navigationTitle("Privacy")
                 .navigationBarTitleDisplayMode(.inline)
                 .navigationBarItems(
-                    trailing: Button("Done") {
+                    trailing: Button("Fatto") {
                         presentationMode.wrappedValue.dismiss()
                     }
                 )
@@ -829,58 +886,63 @@ struct StatCard: View {
         var body: some View {
             NavigationView {
                 List {
-                    Section("Getting Started") {
+                    Section("Come Iniziare") {
                         FAQItem(
-                            question: "How do I add cards to my collection?",
-                            answer: "Tap the '+' button in the Collection tab. You can either scan a card using your camera or manually enter card details."
+                            question: "Come aggiungo carte alla mia collezione?",
+                            answer: "Tocca il '+' nella tab Collezione. Puoi cercare nel database o inserire manualmente i dettagli della carta."
                         )
                         
                         FAQItem(
-                            question: "How does card scanning work?",
-                            answer: "Our AI-powered scanner recognizes cards from major TCGs including Pokemon, Magic, Yu-Gi-Oh, and One Piece. Simply point your camera at the card and the app will automatically identify it."
+                            question: "Come creo un deck?",
+                            answer: "Vai nella tab Collezione, seleziona 'Deck' in alto e tocca '+' per creare un nuovo mazzo. Scegli il TCG e inizia ad aggiungere carte."
                         )
                     }
                     
-                    Section("Collection Management") {
+                    Section("Tornei ed Eventi") {
                         FAQItem(
-                            question: "Can I track card conditions and grades?",
-                            answer: "Yes! You can specify the condition (Mint, Near Mint, Lightly Played, etc.) and add professional grading information from services like PSA, BGS, and CGC."
+                            question: "Come trovo tornei vicino a me?",
+                            answer: "Usa la tab Eventi per scoprire tornei nella tua zona. Puoi filtrare per TCG, data e distanza."
                         )
                         
                         FAQItem(
-                            question: "How are card values determined?",
-                            answer: "We pull real-time market data from multiple sources to provide accurate pricing. Values update automatically based on current market conditions."
+                            question: "Come funziona il check-in?",
+                            answer: "Il giorno del torneo, vai nei dettagli dell'evento e tocca 'Check-in'. Guadagnerai punti bonus!"
+                        )
+                        
+                        FAQItem(
+                            question: "Cosa sono i punti rewards?",
+                            answer: "Guadagni punti partecipando a tornei, creando deck e completando azioni nell'app. Riscattali per premi esclusivi!"
                         )
                     }
                     
-                    Section("Tournaments & Community") {
+                    Section("Negozi e Prenotazioni") {
                         FAQItem(
-                            question: "How do I find local tournaments?",
-                            answer: "Use the Tournament tab to discover events near you. You can filter by TCG type, date, and distance from your location."
+                            question: "Come prenoto una carta?",
+                            answer: "Trova un negozio vicino, naviga il suo inventario e tocca 'Prenota'. Mostra il QR code al ritiro."
                         )
                         
                         FAQItem(
-                            question: "What are rewards points?",
-                            answer: "Earn points by participating in the community, attending tournaments, and completing collection milestones. Redeem points for digital content and physical prizes."
+                            question: "Quanto tempo ho per ritirare?",
+                            answer: "Le prenotazioni scadono dopo 24 ore. Riceverai notifiche di promemoria."
                         )
                     }
                     
-                    Section("Technical Issues") {
+                    Section("Problemi Tecnici") {
                         FAQItem(
-                            question: "My collection isn't syncing",
-                            answer: "Make sure you're signed in and have an internet connection. Try closing and reopening the app, or contact support if the issue persists."
+                            question: "La mia collezione non si sincronizza",
+                            answer: "Assicurati di essere connesso a internet. Prova a chiudere e riaprire l'app."
                         )
                         
                         FAQItem(
-                            question: "The app is running slowly",
-                            answer: "Large collections may cause performance issues on older devices. Try closing other apps and ensure you have sufficient storage space available."
+                            question: "L'app è lenta",
+                            answer: "Collezioni molto grandi possono rallentare l'app. Prova a chiudere altre app in background."
                         )
                     }
                 }
                 .navigationTitle("FAQ")
                 .navigationBarTitleDisplayMode(.inline)
                 .navigationBarItems(
-                    trailing: Button("Done") {
+                    trailing: Button("Fatto") {
                         presentationMode.wrappedValue.dismiss()
                     }
                 )

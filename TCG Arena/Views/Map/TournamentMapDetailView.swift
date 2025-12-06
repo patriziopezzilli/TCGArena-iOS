@@ -10,8 +10,8 @@ import MapKit
 
 struct TournamentMapDetailView: View {
     let tournament: Tournament
-    @State private var isUserRegistered = false
-    @State private var showingRegistrationAlert = false
+    @EnvironmentObject var tournamentService: TournamentService
+    @EnvironmentObject var authService: AuthService
     @State private var showingParticipantProfile: User?
     @Environment(\.dismiss) private var dismiss
     
@@ -53,9 +53,9 @@ struct TournamentMapDetailView: View {
                         VStack(spacing: 12) {
                             InfoRow(icon: "calendar", title: "Date", value: tournament.formattedStartDate)
                             InfoRow(icon: "clock", title: "Time", value: tournament.formattedStartDate)
-                            InfoRow(icon: "person.2", title: "Players", value: "\(tournament.currentParticipants)/\(tournament.maxParticipants)")
+                            InfoRow(icon: "person.2", title: "Players", value: "\(tournament.registeredParticipantsCount)/\(tournament.maxParticipants)")
                             InfoRow(icon: "dollarsign.circle", title: "Entry Fee", value: tournament.entryFee > 0 ? String(format: "$%.0f", tournament.entryFee) : "Free")
-                            InfoRow(icon: "trophy", title: "Prize Pool", value: String(format: "$%.0f", tournament.prizePool))
+                            InfoRow(icon: "trophy", title: "Prize Pool", value: tournament.prizePool)
                         }
                     }
                     
@@ -112,78 +112,82 @@ struct TournamentMapDetailView: View {
                 // Participants Section
                 if !tournament.participants.isEmpty {
                     InfoCard(title: "Participants") {
-                        VStack(spacing: 12) {
-                            ForEach(tournament.participants.prefix(5)) { participant in
-                                Button(action: {
-                                    showingParticipantProfile = participant
-                                }) {
-                                    HStack(spacing: 12) {
-                                        // Avatar
-                                        ZStack {
-                                            Circle()
-                                                .fill(tournament.tcgType.themeColor.opacity(0.2))
-                                                .frame(width: 40, height: 40)
-                                            
-                                            if let profileImageURL = participant.profileImageUrl,
-                                               let url = URL(string: profileImageURL) {
-                                                AsyncImage(url: url) { image in
-                                                    image
-                                                        .resizable()
-                                                        .scaledToFill()
-                                                        .frame(width: 40, height: 40)
-                                                        .clipShape(Circle())
-                                                } placeholder: {
-                                                    SwiftUI.Image(systemName: "person.circle.fill")
-                                                        .font(.system(size: 20))
+                        DisclosureGroup("Show Participants (\(tournament.participants.count))") {
+                            VStack(spacing: 12) {
+                                ForEach(tournament.participants.prefix(5)) { participant in
+                                    Button(action: {
+                                        showingParticipantProfile = participant
+                                    }) {
+                                        HStack(spacing: 12) {
+                                            // Avatar
+                                            ZStack {
+                                                Circle()
+                                                    .fill(tournament.tcgType.themeColor.opacity(0.2))
+                                                    .frame(width: 40, height: 40)
+                                                
+                                                if let profileImageURL = participant.profileImageUrl,
+                                                   let url = URL(string: profileImageURL) {
+                                                    AsyncImage(url: url) { image in
+                                                        image
+                                                            .resizable()
+                                                            .scaledToFill()
+                                                            .frame(width: 40, height: 40)
+                                                            .clipShape(Circle())
+                                                    } placeholder: {
+                                                        SwiftUI.Image(systemName: "person.circle.fill")
+                                                            .font(.system(size: 20))
+                                                            .foregroundColor(tournament.tcgType.themeColor)
+                                                    }
+                                                } else {
+                                                    Text(String(participant.displayName.prefix(2)).uppercased())
+                                                        .font(.system(size: 16, weight: .bold))
                                                         .foregroundColor(tournament.tcgType.themeColor)
                                                 }
-                                            } else {
-                                                Text(String(participant.displayName.prefix(2)).uppercased())
-                                                    .font(.system(size: 16, weight: .bold))
-                                                    .foregroundColor(tournament.tcgType.themeColor)
                                             }
-                                        }
-                                        
-                                        VStack(alignment: .leading, spacing: 2) {
-                                            Text(participant.displayName)
-                                                .font(.system(size: 16, weight: .semibold))
-                                                .foregroundColor(.primary)
                                             
-                                            Text("@\(participant.username)")
-                                                .font(.system(size: 14, weight: .medium))
-                                                .foregroundColor(.secondary)
-                                            
-                                            if let location = participant.location {
-                                                HStack(spacing: 4) {
-                                                    SwiftUI.Image(systemName: "location.fill")
-                                                        .font(.system(size: 12, weight: .medium))
-                                                        .foregroundColor(.secondary)
-                                                    
-                                                    Text("\(location.city)")
-                                                        .font(.system(size: 12, weight: .medium))
-                                                        .foregroundColor(.secondary)
+                                            VStack(alignment: .leading, spacing: 2) {
+                                                Text(participant.displayName)
+                                                    .font(.system(size: 16, weight: .semibold))
+                                                    .foregroundColor(.primary)
+                                                
+                                                Text("@\(participant.username)")
+                                                    .font(.system(size: 14, weight: .medium))
+                                                    .foregroundColor(.secondary)
+                                                
+                                                if let location = participant.location {
+                                                    HStack(spacing: 4) {
+                                                        SwiftUI.Image(systemName: "location.fill")
+                                                            .font(.system(size: 12, weight: .medium))
+                                                            .foregroundColor(.secondary)
+                                                        
+                                                        Text("\(location.city)")
+                                                            .font(.system(size: 12, weight: .medium))
+                                                            .foregroundColor(.secondary)
+                                                    }
                                                 }
                                             }
+                                            
+                                            Spacer()
+                                            
+                                            SwiftUI.Image(systemName: "chevron.right")
+                                                .font(.system(size: 14, weight: .medium))
+                                                .foregroundColor(.secondary)
                                         }
-                                        
-                                        Spacer()
-                                        
-                                        SwiftUI.Image(systemName: "chevron.right")
-                                            .font(.system(size: 14, weight: .medium))
-                                            .foregroundColor(.secondary)
+                                        .padding(.vertical, 8)
                                     }
-                                    .padding(.vertical, 8)
+                                    .buttonStyle(PlainButtonStyle())
                                 }
-                                .buttonStyle(PlainButtonStyle())
+                                
+                                if tournament.participants.count > 5 {
+                                    Text("+\(tournament.participants.count - 5) more participants")
+                                        .font(.system(size: 14, weight: .medium))
+                                        .foregroundColor(.secondary)
+                                        .padding(.top, 4)
+                                }
                             }
-                            
-                            if tournament.participants.count > 5 {
-                                Text("+\(tournament.participants.count - 5) more participants")
-                                    .font(.system(size: 14, weight: .medium))
-                                    .foregroundColor(.secondary)
-                                    .padding(.top, 4)
-                            }
+                            .padding(.top, 8)
                         }
+                        .accentColor(tournament.tcgType.themeColor)
                     }
                     .padding(.horizontal, 20)
                 }
@@ -205,34 +209,49 @@ struct TournamentMapDetailView: View {
                     }
                     
                     Button(action: {
-                        if isUserRegistered {
-                            // If already registered, unregister directly
-                            isUserRegistered = false
+                        if isRegistered || isWaitingList {
+                            // Unregister action
+                            unregisterFromTournament()
                         } else {
-                            // Show confirmation for registration
-                            showingRegistrationAlert = true
+                            // Register directly
+                            registerForTournament()
                         }
                     }) {
                         HStack(spacing: 12) {
-                            SwiftUI.Image(systemName: isUserRegistered ? "checkmark.circle.fill" : "plus.circle.fill")
-                                .font(.system(size: 18, weight: .bold))
-                            
-                            Text(isUserRegistered ? "Registered ✓" : "Register Now")
-                                .font(.system(size: 18, weight: .bold))
+                            if isRegistered {
+                                SwiftUI.Image(systemName: "checkmark.circle.fill")
+                                    .font(.system(size: 18, weight: .bold))
+                                Text("Registered ✓")
+                                    .font(.system(size: 18, weight: .bold))
+                            } else if isWaitingList {
+                                SwiftUI.Image(systemName: "clock.fill")
+                                    .font(.system(size: 18, weight: .bold))
+                                Text("Waiting List")
+                                    .font(.system(size: 18, weight: .bold))
+                            } else if tournament.isFull {
+                                SwiftUI.Image(systemName: "clock.badge.plus")
+                                    .font(.system(size: 18, weight: .bold))
+                                Text("Join Waiting List")
+                                    .font(.system(size: 18, weight: .bold))
+                            } else {
+                                SwiftUI.Image(systemName: "plus.circle.fill")
+                                    .font(.system(size: 18, weight: .bold))
+                                Text("Register Now")
+                                    .font(.system(size: 18, weight: .bold))
+                            }
                         }
                         .foregroundColor(.white)
                         .frame(maxWidth: .infinity, minHeight: 52)
                         .background(
                             RoundedRectangle(cornerRadius: UIConstants.cornerRadius)
-                                .fill(isUserRegistered ? Color.green : tournament.tcgType.themeColor)
+                                .fill(buttonColor)
                         )
                     }
-                    .disabled(tournament.currentParticipants >= tournament.maxParticipants)
                     
-                    if tournament.currentParticipants >= tournament.maxParticipants {
-                        Text("Tournament is full")
+                    if tournament.isFull && !isRegistered && !isWaitingList {
+                        Text("Tournament is full - Join the waiting list!")
                             .font(.system(size: 14, weight: .medium))
-                            .foregroundColor(.red)
+                            .foregroundColor(.orange)
                     }
                 }
                 .padding(.horizontal, 20)
@@ -245,30 +264,79 @@ struct TournamentMapDetailView: View {
         .sheet(item: $showingParticipantProfile) { participant in
             UserProfileDetailView(userProfile: participant.toUserProfile())
         }
-        .alert("Tournament Registration", isPresented: $showingRegistrationAlert) {
-            Button("Cancel", role: .cancel) { }
-            Button("Register", role: .none) {
-                registerForTournament()
-            }
-        } message: {
-            Text("Are you sure you want to register for '\(tournament.title)'?\n\nEntry Fee: $\(String(format: "%.2f", tournament.entryFee))\nRegistration Deadline: \(tournament.formattedStartDate)")
+        .overlay(
+            ToastManager.shared.currentToast.map { toast in
+                ToastNotificationView(toast: toast)
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+                    .animation(.easeInOut, value: toast.id)
+            },
+            alignment: .bottom
+        )
+    }
+    
+    // Computed properties
+    private var userRegistrationStatus: ParticipantStatus? {
+        guard let currentUserId = authService.currentUser?.id else { return nil }
+        return tournament.tournamentParticipants.first { $0.userId == currentUserId }?.status
+    }
+    
+    private var isRegistered: Bool {
+        userRegistrationStatus == .REGISTERED || userRegistrationStatus == .CHECKED_IN
+    }
+    
+    private var isWaitingList: Bool {
+        userRegistrationStatus == .WAITING_LIST
+    }
+    
+    private var buttonColor: Color {
+        if isRegistered {
+            return .green
+        } else if isWaitingList {
+            return .orange
+        } else {
+            return tournament.tcgType.themeColor
         }
     }
     
     private func registerForTournament() {
-        // Haptic feedback
-        let impactFeedback = UIImpactFeedbackGenerator(style: .medium)
-        impactFeedback.impactOccurred()
+        guard let tournamentId = tournament.id else { return }
         
-        // Animate registration
-        withAnimation(.easeInOut(duration: 0.3)) {
-            isUserRegistered = true
+        Task {
+            do {
+                let participant = try await tournamentService.registerForTournament(tournamentId: tournamentId)
+                await tournamentService.loadTournaments()
+                
+                await MainActor.run {
+                    let message = participant.status == .REGISTERED 
+                        ? "Successfully registered!" 
+                        : "Added to waiting list. You'll be notified if a spot opens up."
+                    ToastManager.shared.showSuccess(message)
+                }
+            } catch {
+                await MainActor.run {
+                    ToastManager.shared.showError("Failed to register: \(error.localizedDescription)")
+                }
+            }
         }
+    }
+    
+    private func unregisterFromTournament() {
+        guard let tournamentId = tournament.id else { return }
         
-        // Here you could add:
-        // - API call to register user
-        // - Payment processing
-        // - Success notification/toast
+        Task {
+            do {
+                try await tournamentService.unregisterFromTournament(tournamentId: tournamentId)
+                await tournamentService.loadTournaments()
+                
+                await MainActor.run {
+                    ToastManager.shared.showSuccess("Successfully unregistered.")
+                }
+            } catch {
+                await MainActor.run {
+                    ToastManager.shared.showError("Failed to unregister: \(error.localizedDescription)")
+                }
+            }
+        }
     }
 }
 
@@ -292,7 +360,7 @@ struct TournamentMapDetailView: View {
             endDate: formatDateForBackend(Date().addingTimeInterval(86400 * 7 + 3600 * 8)),
             maxParticipants: 128,
             entryFee: 50.0,
-            prizePool: 5000.0,
+            prizePool: "$5000 + Booster Box",
             organizerId: 1,
             location: Tournament.TournamentLocation(
                 venueName: "San Francisco Game Center",

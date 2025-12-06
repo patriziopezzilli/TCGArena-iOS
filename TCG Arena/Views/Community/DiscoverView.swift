@@ -9,81 +9,48 @@ import SwiftUI
 
 struct DiscoverView: View {
     @StateObject private var discoverService = DiscoverService()
-    @StateObject private var expansionService = ExpansionService()
-    @StateObject private var cardService = CardService()
+
     @State private var selectedLeaderboardType: LeaderboardType = .tournaments
     @State private var showingUserProfile: UserProfile?
     
     var body: some View {
-        NavigationView {
-            VStack(spacing: 0) {
-                ScrollView {
-                    LazyVStack(spacing: 16) {
-                    // Featured Users Section
-                    VStack(alignment: .leading, spacing: 12) {
-                        HStack {
-                            Text("Top Players")
-                                .font(.system(size: 18, weight: .bold))
-                                .foregroundColor(.primary)
-                            Spacer()
-                        }
-                        .padding(.horizontal, 20)
-                        
-                        ScrollView(.horizontal, showsIndicators: false) {
-                            HStack(spacing: 16) {
-                                if discoverService.featuredUsers.isEmpty {
-                                    EmptyStateCard(message: "Nessun giocatore top disponibile")
-                                        .frame(width: 140, height: 180)
-                                } else {
-                                    ForEach(discoverService.featuredUsers) { userProfile in
-                                        FeaturedUserCard(user: userProfile.toUserProfile()) {
-                                            showingUserProfile = userProfile.toUserProfile()
-                                        }
-                                        .frame(width: 140, height: 180)
-                                    }
-                                }
-                            }
-                            .padding(.horizontal, 20)
-                            .padding(.vertical, 8)
-                        }
-                        .frame(height: 196)
-                    }
+        ScrollView {
+            LazyVStack(spacing: 24) {
+                // 1. Featured Users (Top Players)
+                VStack(alignment: .leading, spacing: 16) {
+                    DiscoverSectionHeader(title: "Top Players", subtitle: "The best of the best")
                     
-                    // Leaderboards Section
-                    VStack(alignment: .leading, spacing: 12) {
-                        HStack {
-                            Text("Leaderboards")
-                                .font(.system(size: 18, weight: .bold))
-                                .foregroundColor(.primary)
-                            Spacer()
-                        }
-                        .padding(.horizontal, 20)
-                        
-                        // Leaderboard Type Selector
-                        ScrollView(.horizontal, showsIndicators: false) {
-                            HStack(spacing: 12) {
-                                ForEach(LeaderboardType.allCases) { type in
-                                    LeaderboardTypeButton(
-                                        type: type,
-                                        isSelected: selectedLeaderboardType == type
-                                    ) {
-                                        withAnimation(.easeInOut(duration: 0.2)) {
-                                            selectedLeaderboardType = type
-                                        }
-                                    }
-                                }
-                            }
-                            .padding(.horizontal, 20)
-                        }
-                        
-                        // Leaderboard List
-                        VStack(spacing: 8) {
-                            if discoverService.leaderboards[selectedLeaderboardType]?.isEmpty ?? true {
-                                EmptyStateRow(message: "Nessuna classifica disponibile")
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 16) {
+                            if discoverService.featuredUsers.isEmpty {
+                                EmptyStateCard(message: "No top players yet")
+                                    .frame(width: 160, height: 220)
                             } else {
-                                ForEach(Array((discoverService.leaderboards[selectedLeaderboardType] ?? []).prefix(5).enumerated()), id: \.element.id) { index, entry in
-                                    DiscoverLeaderboardRow(entry: entry, position: index + 1) {
-                                        showingUserProfile = entry.userProfile
+                                ForEach(discoverService.featuredUsers) { userProfile in
+                                    PremiumUserCard(user: userProfile.toUserProfile()) {
+                                        showingUserProfile = userProfile.toUserProfile()
+                                    }
+                                }
+                            }
+                        }
+                        .padding(.horizontal, 20)
+                    }
+                }
+                
+                // 2. Leaderboards
+                VStack(alignment: .leading, spacing: 16) {
+                    DiscoverSectionHeader(title: "Leaderboards", subtitle: "See who's leading the charts")
+                    
+                    // Type Selector
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 12) {
+                            ForEach(LeaderboardType.allCases) { type in
+                                LeaderboardTypePill(
+                                    type: type,
+                                    isSelected: selectedLeaderboardType == type
+                                ) {
+                                    withAnimation {
+                                        selectedLeaderboardType = type
                                     }
                                 }
                             }
@@ -91,153 +58,98 @@ struct DiscoverView: View {
                         .padding(.horizontal, 20)
                     }
                     
-                    // Recent Activity
-                    VStack(alignment: .leading, spacing: 12) {
-                        HStack {
-                            Text("Recent Activity")
-                                .font(.system(size: 18, weight: .bold))
-                                .foregroundColor(.primary)
-                            Spacer()
+                    // List
+                    VStack(spacing: 12) {
+                        if let entries = discoverService.leaderboards[selectedLeaderboardType], !entries.isEmpty {
+                            ForEach(Array(entries.prefix(5).enumerated()), id: \.element.id) { index, entry in
+                                LeaderboardRowItem(entry: entry, rank: index + 1) {
+                                    showingUserProfile = entry.userProfile
+                                }
+                            }
+                        } else {
+                            EmptyStateRow(message: "No leaderboard data available")
                         }
-                        .padding(.horizontal, 20)
-                        
-                        VStack(spacing: 12) {
-                            if discoverService.recentActivities.isEmpty {
-                                EmptyStateRow(message: "Nessuna attività recente")
+                    }
+                    .padding(.horizontal, 20)
+                }
+                
+                // 3. New Members
+                VStack(alignment: .leading, spacing: 16) {
+                    DiscoverSectionHeader(title: "New Members", subtitle: "Welcome our latest players")
+                    
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 16) {
+                            if discoverService.newUsers.isEmpty {
+                                EmptyStateCard(message: "No new members")
+                                    .frame(width: 140, height: 180)
                             } else {
-                                ForEach(Array(discoverService.recentActivities.prefix(4))) { activity in
-                                    ActivityCard(activity: activity) {
-                                        showingUserProfile = activity.userProfile
+                                ForEach(discoverService.newUsers.prefix(5), id: \.id) { user in
+                                    NewMemberCard(user: user.toUserProfile()) {
+                                        showingUserProfile = user.toUserProfile()
                                     }
                                 }
                             }
                         }
                         .padding(.horizontal, 20)
                     }
-                    
-                    // New Users Section
-                    VStack(alignment: .leading, spacing: 12) {
-                        HStack {
-                            Text("New Members")
-                                .font(.system(size: 18, weight: .bold))
-                                .foregroundColor(.primary)
-                            Spacer()
-                        }
-                        .padding(.horizontal, 20)
-                        
-                        ScrollView(.horizontal, showsIndicators: false) {
-                            HStack(spacing: 12) {
-                                if discoverService.newUsers.isEmpty {
-                                    EmptyStateCard(message: "Nessun nuovo membro")
-                                        .frame(width: 100)
-                                } else {
-                                    ForEach(discoverService.newUsers.prefix(5), id: \.id) { user in
-                                        NewUserCard(user: user.toUserProfile()) {
-                                            showingUserProfile = user.toUserProfile()
-                                        }
-                                    }
-                                }
-                            }
-                            .padding(.horizontal, 20)
-                        }
-                    }
-                    
-                    // New Cards Section
-                    VStack(alignment: .leading, spacing: 12) {
-                        HStack {
-                            Text("New Cards")
-                                .font(.system(size: 18, weight: .bold))
-                                .foregroundColor(.primary)
-                            Spacer()
-                        }
-                        .padding(.horizontal, 20)
-                        
-                        ScrollView(.horizontal, showsIndicators: false) {
-                            HStack(spacing: 12) {
-                                if expansionService.expansions.isEmpty {
-                                    EmptyStateCard(message: "Nessuna espansione disponibile")
-                                        .frame(width: 140)
-                                } else {
-                                    ForEach(expansionService.expansions.prefix(5)) { expansion in
-                                        ExpansionCard(expansion: expansion, action: {
-                                            // For now, just show expansion, could navigate to expansion detail
-                                        })
-                                        .frame(width: 180, height: 220)
-                                    }
-                                }
-                            }
-                            .padding(.horizontal, 20)
-                        }
-                    }
-                    .padding(.vertical, 8)
-                        }
+                }
+                
+
+
             }
+            .padding(.top, 10)
         }
-            }
-        .navigationBarHidden(true)
-        .refreshable {
-            // Refresh data
-        }
-        .sheet(item: $showingUserProfile) { (user: UserProfile) in
+        .background(Color(.systemGroupedBackground))
+        .sheet(item: $showingUserProfile) { user in
             UserProfileDetailView(userProfile: user)
         }
-        }
     }
-    
-struct HeroHeaderView: View {
+}
+
+// MARK: - Components
+
+// Removed duplicate SectionHeader and ExpansionCard structs.
+// They are already defined in other files or should be imported/renamed if specific to this view.
+// Assuming we use the shared components or rename them to avoid conflicts.
+
+struct DiscoverSectionHeader: View {
     let title: String
     let subtitle: String
-    let icon: String
-    let color: Color
     
     var body: some View {
-        HStack(spacing: 12) {
-            ZStack {
-                Circle()
-                    .fill(color.opacity(0.2))
-                    .frame(width: 40, height: 40)
-                
-                SwiftUI.Image(systemName: icon)
-                    .font(.system(size: 18, weight: .semibold))
-                    .foregroundColor(color)
-            }
-            
-            VStack(alignment: .leading, spacing: 2) {
-                Text(title)
-                    .font(.system(size: 20, weight: .bold))
-                    .foregroundColor(.primary)
-                
-                Text(subtitle)
-                    .font(.system(size: 14, weight: .medium))
-                    .foregroundColor(.secondary)
-            }
-            
-            Spacer()
+        VStack(alignment: .leading, spacing: 4) {
+            Text(title)
+                .font(.system(size: 20, weight: .bold))
+                .foregroundColor(.primary)
+            Text(subtitle)
+                .font(.system(size: 14, weight: .medium))
+                .foregroundColor(.secondary)
         }
         .padding(.horizontal, 20)
     }
 }
 
-// MARK: - Featured User Card
-struct FeaturedUserCard: View {
+struct PremiumUserCard: View {
     let user: UserProfile
     let onTap: () -> Void
     
     var body: some View {
         Button(action: onTap) {
             VStack(spacing: 12) {
-                // Avatar and Verification
+                // Avatar
                 ZStack {
                     Circle()
-                        .fill(LinearGradient(
-                            colors: [user.preferredTCG?.themeColor ?? .blue, user.preferredTCG?.themeColor.opacity(0.7) ?? .blue.opacity(0.7)],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        ))
-                        .frame(width: 60, height: 60)
+                        .fill(
+                            LinearGradient(
+                                colors: [user.preferredTCG?.themeColor ?? .blue, (user.preferredTCG?.themeColor ?? .blue).opacity(0.6)],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .frame(width: 70, height: 70)
                     
                     Text(String(user.displayName.prefix(2)).uppercased())
-                        .font(.system(size: 20, weight: .bold))
+                        .font(.system(size: 24, weight: .bold))
                         .foregroundColor(.white)
                     
                     if user.isVerified {
@@ -246,84 +158,159 @@ struct FeaturedUserCard: View {
                             HStack {
                                 Spacer()
                                 SwiftUI.Image(systemName: "checkmark.seal.fill")
-                                    .font(.system(size: 16))
-                                    .foregroundColor(.blue)
-                                    .background(Circle().fill(.white))
+                                    .font(.system(size: 20))
+                                    .foregroundColor(.white)
+                                    .background(Circle().fill(Color.blue).padding(2))
                             }
                         }
-                        .frame(width: 60, height: 60)
                     }
                 }
+                .frame(width: 70, height: 70)
                 
+                // Info
                 VStack(spacing: 4) {
                     Text(user.displayName)
-                        .font(.system(size: 15, weight: .bold))
+                        .font(.system(size: 16, weight: .bold))
                         .foregroundColor(.primary)
                         .lineLimit(1)
                     
                     Text("Level \(user.level)")
-                        .font(.system(size: 12, weight: .medium))
+                        .font(.system(size: 13, weight: .medium))
                         .foregroundColor(.secondary)
                 }
                 
                 // Stats
-                VStack(spacing: 6) {
-                    HStack(spacing: 4) {
-                        SwiftUI.Image(systemName: "trophy.fill")
-                            .font(.system(size: 10, weight: .medium))
-                            .foregroundColor(.yellow)
-                        
-                        Text("\(user.stats.tournamentsWon)")
-                            .font(.system(size: 12, weight: .bold))
-                            .foregroundColor(.primary)
-                    }
-                    
-                    HStack(spacing: 4) {
-                        SwiftUI.Image(systemName: "square.stack.3d.up.fill")
-                            .font(.system(size: 10, weight: .medium))
-                            .foregroundColor(.blue)
-                        
-                        Text("\(user.stats.totalCards)")
-                            .font(.system(size: 12, weight: .bold))
-                            .foregroundColor(.primary)
-                    }
+                HStack(spacing: 12) {
+                    StatBadge(icon: "trophy.fill", value: "\(user.stats.tournamentsWon)", color: .yellow)
+                    StatBadge(icon: "rectangle.stack.fill", value: "\(user.stats.totalCards)", color: .blue)
                 }
             }
             .padding(16)
-            .frame(width: 140)
-            .background(
-                RoundedRectangle(cornerRadius: 16)
-                    .fill(Color(.systemBackground))
-                    .shadow(color: .black.opacity(0.1), radius: 4, x: 0, y: 2)
-            )
+            .frame(width: 160, height: 220)
+            .background(Color(.systemBackground))
+            .cornerRadius(20)
+            .shadow(color: Color.black.opacity(0.05), radius: 8, x: 0, y: 4)
         }
         .buttonStyle(PlainButtonStyle())
     }
 }
 
-// MARK: - Leaderboard Type Button
-struct LeaderboardTypeButton: View {
+struct StatBadge: View {
+    let icon: String
+    let value: String
+    let color: Color
+    
+    var body: some View {
+        HStack(spacing: 4) {
+            SwiftUI.Image(systemName: icon)
+                .font(.system(size: 10))
+            Text(value)
+                .font(.system(size: 12, weight: .bold))
+        }
+        .foregroundColor(color)
+        .padding(.horizontal, 8)
+        .padding(.vertical, 4)
+        .background(color.opacity(0.1))
+        .cornerRadius(8)
+    }
+}
+
+struct LeaderboardTypePill: View {
     let type: LeaderboardType
     let isSelected: Bool
     let onTap: () -> Void
     
     var body: some View {
         Button(action: onTap) {
-            HStack(spacing: 8) {
+            HStack(spacing: 6) {
                 SwiftUI.Image(systemName: type.icon)
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundColor(isSelected ? .white : type.color)
-                
+                    .font(.system(size: 12))
                 Text(type.displayName)
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundColor(isSelected ? .white : .primary)
+                    .font(.system(size: 13, weight: .semibold))
             }
+            .foregroundColor(isSelected ? .white : .primary)
             .padding(.horizontal, 16)
-            .padding(.vertical, 10)
+            .padding(.vertical, 8)
             .background(
-                RoundedRectangle(cornerRadius: 20)
-                    .fill(isSelected ? type.color : Color(.systemGray6))
+                Capsule()
+                    .fill(isSelected ? type.color : Color(.systemBackground))
+                    .shadow(color: Color.black.opacity(0.05), radius: 2, x: 0, y: 1)
             )
+        }
+    }
+}
+
+struct LeaderboardRowItem: View {
+    let entry: LeaderboardEntry
+    let rank: Int
+    let onTap: () -> Void
+    
+    var body: some View {
+        Button(action: onTap) {
+            HStack(spacing: 16) {
+                // Rank
+                Text("\(rank)")
+                    .font(.system(size: 18, weight: .bold))
+                    .foregroundColor(rank <= 3 ? .primary : .secondary)
+                    .frame(width: 30)
+                
+                // Avatar
+                ZStack {
+                    Circle()
+                        .fill(Color.gray.opacity(0.2))
+                        .frame(width: 40, height: 40)
+                    Text(String(entry.userProfile.displayName.prefix(1)).uppercased())
+                        .font(.system(size: 16, weight: .bold))
+                        .foregroundColor(.secondary)
+                }
+                
+                // Name
+                Text(entry.userProfile.displayName)
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundColor(.primary)
+                
+                Spacer()
+                
+                // Score
+                Text("\(entry.score)")
+                    .font(.system(size: 16, weight: .bold))
+                    .foregroundColor(.blue)
+            }
+            .padding(16)
+            .background(Color(.systemBackground))
+            .cornerRadius(16)
+            .shadow(color: Color.black.opacity(0.03), radius: 4, x: 0, y: 2)
+        }
+        .buttonStyle(PlainButtonStyle())
+    }
+}
+
+struct NewMemberCard: View {
+    let user: UserProfile
+    let onTap: () -> Void
+    
+    var body: some View {
+        Button(action: onTap) {
+            VStack(spacing: 8) {
+                ZStack {
+                    Circle()
+                        .fill(Color.gray.opacity(0.1))
+                        .frame(width: 50, height: 50)
+                    Text(String(user.displayName.prefix(1)).uppercased())
+                        .font(.system(size: 20, weight: .bold))
+                        .foregroundColor(.primary)
+                }
+                
+                Text(user.displayName)
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundColor(.primary)
+                    .lineLimit(1)
+            }
+            .padding(12)
+            .frame(width: 100, height: 120)
+            .background(Color(.systemBackground))
+            .cornerRadius(16)
+            .shadow(color: Color.black.opacity(0.03), radius: 4, x: 0, y: 2)
         }
         .buttonStyle(PlainButtonStyle())
     }

@@ -10,11 +10,16 @@ import SwiftUI
 struct UserProfileDetailView: View {
     let userProfile: UserProfile
     @StateObject private var discoverService = DiscoverService()
+    @StateObject private var deckService = DeckService()
     @State private var selectedTab = 0
     @State private var showingCardCollection = false
+    @State private var userDecks: [Deck] = []
+    @State private var isLoadingDecks = false
+    @State private var userActivities: [UserActivity] = []
+    @State private var isLoadingActivities = false
     @Environment(\.presentationMode) var presentationMode
     
-    private let tabs = ["Overview", "Collections", "Decks", "Activity"]
+    private let tabs = ["Overview", "Decks", "Activity"]
     
     var body: some View {
         NavigationView {
@@ -34,14 +39,37 @@ struct UserProfileDetailView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Close") {
+                    Button("Chiudi") {
                         presentationMode.wrappedValue.dismiss()
                     }
                 }
             }
+            .onAppear {
+                loadUserData()
+            }
         }
         .sheet(isPresented: $showingCardCollection) {
             UserCardCollectionView(userProfile: userProfile)
+        }
+    }
+    
+    private func loadUserData() {
+        // Load user's public decks
+        // userProfile.id is a String, convert to Int64
+        guard let userId = Int64(userProfile.id) else { return }
+        
+        isLoadingDecks = true
+        deckService.loadUserDecks(userId: userId, saveToCache: false) { result in
+            DispatchQueue.main.async {
+                isLoadingDecks = false
+                switch result {
+                case .success(let decks):
+                    // Filter to show only lista type decks (not system Collection/Wishlist)
+                    userDecks = decks.filter { $0.deckType == .lista }
+                case .failure(let error):
+                    print("Failed to load user decks: \(error)")
+                }
+            }
         }
     }
     
@@ -224,10 +252,8 @@ struct UserProfileDetailView: View {
         case 0:
             overviewTab
         case 1:
-            collectionsTab
-        case 2:
             decksTab
-        case 3:
+        case 2:
             activityTab
         default:
             overviewTab
@@ -317,64 +343,143 @@ struct UserProfileDetailView: View {
         LazyVStack(spacing: 16) {
             // Deck Summary
             VStack(alignment: .leading, spacing: 12) {
-                Text("Deck Collection")
+                Text("Deck")
                     .font(.system(size: 18, weight: .bold))
                     .foregroundColor(.primary)
                     .padding(.horizontal, 20)
                 
                 LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 2), spacing: 12) {
-                    deckSummaryCard(title: "Total Decks", value: "\(userProfile.stats.totalDecks)", icon: "square.stack.3d.up.fill", color: .blue)
-                    deckSummaryCard(title: "Win Rate", value: String(format: "%.1f%%", userProfile.stats.winRate * 100), icon: "chart.line.uptrend.xyaxis", color: .green)
-                    deckSummaryCard(title: "Tournaments", value: "\(userProfile.stats.tournamentsWon)", icon: "trophy.fill", color: .yellow)
-                    deckSummaryCard(title: "Favorites", value: "3", icon: "heart.fill", color: .red)
+                    deckSummaryCard(title: "Total Deck", value: "\(userDecks.count)", icon: "square.stack.3d.up.fill", color: .blue)
+                    deckSummaryCard(title: "Tornei Vinti", value: "\(userProfile.stats.tournamentsWon)", icon: "trophy.fill", color: .yellow)
                 }
                 .padding(.horizontal, 20)
             }
             
-            // Featured Decks
+            // User's Decks - Real Data
             VStack(alignment: .leading, spacing: 12) {
-                Text("Featured Decks")
+                Text("I suoi Deck")
                     .font(.system(size: 18, weight: .bold))
                     .foregroundColor(.primary)
                     .padding(.horizontal, 20)
                 
-                LazyVStack(spacing: 12) {
-                    ForEach(0..<userProfile.stats.totalDecks.clamped(to: 1...4), id: \.self) { index in
-                        deckCardView(
-                            name: getDeckName(index: index, tcg: userProfile.preferredTCG),
-                            tcg: userProfile.preferredTCG?.displayName ?? "Mixed",
-                            winRate: Double.random(in: 0.6...0.9),
-                            matches: Int.random(in: 15...45)
-                        )
+                if isLoadingDecks {
+                    ProgressView()
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 40)
+                } else if userDecks.isEmpty {
+                    VStack(spacing: 12) {
+                        SwiftUI.Image(systemName: "square.stack.3d.up.slash")
+                            .font(.system(size: 40))
+                            .foregroundColor(.secondary)
+                        Text("Nessun deck pubblico")
+                            .font(.system(size: 14, weight: .medium))
+                            .foregroundColor(.secondary)
                     }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 40)
+                } else {
+                    LazyVStack(spacing: 12) {
+                        ForEach(userDecks) { deck in
+                            realDeckCardView(deck: deck)
+                        }
+                    }
+                    .padding(.horizontal, 20)
                 }
-                .padding(.horizontal, 20)
             }
         }
     }
     
+    private func realDeckCardView(deck: Deck) -> some View {
+        HStack(spacing: 12) {
+            RoundedRectangle(cornerRadius: 8)
+                .fill(deck.tcgType.themeColor.opacity(0.2))
+                .frame(width: 50, height: 35)
+                .overlay(
+                    Text(String(deck.name.prefix(2)).uppercased())
+                        .font(.system(size: 12, weight: .bold))
+                        .foregroundColor(deck.tcgType.themeColor)
+                )
+            
+            VStack(alignment: .leading, spacing: 4) {
+                Text(deck.name)
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(.primary)
+                    .lineLimit(1)
+                
+                HStack(spacing: 8) {
+                    Text(deck.tcgType.displayName)
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundColor(.secondary)
+                    
+                    Text("•")
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundColor(.secondary)
+                    
+                    Text("\(deck.cards.count) carte")
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundColor(.secondary)
+                }
+            }
+            
+            Spacer()
+        }
+        .padding(12)
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(Color(.systemGray6))
+        )
+    }
+    
     private var activityTab: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("Activity Feed")
+            Text("Attività Recenti")
                 .font(.system(size: 18, weight: .bold))
                 .foregroundColor(.primary)
                 .padding(.horizontal, 20)
             
-            LazyVStack(spacing: 8) {
-                ForEach(discoverService.recentActivities.filter { $0.userProfile?.id == userProfile.id }.prefix(5)) { activity in
-                    // Simplified activity view to avoid component conflicts  
-                    HStack {
-                        Text("📈")
-                        Text(activity.description)
-                            .font(.system(size: 14))
-                        Spacer()
+            let userActivities = discoverService.recentActivities.filter { $0.userProfile?.id == userProfile.id }
+            
+            if userActivities.isEmpty {
+                // Empty State
+                VStack(spacing: 20) {
+                    ZStack {
+                        Circle()
+                            .fill(Color.orange.opacity(0.1))
+                            .frame(width: 80, height: 80)
+                        
+                        SwiftUI.Image(systemName: "clock.badge.questionmark")
+                            .font(.system(size: 35))
+                            .foregroundColor(.orange.opacity(0.6))
                     }
-                    .padding()
-                    .background(Color(.systemGray6))
-                    .cornerRadius(8)
+                    
+                    VStack(spacing: 6) {
+                        Text("Nessuna attività")
+                            .font(.system(size: 17, weight: .semibold))
+                            .foregroundColor(.primary)
+                        
+                        Text("Le attività recenti appariranno qui")
+                            .font(.system(size: 14, weight: .medium))
+                            .foregroundColor(.secondary)
+                    }
                 }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 40)
+            } else {
+                LazyVStack(spacing: 8) {
+                    ForEach(userActivities.prefix(5)) { activity in
+                        HStack {
+                            Text("📈")
+                            Text(activity.description)
+                                .font(.system(size: 14))
+                            Spacer()
+                        }
+                        .padding()
+                        .background(Color(.systemGray6))
+                        .cornerRadius(8)
+                    }
+                }
+                .padding(.horizontal, 20)
             }
-            .padding(.horizontal, 20)
         }
     }
     
@@ -600,27 +705,22 @@ extension Int {
 // MARK: - User Card Collection View
 struct UserCardCollectionView: View {
     let userProfile: UserProfile
+    @StateObject private var deckService = DeckService()
     @Environment(\.presentationMode) var presentationMode
     @State private var selectedTCG: TCGType?
+    @State private var displayCards: [DisplayCard] = []
+    @State private var isLoading = true
     
-    private let mockCards: [MockCard] = [
-        MockCard(name: "Charizard ex", rarity: "Ultra Rare", tcg: .pokemon, image: "🔥", imageURL: "https://images.pokemontcg.io/sv3pt5/207_hires.png", estimatedValue: 89.99),
-        MockCard(name: "Pikachu VMAX", rarity: "Secret Rare", tcg: .pokemon, image: "⚡", imageURL: "https://images.pokemontcg.io/swsh4/188_hires.png", estimatedValue: 45.50),
-        MockCard(name: "Luffy Gear 5", rarity: "Leader", tcg: .onePiece, image: "👑", imageURL: nil, estimatedValue: 125.00),
-        MockCard(name: "Zoro Three Sword", rarity: "Super Rare", tcg: .onePiece, image: "⚔️", imageURL: nil, estimatedValue: 32.75),
-        MockCard(name: "Black Lotus", rarity: "Mythic", tcg: .magic, image: "🌸", imageURL: nil, estimatedValue: 25000.00),
-        MockCard(name: "Lightning Bolt", rarity: "Common", tcg: .magic, image: "⚡", imageURL: nil, estimatedValue: 2.50),
-        MockCard(name: "Blue-Eyes White Dragon", rarity: "Ultra Rare", tcg: .yugioh, image: "🐉", imageURL: nil, estimatedValue: 78.99),
-        MockCard(name: "Dark Magician", rarity: "Rare", tcg: .yugioh, image: "🧙‍♂️", imageURL: nil, estimatedValue: 15.25),
-        MockCard(name: "Mew ex", rarity: "Ultra Rare", tcg: .pokemon, image: "💫", imageURL: "https://images.pokemontcg.io/sv3pt5/151_hires.png", estimatedValue: 65.00),
-        MockCard(name: "Sanji Black Leg", rarity: "Super Rare", tcg: .onePiece, image: "🦵", imageURL: nil, estimatedValue: 28.50),
-        MockCard(name: "Force of Will", rarity: "Rare", tcg: .magic, image: "🌀", imageURL: nil, estimatedValue: 120.00),
-        MockCard(name: "Exodia the Forbidden One", rarity: "Ultra Rare", tcg: .yugioh, image: "👹", imageURL: nil, estimatedValue: 95.75)
-    ]
+    // Wrapper struct to include TCG type with each card
+    struct DisplayCard: Identifiable {
+        let id: String
+        let card: Deck.DeckCard
+        let tcgType: TCGType
+    }
     
-    private var filteredCards: [MockCard] {
-        guard let selectedTCG = selectedTCG else { return mockCards }
-        return mockCards.filter { $0.tcg == selectedTCG }
+    private var filteredCards: [DisplayCard] {
+        guard let selectedTCG = selectedTCG else { return displayCards }
+        return displayCards.filter { $0.tcgType == selectedTCG }
     }
     
     var body: some View {
@@ -630,47 +730,198 @@ struct UserCardCollectionView: View {
                 VStack(spacing: 16) {
                     HStack {
                         VStack(alignment: .leading, spacing: 4) {
-                            Text("\(userProfile.displayName)'s Collection")
+                            Text("Collezione di \(userProfile.displayName)")
                                 .font(.system(size: 24, weight: .bold))
                                 .foregroundColor(.primary)
                             
-                            Text("\(mockCards.count) cards total")
+                            Text("\(displayCards.count) carte")
                                 .font(.system(size: 16, weight: .medium))
                                 .foregroundColor(.secondary)
                         }
                         
                         Spacer()
+                        
+                        Button {
+                            presentationMode.wrappedValue.dismiss()
+                        } label: {
+                            SwiftUI.Image(systemName: "xmark.circle.fill")
+                                .font(.system(size: 28))
+                                .foregroundColor(.secondary)
+                        }
                     }
                     .padding(.horizontal, 20)
                     
                     // TCG Filter
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: 12) {
-                            CollectionTCGFilterButton(tcg: nil, selectedTCG: $selectedTCG, title: "All")
-                            CollectionTCGFilterButton(tcg: .pokemon, selectedTCG: $selectedTCG, title: "Pokémon")
-                            CollectionTCGFilterButton(tcg: .onePiece, selectedTCG: $selectedTCG, title: "One Piece")
-                            CollectionTCGFilterButton(tcg: .magic, selectedTCG: $selectedTCG, title: "Magic")
-                            CollectionTCGFilterButton(tcg: .yugioh, selectedTCG: $selectedTCG, title: "Yu-Gi-Oh!")
+                    if !displayCards.isEmpty {
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack(spacing: 12) {
+                                CollectionTCGFilterButton(tcg: nil, selectedTCG: $selectedTCG, title: "Tutti")
+                                CollectionTCGFilterButton(tcg: .pokemon, selectedTCG: $selectedTCG, title: "Pokémon")
+                                CollectionTCGFilterButton(tcg: .onePiece, selectedTCG: $selectedTCG, title: "One Piece")
+                                CollectionTCGFilterButton(tcg: .magic, selectedTCG: $selectedTCG, title: "Magic")
+                                CollectionTCGFilterButton(tcg: .yugioh, selectedTCG: $selectedTCG, title: "Yu-Gi-Oh!")
+                            }
+                            .padding(.horizontal, 20)
                         }
-                        .padding(.horizontal, 20)
                     }
                 }
                 .padding(.vertical, 20)
                 .background(Color(.systemBackground))
                 
-                // Cards List
-                ScrollView {
-                    LazyVStack(spacing: 12) {
-                        ForEach(filteredCards, id: \.name) { card in
-                            CardListItemView(card: card)
+                // Content
+                if isLoading {
+                    Spacer()
+                    ProgressView()
+                        .scaleEffect(1.5)
+                    Spacer()
+                } else if displayCards.isEmpty {
+                    // Empty State
+                    Spacer()
+                    VStack(spacing: 20) {
+                        ZStack {
+                            Circle()
+                                .fill(Color.blue.opacity(0.1))
+                                .frame(width: 100, height: 100)
+                            
+                            SwiftUI.Image(systemName: "rectangle.stack.badge.minus")
+                                .font(.system(size: 45))
+                                .foregroundColor(.blue.opacity(0.6))
+                        }
+                        
+                        VStack(spacing: 8) {
+                            Text("Nessuna carta")
+                                .font(.system(size: 20, weight: .bold))
+                                .foregroundColor(.primary)
+                            
+                            Text("Questo utente non ha ancora\naggiunto carte alla sua collezione")
+                                .font(.system(size: 15, weight: .medium))
+                                .foregroundColor(.secondary)
+                                .multilineTextAlignment(.center)
                         }
                     }
-                    .padding(.horizontal, 20)
-                    .padding(.vertical, 16)
+                    .padding(40)
+                    Spacer()
+                } else {
+                    // Cards List
+                    ScrollView {
+                        LazyVStack(spacing: 12) {
+                            ForEach(filteredCards) { displayCard in
+                                RealCardListItemView(displayCard: displayCard)
+                            }
+                        }
+                        .padding(.horizontal, 20)
+                        .padding(.vertical, 16)
+                    }
                 }
             }
             .navigationBarHidden(true)
+            .onAppear {
+                loadUserCards()
+            }
         }
+    }
+    
+    private func loadUserCards() {
+        guard let userId = Int64(userProfile.id) else {
+            isLoading = false
+            return
+        }
+        
+        isLoading = true
+        deckService.loadUserDecks(userId: userId, saveToCache: false) { result in
+            DispatchQueue.main.async {
+                isLoading = false
+                switch result {
+                case .success(let decks):
+                    // Collect all cards from all decks with TCG type
+                    var allCards: [DisplayCard] = []
+                    for deck in decks where deck.deckType == .lista {
+                        for card in deck.cards {
+                            let displayCard = DisplayCard(
+                                id: "\(deck.id ?? 0)-\(card.cardId)",
+                                card: card,
+                                tcgType: deck.tcgType
+                            )
+                            allCards.append(displayCard)
+                        }
+                    }
+                    displayCards = allCards
+                case .failure(let error):
+                    print("Failed to load user cards: \(error)")
+                }
+            }
+        }
+    }
+}
+
+// MARK: - Real Card List Item View
+struct RealCardListItemView: View {
+    let displayCard: UserCardCollectionView.DisplayCard
+    
+    var body: some View {
+        HStack(spacing: 16) {
+            // Card image
+            AsyncImage(url: URL(string: displayCard.card.cardImageUrl ?? "")) { image in
+                image
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+            } placeholder: {
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(displayCard.tcgType.themeColor.opacity(0.15))
+                    .overlay(
+                        VStack(spacing: 4) {
+                            SwiftUI.Image(systemName: displayCard.tcgType.systemIcon)
+                                .font(.system(size: 24))
+                                .foregroundColor(displayCard.tcgType.themeColor)
+                            Text(displayCard.tcgType.displayName)
+                                .font(.system(size: 8, weight: .medium))
+                                .foregroundColor(displayCard.tcgType.themeColor)
+                        }
+                    )
+            }
+            .frame(width: 60, height: 84)
+            .clipShape(RoundedRectangle(cornerRadius: 8))
+            .overlay(
+                RoundedRectangle(cornerRadius: 8)
+                    .stroke(displayCard.tcgType.themeColor.opacity(0.3), lineWidth: 1)
+            )
+            
+            // Card details
+            VStack(alignment: .leading, spacing: 6) {
+                Text(displayCard.card.cardName)
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundColor(.primary)
+                    .lineLimit(2)
+                
+                HStack(spacing: 8) {
+                    Circle()
+                        .fill(displayCard.tcgType.themeColor)
+                        .frame(width: 8, height: 8)
+                    
+                    Text(displayCard.tcgType.displayName)
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundColor(displayCard.tcgType.themeColor)
+                }
+                
+                HStack(spacing: 4) {
+                    Text("x\(displayCard.card.quantity)")
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundColor(.secondary)
+                }
+            }
+            
+            Spacer()
+        }
+        .padding(16)
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(Color(.systemBackground))
+                .shadow(color: .black.opacity(0.06), radius: 4, x: 0, y: 2)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(Color(.systemGray5), lineWidth: 0.5)
+        )
     }
 }
 

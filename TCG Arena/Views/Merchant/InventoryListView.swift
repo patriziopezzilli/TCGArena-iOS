@@ -207,6 +207,19 @@ struct InventoryCardRow: View {
                                     .fill(AdaptiveColors.brandPrimary)
                             )
                         
+                        // Country Badge
+                        if let nationalityDisplayName = card.nationalityDisplayName {
+                            Text(nationalityDisplayName)
+                                .font(.system(size: 11, weight: .semibold))
+                                .foregroundColor(.white)
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 4)
+                                .background(
+                                    Capsule()
+                                        .fill(Color.blue)
+                                )
+                        }
+                        
                         // Condition Badge
                         Text(card.condition.displayName)
                             .font(.system(size: 11, weight: .semibold))
@@ -300,9 +313,9 @@ struct InventoryFiltersView: View {
                 
                 Section("Condition") {
                     Picker("Condition", selection: $filters.condition) {
-                        Text("All").tag(nil as CardCondition?)
-                        ForEach([CardCondition.nearMint, .slightlyPlayed, .moderatelyPlayed, .heavilyPlayed, .damaged], id: \.self) { condition in
-                            Text(condition.displayName).tag(condition as CardCondition?)
+                        Text("All").tag(nil as InventoryCard.CardCondition?)
+                        ForEach([InventoryCard.CardCondition.nearMint, .lightPlayed, .played, .poor], id: \.self) { condition in
+                            Text(condition.displayName).tag(condition as InventoryCard.CardCondition?)
                         }
                     }
                     .pickerStyle(.menu)

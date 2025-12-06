@@ -125,10 +125,13 @@ struct PlayerTournamentListView: View {
         ScrollView {
             LazyVStack(spacing: 12) {
                 ForEach(filteredTournaments) { tournament in
-                    TournamentCardView(tournament: tournament)
-                        .onTapGesture {
-                            selectedTournament = tournament
-                        }
+                    TournamentCardView(
+                        tournament: tournament,
+                        userRegistrationStatus: getUserRegistrationStatus(for: tournament)
+                    )
+                    .onTapGesture {
+                        selectedTournament = tournament
+                    }
                 }
             }
             .padding()
@@ -170,16 +173,21 @@ struct PlayerTournamentListView: View {
                 }
             } catch {
                 await MainActor.run {
-                    print("Error loading tournaments: \(error)")
+                    ToastManager.shared.showError("Error loading tournaments: \(error.localizedDescription)")
                     isLoading = false
                 }
             }
         }
     }
+    private func getUserRegistrationStatus(for tournament: Tournament) -> ParticipantStatus? {
+        guard let currentUserId = authService.currentUser?.id else { return nil }
+        return tournament.tournamentParticipants.first { $0.userId == currentUserId }?.status
+    }
 }
 
 struct TournamentCardView: View {
     let tournament: Tournament
+    let userRegistrationStatus: ParticipantStatus?
     
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -238,7 +246,7 @@ struct TournamentCardView: View {
                     Image(systemName: "person.2.fill")
                         .font(.caption)
                     
-                    Text("\(tournament.currentParticipants)/\(tournament.maxParticipants)")
+                    Text("\(tournament.registeredParticipantsCount)/\(tournament.maxParticipants)")
                         .font(.subheadline)
                 }
                 
@@ -255,7 +263,15 @@ struct TournamentCardView: View {
             .foregroundColor(.secondary)
             
             // Registration Status
-            if tournament.canRegister {
+            if let status = userRegistrationStatus {
+                HStack {
+                    Image(systemName: status == .REGISTERED ? "checkmark.circle.fill" : "clock.fill")
+                        .foregroundColor(status == .REGISTERED ? .green : .orange)
+                    Text(status == .REGISTERED ? "Registered" : "Waiting List")
+                        .font(.subheadline)
+                        .foregroundColor(status == .REGISTERED ? .green : .orange)
+                }
+            } else if tournament.canRegister {
                 HStack {
                     Image(systemName: "checkmark.circle.fill")
                         .foregroundColor(.green)
@@ -314,3 +330,5 @@ struct FilterChip: View {
         .environmentObject(TournamentService(apiClient: APIClient.shared))
         .environmentObject(AuthService())
 }
+}
+        .withToastSupport()

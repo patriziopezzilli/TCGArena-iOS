@@ -10,53 +10,20 @@ import SwiftUI
 struct DeckRowView: View {
     let deck: Deck
     
-    // Computed property for cover image
-    private var coverImageUrl: String? {
-        // Find the first card with an image
-        if let firstCardWithImage = deck.cards.first(where: { $0.cardImageUrl != nil }) {
-            var url = firstCardWithImage.cardImageUrl
-            if let imageUrl = url, !imageUrl.contains("/high.webp") {
-                return "\(imageUrl)/high.webp"
-            }
-            return url
-        }
-        return nil
-    }
-    
     var body: some View {
         ZStack(alignment: .bottomLeading) {
-            // Background Image or Gradient
+            // Abstract Gradient Background
             GeometryReader { geo in
-                if let imageUrl = coverImageUrl {
-                    CachedAsyncImage(url: URL(string: imageUrl)) { phase in
-                        switch phase {
-                        case .success(let image):
-                            image
-                                .resizable()
-                                .aspectRatio(contentMode: .fill)
-                                .frame(width: geo.size.width, height: geo.size.height)
-                                .scaleEffect(1.3) // Zoom per nascondere bordi carta
-                                .clipped()
-                        case .failure, .empty:
-                            fallbackBackground
-                                .frame(width: geo.size.width, height: geo.size.height)
-                        @unknown default:
-                            fallbackBackground
-                                .frame(width: geo.size.width, height: geo.size.height)
-                        }
-                    }
-                } else {
-                    fallbackBackground
-                        .frame(width: geo.size.width, height: geo.size.height)
-                }
+                abstractBackground
+                    .frame(width: geo.size.width, height: geo.size.height)
             }
             
             // Gradient Overlay for text readability
             LinearGradient(
                 gradient: Gradient(colors: [
                     Color.black.opacity(0.85),
-                    Color.black.opacity(0.5),
-                    Color.black.opacity(0.3)
+                    Color.black.opacity(0.4),
+                    Color.black.opacity(0.1)
                 ]),
                 startPoint: .bottom,
                 endPoint: .top
@@ -141,13 +108,94 @@ struct DeckRowView: View {
         .shadow(color: Color.black.opacity(0.15), radius: 8, x: 0, y: 4)
     }
     
-    private var fallbackBackground: some View {
+    // MARK: - Abstract Background Design
+    private var abstractBackground: some View {
         ZStack {
-            deck.tcgType.themeColor.opacity(0.15)
+            // Base gradient with TCG theme colors
+            LinearGradient(
+                gradient: Gradient(colors: [
+                    deck.tcgType.themeColor.opacity(0.8),
+                    deck.tcgType.themeColor.opacity(0.4),
+                    complementaryColor.opacity(0.3)
+                ]),
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
             
-            SwiftUI.Image(systemName: deck.tcgType.systemIcon)
-                .font(.system(size: 60))
-                .foregroundColor(deck.tcgType.themeColor.opacity(0.3))
+            // Decorative geometric shapes
+            GeometryReader { geo in
+                // Large circle in top-right
+                Circle()
+                    .fill(
+                        RadialGradient(
+                            gradient: Gradient(colors: [
+                                deck.tcgType.themeColor.opacity(0.6),
+                                deck.tcgType.themeColor.opacity(0.1)
+                            ]),
+                            center: .center,
+                            startRadius: 0,
+                            endRadius: geo.size.width * 0.4
+                        )
+                    )
+                    .frame(width: geo.size.width * 0.7, height: geo.size.width * 0.7)
+                    .offset(x: geo.size.width * 0.5, y: -geo.size.height * 0.3)
+                
+                // Smaller circle in bottom-left
+                Circle()
+                    .fill(
+                        RadialGradient(
+                            gradient: Gradient(colors: [
+                                complementaryColor.opacity(0.4),
+                                complementaryColor.opacity(0.05)
+                            ]),
+                            center: .center,
+                            startRadius: 0,
+                            endRadius: geo.size.width * 0.25
+                        )
+                    )
+                    .frame(width: geo.size.width * 0.5, height: geo.size.width * 0.5)
+                    .offset(x: -geo.size.width * 0.15, y: geo.size.height * 0.4)
+                
+                // Stylized TCG icon in center-right
+                SwiftUI.Image(systemName: deck.tcgType.systemIcon)
+                    .font(.system(size: 50, weight: .ultraLight))
+                    .foregroundColor(.white.opacity(0.15))
+                    .offset(x: geo.size.width * 0.6, y: geo.size.height * 0.3)
+            }
+            
+            // Subtle noise/texture overlay
+            Rectangle()
+                .fill(
+                    LinearGradient(
+                        gradient: Gradient(colors: [
+                            Color.white.opacity(0.05),
+                            Color.clear,
+                            Color.black.opacity(0.1)
+                        ]),
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                )
+        }
+    }
+    
+    // Complementary color for visual interest
+    private var complementaryColor: Color {
+        switch deck.tcgType {
+        case .pokemon:
+            return Color.orange
+        case .magic:
+            return Color.purple
+        case .yugioh:
+            return Color.red
+        case .onePiece:
+            return Color.blue
+        case .digimon:
+            return Color.cyan
+        case .dragonBall:
+            return Color.yellow
+        case .lorcana:
+            return Color.orange
         }
     }
 }

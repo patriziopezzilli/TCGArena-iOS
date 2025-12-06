@@ -179,14 +179,62 @@ class RequestService: ObservableObject {
         }
     }
     
-    // MARK: - Send Message
-    func sendMessage(requestId: String, content: String, attachmentUrl: String? = nil) async throws -> RequestMessage {
+    // MARK: - Get Messages
+    func getMessages(requestId: String) async throws -> [RequestMessage] {
         isLoading = true
         errorMessage = nil
         
         defer { isLoading = false }
         
-        let request = SendMessageRequest(content: content, attachmentUrl: attachmentUrl)
+        return try await withCheckedThrowingContinuation { continuation in
+            apiClient.request(endpoint: "/api/requests/\(requestId)/messages", method: .get) { result in
+                switch result {
+                case .success(let data):
+                    do {
+                        let decoder = self.createConfiguredDecoder()
+                        let response = try decoder.decode(MessageListResponse.self, from: data)
+                        continuation.resume(returning: response.messages)
+                    } catch {
+                        Task { @MainActor in
+                            self.errorMessage = "Failed to load messages: \(error.localizedDescription)"
+                        }
+                        continuation.resume(throwing: error)
+                    }
+                case .failure(let error):
+                    Task { @MainActor in
+                        self.errorMessage = error.localizedDescription
+                    }
+                    continuation.resume(throwing: error)
+                }
+            }
+        }
+    }
+    
+    // MARK: - Mark as Read
+    func markAsRead(requestId: String) async throws {
+        return try await withCheckedThrowingContinuation { continuation in
+            apiClient.request(endpoint: "/api/requests/\(requestId)/read", method: .post) { result in
+                switch result {
+                case .success:
+                    continuation.resume(returning: ())
+                case .failure(let error):
+                    Task { @MainActor in
+                        self.errorMessage = error.localizedDescription
+                    }
+                    continuation.resume(throwing: error)
+                }
+            }
+        }
+    }
+    
+    // MARK: - Send Message
+    func sendMessage(requestId: String, content: String) async throws -> RequestMessage {
+        isLoading = true
+        errorMessage = nil
+        
+        defer { isLoading = false }
+        
+        let request = SendMessageRequest(message: content, attachmentUrl: nil)
         let encoder = JSONEncoder()
         encoder.keyEncodingStrategy = .convertToSnakeCase
         let body = try encoder.encode(request)
@@ -215,7 +263,41 @@ class RequestService: ObservableObject {
         }
     }
     
-    // MARK: - Update Request Status
+    // MARK: - Send Message as Merchant
+    func sendMessageAsMerchant(requestId: String, content: String) async throws -> RequestMessage {
+        isLoading = true
+        errorMessage = nil
+        
+        defer { isLoading = false }
+        
+        let request = SendMessageRequest(message: content, attachmentUrl: nil)
+        let encoder = JSONEncoder()
+        encoder.keyEncodingStrategy = .convertToSnakeCase
+        let body = try encoder.encode(request)
+        
+        return try await withCheckedThrowingContinuation { continuation in
+            apiClient.request(endpoint: "/api/requests/\(requestId)/messages/merchant", method: .post, body: body) { result in
+                switch result {
+                case .success(let data):
+                    do {
+                        let decoder = self.createConfiguredDecoder()
+                        let message = try decoder.decode(RequestMessage.self, from: data)
+                        continuation.resume(returning: message)
+                    } catch {
+                        Task { @MainActor in
+                            self.errorMessage = "Failed to send message: \(error.localizedDescription)"
+                        }
+                        continuation.resume(throwing: error)
+                    }
+                case .failure(let error):
+                    Task { @MainActor in
+                        self.errorMessage = error.localizedDescription
+                    }
+                    continuation.resume(throwing: error)
+                }
+            }
+        }
+    }
     func updateRequestStatus(id: String, status: CustomerRequest.RequestStatus, message: String? = nil) async throws -> CustomerRequest {
         isLoading = true
         errorMessage = nil

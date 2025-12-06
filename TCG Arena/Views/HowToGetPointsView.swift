@@ -34,12 +34,12 @@ struct HowToGetPointsView: View {
                     }
                     
                     VStack(spacing: 8) {
-                        Text("How to Earn Points")
+                        Text("Come Guadagnare Punti")
                             .font(.system(size: 28, weight: .bold))
                             .foregroundColor(.primary)
                             .multilineTextAlignment(.center)
                         
-                        Text("Discover all the ways to earn points and climb the leaderboard!")
+                        Text("Scopri tutti i modi per accumulare punti e riscattare premi!")
                             .font(.system(size: 16, weight: .medium))
                             .foregroundColor(.secondary)
                             .multilineTextAlignment(.center)
@@ -51,179 +51,112 @@ struct HowToGetPointsView: View {
                 
                 // Tournament Section
                 VStack(alignment: .leading, spacing: 16) {
-                    SectionHeader(title: "🏆 Tournament Performance", icon: "trophy.fill", color: .orange)
+                    PointsSectionHeader(title: "🏆 Tornei", icon: "trophy.fill", color: .orange)
                     
                     PointCard(
-                        title: "Tournament Victory",
-                        description: "Win a tournament",
-                        points: "+500",
+                        title: "Registrazione Torneo",
+                        description: "Iscriviti a un torneo",
+                        points: "+15",
+                        type: .bonus,
+                        icon: "ticket.fill"
+                    )
+                    
+                    PointCard(
+                        title: "Check-in Torneo",
+                        description: "Effettua il check-in il giorno del torneo",
+                        points: "+25",
+                        type: .bonus,
+                        icon: "checkmark.circle.fill"
+                    )
+                    
+                    PointCard(
+                        title: "1° Posto",
+                        description: "Vinci il torneo",
+                        points: "+100",
                         type: .bonus,
                         icon: "crown.fill"
                     )
                     
                     PointCard(
-                        title: "Final Table",
-                        description: "Reach the final table",
-                        points: "+200",
+                        title: "2° Posto",
+                        description: "Arrivi secondo nel torneo",
+                        points: "+50",
                         type: .bonus,
                         icon: "medal.fill"
                     )
                     
                     PointCard(
-                        title: "Top 8 Finish",
-                        description: "Finish in top 8",
-                        points: "+100",
+                        title: "3° Posto",
+                        description: "Arrivi terzo nel torneo",
+                        points: "+25",
                         type: .bonus,
                         icon: "star.fill"
                     )
                     
                     PointCard(
-                        title: "Early Elimination",
-                        description: "Get eliminated in round 1",
-                        points: "-50",
+                        title: "Cancellazione Iscrizione",
+                        description: "Annulli l'iscrizione al torneo",
+                        points: "-10",
                         type: .malus,
                         icon: "xmark.circle.fill"
                     )
                 }
                 .padding(.horizontal, 20)
                 
-                // Daily Activities Section
+                // Collection Section
                 VStack(alignment: .leading, spacing: 16) {
-                    SectionHeader(title: "📅 Daily Activities", icon: "calendar.circle.fill", color: .blue)
+                    PointsSectionHeader(title: "📦 Collezione", icon: "square.stack.3d.up.fill", color: .blue)
                     
                     PointCard(
-                        title: "Daily Login",
-                        description: "Log in every day",
-                        points: "+10",
-                        type: .bonus,
-                        icon: "checkmark.circle.fill"
-                    )
-                    
-                    PointCard(
-                        title: "Weekly Streak",
-                        description: "7 consecutive days login",
-                        points: "+100",
-                        type: .bonus,
-                        icon: "flame.fill"
-                    )
-                    
-                    PointCard(
-                        title: "Card Collection",
-                        description: "Add 5 new cards to collection",
-                        points: "+25",
-                        type: .bonus,
-                        icon: "plus.circle.fill"
-                    )
-                    
-                    PointCard(
-                        title: "Deck Building",
-                        description: "Create a new deck",
+                        title: "Primo Deck",
+                        description: "Crea il tuo primo deck",
                         points: "+50",
                         type: .bonus,
                         icon: "rectangle.stack.fill"
                     )
-                }
-                .padding(.horizontal, 20)
-                
-                // Social & Community Section
-                VStack(alignment: .leading, spacing: 16) {
-                    SectionHeader(title: "👥 Social & Community", icon: "person.2.circle.fill", color: .green)
                     
                     PointCard(
-                        title: "Profile Completion",
-                        description: "Complete your profile (photo, bio, favorite TCG)",
-                        points: "+150",
+                        title: "Nuovi Deck",
+                        description: "Crea altri deck dopo il primo",
+                        points: "+10",
                         type: .bonus,
-                        icon: "person.circle.fill"
-                    )
-                    
-                    PointCard(
-                        title: "Share Achievement",
-                        description: "Share tournament result on social media",
-                        points: "+30",
-                        type: .bonus,
-                        icon: "square.and.arrow.up.fill"
-                    )
-                    
-                    PointCard(
-                        title: "Help New Player",
-                        description: "Answer questions in community",
-                        points: "+20",
-                        type: .bonus,
-                        icon: "hand.raised.fill"
-                    )
-                    
-                    PointCard(
-                        title: "Report Bug",
-                        description: "Help improve the app",
-                        points: "+75",
-                        type: .bonus,
-                        icon: "ant.circle.fill"
+                        icon: "plus.rectangle.on.rectangle"
                     )
                 }
                 .padding(.horizontal, 20)
                 
-                // Special Events Section
+                // Shop & Reservations Section
                 VStack(alignment: .leading, spacing: 16) {
-                    SectionHeader(title: "🎉 Special Events", icon: "party.popper.fill", color: .purple)
+                    PointsSectionHeader(title: "🏪 Negozi", icon: "storefront.fill", color: .green)
                     
                     PointCard(
-                        title: "Season Champion",
-                        description: "Win the seasonal championship",
-                        points: "+2000",
+                        title: "Prenotazione Prodotto",
+                        description: "Prenota un prodotto in un negozio",
+                        points: "+10",
                         type: .bonus,
-                        icon: "sparkles"
-                    )
-                    
-                    PointCard(
-                        title: "TCG Anniversary",
-                        description: "Participate in anniversary event",
-                        points: "+300",
-                        type: .bonus,
-                        icon: "gift.fill"
-                    )
-                    
-                    PointCard(
-                        title: "Beta Tester",
-                        description: "Help test new features",
-                        points: "+500",
-                        type: .bonus,
-                        icon: "wrench.and.screwdriver.fill"
-                    )
-                    
-                    PointCard(
-                        title: "Referral Bonus",
-                        description: "Bring a friend to the app",
-                        points: "+250",
-                        type: .bonus,
-                        icon: "person.fill.badge.plus"
+                        icon: "calendar.badge.plus"
                     )
                 }
                 .padding(.horizontal, 20)
                 
-                // Rules & Tips Section
+                // Info Section
                 VStack(alignment: .leading, spacing: 16) {
-                    SectionHeader(title: "📋 Rules & Tips", icon: "lightbulb.circle.fill", color: .yellow)
+                    PointsSectionHeader(title: "ℹ️ Info", icon: "info.circle.fill", color: .gray)
                     
                     VStack(spacing: 12) {
                         RuleCard(
-                            title: "Point Multipliers",
-                            description: "Points are multiplied during special events and weekends (x2 multiplier)"
+                            title: "Punti Reali",
+                            description: "I punti mostrati sono quelli effettivamente guadagnati nel sistema"
                         )
                         
                         RuleCard(
-                            title: "Season Reset",
-                            description: "Points reset every season, but you keep your redeemed rewards forever"
+                            title: "Riscatta Premi",
+                            description: "Usa i punti per riscattare sconti, gadget e premi esclusivi"
                         )
                         
                         RuleCard(
-                            title: "Fair Play",
-                            description: "Cheating or unsportsmanlike behavior results in permanent point deduction"
-                        )
-                        
-                        RuleCard(
-                            title: "Leaderboard",
-                            description: "Top 10 players each season get exclusive rewards and bragging rights"
+                            title: "Trasparenza",
+                            description: "Ogni azione che ti fa guadagnare punti mostra una notifica con l'importo esatto"
                         )
                     }
                 }
@@ -236,7 +169,7 @@ struct HowToGetPointsView: View {
 }
 
 // MARK: - Supporting Views
-struct SectionHeader: View {
+struct PointsSectionHeader: View {
     let title: String
     let icon: String
     let color: Color

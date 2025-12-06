@@ -23,11 +23,33 @@ class ReservationService: ObservableObject {
     }
     
     // MARK: - Create Reservation
-    func createReservation(cardId: String, quantity: Int = 1) async throws -> Reservation {
+    func createReservation(cardId: String, quantity: Int = 1, availableQuantity: Int? = nil) async throws -> Reservation {
         isLoading = true
         errorMessage = nil
         
         defer { isLoading = false }
+        
+        // Check available quantity if provided
+        if let availableQuantity = availableQuantity {
+            do {
+                // Get active reservations for this card
+                let activeReservationsForCard = try await getReservationsByCardId(cardId: cardId)
+                    .filter { $0.isActive }
+                
+                let activeReservationCount = activeReservationsForCard.count
+                
+                // Check if we have enough available quantity
+                if activeReservationCount >= availableQuantity {
+                    throw NSError(domain: "ReservationError", code: 1, 
+                                userInfo: [NSLocalizedDescriptionKey: "All available copies are already reserved. Please try again later."])
+                }
+            } catch {
+                // If we can't check reservations (e.g., due to auth issues), allow the reservation
+                // The backend will handle the validation
+                print("⚠️ Could not check existing reservations: \(error.localizedDescription)")
+                print("📝 Allowing reservation - backend will validate availability")
+            }
+        }
         
         let request = CreateReservationRequest(cardId: cardId, quantity: quantity)
         let encoder = JSONEncoder()
@@ -40,8 +62,6 @@ class ReservationService: ObservableObject {
                 case .success(let data):
                     do {
                         let decoder = JSONDecoder()
-                        decoder.keyDecodingStrategy = .convertFromSnakeCase
-                        decoder.dateDecodingStrategy = .iso8601
                         
                         let response = try decoder.decode(ReservationResponse.self, from: data)
                         
@@ -67,20 +87,18 @@ class ReservationService: ObservableObject {
     }
     
     // MARK: - Get User Reservations
-    func getUserReservations(userId: String) async throws -> [Reservation] {
+    func getUserReservations() async throws -> [Reservation] {
         isLoading = true
         errorMessage = nil
         
         defer { isLoading = false }
         
         return try await withCheckedThrowingContinuation { continuation in
-            apiClient.request(endpoint: "/api/reservations?userId=\(userId)", method: .get) { result in
+            apiClient.request(endpoint: "/api/reservations/my", method: .get) { result in
                 switch result {
                 case .success(let data):
                     do {
                         let decoder = JSONDecoder()
-                        decoder.keyDecodingStrategy = .convertFromSnakeCase
-                        decoder.dateDecodingStrategy = .iso8601
                         
                         let response = try decoder.decode(ReservationListResponse.self, from: data)
                         
@@ -105,16 +123,49 @@ class ReservationService: ObservableObject {
         }
     }
     
-    // MARK: - Get Merchant Reservations
-    func getMerchantReservations(merchantId: String, status: Reservation.ReservationStatus? = nil) async throws -> [Reservation] {
-        isLoading = true
-        errorMessage = nil
+    // MARK: - Load User Reservations (convenience method)
+    func loadUserReservations() async {
+        do {
+            _ = try await getUserReservations()
+        } catch {
+            self.errorMessage = "Failed to load reservations: \(error.localizedDescription)"
+        }
+    }
+    
+    // MARK: - Get User Reservations for Shop
+    func getUserReservationsForShop(shopId: String) async throws -> [Reservation] {
+        let endpoint = "/api/reservations/my?shopId=\(shopId)"
         
-        defer { isLoading = false }
-        
-        var endpoint = "/api/reservations?merchantId=\(merchantId)"
-        if let status = status {
-            endpoint += "&status=\(status.rawValue)"
+        return try await withCheckedThrowingContinuation { continuation in
+            apiClient.request(endpoint: endpoint, method: .get) { result in
+                switch result {
+                case .success(let data):
+                    do {
+                        let decoder = JSONDecoder()
+                        
+                        let response = try decoder.decode(ReservationListResponse.self, from: data)
+                        continuation.resume(returning: response.reservations)
+                    } catch {
+                        Task { @MainActor in
+                            self.errorMessage = "Failed to load reservations for shop: \(error.localizedDescription)"
+                        }
+                        continuation.resume(throwing: error)
+                    }
+                case .failure(let error):
+                    Task { @MainActor in
+                        self.errorMessage = error.localizedDescription
+                    }
+                    continuation.resume(throwing: error)
+                }
+            }
+        }
+    }
+    
+    // MARK: - Get Reservations by Card ID
+    func getReservationsByCardId(cardId: String, merchantId: String? = nil) async throws -> [Reservation] {
+        var endpoint = "/api/reservations?cardId=\(cardId)"
+        if let merchantId = merchantId {
+            endpoint += "&merchantId=\(merchantId)"
         }
         
         return try await withCheckedThrowingContinuation { continuation in
@@ -123,19 +174,52 @@ class ReservationService: ObservableObject {
                 case .success(let data):
                     do {
                         let decoder = JSONDecoder()
-                        decoder.keyDecodingStrategy = .convertFromSnakeCase
-                        decoder.dateDecodingStrategy = .iso8601
                         
                         let response = try decoder.decode(ReservationListResponse.self, from: data)
-                        
-                        Task { @MainActor in
-                            self.reservations = response.reservations
-                            self.updateActiveReservations()
-                        }
                         continuation.resume(returning: response.reservations)
                     } catch {
+                        continuation.resume(throwing: error)
+                    }
+                case .failure(let error):
+                    continuation.resume(throwing: error)
+                }
+            }
+        }
+    }
+    
+    // MARK: - Validate Reservation (QR Scan)
+    func validateReservation(qrCode: String) async throws -> Reservation {
+        isLoading = true
+        errorMessage = nil
+        
+        defer { isLoading = false }
+        
+        let request = ValidateReservationRequest(qrCode: qrCode)
+        let encoder = JSONEncoder()
+        encoder.keyEncodingStrategy = .convertToSnakeCase
+        let body = try encoder.encode(request)
+        
+        return try await withCheckedThrowingContinuation { continuation in
+            apiClient.request(endpoint: "/api/reservations/validate", method: .post, body: body) { result in
+                switch result {
+                case .success(let data):
+                    do {
+                        let decoder = JSONDecoder()
+                        
+                        let response = try decoder.decode(ReservationResponse.self, from: data)
+                        
                         Task { @MainActor in
-                            self.errorMessage = "Failed to load reservations: \(error.localizedDescription)"
+                            if let index = self.reservations.firstIndex(where: { $0.id == response.reservation.id }) {
+                                self.reservations[index] = response.reservation
+                            } else {
+                                self.reservations.insert(response.reservation, at: 0)
+                            }
+                            self.updateActiveReservations()
+                        }
+                        continuation.resume(returning: response.reservation)
+                    } catch {
+                        Task { @MainActor in
+                            self.errorMessage = "Failed to validate reservation: \(error.localizedDescription)"
                         }
                         continuation.resume(throwing: error)
                     }
@@ -149,7 +233,7 @@ class ReservationService: ObservableObject {
         }
     }
     
-    // MARK: - Validate Reservation (QR Scan)
+    // MARK: - Validate Reservation by ID (QR Scan)
     func validateReservation(id: String, qrCode: String) async throws -> Reservation {
         isLoading = true
         errorMessage = nil
@@ -167,8 +251,6 @@ class ReservationService: ObservableObject {
                 case .success(let data):
                     do {
                         let decoder = JSONDecoder()
-                        decoder.keyDecodingStrategy = .convertFromSnakeCase
-                        decoder.dateDecodingStrategy = .iso8601
                         
                         let response = try decoder.decode(ReservationResponse.self, from: data)
                         
@@ -208,8 +290,6 @@ class ReservationService: ObservableObject {
                 case .success(let data):
                     do {
                         let decoder = JSONDecoder()
-                        decoder.keyDecodingStrategy = .convertFromSnakeCase
-                        decoder.dateDecodingStrategy = .iso8601
                         
                         let response = try decoder.decode(ReservationResponse.self, from: data)
                         
@@ -244,7 +324,7 @@ class ReservationService: ObservableObject {
         defer { isLoading = false }
         
         return try await withCheckedThrowingContinuation { continuation in
-            apiClient.request(endpoint: "/api/reservations/\(id)/cancel", method: .post) { result in
+            apiClient.request(endpoint: "/api/reservations/\(id)/cancel", method: .put) { result in
                 switch result {
                 case .success:
                     Task { @MainActor in

@@ -16,8 +16,6 @@ struct MatchResultEntryView: View {
     
     @State private var selectedResult: Match.MatchResult?
     @State private var isSaving = false
-    @State private var showError = false
-    @State private var errorMessage = ""
     
     var body: some View {
         NavigationView {
@@ -127,11 +125,6 @@ struct MatchResultEntryView: View {
                     }
                 }
             }
-            .alert("Error", isPresented: $showError) {
-                Button("OK", role: .cancel) {}
-            } message: {
-                Text(errorMessage)
-            }
         }
     }
     
@@ -155,8 +148,7 @@ struct MatchResultEntryView: View {
             } catch {
                 await MainActor.run {
                     isSaving = false
-                    errorMessage = error.localizedDescription
-                    showError = true
+                    ToastManager.shared.showError(error.localizedDescription)
                 }
             }
         }
@@ -284,3 +276,4 @@ struct ResultOption: View {
     )
     .environmentObject(TournamentService.shared)
 }
+.withToastSupport()

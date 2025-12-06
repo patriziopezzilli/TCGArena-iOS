@@ -9,6 +9,7 @@ import SwiftUI
 
 struct DeckSelectionModal: View {
     let cardName: String
+    let tcgType: TCGType? // Filter decks by TCG type
     let onDeckSelected: (Deck) -> Void
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject var deckService: DeckService
@@ -22,7 +23,7 @@ struct DeckSelectionModal: View {
                 Color(.systemGroupedBackground)
                     .ignoresSafeArea()
                 
-                if deckService.userDecks.isEmpty {
+                if filteredDecks.isEmpty {
                     emptyStateView
                 } else {
                     ScrollView {
@@ -72,9 +73,16 @@ struct DeckSelectionModal: View {
         )
     }
     
+    private var filteredDecks: [Deck] {
+        if let tcgType = tcgType {
+            return deckService.userDecks.filter { $0.tcgType == tcgType }
+        }
+        return deckService.userDecks
+    }
+    
     private var deckListView: some View {
         VStack(spacing: 12) {
-            ForEach(deckService.userDecks) { deck in
+            ForEach(filteredDecks) { deck in
                 DeckCardRow(
                     deck: deck,
                     isSelected: selectedDeck?.id == deck.id,
@@ -96,7 +104,7 @@ struct DeckSelectionModal: View {
                 .font(.title2)
                 .fontWeight(.semibold)
             
-            Text("Create a deck first to add cards to it")
+            Text(tcgType != nil ? "Crea un deck \(tcgType!.displayName) per aggiungere questa carta" : "Create a deck first to add cards to it")
                 .font(.subheadline)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)

@@ -19,8 +19,6 @@ struct CreateDeckView: View {
     @State private var selectedTCGType: TCGType = .pokemon
     @State private var selectedDeckType: DeckType = .lista
     @State private var isCreating = false
-    @State private var showError = false
-    @State private var errorMessage = ""
     
     // Animation states
     // @State private var animateGradient = false
@@ -84,11 +82,6 @@ struct CreateDeckView: View {
                             .clipShape(Circle())
                     }
                 }
-            }
-            .alert("Error", isPresented: $showError) {
-                Button("OK", role: .cancel) { }
-            } message: {
-                Text(errorMessage)
             }
         }
     }
@@ -251,10 +244,17 @@ struct CreateDeckView: View {
                 isCreating = false
                 switch result {
                 case .success:
-                    dismiss()
+                    // Haptic feedback for successful creation
+                    let generator = UINotificationFeedbackGenerator()
+                    generator.notificationOccurred(.success)
+                    
+                    // Show points toast before dismissing
+                    ToastManager.shared.showSuccess("🎉 +10 punti!")
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                        dismiss()
+                    }
                 case .failure(let error):
-                    errorMessage = error.localizedDescription
-                    showError = true
+                    ToastManager.shared.showError(error.localizedDescription)
                 }
             }
         }

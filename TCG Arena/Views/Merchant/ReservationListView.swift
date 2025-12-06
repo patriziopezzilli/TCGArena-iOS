@@ -9,6 +9,7 @@ import SwiftUI
 
 struct ReservationListView: View {
     @EnvironmentObject var reservationService: ReservationService
+    @EnvironmentObject var inventoryService: InventoryService
     @EnvironmentObject var authService: AuthService
     
     @State private var selectedStatus: ReservationStatus?
@@ -127,7 +128,11 @@ struct ReservationListView: View {
         // Validate QR code
         Task {
             do {
-                try await reservationService.validateReservation(code: code)
+                let validatedReservation = try await reservationService.validateReservation(code: code)
+                
+                // Update inventory quantity after successful validation
+                try await inventoryService.updateQuantity(cardId: validatedReservation.cardId, delta: -1)
+                
                 // Show success and load reservation details
                 if let reservation = reservationService.merchantReservations.first(where: { $0.qrCode == code }) {
                     selectedReservation = reservation
@@ -178,8 +183,8 @@ struct ReservationRow: View {
         Button(action: onTap) {
             VStack(spacing: 12) {
                 HStack(spacing: 12) {
-                    // Card Image
-                    if let imageUrl = reservation.card?.imageUrl {
+                    // Card Image - Only show for non-expired reservations
+                    if reservation.status != .expired, let imageUrl = reservation.card?.imageUrl {
                         AsyncImage(url: URL(string: imageUrl)) { image in
                             image
                                 .resizable()

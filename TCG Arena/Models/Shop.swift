@@ -20,6 +20,7 @@ struct Shop: Identifiable, Codable {
     let instagramUrl: String?
     let facebookUrl: String?
     let twitterUrl: String?
+    let photoBase64: String?
     let type: ShopType
     let isVerified: Bool
     let active: Bool?
@@ -32,7 +33,7 @@ struct Shop: Identifiable, Codable {
     
     enum CodingKeys: String, CodingKey {
         case id, name, description, address, latitude, longitude, phoneNumber, email
-        case websiteUrl, instagramUrl, facebookUrl, twitterUrl
+        case websiteUrl, instagramUrl, facebookUrl, twitterUrl, photoBase64
         case type, isVerified, active, ownerId, openingHours, openingDays, tcgTypes, services, inventory
     }
     
@@ -51,6 +52,7 @@ struct Shop: Identifiable, Codable {
         instagramUrl = try container.decodeIfPresent(String.self, forKey: .instagramUrl)
         facebookUrl = try container.decodeIfPresent(String.self, forKey: .facebookUrl)
         twitterUrl = try container.decodeIfPresent(String.self, forKey: .twitterUrl)
+        photoBase64 = try container.decodeIfPresent(String.self, forKey: .photoBase64)
         type = try container.decode(ShopType.self, forKey: .type)
         isVerified = try container.decode(Bool.self, forKey: .isVerified)
         active = try container.decodeIfPresent(Bool.self, forKey: .active)
@@ -87,6 +89,48 @@ struct Shop: Identifiable, Codable {
         (services ?? []).compactMap { ShopServiceType(rawValue: $0) }
     }
     
+    /// Check if the shop is currently open based on openingHours
+    var isOpenNow: Bool {
+        guard let hours = openingHours else { return false }
+        
+        // Parse format "10:00-19:00" or "10:00 - 19:00"
+        let cleanHours = hours.replacingOccurrences(of: " ", with: "")
+        let parts = cleanHours.split(separator: "-")
+        guard parts.count == 2 else { return false }
+        
+        let openTime = String(parts[0])
+        let closeTime = String(parts[1])
+        
+        let formatter = DateFormatter()
+        formatter.dateFormat = "HH:mm"
+        
+        guard let openDate = formatter.date(from: openTime),
+              let closeDate = formatter.date(from: closeTime) else { return false }
+        
+        let now = Date()
+        let calendar = Calendar.current
+        
+        let nowComponents = calendar.dateComponents([.hour, .minute], from: now)
+        let openComponents = calendar.dateComponents([.hour, .minute], from: openDate)
+        let closeComponents = calendar.dateComponents([.hour, .minute], from: closeDate)
+        
+        let nowMinutes = (nowComponents.hour ?? 0) * 60 + (nowComponents.minute ?? 0)
+        let openMinutes = (openComponents.hour ?? 0) * 60 + (openComponents.minute ?? 0)
+        let closeMinutes = (closeComponents.hour ?? 0) * 60 + (closeComponents.minute ?? 0)
+        
+        // Handle overnight hours (e.g., 22:00-02:00)
+        if closeMinutes < openMinutes {
+            return nowMinutes >= openMinutes || nowMinutes < closeMinutes
+        }
+        
+        return nowMinutes >= openMinutes && nowMinutes < closeMinutes
+    }
+    
+    /// Get status text for display
+    var openStatusText: String {
+        isOpenNow ? "Aperto" : "Chiuso"
+    }
+    
     // Standard init for programmatic creation (used in Previews)
     init(
         id: Int64,
@@ -101,6 +145,7 @@ struct Shop: Identifiable, Codable {
         instagramUrl: String? = nil,
         facebookUrl: String? = nil,
         twitterUrl: String? = nil,
+        photoBase64: String? = nil,
         type: ShopType,
         isVerified: Bool,
         active: Bool? = nil,
@@ -123,6 +168,7 @@ struct Shop: Identifiable, Codable {
         self.instagramUrl = instagramUrl
         self.facebookUrl = facebookUrl
         self.twitterUrl = twitterUrl
+        self.photoBase64 = photoBase64
         self.type = type
         self.isVerified = isVerified
         self.active = active
@@ -149,6 +195,7 @@ struct Shop: Identifiable, Codable {
             instagramUrl: "https://instagram.com/magiccastle",
             facebookUrl: nil,
             twitterUrl: nil,
+            photoBase64: nil,
             type: .physicalStore,
             isVerified: true,
             active: true,

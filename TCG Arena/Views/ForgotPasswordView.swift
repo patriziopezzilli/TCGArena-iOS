@@ -12,9 +12,6 @@ struct ForgotPasswordView: View {
     @StateObject private var authService = AuthService()
     @State private var email = ""
     @State private var isLoading = false
-    @State private var showSuccess = false
-    @State private var showError = false
-    @State private var message = ""
 
     var body: some View {
         ZStack {
@@ -137,20 +134,6 @@ struct ForgotPasswordView: View {
                 .padding(.vertical, 40)
             }
         }
-        .alert(isPresented: $showSuccess) {
-            Alert(
-                title: Text("Email Sent"),
-                message: Text("Check your email for password reset instructions"),
-                dismissButton: .default(Text("OK")) {
-                    dismiss()
-                }
-            )
-        }
-        .alert("Error", isPresented: $showError) {
-            Button("OK", role: .cancel) {}
-        } message: {
-            Text(message)
-        }
     }
 
     private func resetPassword() {
@@ -161,10 +144,10 @@ struct ForgotPasswordView: View {
         Task {
             do {
                 try await authService.resetPassword(email: email)
-                showSuccess = true
+                ToastManager.shared.showSuccess("Check your email for password reset instructions")
+                dismiss()
             } catch {
-                message = error.localizedDescription
-                showError = true
+                ToastManager.shared.showError(error.localizedDescription)
             }
             isLoading = false
         }

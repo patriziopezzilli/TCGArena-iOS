@@ -19,8 +19,6 @@ struct SendRequestToShopView: View {
     @State private var title = ""
     @State private var description = ""
     @State private var isSending = false
-    @State private var showError = false
-    @State private var errorMessage = ""
     
     private var isValid: Bool {
         !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty &&
@@ -64,11 +62,6 @@ struct SendRequestToShopView: View {
                             .foregroundColor(.secondary)
                     }
                 }
-            }
-            .alert("Error", isPresented: $showError) {
-                Button("OK", role: .cancel) { }
-            } message: {
-                Text(errorMessage)
             }
         }
     }
@@ -293,8 +286,7 @@ struct SendRequestToShopView: View {
             } catch {
                 await MainActor.run {
                     isSending = false
-                    errorMessage = error.localizedDescription
-                    showError = true
+                    ToastManager.shared.showError(error.localizedDescription)
                 }
             }
         }
@@ -375,4 +367,5 @@ private struct RequestTipRow: View {
     SendRequestToShopView(shop: Shop.preview, onRequestSent: nil)
         .environmentObject(RequestService())
         .environmentObject(AuthService())
+        .withToastSupport()
 }

@@ -14,14 +14,7 @@ class SettingsService: ObservableObject {
         }
     }
     
-    @Published var showMarketValues: Bool {
-        didSet {
-            UserDefaults.standard.set(showMarketValues, forKey: "showMarketValues")
-        }
-    }
-    
     init() {
         self.isDarkMode = UserDefaults.standard.bool(forKey: "darkModeEnabled")
-        self.showMarketValues = UserDefaults.standard.bool(forKey: "showMarketValues")
     }
 }

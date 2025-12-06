@@ -138,7 +138,7 @@ struct RequestManagementView: View {
                 _ = try await requestService.getMerchantRequests(merchantId: String(shopId))
             } catch {
                 // Handle error
-                print("Failed to load merchant requests: \(error)")
+                ToastManager.shared.showError("Failed to load merchant requests: \(error.localizedDescription)")
             }
         }
     }
@@ -352,3 +352,5 @@ struct QuickActionButton: View {
         .environmentObject(RequestService())
         .environmentObject(AuthService())
 }
+}
+        .withToastSupport()

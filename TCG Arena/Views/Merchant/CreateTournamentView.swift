@@ -23,8 +23,6 @@ struct CreateTournamentView: View {
     @State private var rules = ""
     
     @State private var isSaving = false
-    @State private var showError = false
-    @State private var errorMessage = ""
     
     let maxParticipantsOptions = [8, 16, 32, 64, 128]
     
@@ -34,7 +32,7 @@ struct CreateTournamentView: View {
                 VStack(spacing: 24) {
                     // Basic Info Section
                     VStack(alignment: .leading, spacing: 16) {
-                        SectionHeader(title: "Basic Information")
+                        TournamentSectionHeader(title: "Basic Information")
                         
                         VStack(spacing: 12) {
                             CustomTextField(
@@ -53,7 +51,7 @@ struct CreateTournamentView: View {
                     
                     // Game Settings Section
                     VStack(alignment: .leading, spacing: 16) {
-                        SectionHeader(title: "Game Settings")
+                        TournamentSectionHeader(title: "Game Settings")
                         
                         VStack(spacing: 12) {
                             // TCG Type
@@ -99,7 +97,7 @@ struct CreateTournamentView: View {
                     
                     // Schedule & Participants Section
                     VStack(alignment: .leading, spacing: 16) {
-                        SectionHeader(title: "Schedule & Participants")
+                        TournamentSectionHeader(title: "Schedule & Participants")
                         
                         VStack(spacing: 12) {
                             // Date Picker
@@ -140,7 +138,7 @@ struct CreateTournamentView: View {
                     
                     // Entry & Prizes Section
                     VStack(alignment: .leading, spacing: 16) {
-                        SectionHeader(title: "Entry & Prizes")
+                        TournamentSectionHeader(title: "Entry & Prizes")
                         
                         VStack(spacing: 12) {
                             // Entry Fee
@@ -176,7 +174,7 @@ struct CreateTournamentView: View {
                     
                     // Rules Section
                     VStack(alignment: .leading, spacing: 16) {
-                        SectionHeader(title: "Rules (Optional)")
+                        TournamentSectionHeader(title: "Rules (Optional)")
                         
                         CustomTextEditor(
                             icon: "doc.text.fill",
@@ -209,11 +207,6 @@ struct CreateTournamentView: View {
                     }
                     .disabled(isSaving || !isFormValid)
                 }
-            }
-            .alert("Error", isPresented: $showError) {
-                Button("OK", role: .cancel) {}
-            } message: {
-                Text(errorMessage)
             }
         }
     }
@@ -255,8 +248,7 @@ struct CreateTournamentView: View {
             } catch {
                 await MainActor.run {
                     isSaving = false
-                    errorMessage = error.localizedDescription
-                    showError = true
+                    ToastManager.shared.showError("Failed to create tournament: \(error.localizedDescription)")
                 }
             }
         }
@@ -264,7 +256,7 @@ struct CreateTournamentView: View {
 }
 
 // MARK: - Section Header
-struct SectionHeader: View {
+struct TournamentSectionHeader: View {
     let title: String
     
     var body: some View {

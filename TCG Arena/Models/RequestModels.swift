@@ -228,7 +228,16 @@ struct RequestMessage: Identifiable, Codable, Hashable {
         
         id = try container.decode(String.self, forKey: .id)
         requestId = try container.decode(String.self, forKey: .requestId)
-        senderId = try container.decode(String.self, forKey: .senderId)
+        
+        // Handle senderId as either String or Int
+        if let senderIdString = try? container.decode(String.self, forKey: .senderId) {
+            senderId = senderIdString
+        } else if let senderIdInt = try? container.decode(Int.self, forKey: .senderId) {
+            senderId = String(senderIdInt)
+        } else {
+            throw DecodingError.typeMismatch(String.self, DecodingError.Context(codingPath: container.codingPath, debugDescription: "Expected String or Int for senderId"))
+        }
+        
         senderType = try container.decode(SenderType.self, forKey: .senderType)
         content = try container.decode(String.self, forKey: .content)
         attachmentUrl = try container.decodeIfPresent(String.self, forKey: .attachmentUrl)
@@ -278,11 +287,11 @@ struct CreateRequestRequest: Codable {
 }
 
 struct SendMessageRequest: Codable {
-    let content: String
+    let message: String
     let attachmentUrl: String?
     
     enum CodingKeys: String, CodingKey {
-        case content
+        case message
         case attachmentUrl = "attachment_url"
     }
 }
@@ -300,5 +309,10 @@ struct RequestResponse: Codable {
 
 struct RequestListResponse: Codable {
     let requests: [CustomerRequest]
+    let total: Int
+}
+
+struct MessageListResponse: Codable {
+    let messages: [RequestMessage]
     let total: Int
 }

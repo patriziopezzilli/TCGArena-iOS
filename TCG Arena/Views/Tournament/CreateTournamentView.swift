@@ -30,9 +30,6 @@ struct CreateTournamentView: View {
     
     // UI State
     @State private var isCreating = false
-    @State private var showingSuccess = false
-    @State private var errorMessage = ""
-    @State private var showingError = false
     
     var body: some View {
         NavigationView {
@@ -62,18 +59,6 @@ struct CreateTournamentView: View {
             .background(Color(.systemBackground))
             .navigationTitle("Create Tournament")
             .navigationBarTitleDisplayMode(.inline)
-        }
-        .alert("Success", isPresented: $showingSuccess) {
-            Button("OK") {
-                presentationMode.wrappedValue.dismiss()
-            }
-        } message: {
-            Text("Tournament created successfully!")
-        }
-        .alert("Error", isPresented: $showingError) {
-            Button("OK") { }
-        } message: {
-            Text(errorMessage)
         }
     }
     
@@ -347,8 +332,7 @@ struct CreateTournamentView: View {
     
     private func createTournament() {
         guard isFormValid else {
-            errorMessage = "Please fill all required fields correctly."
-            showingError = true
+            ToastManager.shared.showError("Please fill all required fields correctly.")
             return
         }
         
@@ -363,7 +347,7 @@ struct CreateTournamentView: View {
             endDate: formatDateForBackend(endDate),
             maxParticipants: maxParticipants,
             entryFee: entryFee,
-            prizePool: Double(prizePool) ?? 0.0,
+            prizePool: prizePool,
             organizerId: Int64(authService.currentUserId ?? 0),
             location: Tournament.TournamentLocation(
                 venueName: locationName,
@@ -382,10 +366,10 @@ struct CreateTournamentView: View {
             DispatchQueue.main.async {
                 isCreating = false
                 if tournamentService.errorMessage == nil {
-                    showingSuccess = true
+                    ToastManager.shared.showSuccess("Tournament created successfully!")
+                    presentationMode.wrappedValue.dismiss()
                 } else {
-                    errorMessage = tournamentService.errorMessage ?? "Failed to create tournament"
-                    showingError = true
+                    ToastManager.shared.showError(tournamentService.errorMessage ?? "Failed to create tournament")
                 }
             }
         }

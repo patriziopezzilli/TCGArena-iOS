@@ -15,6 +15,7 @@ struct ReadOnlyContentView: View {
     @StateObject private var tournamentService = TournamentService()
     @StateObject private var deckService = DeckService()
     @StateObject private var inventoryService = InventoryService()
+    @StateObject private var marketService = MarketDataService()
     @EnvironmentObject private var settingsService: SettingsService
     @EnvironmentObject private var authService: AuthService
 
@@ -25,6 +26,8 @@ struct ReadOnlyContentView: View {
                 ReadOnlyCollectionView()
                     .environmentObject(cardService)
                     .environmentObject(deckService)
+                    .environmentObject(marketService)
+                    .environmentObject(authService)
                     .tabItem {
                         SwiftUI.Image(systemName: "rectangle.stack")
                         Text("Decks")
@@ -95,65 +98,207 @@ struct ReadOnlyContentView: View {
 struct ReadOnlyCollectionView: View {
     @EnvironmentObject var cardService: CardService
     @EnvironmentObject var deckService: DeckService
+    @EnvironmentObject var marketService: MarketDataService
+    @EnvironmentObject var authService: AuthService
     @StateObject private var expansionService = ExpansionService()
     @State private var showLoginPrompt = false
     @State private var selectedExpansion: Expansion?
+    @State private var showAllExpansions = false
+    @State private var selectedTCGFilter: TCGType? = nil
+    @State private var currentMarketingSlide = 0
+    @State private var marketingTimer: Timer?
+    
+    // Marketing slides data
+    private let marketingSlides: [(icon: String, title: String, subtitle: String, color: Color)] = [
+        ("rectangle.stack.fill.badge.plus", "Create Your Collection", "Track and organize your TCG cards", .blue),
+        ("gamecontroller.fill", "Build Custom Decks", "Design winning strategies", .purple),
+        ("trophy.fill", "Compete in Tournaments", "Join competitive events", .orange),
+        ("cart.fill", "Shop & Trade", "Buy, sell and trade cards", .green),
+        ("person.2.fill", "Connect with Community", "Share decks and strategies", .pink)
+    ]
+    
+    // Computed properties for filtered expansions
+    private var filteredExpansions: [Expansion] {
+        var expansions = expansionService.expansions
+        if let tcgFilter = selectedTCGFilter {
+            expansions = expansions.filter { $0.tcgType == tcgFilter }
+        }
+        return expansions
+    }
+    
+    private var displayedExpansions: [Expansion] {
+        if showAllExpansions {
+            return filteredExpansions
+        } else {
+            return Array(filteredExpansions.prefix(5))
+        }
+    }
 
     var body: some View {
         NavigationView {
             ScrollView {
                 VStack(spacing: 24) {
-                    // Header
+                    // Welcome Header
                     VStack(spacing: 8) {
-                        Text("TCG Collection")
+                        Text("Welcome in TCG Arena")
                             .font(.system(size: 28, weight: .bold))
                             .foregroundColor(.primary)
+                            .multilineTextAlignment(.center)
 
-                        Text("Browse expansions and discover cards")
+                        Text("Dove collezionisti e negozi si incontrano")
                             .font(.system(size: 16, weight: .medium))
                             .foregroundColor(.secondary)
+                            .multilineTextAlignment(.center)
                     }
                     .padding(.top, 20)
 
-                    // Login prompt card
-                    VStack(spacing: 16) {
-                        SwiftUI.Image(systemName: "lock.fill")
-                            .font(.system(size: 40, weight: .bold))
-                            .foregroundColor(.orange)
-
-                        Text("Sign in to create your own collection")
-                            .font(.system(size: 18, weight: .semibold))
-                            .foregroundColor(.primary)
-                            .multilineTextAlignment(.center)
-
-                        Text("Track your cards and build custom decks")
-                            .font(.system(size: 14, weight: .medium))
-                            .foregroundColor(.secondary)
-                            .multilineTextAlignment(.center)
-
-                        Button(action: {
-                            showLoginPrompt = true
-                        }) {
-                            Text("Sign In to Unlock")
-                                .font(.system(size: 16, weight: .semibold))
-                                .foregroundColor(.white)
-                                .frame(maxWidth: .infinity)
-                                .frame(height: 50)
-                                .background(Color.orange)
-                                .clipShape(RoundedRectangle(cornerRadius: 25))
+                    // Marketing Slider Card
+                    ZStack {
+                        // Background with gradient
+                        RoundedRectangle(cornerRadius: 16)
+                            .fill(
+                                LinearGradient(
+                                    gradient: Gradient(colors: [
+                                        marketingSlides[currentMarketingSlide].color.opacity(0.1),
+                                        marketingSlides[currentMarketingSlide].color.opacity(0.05)
+                                    ]),
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                            )
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 16)
+                                    .stroke(marketingSlides[currentMarketingSlide].color.opacity(0.2), lineWidth: 1)
+                            )
+                        
+                        VStack(spacing: 16) {
+                            // Marketing Content
+                            VStack(spacing: 12) {
+                                // Icon with background
+                                ZStack {
+                                    Circle()
+                                        .fill(marketingSlides[currentMarketingSlide].color.opacity(0.2))
+                                        .frame(width: 60, height: 60)
+                                    
+                                    SwiftUI.Image(systemName: marketingSlides[currentMarketingSlide].icon)
+                                        .font(.system(size: 24, weight: .bold))
+                                        .foregroundColor(marketingSlides[currentMarketingSlide].color)
+                                }
+                                
+                                // Title
+                                Text(marketingSlides[currentMarketingSlide].title)
+                                    .font(.system(size: 18, weight: .bold))
+                                    .foregroundColor(.primary)
+                                    .multilineTextAlignment(.center)
+                                
+                                // Subtitle
+                                Text(marketingSlides[currentMarketingSlide].subtitle)
+                                    .font(.system(size: 14, weight: .medium))
+                                    .foregroundColor(.secondary)
+                                    .multilineTextAlignment(.center)
+                            }
+                            
+                            // Slide Indicators
+                            HStack(spacing: 8) {
+                                ForEach(0..<marketingSlides.count, id: \.self) { index in
+                                    Circle()
+                                        .fill(index == currentMarketingSlide ? marketingSlides[index].color : Color.gray.opacity(0.3))
+                                        .frame(width: 8, height: 8)
+                                        .animation(.easeInOut(duration: 0.3), value: currentMarketingSlide)
+                                        .onTapGesture {
+                                            withAnimation(.easeInOut(duration: 0.3)) {
+                                                currentMarketingSlide = index
+                                                // Reset timer when manually changed
+                                                stopMarketingTimer()
+                                                startMarketingTimer()
+                                            }
+                                        }
+                                }
+                            }
+                            
+                            // CTA Button
+                            Button(action: {
+                                showLoginPrompt = true
+                            }) {
+                                Text("Sign In to Unlock")
+                                    .font(.system(size: 16, weight: .semibold))
+                                    .foregroundColor(.white)
+                                    .frame(maxWidth: .infinity)
+                                    .frame(height: 50)
+                                    .background(
+                                        LinearGradient(
+                                            gradient: Gradient(colors: [
+                                                marketingSlides[currentMarketingSlide].color,
+                                                marketingSlides[currentMarketingSlide].color.opacity(0.8)
+                                            ]),
+                                            startPoint: .leading,
+                                            endPoint: .trailing
+                                        )
+                                    )
+                                    .clipShape(RoundedRectangle(cornerRadius: 25))
+                                    .shadow(color: marketingSlides[currentMarketingSlide].color.opacity(0.3), radius: 8, x: 0, y: 4)
+                            }
                         }
+                        .padding(24)
                     }
-                    .padding(24)
-                    .background(Color(.secondarySystemBackground))
+                    .frame(height: 260)
                     .clipShape(RoundedRectangle(cornerRadius: 16))
+                    .onAppear {
+                        startMarketingTimer()
+                    }
+                    .onDisappear {
+                        stopMarketingTimer()
+                    }
                     .padding(.horizontal, 20)
 
                     // Expansions List
                     VStack(alignment: .leading, spacing: 16) {
-                        Text("Browse Expansions")
-                            .font(.system(size: 20, weight: .bold))
-                            .foregroundColor(.primary)
+                        // Header with filters
+                        HStack {
+                            Text("Browse Expansions")
+                                .font(.system(size: 20, weight: .bold))
+                                .foregroundColor(.primary)
+                            Spacer()
+                        }
+                        .padding(.horizontal, 20)
+                        
+                        // TCG Filters
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack(spacing: 12) {
+                                // All TCGs button
+                                Button(action: {
+                                    selectedTCGFilter = nil
+                                }) {
+                                    Text("All")
+                                        .font(.system(size: 14, weight: selectedTCGFilter == nil ? .semibold : .medium))
+                                        .foregroundColor(selectedTCGFilter == nil ? .white : .secondary)
+                                        .padding(.horizontal, 16)
+                                        .padding(.vertical, 8)
+                                        .background(selectedTCGFilter == nil ? Color.blue : Color(.secondarySystemBackground))
+                                        .clipShape(Capsule())
+                                }
+                                
+                                ForEach(TCGType.allCases, id: \.self) { tcgType in
+                                    Button(action: {
+                                        selectedTCGFilter = tcgType
+                                    }) {
+                                        HStack(spacing: 6) {
+                                            Circle()
+                                                .fill(tcgType.themeColor)
+                                                .frame(width: 8, height: 8)
+                                            Text(tcgType.displayName)
+                                                .font(.system(size: 14, weight: selectedTCGFilter == tcgType ? .semibold : .medium))
+                                                .foregroundColor(selectedTCGFilter == tcgType ? .white : .secondary)
+                                        }
+                                        .padding(.horizontal, 16)
+                                        .padding(.vertical, 8)
+                                        .background(selectedTCGFilter == tcgType ? tcgType.themeColor : Color(.secondarySystemBackground))
+                                        .clipShape(Capsule())
+                                    }
+                                }
+                            }
                             .padding(.horizontal, 20)
+                        }
 
                         if expansionService.isLoading {
                             HStack {
@@ -162,12 +307,12 @@ struct ReadOnlyCollectionView: View {
                                     .padding(.vertical, 40)
                                 Spacer()
                             }
-                        } else if expansionService.expansions.isEmpty {
+                        } else if filteredExpansions.isEmpty {
                             VStack(spacing: 12) {
                                 SwiftUI.Image(systemName: "square.stack.3d.up.slash")
                                     .font(.system(size: 40))
                                     .foregroundColor(.secondary)
-                                Text("No expansions available")
+                                Text(selectedTCGFilter != nil ? "No expansions found for this TCG" : "No expansions available")
                                     .font(.system(size: 16))
                                     .foregroundColor(.secondary)
                             }
@@ -175,12 +320,34 @@ struct ReadOnlyCollectionView: View {
                             .padding(.vertical, 40)
                         } else {
                             VStack(spacing: 12) {
-                                ForEach(expansionService.expansions) { expansion in
+                                ForEach(displayedExpansions) { expansion in
                                     Button(action: {
                                         selectedExpansion = expansion
                                     }) {
                                         PublicExpansionCard(expansion: expansion)
                                     }
+                                }
+                                
+                                // Show more/less button
+                                if filteredExpansions.count > 5 {
+                                    Button(action: {
+                                        showAllExpansions.toggle()
+                                    }) {
+                                        HStack {
+                                            Text(showAllExpansions ? "Show Less" : "View All Expansions (\(filteredExpansions.count))")
+                                                .font(.system(size: 16, weight: .semibold))
+                                                .foregroundColor(.blue)
+                                            Spacer()
+                                            SwiftUI.Image(systemName: showAllExpansions ? "chevron.up" : "chevron.down")
+                                                .font(.system(size: 14))
+                                                .foregroundColor(.blue)
+                                        }
+                                        .padding(.vertical, 12)
+                                        .padding(.horizontal, 16)
+                                        .background(Color.blue.opacity(0.1))
+                                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                                    }
+                                    .padding(.horizontal, 20)
                                 }
                             }
                             .padding(.horizontal, 20)
@@ -192,11 +359,38 @@ struct ReadOnlyCollectionView: View {
             .navigationBarHidden(true)
         }
         .sheet(isPresented: $showLoginPrompt) {
-            WelcomeFlowView()
+            ModernAuthView(
+                onSkip: {
+                    showLoginPrompt = false
+                },
+                onSuccess: {
+                    showLoginPrompt = false
+                }
+            )
+            .environmentObject(authService)
         }
         .sheet(item: $selectedExpansion) { expansion in
             ExpansionDetailView(expansion: expansion)
+                .environmentObject(marketService)
         }
+        .task {
+            await expansionService.loadExpansions()
+        }
+    }
+    
+    // MARK: - Marketing Timer Methods
+    
+    private func startMarketingTimer() {
+        marketingTimer = Timer.scheduledTimer(withTimeInterval: 3.0, repeats: true) { _ in
+            withAnimation(.easeInOut(duration: 0.5)) {
+                currentMarketingSlide = (currentMarketingSlide + 1) % marketingSlides.count
+            }
+        }
+    }
+    
+    private func stopMarketingTimer() {
+        marketingTimer?.invalidate()
+        marketingTimer = nil
     }
 }
 
@@ -468,10 +662,10 @@ struct LoginPromptView: View {
             .padding(.horizontal, 32)
         }
         .fullScreenCover(isPresented: $showLogin) {
-            WelcomeFlowView()
+            AuthFlowView(startWithLogin: true)
         }
         .fullScreenCover(isPresented: $showRegister) {
-            WelcomeFlowView()
+            AuthFlowView(startWithLogin: false)
         }
     }
 }

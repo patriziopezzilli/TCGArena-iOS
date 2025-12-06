@@ -202,7 +202,7 @@ struct ImportFromDecksView: View {
                         }
                     }
                 case .failure(let error):
-                    print("Failed to import card \(deckCard.cardName): \(error.localizedDescription)")
+                    ToastManager.shared.showError("Failed to import card \(deckCard.cardName): \(error.localizedDescription)")
                     importedCount += 1
                     if importedCount == totalCount {
                         DispatchQueue.main.async {
@@ -221,7 +221,6 @@ struct CollectionView: View {
     @EnvironmentObject var deckService: DeckService
     @EnvironmentObject var authService: AuthService
     @EnvironmentObject var marketService: MarketDataService
-    @AppStorage("showMarketValues") private var showMarketValues: Bool = true
     @State private var showingCreateDeck = false
     @State private var showingAddCard = false
     @State private var selectedTCGType: TCGType? = nil
@@ -238,6 +237,10 @@ struct CollectionView: View {
     @State private var hasAppeared = false // For initial appearance animation
     @State private var isAddCardButtonPressed = false
     @State private var isCreateDeckButtonPressed = false
+    @State private var showingTCGRules = false
+    @State private var selectedRulesTCG: TCGType? = nil
+    @AppStorage("dismissedTCGRulesBanners") private var dismissedBannersData: Data = Data()
+    @State private var isHeaderCollapsed = false // For collapsible header on scroll
 
     enum ViewMode {
         case lists, allCards
@@ -337,8 +340,8 @@ struct CollectionView: View {
                 case .success(let cards):
                     // Cards are already enriched by getUserCardCollection
                     self.userCards = cards
-                case .failure(let error):
-                    print("Error loading user cards: \(error)")
+                case .failure(_):
+                    print("fail")
                 }
             }
         }
@@ -453,17 +456,32 @@ struct CollectionView: View {
                 headerView
                     .opacity(hasAppeared ? 1 : 0)
                     .offset(y: hasAppeared ? 0 : -10)
-                searchBarView
-                    .opacity(hasAppeared ? 1 : 0)
-                    .offset(y: hasAppeared ? 0 : -8)
-                portfolioCardView
+                
+                // Collapsible search bar
+                if !isHeaderCollapsed {
+                    searchBarView
+                        .opacity(hasAppeared ? 1 : 0)
+                        .offset(y: hasAppeared ? 0 : -8)
+                        .transition(.opacity.combined(with: .move(edge: .top)))
+                }
+                
                 tcgFilterView
                     .opacity(hasAppeared ? 1 : 0)
+                
+                // TCG Rules Info Banner
+                tcgRulesBannerView
+                
                 separatorView
-                discoverSectionView
+                
+                // Collapsible discover section
+                if !isHeaderCollapsed {
+                    discoverSectionView
+                        .transition(.opacity.combined(with: .move(edge: .top)))
+                }
+                
                 contentView
             }
-            .animation(.easeOut(duration: 0.4), value: hasAppeared)
+            .animation(.spring(response: 0.5, dampingFraction: 0.8, blendDuration: 0.3), value: hasAppeared)
             .navigationTitle("")
             .navigationBarHidden(true)
             .background(cardNavigationLink)
@@ -476,6 +494,11 @@ struct CollectionView: View {
                     .environmentObject(cardService)
                     .environmentObject(deckService)
             }
+            .sheet(isPresented: $showingTCGRules) {
+                if let tcgType = selectedRulesTCG {
+                    TCGRulesView(tcgType: tcgType)
+                }
+            }
             .onAppear {
                 onAppearAction()
                 // Trigger appearance animation
@@ -484,7 +507,6 @@ struct CollectionView: View {
                 }
             }
             .task(taskAction)
-            .onChange(of: showMarketValues, perform: onChangeAction)
             .refreshable {
                 await performRefresh()
             }
@@ -504,76 +526,56 @@ struct CollectionView: View {
                 Spacer()
 
                 HStack(spacing: 12) {
-                    // Add Card Button
-                    Button(action: { showingAddCard = true }) {
+                    // Unified Add Button with Menu
+                    Menu {
+                        Button(action: { showingAddCard = true }) {
+                            Label("Add Card", systemImage: "plus.circle.fill")
+                        }
+                        
+                        Button(action: { showingCreateDeck = true }) {
+                            Label("Create List", systemImage: "plus.square")
+                        }
+                    } label: {
                         ZStack {
                             Circle()
                                 .fill(Color.blue)
-                                .frame(width: 32, height: 32)
-
-                            SwiftUI.Image(systemName: "plus.circle.fill")
-                                .font(.system(size: 16, weight: .bold))
+                                .frame(width: 36, height: 36)
+                            
+                            SwiftUI.Image(systemName: "plus")
+                                .font(.system(size: 18, weight: .bold))
                                 .foregroundColor(.white)
                         }
                         .shadow(color: Color.blue.opacity(0.3), radius: 4, x: 0, y: 2)
-                        .scaleEffect(isAddCardButtonPressed ? 0.85 : 1.0)
                     }
-                    .buttonStyle(PlainButtonStyle())
-                    .simultaneousGesture(
-                        DragGesture(minimumDistance: 0)
-                            .onChanged { _ in
-                                withAnimation(.easeOut(duration: 0.1)) {
-                                    isAddCardButtonPressed = true
-                                }
-                            }
-                            .onEnded { _ in
-                                withAnimation(.spring(response: 0.3, dampingFraction: 0.5)) {
-                                    isAddCardButtonPressed = false
-                                }
-                            }
-                    )
-
-                    // Create Deck Button
-                    Button(action: { showingCreateDeck = true }) {
-                        ZStack {
-                            Circle()
-                                .fill(Color.green)
-                                .frame(width: 32, height: 32)
-
-                            SwiftUI.Image(systemName: "plus.square")
-                                .font(.system(size: 16, weight: .bold))
-                                .foregroundColor(.white)
-                        }
-                        .shadow(color: Color.green.opacity(0.3), radius: 4, x: 0, y: 2)
-                        .scaleEffect(isCreateDeckButtonPressed ? 0.85 : 1.0)
-                    }
-                    .buttonStyle(PlainButtonStyle())
-                    .simultaneousGesture(
-                        DragGesture(minimumDistance: 0)
-                            .onChanged { _ in
-                                withAnimation(.easeOut(duration: 0.1)) {
-                                    isCreateDeckButtonPressed = true
-                                }
-                            }
-                            .onEnded { _ in
-                                withAnimation(.spring(response: 0.3, dampingFraction: 0.5)) {
-                                    isCreateDeckButtonPressed = false
-                                }
-                            }
-                    )
                 }
         }
         .padding(.horizontal, 20)
         .padding(.top, 20)
         .padding(.bottom, 12)            // View Mode Selector
-            Picker("View Mode", selection: $viewMode) {
-                Text("Lists (\(listsCount))").tag(ViewMode.lists)
-                Text("All Cards (\(allCardsCount))").tag(ViewMode.allCards)
+            // View Mode Selector
+            HStack(spacing: 12) {
+                PremiumTabButton(
+                    title: "Lists (\(listsCount))",
+                    icon: "rectangle.stack.fill",
+                    isSelected: viewMode == .lists
+                ) {
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        viewMode = .lists
+                    }
+                }
+                
+                PremiumTabButton(
+                    title: "All Cards (\(allCardsCount))",
+                    icon: "square.grid.2x2.fill",
+                    isSelected: viewMode == .allCards
+                ) {
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        viewMode = .allCards
+                    }
+                }
             }
-            .pickerStyle(.segmented)
             .padding(.horizontal, 20)
             .padding(.bottom, 8)
-            .animation(.easeInOut(duration: 0.2), value: viewMode)
         }
     }
 
@@ -617,7 +619,7 @@ struct CollectionView: View {
 
     private var portfolioCardView: some View {
         Group {
-            if showMarketValues, let portfolio = marketService.portfolioSummary {
+            if let portfolio = marketService.portfolioSummary {
                 PortfolioCard(portfolio: portfolio)
                     .padding(.horizontal, 20)
                     .padding(.top, 16)
@@ -665,6 +667,57 @@ struct CollectionView: View {
         }
         .padding(.vertical, 20)
     }
+    
+    // MARK: - TCG Rules Banner
+    private var dismissedBanners: Set<String> {
+        get {
+            guard let decoded = try? JSONDecoder().decode(Set<String>.self, from: dismissedBannersData) else {
+                return []
+            }
+            return decoded
+        }
+        set {
+            if let encoded = try? JSONEncoder().encode(newValue) {
+                dismissedBannersData = encoded
+            }
+        }
+    }
+    
+    private func isDismissed(_ tcgType: TCGType) -> Bool {
+        dismissedBanners.contains(tcgType.rawValue)
+    }
+    
+    private func dismissBanner(for tcgType: TCGType) {
+        var dismissed = dismissedBanners
+        dismissed.insert(tcgType.rawValue)
+        if let encoded = try? JSONEncoder().encode(dismissed) {
+            dismissedBannersData = encoded
+        }
+    }
+    
+    @ViewBuilder
+    private var tcgRulesBannerView: some View {
+        if let tcgType = selectedTCGType, !isDismissed(tcgType) {
+            TCGRulesInfoBanner(
+                tcgType: tcgType,
+                onDismiss: {
+                    withAnimation(.easeOut(duration: 0.3)) {
+                        dismissBanner(for: tcgType)
+                    }
+                },
+                onLearnMore: {
+                    selectedRulesTCG = tcgType
+                    showingTCGRules = true
+                }
+            )
+            .padding(.horizontal, 20)
+            .padding(.bottom, 12)
+            .transition(.asymmetric(
+                insertion: .opacity.combined(with: .move(edge: .top)),
+                removal: .opacity.combined(with: .scale(scale: 0.9))
+            ))
+        }
+    }
 
     private var separatorView: some View {
         Rectangle()
@@ -683,24 +736,42 @@ struct CollectionView: View {
     private var contentView: some View {
         Group {
             if viewMode == .lists {
-                if filteredDecks.isEmpty && !isLoadingDecks {
+                if isLoadingDecks {
+                    // Custom rectangular skeleton for decks
+                    ScrollView {
+                        LazyVStack(spacing: 8) {
+                            ForEach(0..<5, id: \.self) { _ in
+                                DeckRowSkeletonView()
+                            }
+                        }
+                        .padding(.horizontal, 20)
+                    }
+                } else if filteredDecks.isEmpty {
                     emptyDecksView
                         .transition(.opacity.combined(with: .scale(scale: 0.95)))
                 } else {
                     decksListView
-                        .skeleton(with: isLoadingDecks)
                         .transition(.asymmetric(
                             insertion: .opacity.combined(with: .move(edge: .leading)),
                             removal: .opacity.combined(with: .move(edge: .trailing))
                         ))
                 }
             } else {
-                if filteredCards.isEmpty && !isLoadingCards {
+                if isLoadingCards {
+                    // Custom rectangular skeleton for cards
+                    ScrollView {
+                        LazyVStack(spacing: 8) {
+                            ForEach(0..<5, id: \.self) { _ in
+                                CardRowSkeletonView()
+                            }
+                        }
+                        .padding(.horizontal, 20)
+                    }
+                } else if filteredCards.isEmpty {
                     emptyCardsView
                         .transition(.opacity.combined(with: .scale(scale: 0.95)))
                 } else {
                     cardsListView
-                        .skeleton(with: isLoadingCards)
                         .transition(.asymmetric(
                             insertion: .opacity.combined(with: .move(edge: .trailing)),
                             removal: .opacity.combined(with: .move(edge: .leading))
@@ -760,6 +831,19 @@ struct CollectionView: View {
         }
         .listStyle(PlainListStyle())
         .background(Color(.systemBackground))
+        .simultaneousGesture(
+            DragGesture().onChanged { value in
+                let verticalMovement = value.translation.height
+                withAnimation(.easeInOut(duration: 0.25)) {
+                    // Collapse header when scrolling down, expand when scrolling up
+                    if verticalMovement < -20 && !isHeaderCollapsed {
+                        isHeaderCollapsed = true
+                    } else if verticalMovement > 20 && isHeaderCollapsed {
+                        isHeaderCollapsed = false
+                    }
+                }
+            }
+        )
     }
 
     private var emptyCardsView: some View {
@@ -876,9 +960,7 @@ struct CollectionView: View {
     }
 
     private func onAppearAction() {
-        if showMarketValues {
-            marketService.loadMarketData()
-        }
+        marketService.loadMarketData()
 
         // Always refresh user decks and cards when appearing
         if let userId = authService.currentUserId {
@@ -928,17 +1010,13 @@ struct CollectionView: View {
         }
     }
 
-    private func onChangeAction(_ enabled: Bool) {
-        if enabled {
-            marketService.loadMarketData()
-        }
-    }
-
     private func performRefresh() async {
-        // Refresh market data if enabled
-        if showMarketValues {
-            marketService.loadMarketData()
-        }
+        // Haptic feedback when refresh starts
+        let generator = UIImpactFeedbackGenerator(style: .medium)
+        generator.impactOccurred()
+        
+        // Refresh market data
+        marketService.loadMarketData()
 
         // Always refresh both decks and cards to keep them synchronized
         if let userId = authService.currentUserId {
@@ -1051,6 +1129,57 @@ struct CardRowSkeletonView: View {
             }
 
             Spacer()
+        }
+        .padding(16)
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(Color(.secondarySystemGroupedBackground))
+                .shadow(color: Color.black.opacity(0.08), radius: 10, x: 0, y: 3)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 16)
+                .stroke(Color(.separator).opacity(0.3), lineWidth: 1)
+        )
+    }
+}
+
+struct DeckRowSkeletonView: View {
+    var body: some View {
+        HStack(spacing: 16) {
+            // Deck icon skeleton
+            RoundedRectangle(cornerRadius: 12)
+                .fill(Color(.systemGray5))
+                .frame(width: 60, height: 60)
+            
+            VStack(alignment: .leading, spacing: 8) {
+                // Deck name skeleton
+                RoundedRectangle(cornerRadius: 4)
+                    .fill(Color(.systemGray4))
+                    .frame(width: 150, height: 18)
+                
+                // TCG type and card count
+                HStack(spacing: 8) {
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(Color(.systemGray4))
+                        .frame(width: 70, height: 22)
+                    
+                    RoundedRectangle(cornerRadius: 4)
+                        .fill(Color(.systemGray4))
+                        .frame(width: 60, height: 14)
+                }
+                
+                // Date skeleton
+                RoundedRectangle(cornerRadius: 4)
+                    .fill(Color(.systemGray5))
+                    .frame(width: 100, height: 12)
+            }
+            
+            Spacer()
+            
+            // Chevron skeleton
+            RoundedRectangle(cornerRadius: 4)
+                .fill(Color(.systemGray5))
+                .frame(width: 10, height: 16)
         }
         .padding(16)
         .background(
@@ -1298,7 +1427,7 @@ struct CardDiscoverView: View {
             Text("Discover")
                 .font(.system(size: 34, weight: .bold))
                 .foregroundColor(.primary)
-
+            
             Text("Explore new cards and expansions")
                 .font(.system(size: 16, weight: .medium))
                 .foregroundColor(.secondary)
@@ -1307,16 +1436,16 @@ struct CardDiscoverView: View {
         .padding(.horizontal, 24)
         .padding(.top, 60)
     }
-
+    
     private var searchBarView: some View {
         HStack(spacing: 12) {
             SwiftUI.Image(systemName: "magnifyingglass")
                 .font(.system(size: 18, weight: .semibold))
                 .foregroundColor(.secondary)
-
+            
             TextField("Search cards, sets...", text: $searchText)
                 .font(.system(size: 16, weight: .medium))
-
+            
             if !searchText.isEmpty {
                 Button(action: { searchText = "" }) {
                     SwiftUI.Image(systemName: "xmark.circle.fill")
@@ -1334,7 +1463,7 @@ struct CardDiscoverView: View {
         .padding(.horizontal, 20)
         .padding(.top, 4)
     }
-
+    
     private var contentView: some View {
         if !searchText.isEmpty && searchText.count >= 2 {
             AnyView(searchResultsView)
@@ -1342,7 +1471,7 @@ struct CardDiscoverView: View {
             AnyView(mainContentView)
         }
     }
-
+    
     private var mainContentView: some View {
         Group {
             tcgFilterView
@@ -1350,7 +1479,7 @@ struct CardDiscoverView: View {
             featuredCardsView
         }
     }
-
+    
     private var tcgFilterView: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 12) {
@@ -1364,7 +1493,7 @@ struct CardDiscoverView: View {
                                     .font(.system(size: 14, weight: .semibold))
                                     .foregroundColor(iconColorFor(tcgType, type: type))
                             }
-
+                            
                             Text(tcgType?.displayName ?? "All")
                                 .font(.system(size: 14, weight: .semibold))
                                 .foregroundColor(textColorFor(tcgType))
@@ -1381,17 +1510,17 @@ struct CardDiscoverView: View {
             .padding(.horizontal, 20)
         }
     }
-
+    
     private var featuredExpansionsView: some View {
         VStack(alignment: .leading, spacing: 16) {
             HStack {
                 Text("All Expansions")
                     .font(.system(size: 20, weight: .bold))
                     .foregroundColor(.primary)
-
+                
                 Spacer()
             }
-
+            
             VStack(spacing: 16) {
                 ForEach(filteredExpansions) { expansion in
                     NavigationLink(destination: ExpansionDetailView(expansion: expansion).environmentObject(expansionService)) {
@@ -1402,7 +1531,7 @@ struct CardDiscoverView: View {
         }
         .padding(.horizontal, 20)
     }
-
+    
     private var featuredCardsView: some View {
         Group {
             if searchText.isEmpty && selectedTCGType == nil && !filteredCards.isEmpty {
@@ -1411,10 +1540,10 @@ struct CardDiscoverView: View {
                         Text("Featured Cards")
                             .font(.system(size: 20, weight: .bold))
                             .foregroundColor(.primary)
-
+                        
                         Spacer()
                     }
-
+                    
                     LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
                         ForEach(Array(filteredCards.prefix(6)), id: \.id) { card in
                             NavigationLink(destination: CardDetailView(card: card, isFromDiscover: true)) {
@@ -1428,7 +1557,7 @@ struct CardDiscoverView: View {
             }
         }
     }
-
+    
     private var closeButtonView: some View {
         VStack {
             HStack {
@@ -1471,7 +1600,7 @@ struct CardDiscoverView: View {
         
         return expansions
     }
-
+    
     // MARK: - Search Results View
     private var searchResultsView: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -1479,20 +1608,20 @@ struct CardDiscoverView: View {
                 Text("Search Results")
                     .font(.system(size: 18, weight: .bold))
                     .foregroundColor(.primary)
-
+                
                 if isSearching {
                     ProgressView()
                         .scaleEffect(0.8)
                 }
-
+                
                 Spacer()
-
+                
                 Text("\(searchResults.count) results")
                     .font(.system(size: 14, weight: .medium))
                     .foregroundColor(.secondary)
             }
             .padding(.horizontal, 20)
-
+            
             if searchResults.isEmpty && !isSearching {
                 EmptyStateRow(message: "No cards found")
                     .padding(.horizontal, 20)
@@ -1509,29 +1638,29 @@ struct CardDiscoverView: View {
             }
         }
     }
-
+    
     // MARK: - Search Logic
     private func performSearch(query: String) {
         // Cancel previous search task
         searchTask?.cancel()
-
+        
         // Clear results if query is too short
         guard query.count >= 2 else {
             searchResults = []
             isSearching = false
             return
         }
-
+        
         // Debounce search with 0.5 second delay
         searchTask = Task {
             try? await Task.sleep(nanoseconds: 500_000_000) // 0.5 seconds
-
+            
             guard !Task.isCancelled else { return }
-
+            
             await MainActor.run {
                 isSearching = true
             }
-
+            
             cardService.searchCardTemplates(query: query) { result in
                 DispatchQueue.main.async {
                     isSearching = false
@@ -1539,20 +1668,20 @@ struct CardDiscoverView: View {
                     case .success(let cards):
                         searchResults = cards
                     case .failure(let error):
-                        print("Search error: \(error.localizedDescription)")
+                        ToastManager.shared.showError("Search error: \(error.localizedDescription)")
                         searchResults = []
                     }
                 }
             }
         }
     }
-
+    
     var body: some View {
         NavigationView {
             ZStack(alignment: .top) {
                 Color(.systemGroupedBackground)
                     .edgesIgnoringSafeArea(.all)
-
+                
                 ScrollView {
                     VStack(spacing: 20) {
                         headerView
@@ -1561,7 +1690,7 @@ struct CardDiscoverView: View {
                     }
                     .padding(.bottom, 32)
                 }
-
+                
                 closeButtonView
             }
             .navigationBarHidden(true)
@@ -1573,10 +1702,10 @@ struct CardDiscoverView: View {
             }
         }
     }
-
+    
     struct CompactCardView: View {
         let card: Card
-
+        
         private var cardImageView: some View {
             ZStack {
                 CachedAsyncImage(url: URL(string: card.fullImageURL ?? "")) { phase in
@@ -1603,7 +1732,7 @@ struct CardDiscoverView: View {
             .frame(height: 160)
             .clipped()
         }
-
+        
         private var cardInfoView: some View {
             VStack(alignment: .leading, spacing: 6) {
                 Text(card.name)
@@ -1618,7 +1747,7 @@ struct CardDiscoverView: View {
                         .lineLimit(1)
                     
                     Spacer()
-
+                    
                     if let price = card.marketPrice {
                         Text("€\(String(format: "%.2f", price))")
                             .font(.system(size: 12, weight: .bold))
@@ -1629,7 +1758,7 @@ struct CardDiscoverView: View {
             .padding(12)
             .background(Color(.systemBackground))
         }
-
+        
         var body: some View {
             VStack(spacing: 0) {
                 cardImageView
@@ -1639,12 +1768,12 @@ struct CardDiscoverView: View {
             .shadow(color: Color.black.opacity(0.1), radius: 5, x: 0, y: 2)
         }
     }
-
+    
     // MARK: - Set Card Component
     struct SetCard: View {
         let set: TCGSet
         let action: () -> Void
-
+        
         // Dynamic color based on set code or name
         private var cardColor: Color {
             // Use a hash of the set code to generate a consistent color
@@ -1652,7 +1781,7 @@ struct CardDiscoverView: View {
             let hue = Double(hash % 360) / 360.0
             return Color(hue: hue, saturation: 0.6, brightness: 0.8)
         }
-
+        
         private var setImageView: some View {
             ZStack {
                 CachedAsyncImage(url: URL(string: set.logoUrl ?? "")) { phase in
@@ -1678,13 +1807,13 @@ struct CardDiscoverView: View {
                     endPoint: .bottom
                 )
                 .clipShape(RoundedRectangle(cornerRadius: 12))
-
+                
                 // Set code badge
                 setCodeBadge
             }
             .frame(height: 100)
         }
-
+        
         private var setPlaceholderView: some View {
             RoundedRectangle(cornerRadius: 12)
                 .fill(cardColor.opacity(0.3))
@@ -1694,14 +1823,14 @@ struct CardDiscoverView: View {
                         SwiftUI.Image(systemName: "square.stack.3d.up.fill")
                             .font(.system(size: 24, weight: .bold))
                             .foregroundColor(cardColor)
-
+                        
                         Text(set.setCode.uppercased())
                             .font(.system(size: 10, weight: .bold))
                             .foregroundColor(cardColor)
                     }
                 )
         }
-
+        
         private var setCodeBadge: some View {
             VStack {
                 Spacer()
@@ -1718,7 +1847,7 @@ struct CardDiscoverView: View {
                 }
             }
         }
-
+        
         private var setInfoView: some View {
             VStack(spacing: 4) {
                 Text(set.name)
@@ -1726,23 +1855,23 @@ struct CardDiscoverView: View {
                     .foregroundColor(.primary)
                     .lineLimit(2)
                     .multilineTextAlignment(.center)
-
+                
                 HStack(spacing: 8) {
                     HStack(spacing: 2) {
                         SwiftUI.Image(systemName: "square.stack.3d.up.fill")
                             .font(.system(size: 10))
                             .foregroundColor(.secondary)
-
+                        
                         Text("\(set.cardCount)")
                             .font(.system(size: 12, weight: .medium))
                             .foregroundColor(.secondary)
                     }
-
+                    
                     HStack(spacing: 2) {
                         SwiftUI.Image(systemName: "calendar")
                             .font(.system(size: 10))
                             .foregroundColor(.secondary)
-
+                        
                         Text(set.formattedReleaseDate)
                             .font(.system(size: 10, weight: .medium))
                             .foregroundColor(.secondary)
@@ -1751,7 +1880,7 @@ struct CardDiscoverView: View {
             }
             .padding(.horizontal, 8)
         }
-
+        
         var body: some View {
             Button(action: action) {
                 VStack(spacing: 12) {

@@ -139,3 +139,36 @@ struct ModernToggleField: View {
         )
     }
 }
+
+// MARK: - Premium Tab Button
+struct PremiumTabButton: View {
+    let title: String
+    let icon: String
+    let isSelected: Bool
+    var flexibleWidth: Bool = true
+    let action: () -> Void
+    
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 8) {
+                SwiftUI.Image(systemName: icon)
+                    .font(.system(size: 14, weight: .semibold))
+                Text(title)
+                    .font(.system(size: 14, weight: .semibold))
+            }
+            .foregroundColor(isSelected ? .white : .secondary)
+            .frame(maxWidth: flexibleWidth ? .infinity : nil) // Fill available width if enabled
+            .padding(.horizontal, flexibleWidth ? 0 : 16)
+            .padding(.vertical, 10)
+            .background(
+                Capsule()
+                    .fill(isSelected ? Color.blue : Color(.systemGray6))
+            )
+            .overlay(
+                Capsule()
+                    .stroke(Color.black.opacity(0.05), lineWidth: 1)
+            )
+            .shadow(color: isSelected ? Color.blue.opacity(0.3) : Color.clear, radius: 4, x: 0, y: 2)
+        }
+    }
+}

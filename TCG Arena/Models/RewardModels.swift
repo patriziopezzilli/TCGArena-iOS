@@ -15,15 +15,38 @@ struct Reward: Codable, Identifiable {
     let imageUrl: String?
     let isActive: Bool
     let createdAt: String
+    let partner: Partner?
+    let type: RewardType
 
     enum CodingKeys: String, CodingKey {
         case id
         case name
         case description
-        case costPoints = "cost_points"
-        case imageUrl = "image_url"
-        case isActive = "is_active"
-        case createdAt = "created_at"
+        case costPoints
+        case imageUrl
+        case isActive
+        case createdAt
+        case partner
+        case type
+    }
+}
+
+enum RewardType: String, Codable {
+    case physical = "PHYSICAL"
+    case digital = "DIGITAL"
+    
+    var displayName: String {
+        switch self {
+        case .physical: return "Physical"
+        case .digital: return "Digital"
+        }
+    }
+    
+    var icon: String {
+        switch self {
+        case .physical: return "shippingbox.fill"
+        case .digital: return "wifi"
+        }
     }
 }
 

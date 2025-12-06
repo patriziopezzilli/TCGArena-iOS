@@ -216,7 +216,7 @@ struct PlayerRequestDetailView: View {
             do {
                 try await requestService.sendMessage(
                     requestId: request.id,
-                    message: messageText
+                    content: messageText
                 )
                 
                 await MainActor.run {
@@ -274,11 +274,11 @@ struct MessageBubble: View {
             }
             
             VStack(alignment: isFromUser ? .trailing : .leading, spacing: 4) {
-                Text(message.message)
+                Text(message.content)
                     .font(.body)
                     .foregroundColor(isFromUser ? .white : .primary)
                     .padding(12)
-                    .background(isFromUser ? Color(AdaptiveColors.primary) : Color(.systemGray5))
+                    .background(isFromUser ? Color.blue : Color(.systemGray5))
                     .cornerRadius(16)
                 
                 HStack(spacing: 4) {

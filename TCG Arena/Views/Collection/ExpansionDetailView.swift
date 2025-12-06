@@ -10,6 +10,7 @@ import SwiftUI
 struct ExpansionDetailView: View {
     let expansion: Expansion
     @EnvironmentObject private var expansionService: ExpansionService
+    @EnvironmentObject private var marketService: MarketDataService
     @State private var isLoadingExpansion = false
     @State private var loadedExpansion: Expansion? = nil
     
@@ -106,7 +107,7 @@ struct ExpansionDetailView: View {
                 .padding(.vertical, 40)
             } else {
                 ForEach(currentExpansion.sets) { set in
-                    NavigationLink(destination: SetDetailView(set: set)) {
+                    NavigationLink(destination: SetDetailView(set: set).environmentObject(marketService)) {
                         SetDetailCard(set: set)
                     }
                     .buttonStyle(PlainButtonStyle())

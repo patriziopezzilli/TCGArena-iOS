@@ -13,6 +13,51 @@ typealias SUIImage = SwiftUI.Image
 enum AuthMode {
     case login
     case register
+    
+    var accentColor: Color {
+        switch self {
+        case .login:
+            return Color.blue
+        case .register:
+            return Color.green
+        }
+    }
+    
+    var title: String {
+        switch self {
+        case .login:
+            return "Welcome Back"
+        case .register:
+            return "Create Account"
+        }
+    }
+    
+    var subtitle: String {
+        switch self {
+        case .login:
+            return "Sign in to continue your journey"
+        case .register:
+            return "Join the TCG Arena community"
+        }
+    }
+    
+    var icon: String {
+        switch self {
+        case .login:
+            return "person.circle.fill"
+        case .register:
+            return "person.badge.plus.fill"
+        }
+    }
+    
+    var buttonTitle: String {
+        switch self {
+        case .login:
+            return "Sign In"
+        case .register:
+            return "Create Account"
+        }
+    }
 }
 
 struct ModernAuthView: View {
@@ -24,25 +69,25 @@ struct ModernAuthView: View {
     @State private var confirmPassword = ""
     @State private var selectedTCGs: Set<TCGType> = []
     @State private var isLoading = false
-    @State private var showError = false
-    @State private var errorMessage = ""
+    // Removed: @State private var showError = false
+    // Removed: @State private var errorMessage = ""
     
     let onSkip: () -> Void
     let onSuccess: () -> Void
     
     var body: some View {
         ZStack {
-            // Background
+            // Background with gradient based on mode
             LinearGradient(
                 gradient: Gradient(colors: [
-                    Color.blue.opacity(0.05),
-                    Color.purple.opacity(0.05),
+                    mode.accentColor.opacity(0.08),
                     Color(.systemBackground)
                 ]),
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
+                startPoint: .top,
+                endPoint: .center
             )
             .ignoresSafeArea()
+            .animation(.easeInOut(duration: 0.3), value: mode)
             
             ScrollView {
                 VStack(spacing: 32) {
@@ -50,215 +95,282 @@ struct ModernAuthView: View {
                         .frame(height: 40)
                     
                     // Header
-                    VStack(spacing: 16) {
-                        ZStack {
-                            Circle()
-                                .fill(Color.blue.opacity(0.1))
-                                .frame(width: 80, height: 80)
-                            
-                            SUIImage(systemName: mode == .login ? "person.circle.fill" : "person.badge.plus.fill")
-                                .font(.system(size: 40, weight: .medium))
-                                .foregroundColor(.blue)
-                        }
-                        
-                        VStack(spacing: 8) {
-                            Text(mode == .login ? "Welcome Back" : "Create Account")
-                                .font(.system(size: 32, weight: .bold))
-                                .foregroundColor(.primary)
-                            
-                            Text(mode == .login ? "Sign in to continue your journey" : "Join the TCG Arena community")
-                                .font(.system(size: 16))
-                                .foregroundColor(.secondary)
-                                .multilineTextAlignment(.center)
-                        }
-                    }
+                    headerView
                     
                     // Mode Toggle
-                    HStack(spacing: 0) {
-                        Button(action: { withAnimation(.spring()) { mode = .login } }) {
-                            Text("Sign In")
-                                .font(.system(size: 16, weight: .semibold))
-                                .foregroundColor(mode == .login ? .white : .primary)
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 12)
-                                .background(mode == .login ? Color.blue : Color.clear)
-                                .clipShape(RoundedRectangle(cornerRadius: 12))
-                        }
-                        
-                        Button(action: { withAnimation(.spring()) { mode = .register } }) {
-                            Text("Register")
-                                .font(.system(size: 16, weight: .semibold))
-                                .foregroundColor(mode == .register ? .white : .primary)
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 12)
-                                .background(mode == .register ? Color.blue : Color.clear)
-                                .clipShape(RoundedRectangle(cornerRadius: 12))
-                        }
-                    }
-                    .padding(4)
-                    .background(Color(.systemGray6))
-                    .clipShape(RoundedRectangle(cornerRadius: 16))
-                    .padding(.horizontal, 24)
+                    modeToggle
                     
                     // Form
-                    VStack(spacing: 20) {
-                        if mode == .register {
-                            // Email Field
-                            VStack(alignment: .leading, spacing: 8) {
-                                Label("Email", systemImage: "envelope.fill")
-                                    .font(.system(size: 14, weight: .semibold))
-                                    .foregroundColor(.blue)
-                                
-                                TextField("your@email.com", text: $email)
-                                    .keyboardType(.emailAddress)
-                                    .autocapitalization(.none)
-                                    .disableAutocorrection(true)
-                                    .padding(16)
-                                    .background(Color(.systemBackground))
-                                    .clipShape(RoundedRectangle(cornerRadius: 12))
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: 12)
-                                            .stroke(Color(.systemGray4), lineWidth: 1)
-                                    )
-                            }
-                        }
-                        
-                        // Username Field
-                        VStack(alignment: .leading, spacing: 8) {
-                            Label("Username", systemImage: "person.fill")
-                                .font(.system(size: 14, weight: .semibold))
-                                .foregroundColor(.blue)
-                            
-                            TextField("Enter your username", text: $username)
-                                .autocapitalization(.none)
-                                .disableAutocorrection(true)
-                                .padding(16)
-                                .background(Color(.systemBackground))
-                                .clipShape(RoundedRectangle(cornerRadius: 12))
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 12)
-                                        .stroke(Color(.systemGray4), lineWidth: 1)
-                                )
-                        }
-                        
-                        // Password Field
-                        VStack(alignment: .leading, spacing: 8) {
-                            Label("Password", systemImage: "lock.fill")
-                                .font(.system(size: 14, weight: .semibold))
-                                .foregroundColor(.blue)
-                            
-                            SecureField("Enter password", text: $password)
-                                .padding(16)
-                                .background(Color(.systemBackground))
-                                .clipShape(RoundedRectangle(cornerRadius: 12))
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 12)
-                                        .stroke(Color(.systemGray4), lineWidth: 1)
-                                )
-                        }
-                        
-                        if mode == .register {
-                            // Confirm Password
-                            VStack(alignment: .leading, spacing: 8) {
-                                Label("Confirm Password", systemImage: "lock.fill")
-                                    .font(.system(size: 14, weight: .semibold))
-                                    .foregroundColor(.blue)
-                                
-                                SecureField("Confirm password", text: $confirmPassword)
-                                    .padding(16)
-                                    .background(Color(.systemBackground))
-                                    .clipShape(RoundedRectangle(cornerRadius: 12))
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: 12)
-                                            .stroke(Color(.systemGray4), lineWidth: 1)
-                                    )
-                            }
-                            
-                            // TCG Selection
-                            VStack(alignment: .leading, spacing: 12) {
-                                Label("Favorite TCGs", systemImage: "gamecontroller.fill")
-                                    .font(.system(size: 14, weight: .semibold))
-                                    .foregroundColor(.blue)
-                                
-                                Text("Choose at least one")
-                                    .font(.system(size: 13))
-                                    .foregroundColor(.secondary)
-                                
-                                LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 2), spacing: 12) {
-                                    ForEach([TCGType.pokemon, .magic, .yugioh, .onePiece], id: \.self) { tcg in
-                                        Button(action: {
-                                            if selectedTCGs.contains(tcg) {
-                                                selectedTCGs.remove(tcg)
-                                            } else {
-                                                selectedTCGs.insert(tcg)
-                                            }
-                                        }) {
-                                            HStack(spacing: 8) {
-                                                SUIImage(systemName: tcg.icon)
-                                                    .font(.system(size: 20))
-                                                Text(tcg.displayName)
-                                                    .font(.system(size: 14, weight: .semibold))
-                                                Spacer()
-                                                if selectedTCGs.contains(tcg) {
-                                                    SUIImage(systemName: "checkmark.circle.fill")
-                                                        .font(.system(size: 18))
-                                                }
-                                            }
-                                            .foregroundColor(selectedTCGs.contains(tcg) ? .white : .primary)
-                                            .padding(12)
-                                            .background(selectedTCGs.contains(tcg) ? tcg.themeColor : Color(.systemGray6))
-                                            .clipShape(RoundedRectangle(cornerRadius: 10))
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    .padding(.horizontal, 24)
+                    formFields
                     
                     // Action Button
-                    Button(action: handleSubmit) {
-                        HStack {
-                            if isLoading {
-                                ProgressView()
-                                    .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                            } else {
-                                Text(mode == .login ? "Sign In" : "Create Account")
-                                    .font(.system(size: 18, weight: .bold))
-                            }
-                        }
-                        .foregroundColor(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 16)
-                        .background(
-                            RoundedRectangle(cornerRadius: 16)
-                                .fill(Color.blue)
-                                .shadow(color: Color.blue.opacity(0.3), radius: 8, x: 0, y: 4)
-                        )
-                    }
-                    .disabled(isLoading || !isFormValid)
-                    .opacity(isFormValid ? 1.0 : 0.6)
-                    .padding(.horizontal, 24)
+                    actionButton
                     
                     // Skip Button
-                    Button(action: onSkip) {
-                        Text("Continue as Guest")
-                            .font(.system(size: 16, weight: .medium))
-                            .foregroundColor(.secondary)
-                    }
+                    skipButton
                     
                     Spacer()
                         .frame(height: 40)
                 }
             }
         }
-        .alert("Error", isPresented: $showError) {
-            Button("OK", role: .cancel) { }
-        } message: {
-            Text(errorMessage)
+    }
+    
+    // MARK: - Header View
+    private var headerView: some View {
+        VStack(spacing: 16) {
+            ZStack {
+                Circle()
+                    .fill(mode.accentColor.opacity(0.15))
+                    .frame(width: 90, height: 90)
+                
+                Circle()
+                    .fill(mode.accentColor.opacity(0.25))
+                    .frame(width: 70, height: 70)
+                
+                SUIImage(systemName: mode.icon)
+                    .font(.system(size: 32, weight: .medium))
+                    .foregroundColor(mode.accentColor)
+            }
+            .animation(.spring(response: 0.4, dampingFraction: 0.7), value: mode)
+            
+            VStack(spacing: 8) {
+                Text(mode.title)
+                    .font(.system(size: 32, weight: .bold))
+                    .foregroundColor(.primary)
+                
+                Text(mode.subtitle)
+                    .font(.system(size: 16))
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
+            }
         }
     }
     
+    // MARK: - Mode Toggle
+    private var modeToggle: some View {
+        HStack(spacing: 0) {
+            // Login Tab
+            Button(action: { withAnimation(.spring(response: 0.35, dampingFraction: 0.7)) { mode = .login } }) {
+                Text("Sign In")
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundColor(mode == .login ? .white : .primary)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 14)
+                    .background(
+                        ZStack {
+                            if mode == .login {
+                                RoundedRectangle(cornerRadius: 12)
+                                    .fill(Color.blue)
+                                    .shadow(color: Color.blue.opacity(0.3), radius: 4, x: 0, y: 2)
+                            }
+                        }
+                    )
+            }
+            
+            // Register Tab
+            Button(action: { withAnimation(.spring(response: 0.35, dampingFraction: 0.7)) { mode = .register } }) {
+                Text("Register")
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundColor(mode == .register ? .white : .primary)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 14)
+                    .background(
+                        ZStack {
+                            if mode == .register {
+                                RoundedRectangle(cornerRadius: 12)
+                                    .fill(Color.green)
+                                    .shadow(color: Color.green.opacity(0.3), radius: 4, x: 0, y: 2)
+                            }
+                        }
+                    )
+            }
+        }
+        .padding(4)
+        .background(Color(.systemGray6))
+        .clipShape(RoundedRectangle(cornerRadius: 16))
+        .padding(.horizontal, 24)
+    }
+    
+    // MARK: - Form Fields
+    private var formFields: some View {
+        VStack(spacing: 20) {
+            if mode == .register {
+                // Email Field
+                VStack(alignment: .leading, spacing: 8) {
+                    Label("Email", systemImage: "envelope.fill")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundColor(.green)
+                    
+                    TextField("your@email.com", text: $email)
+                        .keyboardType(.emailAddress)
+                        .autocapitalization(.none)
+                        .disableAutocorrection(true)
+                        .padding(16)
+                        .background(Color(.systemBackground))
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12)
+                                .stroke(Color(.systemGray4), lineWidth: 1)
+                        )
+                }
+                .transition(.asymmetric(
+                    insertion: .move(edge: .top).combined(with: .opacity),
+                    removal: .move(edge: .top).combined(with: .opacity)
+                ))
+            }
+            
+            // Username Field
+            VStack(alignment: .leading, spacing: 8) {
+                Label("Username", systemImage: "person.fill")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(mode.accentColor)
+                
+                TextField("Enter your username", text: $username)
+                    .autocapitalization(.none)
+                    .disableAutocorrection(true)
+                    .padding(16)
+                    .background(Color(.systemBackground))
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(Color(.systemGray4), lineWidth: 1)
+                    )
+            }
+            
+            // Password Field
+            VStack(alignment: .leading, spacing: 8) {
+                Label("Password", systemImage: "lock.fill")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(mode == .login ? .blue.opacity(0.8) : .green.opacity(0.8))
+                
+                SecureField("Enter password", text: $password)
+                    .padding(16)
+                    .background(Color(.systemBackground))
+                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(Color(.systemGray4), lineWidth: 1)
+                    )
+            }
+            
+            if mode == .register {
+                // Confirm Password
+                VStack(alignment: .leading, spacing: 8) {
+                    Label("Confirm Password", systemImage: "lock.shield.fill")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundColor(.cyan)
+                    
+                    SecureField("Confirm password", text: $confirmPassword)
+                        .padding(16)
+                        .background(Color(.systemBackground))
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12)
+                                .stroke(Color(.systemGray4), lineWidth: 1)
+                        )
+                }
+                .transition(.asymmetric(
+                    insertion: .move(edge: .bottom).combined(with: .opacity),
+                    removal: .move(edge: .bottom).combined(with: .opacity)
+                ))
+                
+                // TCG Selection
+                tcgSelectionView
+                    .transition(.asymmetric(
+                        insertion: .move(edge: .bottom).combined(with: .opacity),
+                        removal: .move(edge: .bottom).combined(with: .opacity)
+                    ))
+            }
+        }
+        .padding(.horizontal, 24)
+        .animation(.spring(response: 0.4, dampingFraction: 0.8), value: mode)
+    }
+    
+    // MARK: - TCG Selection
+    private var tcgSelectionView: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Label("Favorite TCGs", systemImage: "gamecontroller.fill")
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundColor(.indigo)
+            
+            Text("Choose at least one")
+                .font(.system(size: 13))
+                .foregroundColor(.secondary)
+            
+            LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 2), spacing: 12) {
+                ForEach([TCGType.pokemon, .magic, .yugioh, .onePiece], id: \.self) { tcg in
+                    Button(action: {
+                        if selectedTCGs.contains(tcg) {
+                            selectedTCGs.remove(tcg)
+                        } else {
+                            selectedTCGs.insert(tcg)
+                        }
+                    }) {
+                        HStack(spacing: 8) {
+                            SUIImage(systemName: tcg.systemIcon)
+                                .font(.system(size: 20))
+                            Text(tcg.displayName)
+                                .font(.system(size: 14, weight: .semibold))
+                            Spacer()
+                            if selectedTCGs.contains(tcg) {
+                                SUIImage(systemName: "checkmark.circle.fill")
+                                    .font(.system(size: 18))
+                            }
+                        }
+                        .foregroundColor(selectedTCGs.contains(tcg) ? .white : .primary)
+                        .padding(12)
+                        .background(selectedTCGs.contains(tcg) ? tcg.themeColor : Color(.systemGray6))
+                        .clipShape(RoundedRectangle(cornerRadius: 10))
+                    }
+                }
+            }
+        }
+    }
+    
+    // MARK: - Action Button
+    private var actionButton: some View {
+        Button(action: handleSubmit) {
+            HStack(spacing: 10) {
+                if isLoading {
+                    ProgressView()
+                        .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                } else {
+                    Text(mode.buttonTitle)
+                        .font(.system(size: 18, weight: .bold))
+                    SUIImage(systemName: "arrow.right")
+                        .font(.system(size: 16, weight: .bold))
+                }
+            }
+            .foregroundColor(.white)
+            .frame(maxWidth: .infinity)
+            .frame(height: 56)
+            .background(
+                LinearGradient(
+                    gradient: Gradient(colors: [mode.accentColor, mode.accentColor.opacity(0.8)]),
+                    startPoint: .leading,
+                    endPoint: .trailing
+                )
+            )
+            .clipShape(RoundedRectangle(cornerRadius: 16))
+            .shadow(color: mode.accentColor.opacity(0.3), radius: 8, x: 0, y: 4)
+        }
+        .disabled(isLoading || !isFormValid)
+        .opacity(isFormValid ? 1.0 : 0.6)
+        .padding(.horizontal, 24)
+        .animation(.easeInOut(duration: 0.2), value: mode)
+    }
+    
+    // MARK: - Skip Button
+    private var skipButton: some View {
+        Button(action: onSkip) {
+            Text("Continue as Guest")
+                .font(.system(size: 16, weight: .medium))
+                .foregroundColor(.secondary)
+        }
+    }
+    
+    // MARK: - Validation
     private var isFormValid: Bool {
         if mode == .login {
             return !username.isEmpty && !password.isEmpty
@@ -271,6 +383,7 @@ struct ModernAuthView: View {
         }
     }
     
+    // MARK: - Actions
     private func handleSubmit() {
         guard isFormValid else { return }
         
@@ -289,8 +402,8 @@ struct ModernAuthView: View {
             if authService.isAuthenticated {
                 onSuccess()
             } else if let error = authService.errorMessage {
-                errorMessage = error
-                showError = true
+                // ToastManager.shared.showError(error)
+                print("Auth error: \(error)")
             }
             isLoading = false
         }
@@ -309,8 +422,8 @@ struct ModernAuthView: View {
                 // Registration successful, already logged in
                 onSuccess()
             } else if let error = authService.errorMessage {
-                errorMessage = error
-                showError = true
+                // ToastManager.shared.showError(error)
+                print("Registration error: \(error)")
             }
             isLoading = false
         }
@@ -319,4 +432,5 @@ struct ModernAuthView: View {
 
 #Preview {
     ModernAuthView(onSkip: {}, onSuccess: {})
+        .environmentObject(AuthService())
 }

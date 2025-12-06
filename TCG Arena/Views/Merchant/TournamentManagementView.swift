@@ -218,7 +218,7 @@ struct TournamentManagementCard: View {
                     GridItem(.flexible())
                 ], spacing: 12) {
                     InfoCell(icon: "calendar", value: tournament.date.formatted(date: .abbreviated, time: .omitted))
-                    InfoCell(icon: "person.2.fill", value: "\(tournament.currentParticipants)/\(tournament.maxParticipants)")
+                    InfoCell(icon: "person.2.fill", value: "\(tournament.registeredParticipantsCount)/\(tournament.maxParticipants)")
                     InfoCell(icon: "trophy.fill", value: tournament.prizePool ?? "No Prize")
                 }
                 

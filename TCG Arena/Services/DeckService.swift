@@ -20,7 +20,6 @@ class DeckService: ObservableObject {
     }
 
     @Published var userDecks: [Deck] = []
-    @Published var proDecks: [ProDeck] = []
     @Published var isLoading = false
     @Published var errorMessage: String?
     
@@ -28,7 +27,6 @@ class DeckService: ObservableObject {
     private var lastLoadedUserId: Int64?
 
     init() {
-        loadProDecks()
         loadCachedUserDecks()
     }
 
@@ -435,74 +433,6 @@ func deleteDeck(deckId: Int64, userId: Int64, completion: @escaping (Result<Void
         }
     }
 
-    // MARK: - Pro Decks
-
-    private func loadProDecks() {
-        getAllProDecks { result in
-            switch result {
-            case .success(let proDecks):
-                DispatchQueue.main.async {
-                    self.proDecks = proDecks
-                }
-            case .failure(let error):
-                // Handle error silently
-                break
-            }
-        }
-    }
-
-    func getAllProDecks(completion: @escaping (Result<[ProDeck], Error>) -> Void) {
-        apiClient.request(endpoint: "/api/pro-decks", method: .get) { result in
-            switch result {
-            case .success(let data):
-                do {
-                    let decoder = JSONDecoder()
-                    decoder.dateDecodingStrategy = .iso8601
-                    let proDecks = try decoder.decode([ProDeck].self, from: data)
-                    completion(.success(proDecks))
-                } catch {
-                    completion(.failure(error))
-                }
-            case .failure(let error):
-                completion(.failure(error))
-            }
-        }
-    }
-
-    func getProDeckById(_ id: Int64, completion: @escaping (Result<ProDeck, Error>) -> Void) {
-        apiClient.request(endpoint: "/api/pro-decks/\(id)", method: .get) { result in
-            switch result {
-            case .success(let data):
-                do {
-                    let proDeck = try self.createDecoder().decode(ProDeck.self, from: data)
-                    completion(.success(proDeck))
-                } catch {
-                    completion(.failure(error))
-                }
-            case .failure(let error):
-                completion(.failure(error))
-            }
-        }
-    }
-
-    func getRecentProDecks(completion: @escaping (Result<[ProDeck], Error>) -> Void) {
-        apiClient.request(endpoint: "/api/pro-decks/recent", method: .get) { result in
-            switch result {
-            case .success(let data):
-                do {
-                    let decoder = JSONDecoder()
-                    decoder.dateDecodingStrategy = .iso8601
-                    let proDecks = try decoder.decode([ProDeck].self, from: data)
-                    completion(.success(proDecks))
-                } catch {
-                    completion(.failure(error))
-                }
-            case .failure(let error):
-                completion(.failure(error))
-            }
-        }
-    }
-    
     func addDeck(_ deck: Deck) {
         DispatchQueue.main.async {
             self.userDecks.append(deck)

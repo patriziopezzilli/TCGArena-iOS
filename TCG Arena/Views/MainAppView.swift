@@ -27,5 +27,6 @@ struct MainAppView: View {
                     }
             }
         }
+        .withToastSupport() // Enable toast notifications throughout the app
     }
 }

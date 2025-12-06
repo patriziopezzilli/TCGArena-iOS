@@ -15,7 +15,7 @@ class ExpansionService: ObservableObject {
     @Published var errorMessage: String?
     
     private let apiClient: APIClient
-    
+        
     private let decoder: JSONDecoder = {
         let decoder = JSONDecoder()
         let formatter = DateFormatter()

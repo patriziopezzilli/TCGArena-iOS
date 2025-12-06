@@ -19,12 +19,12 @@ struct ShopNews: Identifiable, Codable {
     let isPinned: Bool
     
     enum NewsType: String, CaseIterable, Codable {
-        case announcement = "Announcement"
-        case newStock = "New Stock"
-        case tournament = "Tournament"
-        case sale = "Sale"
-        case event = "Event"
-        case general = "General"
+        case announcement = "ANNOUNCEMENT"
+        case newStock = "NEW_STOCK"
+        case tournament = "TOURNAMENT"
+        case sale = "SALE"
+        case event = "EVENT"
+        case general = "GENERAL"
         
         var icon: String {
             switch self {
@@ -47,10 +47,22 @@ struct ShopNews: Identifiable, Codable {
             case .general: return "gray"
             }
         }
+        
+        var displayName: String {
+            switch self {
+            case .announcement: return "Announcement"
+            case .newStock: return "New Stock"
+            case .tournament: return "Tournament"
+            case .sale: return "Sale"
+            case .event: return "Event"
+            case .general: return "General"
+            }
+        }
     }
     
-    init(shopID: Int64, title: String, content: String, newsType: NewsType, publishedDate: Date = Date(), expiryDate: Date? = nil, imageURL: String? = nil, isPinned: Bool = false) {
-        self.id = 0 // Mock ID
+    // Full initializer for API response
+    init(id: Int64 = 0, shopID: Int64, title: String, content: String, newsType: NewsType, publishedDate: Date = Date(), expiryDate: Date? = nil, imageURL: String? = nil, isPinned: Bool = false) {
+        self.id = id
         self.shopID = shopID
         self.title = title
         self.content = content

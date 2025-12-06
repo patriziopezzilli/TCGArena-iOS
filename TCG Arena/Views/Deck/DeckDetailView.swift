@@ -9,8 +9,6 @@ struct DeckDetailView: View {
     @State private var isLoadingCards = false
     @State private var showingEditSheet = false
     @State private var showingDeleteAlert = false
-    @State private var showingErrorAlert = false
-    @State private var errorMessage = ""
     @State private var editName = ""
     @State private var editDescription = ""
     @State private var isUpdating = false
@@ -102,29 +100,9 @@ struct DeckDetailView: View {
             ZStack(alignment: .top) {
                 // Fixed Header
                 ZStack(alignment: .bottomLeading) {
-                    // Background Image - estesa fino alla Dynamic Island
-                    if let imageUrl = coverImageUrl {
-                        CachedAsyncImage(url: URL(string: imageUrl)) { phase in
-                            switch phase {
-                            case .success(let image):
-                                image
-                                    .resizable()
-                                    .aspectRatio(contentMode: .fill)
-                                    .frame(width: geometry.size.width, height: 280 + safeAreaTop)
-                                    .scaleEffect(1.3) // Zoom per nascondere bordi carta
-                                    .clipped()
-                            case .failure, .empty:
-                                fallbackHeaderBackground
-                                    .frame(width: geometry.size.width, height: 280 + safeAreaTop)
-                            @unknown default:
-                                fallbackHeaderBackground
-                                    .frame(width: geometry.size.width, height: 280 + safeAreaTop)
-                            }
-                        }
-                    } else {
-                        fallbackHeaderBackground
-                            .frame(width: geometry.size.width, height: 280 + safeAreaTop)
-                    }
+                    // Abstract Gradient Background
+                    abstractHeaderBackground
+                        .frame(width: geometry.size.width, height: 280 + safeAreaTop)
                     
                     // Gradient Overlay
                     LinearGradient(
@@ -281,21 +259,13 @@ struct DeckDetailView: View {
         }
         }
         .navigationBarHidden(true)
-        .alert("Delete Deck", isPresented: $showingDeleteAlert) {
-            Button("Cancel", role: .cancel) { }
+        .confirmationDialog("Delete Deck", isPresented: $showingDeleteAlert) {
             Button("Delete", role: .destructive) {
-                print("🗑️ Delete confirmed")
                 deleteDeck()
             }
+            Button("Cancel", role: .cancel) { }
         } message: {
             Text("Are you sure you want to delete \"\(deck.name)\"? This action cannot be undone.")
-        }
-        .alert(isPresented: $showingErrorAlert) {
-            Alert(
-                title: Text("Error"),
-                message: Text(errorMessage),
-                dismissButton: .default(Text("OK"))
-            )
         }
         .sheet(isPresented: $showingEditSheet) {
             EditDeckView(
@@ -311,13 +281,94 @@ struct DeckDetailView: View {
         }
     }
     
-    private var fallbackHeaderBackground: some View {
+    // MARK: - Abstract Header Background
+    private var abstractHeaderBackground: some View {
         ZStack {
-            deck.tcgType.themeColor.opacity(0.3)
+            // Base gradient with TCG theme colors
+            LinearGradient(
+                gradient: Gradient(colors: [
+                    deck.tcgType.themeColor.opacity(0.8),
+                    deck.tcgType.themeColor.opacity(0.4),
+                    complementaryColor.opacity(0.3)
+                ]),
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
             
-            SwiftUI.Image(systemName: deck.tcgType.systemIcon)
-                .font(.system(size: 80))
-                .foregroundColor(deck.tcgType.themeColor.opacity(0.5))
+            // Decorative geometric shapes
+            GeometryReader { geo in
+                // Large circle in top-right
+                Circle()
+                    .fill(
+                        RadialGradient(
+                            gradient: Gradient(colors: [
+                                deck.tcgType.themeColor.opacity(0.6),
+                                deck.tcgType.themeColor.opacity(0.1)
+                            ]),
+                            center: .center,
+                            startRadius: 0,
+                            endRadius: geo.size.width * 0.4
+                        )
+                    )
+                    .frame(width: geo.size.width * 0.7, height: geo.size.width * 0.7)
+                    .offset(x: geo.size.width * 0.5, y: -geo.size.height * 0.2)
+                
+                // Smaller circle in bottom-left
+                Circle()
+                    .fill(
+                        RadialGradient(
+                            gradient: Gradient(colors: [
+                                complementaryColor.opacity(0.4),
+                                complementaryColor.opacity(0.05)
+                            ]),
+                            center: .center,
+                            startRadius: 0,
+                            endRadius: geo.size.width * 0.3
+                        )
+                    )
+                    .frame(width: geo.size.width * 0.6, height: geo.size.width * 0.6)
+                    .offset(x: -geo.size.width * 0.2, y: geo.size.height * 0.5)
+                
+                // Stylized TCG icon in center-right
+                SwiftUI.Image(systemName: deck.tcgType.systemIcon)
+                    .font(.system(size: 80, weight: .ultraLight))
+                    .foregroundColor(.white.opacity(0.12))
+                    .offset(x: geo.size.width * 0.55, y: geo.size.height * 0.35)
+            }
+            
+            // Subtle overlay for depth
+            Rectangle()
+                .fill(
+                    LinearGradient(
+                        gradient: Gradient(colors: [
+                            Color.white.opacity(0.05),
+                            Color.clear,
+                            Color.black.opacity(0.1)
+                        ]),
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                )
+        }
+    }
+    
+    // Complementary color for visual interest
+    private var complementaryColor: Color {
+        switch deck.tcgType {
+        case .pokemon:
+            return Color.orange
+        case .magic:
+            return Color.purple
+        case .yugioh:
+            return Color.red
+        case .onePiece:
+            return Color.blue
+        case .digimon:
+            return Color.cyan
+        case .dragonBall:
+            return Color.yellow
+        case .lorcana:
+            return Color.gray
         }
     }
     
@@ -390,13 +441,11 @@ struct DeckDetailView: View {
                     showingEditSheet = false
                     presentationMode.wrappedValue.dismiss()
                 case .failure(let error):
-                    print("Error updating deck: \(error.localizedDescription)")
                     if case APIError.unauthorized = error {
-                        errorMessage = "Your session has expired. Please log in again."
+                        ToastManager.shared.showError("Your session has expired. Please log in again.")
                     } else {
-                        errorMessage = "Unable to update deck. Please check your connection and try again."
+                        ToastManager.shared.showError("Unable to update deck. Please check your connection and try again.")
                     }
-                    showingErrorAlert = true
                 }
             }
         }
@@ -414,13 +463,11 @@ struct DeckDetailView: View {
                 case .success:
                     presentationMode.wrappedValue.dismiss()
                 case .failure(let error):
-                    print("Error deleting deck: \(error.localizedDescription)")
                     if case APIError.unauthorized = error {
-                        errorMessage = "Your session has expired. Please log in again."
+                        ToastManager.shared.showError("Your session has expired. Please log in again.")
                     } else {
-                        errorMessage = "Unable to delete deck. Please check your connection and try again."
+                        ToastManager.shared.showError("Unable to delete deck. Please check your connection and try again.")
                     }
-                    showingErrorAlert = true
                 }
             }
         }
@@ -551,6 +598,7 @@ struct EditDeckView: View {
                     LoadingOverlay(message: "Updating your deck...")
                 }
             }
+            .withToastSupport()
         }
     }
 }

@@ -39,7 +39,42 @@ struct PlayerTournamentDetailView: View {
     
     var canCheckIn: Bool {
         guard let participant = userParticipant else { return false }
-        return tournament.status == .checkinOpen && !participant.checkedIn
+        
+        // Parse tournament start date
+        guard let tournamentStartDate = parseTournamentDate(tournament.startDate) else { return false }
+        
+        // Allow check-in 1 hour before start until 30 minutes after start
+        let now = Date()
+        let oneHourBefore = tournamentStartDate.addingTimeInterval(-60 * 60)  // 1 hour before
+        let thirtyMinutesAfter = tournamentStartDate.addingTimeInterval(30 * 60)  // 30 min after
+        let isWithinCheckInWindow = now >= oneHourBefore && now <= thirtyMinutesAfter
+        
+        return isWithinCheckInWindow && !participant.checkedIn
+    }
+    
+    /// Parses tournament date string to Date object
+    private func parseTournamentDate(_ dateString: String) -> Date? {
+        let formatters: [DateFormatter] = {
+            let formats = [
+                "yyyy-MM-dd'T'HH:mm:ss",
+                "yyyy-MM-dd'T'HH:mm:ss.SSS",
+                "dd MMM yyyy, HH:mm",
+                "yyyy-MM-dd HH:mm:ss"
+            ]
+            return formats.map { format in
+                let formatter = DateFormatter()
+                formatter.dateFormat = format
+                formatter.locale = Locale(identifier: "en_US_POSIX")
+                return formatter
+            }
+        }()
+        
+        for formatter in formatters {
+            if let date = formatter.date(from: dateString) {
+                return date
+            }
+        }
+        return nil
     }
     
     var body: some View {
@@ -107,9 +142,11 @@ struct PlayerTournamentDetailView: View {
                 }
             }
             .sheet(isPresented: $showingRegistration) {
-                TournamentRegistrationView(tournament: tournament) { success in
-                    if success {
-                        successMessage = "Successfully registered for tournament!"
+                TournamentRegistrationView(tournament: tournament) { participant in
+                    if let participant = participant {
+                        successMessage = participant.status == .REGISTERED
+                            ? "Successfully registered for tournament!"
+                            : "Added to waiting list. You'll be notified if a spot opens up."
                         loadData()
                     }
                 }
@@ -158,7 +195,7 @@ struct PlayerTournamentDetailView: View {
                 HStack(spacing: 6) {
                     Image(systemName: "person.2.fill")
                         .foregroundColor(.secondary)
-                    Text("\(tournament.currentParticipants)/\(tournament.maxParticipants) Players")
+                    Text("\(tournament.registeredParticipantsCount)/\(tournament.maxParticipants) Players")
                         .font(.subheadline)
                 }
                 

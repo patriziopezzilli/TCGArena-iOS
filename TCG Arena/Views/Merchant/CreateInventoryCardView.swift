@@ -26,8 +26,6 @@ struct CreateInventoryCardView: View {
     @State private var quantity: Int = 1
     @State private var notes: String = ""
     
-    @State private var showError = false
-    @State private var errorMessage = ""
     @State private var isSaving = false
     
     var body: some View {
@@ -65,10 +63,6 @@ struct CreateInventoryCardView: View {
                     }
                 }
             }
-            .alert("Error", isPresented: $showError) {
-                Button("OK", role: .cancel) {}
-            } message: {
-                Text(errorMessage)
             }
         }
     }
@@ -358,13 +352,11 @@ struct CreateInventoryCardView: View {
             } catch {
                 await MainActor.run {
                     isSaving = false
-                    errorMessage = error.localizedDescription
-                    showError = true
+                    ToastManager.shared.showError(error.localizedDescription)
                 }
             }
         }
     }
-}
 
 // MARK: - Card Search Result Row
 struct CardSearchResultRow: View {

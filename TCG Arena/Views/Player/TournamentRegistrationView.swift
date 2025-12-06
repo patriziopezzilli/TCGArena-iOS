@@ -12,7 +12,7 @@ struct TournamentRegistrationView: View {
     @Environment(\.dismiss) var dismiss
     
     let tournament: Tournament
-    let onComplete: (Bool) -> Void
+    let onComplete: (TournamentParticipant?) -> Void
     
     @State private var deckName = ""
     @State private var notes = ""
@@ -24,7 +24,7 @@ struct TournamentRegistrationView: View {
             Form {
                 Section {
                     VStack(alignment: .leading, spacing: 12) {
-                        Text(tournament.name)
+                        Text(tournament.title)
                             .font(.headline)
                         
                         HStack {
@@ -37,8 +37,7 @@ struct TournamentRegistrationView: View {
                         
                         HStack {
                             Image(systemName: "calendar")
-                            Text(tournament.startDate, style: .date)
-                            Text(tournament.startDate, style: .time)
+                            Text(formatDate(tournament.startDate))
                         }
                         .font(.subheadline)
                         .foregroundColor(.secondary)
@@ -109,16 +108,18 @@ struct TournamentRegistrationView: View {
         isSubmitting = true
         errorMessage = nil
         
+        guard let tournamentId = tournament.id else {
+            errorMessage = "Invalid tournament ID"
+            isSubmitting = false
+            return
+        }
+        
         Task {
             do {
-                try await tournamentService.register(
-                    tournamentId: tournament.id,
-                    deckName: deckName,
-                    notes: notes.isEmpty ? nil : notes
-                )
+                let participant = try await tournamentService.registerForTournament(tournamentId: tournamentId)
                 
                 await MainActor.run {
-                    onComplete(true)
+                    onComplete(participant)
                     dismiss()
                 }
             } catch {
@@ -128,6 +129,20 @@ struct TournamentRegistrationView: View {
                 }
             }
         }
+    }
+    
+    private func formatDate(_ dateString: String) -> String {
+        let isoFormatter = ISO8601DateFormatter()
+        isoFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        
+        guard let date = isoFormatter.date(from: dateString) else {
+            return dateString
+        }
+        
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        formatter.timeStyle = .short
+        return formatter.string(from: date)
     }
 }
 

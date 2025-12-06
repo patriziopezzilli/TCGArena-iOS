@@ -9,7 +9,7 @@ import Foundation
 
 class APIClient: NSObject {
     static let shared = APIClient()
-    private let baseURL = "http://localhost:8080"
+    private let baseURL = "http://80.211.236.249:8080"
     
     // URLSession con configurazione basata sulla modalità (debug/disabilita cache)
     private lazy var urlSession: URLSession = {
@@ -27,6 +27,7 @@ class APIClient: NSObject {
 
     private var _jwtToken: String?
     private var _refreshToken: String?
+    private var refreshTask: Task<Bool, Error>? // Task per deduplicare le richieste di refresh
 
     // JSON Decoder configurato per gestire le date dal backend
     private lazy var jsonDecoder: JSONDecoder = {
@@ -114,7 +115,12 @@ class APIClient: NSObject {
         headers: [String: String] = [:]
     ) async throws -> T {
         let bodyData = body != nil ? try JSONEncoder().encode(body!) : nil
-        let data = try await rawRequest(endpoint, method: method, body: bodyData, headers: headers)
+        let (data, response) = try await rawRequestWithResponse(endpoint, method: method, body: bodyData, headers: headers)
+
+        // Handle empty responses (204 No Content) for EmptyResponse type
+        if T.self == EmptyResponse.self && data.isEmpty {
+            return EmptyResponse() as! T
+        }
 
         do {
             let decoder = JSONDecoder()
@@ -135,21 +141,27 @@ class APIClient: NSObject {
     func request(endpoint: String, method: HTTPMethod, body: Data? = nil, headers: [String: String] = [:], completion: @escaping (Result<Data, Error>) -> Void) {
         Task {
             do {
-                let data = try await rawRequest(endpoint, method: method.rawValue, body: body, headers: headers)
-                completion(.success(data))
+                let (data, _) = try await rawRequestWithResponse(endpoint, method: method.rawValue, body: body, headers: headers)
+                // Ensure completion is called on main thread
+                DispatchQueue.main.async {
+                    completion(.success(data))
+                }
             } catch {
-                completion(.failure(error))
+                // Ensure completion is called on main thread
+                DispatchQueue.main.async {
+                    completion(.failure(error))
+                }
             }
         }
     }
 
-    private func rawRequest(
+    private func rawRequestWithResponse(
         _ endpoint: String,
         method: String = "GET",
         body: Data? = nil,
         headers: [String: String] = [:],
         retryCount: Int = 0
-    ) async throws -> Data {
+    ) async throws -> (Data, HTTPURLResponse) {
         guard let url = URL(string: baseURL + endpoint) else {
             print("🔴 APIClient: Invalid URL - \(baseURL + endpoint)")
             throw APIError.invalidURL
@@ -217,7 +229,7 @@ class APIClient: NSObject {
                     do {
                         if try await refreshToken() {
                             print("✅ APIClient: Token refreshed, retrying request...")
-                            return try await rawRequest(endpoint, method: method, body: body, headers: headers, retryCount: 1)
+                            return try await rawRequestWithResponse(endpoint, method: method, body: body, headers: headers, retryCount: 1)
                         }
                     } catch {
                         print("🔴 APIClient: Token refresh failed with error: \(error.localizedDescription)")
@@ -230,7 +242,7 @@ class APIClient: NSObject {
             throw APIError.serverError(httpResponse.statusCode)
         }
 
-        return data
+        return (data, httpResponse)
     }
 
     func setJWTToken(_ token: String) {
@@ -250,58 +262,77 @@ class APIClient: NSObject {
     }
 
     private func refreshToken() async throws -> Bool {
-        guard let currentRefreshToken = refreshToken else { 
-            print("🔴 APIClient: No refresh token available")
-            return false
+        // Se c'è già un refresh in corso, attendi il suo risultato
+        if let existingTask = refreshTask {
+            print("🔄 APIClient: Waiting for existing refresh task...")
+            return try await existingTask.value
         }
-
-        guard let url = URL(string: baseURL + "/api/auth/refresh-token") else {
-            print("🔴 APIClient: Invalid refresh URL")
-            return false
-        }
-
-        print("🔄 APIClient: Attempting to refresh token")
-
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-
-        // Includi il refresh token nel body
-        let refreshBody = ["refreshToken": currentRefreshToken]
-        request.httpBody = try? JSONEncoder().encode(refreshBody)
-
-        do {
-            let (data, response) = try await urlSession.data(for: request)
-
-            guard let httpResponse = response as? HTTPURLResponse else {
-                print("🔴 APIClient: Invalid refresh response type")
+        
+        // Avvia un nuovo task di refresh
+        let task = Task<Bool, Error> {
+            guard let currentRefreshToken = refreshToken else {
+                print("🔴 APIClient: No refresh token available")
                 return false
             }
 
-            guard (200...299).contains(httpResponse.statusCode) else {
-                print("🔴 APIClient: Refresh failed with status code: \(httpResponse.statusCode)")
-                if let responseString = String(data: data, encoding: .utf8) {
-                    print("🔴 APIClient: Refresh error response: \(responseString)")
+            guard let url = URL(string: baseURL + "/api/auth/refresh-token") else {
+                print("🔴 APIClient: Invalid refresh URL")
+                return false
+            }
+
+            print("🔄 APIClient: Attempting to refresh token")
+
+            var request = URLRequest(url: url)
+            request.httpMethod = "POST"
+            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+
+            let refreshBody = ["refreshToken": currentRefreshToken]
+            request.httpBody = try? JSONEncoder().encode(refreshBody)
+
+            do {
+                let (data, response) = try await urlSession.data(for: request)
+
+                guard let httpResponse = response as? HTTPURLResponse else {
+                    print("🔴 APIClient: Invalid refresh response type")
+                    return false
                 }
+
+                guard (200...299).contains(httpResponse.statusCode) else {
+                    print("🔴 APIClient: Refresh failed with status code: \(httpResponse.statusCode)")
+                    if let responseString = String(data: data, encoding: .utf8) {
+                        print("🔴 APIClient: Refresh error response: \(responseString)")
+                    }
+                    return false
+                }
+
+                let decoder = JSONDecoder()
+                let refreshResponse = try decoder.decode([String: String].self, from: data)
+
+                if let newToken = refreshResponse["accessToken"], let newRefreshToken = refreshResponse["refreshToken"] {
+                    jwtToken = newToken
+                    refreshToken = newRefreshToken
+                    print("✅ APIClient: Tokens refreshed successfully")
+                    return true
+                } else {
+                    print("🔴 APIClient: Refresh response missing accessToken or refreshToken")
+                    return false
+                }
+            } catch {
+                print("🔴 APIClient: Refresh request failed - \(error.localizedDescription)")
                 return false
             }
-
-            // Parse the response to get new tokens
-            let decoder = JSONDecoder()
-            let refreshResponse = try decoder.decode([String: String].self, from: data)
-
-            if let newToken = refreshResponse["token"], let newRefreshToken = refreshResponse["refreshToken"] {
-                jwtToken = newToken
-                refreshToken = newRefreshToken
-                print("✅ APIClient: Tokens refreshed successfully")
-                return true
-            } else {
-                print("🔴 APIClient: Refresh response missing token or refreshToken")
-                return false
-            }
+        }
+        
+        self.refreshTask = task
+        
+        // Attendi il risultato e poi pulisci il task
+        do {
+            let result = try await task.value
+            self.refreshTask = nil
+            return result
         } catch {
-            print("🔴 APIClient: Refresh request failed - \(error.localizedDescription)")
-            return false
+            self.refreshTask = nil
+            throw error
         }
     }
 }

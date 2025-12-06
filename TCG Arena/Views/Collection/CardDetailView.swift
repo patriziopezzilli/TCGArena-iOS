@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import TCG_Arena
 
 struct CardDetailView: View {
     @State var card: Card
@@ -15,9 +16,8 @@ struct CardDetailView: View {
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject var cardService: CardService
     @EnvironmentObject var deckService: DeckService
+    @EnvironmentObject var marketService: MarketDataService
     @EnvironmentObject var authService: AuthService
-    @StateObject private var marketService = MarketDataService()
-    @AppStorage("showMarketValues") private var showMarketValues = true
     @State private var showingEditView = false
     @State private var showingDeleteConfirmation = false
     @State private var isShowingDeckModal = false
@@ -159,9 +159,6 @@ struct CardDetailView: View {
             if !isFromDiscover {
                 VStack(spacing: 20) {
                     additionalInfoCard
-                    if showMarketValues {
-                        marketValueCard
-                    }
                 }
                 .padding(.horizontal, 20)
             }
@@ -424,7 +421,7 @@ struct CardDetailView: View {
             }
         }
         .sheet(isPresented: $isShowingDeckModal) {
-            DeckSelectionModal(cardName: card.name) { selectedDeck in
+            DeckSelectionModal(cardName: card.name, tcgType: card.tcgType) { selectedDeck in
                 addCardToSelectedDeck(selectedDeck)
             }
             .environmentObject(deckService)
@@ -432,24 +429,17 @@ struct CardDetailView: View {
         .fullScreenCover(isPresented: $showingFullScreenImage) {
             FullScreenImageView(imageURL: card.fullImageURL, cardName: card.name)
         }
-        .alert("Delete Card", isPresented: $showingDeleteConfirmation) {
-            Button("Cancel", role: .cancel) { }
+        .confirmationDialog("Delete Card", isPresented: $showingDeleteConfirmation) {
             Button("Delete", role: .destructive) {
                 deleteCard()
             }
+            Button("Cancel", role: .cancel) { }
         } message: {
             Text("Are you sure you want to delete '\(card.name)'? This action cannot be undone.")
         }
         .onAppear {
-            if showMarketValues {
-                marketService.loadMarketData()
-            }
-            // Debug logging for image loading
-            if let imageURL = card.fullImageURL {
-                print("🖼️ CardDetailView - Card '\(card.name)' has image URL: \(imageURL)")
-            } else {
-                print("⚠️ CardDetailView - Card '\(card.name)' has no image URL")
-            }
+            marketService.loadMarketData()
+            // Debug logging for image loading - removed prints
         }
     }
     
@@ -464,8 +454,8 @@ struct CardDetailView: View {
                     // No need to remove from local arrays since we load fresh data from backend
                     dismiss()
                 case .failure(let error):
-                    // Handle error - could show an alert
-                    print("Error deleting card: \(error.localizedDescription)")
+                    // Handle error - show toast
+                    ToastManager.shared.showError("Failed to delete card: \(error.localizedDescription)")
                     // For now, just dismiss anyway
                     dismiss()
                 }
@@ -492,8 +482,8 @@ struct CardDetailView: View {
                         // Success - dismiss
                         self.dismiss()
                     case .failure(let error):
-                        // Handle error - could show another alert
-                        print("Error adding card template to deck: \(error.localizedDescription)")
+                        // Handle error - show toast
+                        ToastManager.shared.showError("Error adding card template to deck: \(error.localizedDescription)")
                     }
                 }
             }
@@ -509,8 +499,8 @@ struct CardDetailView: View {
                         // Success - dismiss
                         self.dismiss()
                     case .failure(let error):
-                        // Handle error - could show another alert
-                        print("Error adding card to deck: \(error.localizedDescription)")
+                        // Handle error - show toast
+                        ToastManager.shared.showError("Error adding card to deck: \(error.localizedDescription)")
                     }
                 }
             }
