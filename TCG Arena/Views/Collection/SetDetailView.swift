@@ -258,7 +258,7 @@ struct SetDetailView: View {
     private func loadCards() async {
         // Check cache first
         if let cachedCards = SetCardsCache.shared.getCards(for: set.id), !cachedCards.isEmpty {
-            Swift.print("💾 Using cached cards for set \(set.name): \(cachedCards.count) cards")
+            // Swift.print("💾 Using cached cards for set \(set.name): \(cachedCards.count) cards")
             self.cards = cachedCards
             isLoading = false
             return
@@ -266,11 +266,11 @@ struct SetDetailView: View {
         
         isLoading = true
         
-        Swift.print("🎯 Loading cards for set: \(set.name) (ID: \(set.id), cardCount: \(set.cardCount))")
+        // Swift.print("🎯 Loading cards for set: \(set.name) (ID: \(set.id), cardCount: \(set.cardCount))")
         
         // Use pre-loaded cards from the set if available
         if let preloadedCards = set.cards, !preloadedCards.isEmpty {
-            Swift.print("💾 Using pre-loaded cards: \(preloadedCards.count) cards")
+            // Swift.print("💾 Using pre-loaded cards: \(preloadedCards.count) cards")
             cards = preloadedCards
             SetCardsCache.shared.setCards(preloadedCards, for: set.id)
         } else {
@@ -286,26 +286,26 @@ struct SetDetailView: View {
         var currentPage = 1
         let pageSize = 20  // Riduciamo ulteriormente per testare la paginazione
         
-        Swift.print("🔄 Starting to load all cards for set \(set.name) (ID: \(set.id))")
+        // Swift.print("🔄 Starting to load all cards for set \(set.name) (ID: \(set.id))")
         
-        Swift.print("📊 Set should have \(set.cardCount) cards according to metadata")
-        Swift.print("🔍 Investigating potential data inconsistency...")
+        // Swift.print("📊 Set should have \(set.cardCount) cards according to metadata")
+        // Swift.print("🔍 Investigating potential data inconsistency...")
         
         // Check if this is a known issue with this set
         if set.cardCount > 0 && set.cardCount < 10 {
-            Swift.print("⚠️ WARNING: Set has very few cards (\(set.cardCount)), this might be correct")
+            // Swift.print("⚠️ WARNING: Set has very few cards (\(set.cardCount)), this might be correct")
         } else if set.cardCount >= 10 {
-            Swift.print("⚠️ WARNING: Set metadata claims \(set.cardCount) cards but we're getting very few from API")
+            // Swift.print("⚠️ WARNING: Set metadata claims \(set.cardCount) cards but we're getting very few from API")
         }
         
         while true {
             let cardsPage = await loadCardsPage(currentPage, limit: pageSize)
             
-            Swift.print("📄 Page \(currentPage): loaded \(cardsPage.count) cards")
+            // Swift.print("📄 Page \(currentPage): loaded \(cardsPage.count) cards")
             
             if cardsPage.isEmpty {
                 // No more cards to load
-                Swift.print("✅ No more cards to load, stopping at page \(currentPage)")
+                // Swift.print("✅ No more cards to load, stopping at page \(currentPage)")
                 break
             }
             
@@ -314,27 +314,27 @@ struct SetDetailView: View {
             
             // Safety check: prevent infinite loops
             if currentPage > 100 {  // Aumentiamo il limite di sicurezza
-                Swift.print("⚠️ Safety limit reached (50 pages), stopping")
+                // Swift.print("⚠️ Safety limit reached (50 pages), stopping")
                 break
             }
         }
         
-        Swift.print("📊 Total cards loaded for set \(set.name): \(allCards.count)")
+        // Swift.print("📊 Total cards loaded for set \(set.name): \(allCards.count)")
         
         // Analyze the results
         if allCards.count == 0 {
-            Swift.print("🚨 CRITICAL: No cards loaded at all!")
+            // Swift.print("🚨 CRITICAL: No cards loaded at all!")
         } else if allCards.count < set.cardCount * Int(0.1) {  // Less than 10% of expected cards
-            Swift.print("🚨 CRITICAL: Loaded only \(allCards.count) cards out of \(set.cardCount) expected (\(String(format: "%.1f", Double(allCards.count)/Double(set.cardCount)*100))%)")
+            // Swift.print("🚨 CRITICAL: Loaded only \(allCards.count) cards out of \(set.cardCount) expected (\(String(format: "%.1f", Double(allCards.count)/Double(set.cardCount)*100))%)")
         } else if allCards.count < set.cardCount {
-            Swift.print("⚠️ WARNING: Loaded \(allCards.count) cards out of \(set.cardCount) expected (\(String(format: "%.1f", Double(allCards.count)/Double(set.cardCount)*100))%)")
+            // Swift.print("⚠️ WARNING: Loaded \(allCards.count) cards out of \(set.cardCount) expected (\(String(format: "%.1f", Double(allCards.count)/Double(set.cardCount)*100))%)")
         } else {
-            Swift.print("✅ SUCCESS: Loaded all expected cards (\(allCards.count)/\(set.cardCount))")
+            // Swift.print("✅ SUCCESS: Loaded all expected cards (\(allCards.count)/\(set.cardCount))")
         }
         
         if allCards.isEmpty {
             // Fallback: create mock cards if backend fails
-            Swift.print("❌ No cards loaded from backend, using mock cards")
+            // Swift.print("❌ No cards loaded from backend, using mock cards")
             self.cards = self.createMockCards()
         } else {
             self.cards = allCards
@@ -345,21 +345,21 @@ struct SetDetailView: View {
     
     private func loadCardsPage(_ page: Int, limit: Int) async -> [CardTemplate] {
         await withCheckedContinuation { continuation in
-            Swift.print("🌐 Requesting page \(page) with limit \(limit) for set \(set.id) - expecting up to \(limit) cards")
+            // Swift.print("🌐 Requesting page \(page) with limit \(limit) for set \(set.id) - expecting up to \(limit) cards")
             expansionService.getCardsForSet(set.id, page: page, limit: limit) { result in
                 switch result {
                 case .success(let loadedCards):
-                    Swift.print("✅ Successfully loaded \(loadedCards.count) cards for page \(page) (requested limit: \(limit))")
+                    // Swift.print("✅ Successfully loaded \(loadedCards.count) cards for page \(page) (requested limit: \(limit))")
                     if loadedCards.count < limit && loadedCards.count > 0 {
-                        Swift.print("ℹ️ INFO: Received \(loadedCards.count) cards (less than limit \(limit)) - might be last page")
+                        // Swift.print("ℹ️ INFO: Received \(loadedCards.count) cards (less than limit \(limit)) - might be last page")
                     } else if loadedCards.count == 0 {
-                        Swift.print("ℹ️ INFO: Received 0 cards - this is the last page")
+                        // Swift.print("ℹ️ INFO: Received 0 cards - this is the last page")
                     } else if loadedCards.count == limit {
-                        Swift.print("ℹ️ INFO: Received exactly \(limit) cards - there might be more pages")
+                        // Swift.print("ℹ️ INFO: Received exactly \(limit) cards - there might be more pages")
                     }
                     continuation.resume(returning: loadedCards)
                 case .failure(let error):
-                    Swift.print("❌ Failed to load cards for page \(page): \(error.localizedDescription)")
+                    print("❌ Failed to load cards for page \(page): \(error.localizedDescription)")
                     continuation.resume(returning: [])
                 }
             }

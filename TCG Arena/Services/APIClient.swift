@@ -9,7 +9,7 @@ import Foundation
 
 class APIClient: NSObject {
     static let shared = APIClient()
-    private let baseURL = "http://localhost:8080"
+    private let baseURL = "https://api.tcgarena.it"
     
     // URLSession con configurazione basata sulla modalità (debug/disabilita cache)
     private lazy var urlSession: URLSession = {
@@ -19,7 +19,7 @@ class APIClient: NSObject {
         // In modalità debug, disabilita completamente la cache per vedere sempre i dati più recenti
         configuration.requestCachePolicy = .reloadIgnoringLocalCacheData
         configuration.urlCache = nil
-        print("🔧 APIClient: Cache disabilitata per modalità debug")
+        // print("🔧 APIClient: Cache disabilitata per modalità debug")
         #endif
         
         return URLSession(configuration: configuration)
@@ -129,7 +129,7 @@ class APIClient: NSObject {
             return decoded
         } catch let decodingError as DecodingError {
             print("🔴 APIClient: JSON Decoding error - \(decodingError.localizedDescription)")
-            print("🔴 APIClient: Error details: \(decodingError)")
+            // print("🔴 APIClient: Error details: \(decodingError)")
             throw decodingError
         } catch {
             print("🔴 APIClient: Unexpected decoding error - \(error.localizedDescription)")
@@ -163,11 +163,11 @@ class APIClient: NSObject {
         retryCount: Int = 0
     ) async throws -> (Data, HTTPURLResponse) {
         guard let url = URL(string: baseURL + endpoint) else {
-            print("🔴 APIClient: Invalid URL - \(baseURL + endpoint)")
+            // print("🔴 APIClient: Invalid URL - \(baseURL + endpoint)")
             throw APIError.invalidURL
         }
         
-        print("🌐 APIClient: Making \(method) request to: \(url.absoluteString)")
+        // print("🌐 APIClient: Making \(method) request to: \(url.absoluteString)")
 
         var request = URLRequest(url: url)
         request.httpMethod = method
@@ -177,8 +177,8 @@ class APIClient: NSObject {
         let publicEndpoints = ["/api/auth/register", "/api/auth/login", "/api/auth/refresh-token"]
         if let token = jwtToken, !publicEndpoints.contains(where: { endpoint.hasPrefix($0) }) {
             request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-            let tokenPrefix = token.prefix(20)
-            print("🔑 APIClient: Using JWT token (prefix: \(tokenPrefix)...)")
+            // let tokenPrefix = token.prefix(20)
+            // print("🔑 APIClient: Using JWT token (prefix: \(tokenPrefix)...)")
         } else {
             print("⚠️ APIClient: No JWT token available or endpoint is public")
             // Debug: Check if token exists in UserDefaults
@@ -190,7 +190,7 @@ class APIClient: NSObject {
                 let tokenPrefix = savedToken.prefix(20)
                 print("🔑 APIClient: Recovered JWT token (prefix: \(tokenPrefix)...)")
             } else {
-                print("⚠️ APIClient: No token in UserDefaults either or endpoint is public")
+                // print("⚠️ APIClient: No token in UserDefaults either or endpoint is public")
             }
         }
         
@@ -202,13 +202,13 @@ class APIClient: NSObject {
         // Aggiungi body se presente
         if let body = body {
             request.httpBody = body
-            if let bodyString = String(data: body, encoding: .utf8) {
-                print("Request body: \(bodyString)")
-            }
+            // if let bodyString = String(data: body, encoding: .utf8) {
+            //     print("Request body: \(bodyString)")
+            // }
         }
 
-        print("Making request to: \(url.absoluteString)")
-        print("Method: \(method)")
+        // print("Making request to: \(url.absoluteString)")
+        // print("Method: \(method)")
 
         let (data, response) = try await urlSession.data(for: request)
         
@@ -217,9 +217,9 @@ class APIClient: NSObject {
         }
         
         // Log per debug
-        if let responseString = String(data: data, encoding: .utf8) {
-            print("Response (\(httpResponse.statusCode)): \(responseString)")
-        }
+        // if let responseString = String(data: data, encoding: .utf8) {
+        //     print("Response (\(httpResponse.statusCode)): \(responseString)")
+        // }
 
         guard (200...299).contains(httpResponse.statusCode) else {
             if httpResponse.statusCode == 401 {

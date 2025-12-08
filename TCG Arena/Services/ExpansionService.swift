@@ -38,7 +38,7 @@ class ExpansionService: ObservableObject {
             case .success(let data):
                 do {
                     let expansions = try self.decoder.decode([Expansion].self, from: data)
-                    print("✅ Successfully decoded \(expansions.count) expansions")
+                    // print("✅ Successfully decoded \(expansions.count) expansions")
                     completion(.success(expansions))
                 } catch {
                     print("❌ Failed to decode expansions: \(error)")
@@ -56,7 +56,7 @@ class ExpansionService: ObservableObject {
             case .success(let data):
                 do {
                     let expansions = try self.decoder.decode([Expansion].self, from: data)
-                    print("✅ Successfully decoded \(expansions.count) recent expansions")
+                    // print("✅ Successfully decoded \(expansions.count) recent expansions")
                     completion(.success(expansions))
                 } catch {
                     print("❌ Failed to decode recent expansions: \(error)")
@@ -135,17 +135,17 @@ class ExpansionService: ObservableObject {
     
     func getCardsForSet(_ setId: Int64, page: Int = 1, limit: Int = 20, completion: @escaping (Result<[CardTemplate], Error>) -> Void) {
         #if DEBUG
-        print("🔄 [DEBUG] Cache disabled for set cards - fetching from API")
+        // print("🔄 [DEBUG] Cache disabled for set cards - fetching from API")
         // Skip cache in debug mode
         let apiPage = max(0, page - 1)
         let endpoint = "/api/sets/\(setId)/cards?page=\(apiPage)&limit=\(limit)"
-        print("🌐 [DEBUG] API request: \(endpoint)")
+        // print("🌐 [DEBUG] API request: \(endpoint)")
         apiClient.request(endpoint: endpoint, method: .get) { result in
             switch result {
             case .success(let data):
                 do {
                     let pagedResponse = try JSONDecoder().decode(PagedResponse<CardTemplate>.self, from: data)
-                    print("✅ [DEBUG] API response: \(pagedResponse.content.count) cards")
+                    // print("✅ [DEBUG] API response: \(pagedResponse.content.count) cards")
                     completion(.success(pagedResponse.content))
                 } catch {
                     print("❌ [DEBUG] JSON decode error: \(error)")
@@ -194,17 +194,17 @@ class ExpansionService: ObservableObject {
     }
 
     func getCardsForExpansion(_ expansion: Expansion, completion: @escaping (Result<[CardTemplate], Error>) -> Void) {
-        print("🔍 Checking for pre-loaded cards in expansion \(expansion.title)")
+        // print("🔍 Checking for pre-loaded cards in expansion \(expansion.title)")
 
         // First, try to get cards from the sets that are already loaded
         let existingCards = expansion.sets.compactMap { $0.cards }.flatMap { $0 }
         if !existingCards.isEmpty {
-            print("💾 Found \(existingCards.count) pre-loaded cards for expansion \(expansion.title)")
+            // print("💾 Found \(existingCards.count) pre-loaded cards for expansion \(expansion.title)")
             completion(.success(existingCards))
             return
         }
 
-        print("⚠️ No pre-loaded cards found - consider loading cards only when needed")
+        // print("⚠️ No pre-loaded cards found - consider loading cards only when needed")
         // For now, return empty array to avoid unnecessary API calls
         completion(.success([]))
 
