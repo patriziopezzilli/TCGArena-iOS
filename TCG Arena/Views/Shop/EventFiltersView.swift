@@ -14,6 +14,7 @@ struct EventFilters {
     var selectedTCGTypes: Set<TCGType> = []
     var selectedTournamentTypes: Set<Tournament.TournamentType> = []
     var onlyRanked: Bool = false
+    var onlyNearby: Bool = true // Default on - show only events within 30km
     
     enum DateRangeFilter: String, CaseIterable {
         case all = "All"
@@ -64,7 +65,8 @@ struct EventFilters {
         priceRange != .all ||
         !selectedTCGTypes.isEmpty ||
         !selectedTournamentTypes.isEmpty ||
-        onlyRanked
+        onlyRanked ||
+        onlyNearby
     }
     
     var activeFilterCount: Int {
@@ -75,6 +77,7 @@ struct EventFilters {
         count += selectedTCGTypes.count
         count += selectedTournamentTypes.count
         if onlyRanked { count += 1 }
+        if onlyNearby { count += 1 }
         return count
     }
     
@@ -84,6 +87,7 @@ struct EventFilters {
         selectedTCGTypes = []
         selectedTournamentTypes = []
         onlyRanked = false
+        onlyNearby = true // Reset to default on
     }
 }
 
@@ -174,9 +178,17 @@ struct EventFiltersView: View {
                         }
                     }
                     
-                    // Category Filter Section
                     FilterSection(title: "Category", icon: "star.circle.fill") {
                         LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
+                            FilterChip(
+                                title: "Solo vicini (30km)",
+                                icon: "location.fill",
+                                isSelected: tempFilters.onlyNearby,
+                                accentColor: .green
+                            ) {
+                                tempFilters.onlyNearby.toggle()
+                            }
+                            
                             FilterChip(
                                 title: "Official Only 🏆",
                                 isSelected: tempFilters.onlyRanked,
@@ -334,6 +346,164 @@ extension Tournament.TournamentType {
         case .casual: return "Casual"
         case .competitive: return "Competitive"
         case .championship: return "Championship"
+        }
+    }
+}
+
+// MARK: - Shop Filters Model
+struct ShopFilters {
+    var onlyNearby: Bool = true // Default on - show only shops within 20km
+    var selectedTCGTypes: Set<TCGType> = []
+    
+    var isActive: Bool {
+        onlyNearby || !selectedTCGTypes.isEmpty
+    }
+    
+    var activeFilterCount: Int {
+        var count = 0
+        if onlyNearby { count += 1 }
+        count += selectedTCGTypes.count
+        return count
+    }
+    
+    mutating func reset() {
+        onlyNearby = true // Reset to default on
+        selectedTCGTypes = []
+    }
+}
+
+// MARK: - Shop Filters View (Bottom Sheet)
+struct ShopFiltersView: View {
+    @Binding var filters: ShopFilters
+    @Binding var isPresented: Bool
+    let onApply: () -> Void
+    
+    @State private var tempFilters: ShopFilters
+    
+    init(filters: Binding<ShopFilters>, isPresented: Binding<Bool>, onApply: @escaping () -> Void) {
+        self._filters = filters
+        self._isPresented = isPresented
+        self.onApply = onApply
+        self._tempFilters = State(initialValue: filters.wrappedValue)
+    }
+    
+    var body: some View {
+        NavigationView {
+            ScrollView {
+                VStack(spacing: 24) {
+                    // Distance Filter Section
+                    FilterSection(title: "Distance", icon: "location.fill") {
+                        LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
+                            FilterChip(
+                                title: "Solo vicini (20km)",
+                                icon: "location.fill",
+                                isSelected: tempFilters.onlyNearby,
+                                accentColor: .green
+                            ) {
+                                tempFilters.onlyNearby.toggle()
+                            }
+                            
+                            FilterChip(
+                                title: "Tutti i negozi",
+                                icon: "globe",
+                                isSelected: !tempFilters.onlyNearby,
+                                accentColor: .blue
+                            ) {
+                                tempFilters.onlyNearby = false
+                            }
+                        }
+                    }
+                    
+                    // TCG Type Filter Section
+                    FilterSection(title: "TCG Type", icon: "gamecontroller") {
+                        LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
+                            ForEach([TCGType.pokemon, .magic, .yugioh, .onePiece], id: \.self) { tcgType in
+                                FilterChip(
+                                    title: tcgType.displayName,
+                                    isSelected: tempFilters.selectedTCGTypes.contains(tcgType),
+                                    accentColor: tcgType.themeColor
+                                ) {
+                                    if tempFilters.selectedTCGTypes.contains(tcgType) {
+                                        tempFilters.selectedTCGTypes.remove(tcgType)
+                                    } else {
+                                        tempFilters.selectedTCGTypes.insert(tcgType)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    
+                    Spacer(minLength: 100)
+                }
+                .padding(.horizontal, 20)
+                .padding(.top, 16)
+            }
+            .navigationTitle("Filter Stores")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button("Reset") {
+                        tempFilters.reset()
+                    }
+                    .foregroundColor(.secondary)
+                }
+                
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button(action: {
+                        isPresented = false
+                    }) {
+                        SwiftUI.Image(systemName: "xmark.circle.fill")
+                            .font(.system(size: 24))
+                            .foregroundColor(.secondary)
+                    }
+                }
+            }
+            .safeAreaInset(edge: .bottom) {
+                VStack(spacing: 12) {
+                    // Apply Button
+                    Button(action: {
+                        filters = tempFilters
+                        onApply()
+                        isPresented = false
+                    }) {
+                        HStack {
+                            Text("Apply Filters")
+                                .font(.system(size: 17, weight: .semibold))
+                            
+                            if tempFilters.activeFilterCount > 0 {
+                                Text("(\(tempFilters.activeFilterCount))")
+                                    .font(.system(size: 15, weight: .medium))
+                            }
+                        }
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 16)
+                        .background(
+                            RoundedRectangle(cornerRadius: 14)
+                                .fill(Color.blue)
+                        )
+                    }
+                    
+                    // Clear All Button
+                    if tempFilters.isActive {
+                        Button(action: {
+                            tempFilters.reset()
+                        }) {
+                            Text("Clear All")
+                                .font(.system(size: 15, weight: .medium))
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                }
+                .padding(.horizontal, 20)
+                .padding(.vertical, 16)
+                .background(
+                    Rectangle()
+                        .fill(Color(.systemBackground))
+                        .shadow(color: Color.black.opacity(0.05), radius: 10, x: 0, y: -5)
+                        .ignoresSafeArea()
+                )
+            }
         }
     }
 }

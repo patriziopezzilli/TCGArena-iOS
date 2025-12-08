@@ -51,7 +51,8 @@ struct RewardsView: View {
         return result
     }
 
-    @State private var selectedTab = 0 // 0: Available, 1: History
+    @State private var selectedTab = 0 // 0: Available, 1: History, 2: Earn Points
+    @State private var historySubTab = 0 // 0: Premi Riscattati, 1: Attività
     
     var body: some View {
         NavigationView {
@@ -242,8 +243,55 @@ struct RewardsView: View {
                         }
                         .transition(.opacity)
                     } else if selectedTab == 1 {
-                        RedeemedRewardsView()
-                            .transition(.opacity)
+                        // History tab with sub-tabs
+                        VStack(spacing: 0) {
+                            // Sub-tabs
+                            HStack(spacing: 0) {
+                                Button(action: {
+                                    withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                                        historySubTab = 0
+                                    }
+                                }) {
+                                    VStack(spacing: 4) {
+                                        Text("Premi Riscattati")
+                                            .font(.system(size: 14, weight: historySubTab == 0 ? .semibold : .medium))
+                                            .foregroundColor(historySubTab == 0 ? .blue : .secondary)
+                                        Rectangle()
+                                            .fill(historySubTab == 0 ? Color.blue : Color.clear)
+                                            .frame(height: 2)
+                                    }
+                                }
+                                .frame(maxWidth: .infinity)
+                                
+                                Button(action: {
+                                    withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                                        historySubTab = 1
+                                    }
+                                }) {
+                                    VStack(spacing: 4) {
+                                        Text("Attività")
+                                            .font(.system(size: 14, weight: historySubTab == 1 ? .semibold : .medium))
+                                            .foregroundColor(historySubTab == 1 ? .blue : .secondary)
+                                        Rectangle()
+                                            .fill(historySubTab == 1 ? Color.blue : Color.clear)
+                                            .frame(height: 2)
+                                    }
+                                }
+                                .frame(maxWidth: .infinity)
+                            }
+                            .padding(.horizontal, 20)
+                            .padding(.top, 12)
+                            .background(Color(.systemBackground))
+                            
+                            Divider()
+                            
+                            if historySubTab == 0 {
+                                RedeemedRewardsView()
+                            } else {
+                                PointsActivityView()
+                            }
+                        }
+                        .transition(.opacity)
                     } else {
                         HowToGetPointsView()
                             .transition(.opacity)
@@ -646,5 +694,179 @@ struct RedeemedRewardCard: View {
     }
 }
 
+// MARK: - Points Activity View
+struct PointsActivityView: View {
+    @EnvironmentObject var rewardsService: RewardsService
+    @State private var activities: [PointsActivity] = []
+    @State private var isLoading = true
+    
+    var body: some View {
+        ScrollView {
+            VStack(spacing: 16) {
+                if isLoading {
+                    ProgressView()
+                        .padding(.top, 40)
+                } else if activities.isEmpty {
+                    VStack(spacing: 16) {
+                        SwiftUI.Image(systemName: "chart.line.uptrend.xyaxis")
+                            .font(.system(size: 48))
+                            .foregroundColor(.secondary.opacity(0.5))
+                        Text("Nessuna attività registrata")
+                            .font(.system(size: 16, weight: .medium))
+                            .foregroundColor(.secondary)
+                    }
+                    .padding(.top, 40)
+                } else {
+                    ForEach(activities) { activity in
+                        PointsActivityRow(activity: activity)
+                    }
+                }
+            }
+            .padding(20)
+        }
+        .onAppear {
+            loadActivities()
+        }
+    }
+    
+    private func loadActivities() {
+        isLoading = true
+        // Load activities from API
+        Task {
+            do {
+                if let userId = AuthService.shared.currentUserId {
+                    let userActivities = try await UserService.shared.getUserActivities(userId: userId)
+                    await MainActor.run {
+                        // Convert to PointsActivity
+                        activities = userActivities.compactMap { activity in
+                            // Filter only activities that affect points
+                            let pointsChange = getPointsForActivityType(activity.activityType)
+                            if pointsChange != 0 {
+                                return PointsActivity(
+                                    id: String(activity.id),
+                                    type: activity.activityType,
+                                    description: activity.description,
+                                    pointsChange: pointsChange,
+                                    timestamp: activity.timestamp
+                                )
+                            }
+                            return nil
+                        }
+                        isLoading = false
+                    }
+                }
+            } catch {
+                await MainActor.run {
+                    isLoading = false
+                }
+            }
+        }
+    }
+    
+    private func getPointsForActivityType(_ type: String) -> Int {
+        switch type {
+        case "TOURNAMENT_WON": return 100
+        case "TOURNAMENT_JOINED": return 20
+        case "DECK_CREATED": return 5
+        case "CARD_ADDED_TO_COLLECTION": return 1
+        case "USER_REGISTERED": return 50
+        case "REWARD_REDEEMED": return -1 // Indicates point deduction
+        default: return 0
+        }
+    }
+}
 
+struct PointsActivity: Identifiable {
+    let id: String
+    let type: String
+    let description: String
+    let pointsChange: Int
+    let timestamp: String
+    
+    var isBonus: Bool { pointsChange > 0 }
+    
+    var displayType: String {
+        switch type {
+        case "TOURNAMENT_WON": return "Vittoria Torneo"
+        case "TOURNAMENT_JOINED": return "Iscrizione Torneo"
+        case "DECK_CREATED": return "Deck Creato"
+        case "CARD_ADDED_TO_COLLECTION": return "Carta Aggiunta"
+        case "USER_REGISTERED": return "Registrazione"
+        case "REWARD_REDEEMED": return "Premio Riscattato"
+        default: return type
+        }
+    }
+    
+    var icon: String {
+        switch type {
+        case "TOURNAMENT_WON": return "trophy.fill"
+        case "TOURNAMENT_JOINED": return "person.2.fill"
+        case "DECK_CREATED": return "rectangle.stack.badge.plus"
+        case "CARD_ADDED_TO_COLLECTION": return "plus.circle.fill"
+        case "USER_REGISTERED": return "person.badge.plus"
+        case "REWARD_REDEEMED": return "gift.fill"
+        default: return "star.fill"
+        }
+    }
+}
 
+struct PointsActivityRow: View {
+    let activity: PointsActivity
+    
+    var body: some View {
+        HStack(spacing: 12) {
+            // Icon
+            ZStack {
+                Circle()
+                    .fill(activity.isBonus ? Color.green.opacity(0.15) : Color.red.opacity(0.15))
+                    .frame(width: 44, height: 44)
+                
+                SwiftUI.Image(systemName: activity.icon)
+                    .font(.system(size: 18, weight: .semibold))
+                    .foregroundColor(activity.isBonus ? .green : .red)
+            }
+            
+            // Details
+            VStack(alignment: .leading, spacing: 4) {
+                Text(activity.displayType)
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundColor(.primary)
+                
+                Text(activity.description)
+                    .font(.system(size: 13))
+                    .foregroundColor(.secondary)
+                    .lineLimit(1)
+                
+                Text(formatTimestamp(activity.timestamp))
+                    .font(.system(size: 11))
+                    .foregroundColor(.secondary.opacity(0.8))
+            }
+            
+            Spacer()
+            
+            // Points
+            Text(activity.isBonus ? "+\(activity.pointsChange)" : "\(activity.pointsChange)")
+                .font(.system(size: 16, weight: .bold))
+                .foregroundColor(activity.isBonus ? .green : .red)
+        }
+        .padding(16)
+        .background(Color(.systemBackground))
+        .cornerRadius(12)
+        .shadow(color: Color.black.opacity(0.03), radius: 4, x: 0, y: 2)
+    }
+    
+    private func formatTimestamp(_ timestamp: String) -> String {
+        let isoFormatter = ISO8601DateFormatter()
+        isoFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        
+        guard let date = isoFormatter.date(from: timestamp) else {
+            return timestamp
+        }
+        
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        formatter.timeStyle = .short
+        formatter.locale = Locale(identifier: "it_IT")
+        return formatter.string(from: date)
+    }
+}

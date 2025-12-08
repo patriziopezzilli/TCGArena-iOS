@@ -490,10 +490,10 @@ struct TCGRulesInfoBanner: View {
 
 struct TCGRulesRow: View {
     let tcgType: TCGType
-    @State private var showingRules = false
+    @State private var selectedTCGType: TCGType?
     
     var body: some View {
-        Button(action: { showingRules = true }) {
+        Button(action: { selectedTCGType = tcgType }) {
             HStack(spacing: 12) {
                 ZStack {
                     RoundedRectangle(cornerRadius: 8)
@@ -516,8 +516,8 @@ struct TCGRulesRow: View {
             .padding(.vertical, 4)
         }
         .buttonStyle(PlainButtonStyle())
-        .sheet(isPresented: $showingRules) {
-            TCGRulesView(tcgType: tcgType)
+        .sheet(item: $selectedTCGType) { type in
+            TCGRulesView(tcgType: type)
         }
     }
 }

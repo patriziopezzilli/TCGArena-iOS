@@ -24,9 +24,9 @@ struct MyReservationsView: View {
         var statuses: [Reservation.ReservationStatus] {
             switch self {
             case .active:
-                return [.pending, .validated]
+                return [.pending]  // Only pending is "active" - validated means ready for pickup (past)
             case .history:
-                return [.pickedUp, .expired, .cancelled]
+                return [.validated, .pickedUp, .expired, .cancelled]  // Validated goes to history
             }
         }
         

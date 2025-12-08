@@ -83,7 +83,9 @@ struct DiscoverView: View {
                                 EmptyStateCard(message: "No new members")
                                     .frame(width: 140, height: 180)
                             } else {
-                                ForEach(discoverService.newUsers.prefix(5), id: \.id) { user in
+                                // Filter out guest users
+                                let nonGuestUsers = discoverService.newUsers.filter { !$0.username.lowercased().contains("guest") }
+                                ForEach(nonGuestUsers.prefix(5), id: \.id) { user in
                                     NewMemberCard(user: user.toUserProfile()) {
                                         showingUserProfile = user.toUserProfile()
                                     }

@@ -89,14 +89,19 @@ struct Shop: Identifiable, Codable {
         (services ?? []).compactMap { ShopServiceType(rawValue: $0) }
     }
     
-    /// Check if the shop is currently open based on openingHours
+    /// Check if the shop is currently open based on openingHours and openingDays
     var isOpenNow: Bool {
-        guard let hours = openingHours else { return false }
+        guard let hours = openingHours else { return true } // If no hours set, assume open
+        
+        // First check if today is an open day
+        if let days = openingDays, !isDayOpen(days) {
+            return false
+        }
         
         // Parse format "10:00-19:00" or "10:00 - 19:00"
         let cleanHours = hours.replacingOccurrences(of: " ", with: "")
         let parts = cleanHours.split(separator: "-")
-        guard parts.count == 2 else { return false }
+        guard parts.count == 2 else { return true } // Invalid format, assume open
         
         let openTime = String(parts[0])
         let closeTime = String(parts[1])
@@ -105,7 +110,7 @@ struct Shop: Identifiable, Codable {
         formatter.dateFormat = "HH:mm"
         
         guard let openDate = formatter.date(from: openTime),
-              let closeDate = formatter.date(from: closeTime) else { return false }
+              let closeDate = formatter.date(from: closeTime) else { return true } // Invalid time, assume open
         
         let now = Date()
         let calendar = Calendar.current
@@ -120,15 +125,72 @@ struct Shop: Identifiable, Codable {
         
         // Handle overnight hours (e.g., 22:00-02:00)
         if closeMinutes < openMinutes {
-            return nowMinutes >= openMinutes || nowMinutes < closeMinutes
+            return nowMinutes >= openMinutes || nowMinutes <= closeMinutes
         }
         
-        return nowMinutes >= openMinutes && nowMinutes < closeMinutes
+        // Normal hours - use <= for close time to include the closing hour
+        return nowMinutes >= openMinutes && nowMinutes <= closeMinutes
+    }
+    
+    /// Check if today is an open day based on openingDays string
+    private func isDayOpen(_ daysString: String) -> Bool {
+        let calendar = Calendar.current
+        let weekday = calendar.component(.weekday, from: Date())
+        
+        // Map weekday (1=Sunday, 2=Monday, ... 7=Saturday) to Italian day names
+        let dayMap: [Int: [String]] = [
+            1: ["dom", "sun", "domenica", "sunday"],
+            2: ["lun", "mon", "lunedì", "lunedi", "monday"],
+            3: ["mar", "tue", "martedì", "martedi", "tuesday"],
+            4: ["mer", "wed", "mercoledì", "mercoledi", "wednesday"],
+            5: ["gio", "thu", "giovedì", "giovedi", "thursday"],
+            6: ["ven", "fri", "venerdì", "venerdi", "friday"],
+            7: ["sab", "sat", "sabato", "saturday"]
+        ]
+        
+        let lowercaseDays = daysString.lowercased()
+        
+        // Check for range format like "Lun-Sab" or "Mon-Sat"
+        if lowercaseDays.contains("-") {
+            let parts = lowercaseDays.split(separator: "-").map { String($0).trimmingCharacters(in: .whitespaces) }
+            if parts.count == 2 {
+                var startDay: Int?
+                var endDay: Int?
+                
+                for (day, aliases) in dayMap {
+                    if aliases.contains(where: { parts[0].contains($0) }) {
+                        startDay = day
+                    }
+                    if aliases.contains(where: { parts[1].contains($0) }) {
+                        endDay = day
+                    }
+                }
+                
+                if let start = startDay, let end = endDay {
+                    // Handle wrap-around (e.g., Sat-Sun)
+                    if start <= end {
+                        return weekday >= start && weekday <= end
+                    } else {
+                        return weekday >= start || weekday <= end
+                    }
+                }
+            }
+        }
+        
+        // Check if current day is mentioned
+        if let aliases = dayMap[weekday] {
+            return aliases.contains(where: { lowercaseDays.contains($0) })
+        }
+        
+        return true // Default to open if can't parse
     }
     
     /// Get status text for display
     var openStatusText: String {
-        isOpenNow ? "Aperto" : "Chiuso"
+        if openingHours == nil {
+            return "Orari non disponibili"
+        }
+        return isOpenNow ? "Aperto" : "Chiuso"
     }
     
     // Standard init for programmatic creation (used in Previews)

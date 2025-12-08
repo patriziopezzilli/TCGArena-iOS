@@ -133,17 +133,21 @@ class DiscoverService: ObservableObject {
     }
     
     private func processUsers(_ users: [User], leaderboardUsers: [User]) {
+        // Filter out merchant and private users from community sections
+        let publicUsers = users.filter { !$0.isMerchant && !$0.isPrivate }
+        let publicLeaderboardUsers = leaderboardUsers.filter { !$0.isMerchant && !$0.isPrivate }
+        
         // Sort users by join date for new users (most recent first)
         // Sort by dateJoined string (already formatted by backend)
-        let sortedByJoinDate = users.sorted { $0.dateJoined > $1.dateJoined }
+        let sortedByJoinDate = publicUsers.sorted { $0.dateJoined > $1.dateJoined }
         self.newUsers = Array(sortedByJoinDate.prefix(5))
         
         // Use leaderboard users as featured users
-        self.featuredUsers = Array(leaderboardUsers.prefix(3))
+        self.featuredUsers = Array(publicLeaderboardUsers.prefix(3))
         
         // For active users, sort by some criteria (mock for now since backend doesn't have lastActive)
         // In a real implementation, backend would need to provide last active date
-        self.activeUsers = Array(users.shuffled().prefix(10))
+        self.activeUsers = Array(publicUsers.shuffled().prefix(10))
     }
     
     func refreshData() {
@@ -157,10 +161,6 @@ class DiscoverService: ObservableObject {
             endpoint = "/api/users/leaderboard/tournaments"
         case .collection:
             endpoint = "/api/users/leaderboard/collection"
-        case .community:
-            endpoint = "/api/users/leaderboard/active" // Using active players as proxy for community
-        case .level:
-            endpoint = "/api/users/leaderboard" // Using overall points as proxy for level
         }
         
         apiClient.request(endpoint: endpoint, method: .get) { result in
@@ -209,10 +209,8 @@ class DiscoverService: ObservableObject {
     
     private func getScore(for type: LeaderboardType, stat: UserStats) -> Int {
         switch type {
-        case .tournaments: return stat.totalWins * 10 // Example scoring
+        case .tournaments: return stat.totalWins * 10
         case .collection: return stat.totalCards
-        case .community: return Int(stat.winRate * 100)
-        case .level: return stat.user.points ?? 0
         }
     }
     

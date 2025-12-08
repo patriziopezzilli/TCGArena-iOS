@@ -520,7 +520,7 @@ struct CollectionView: View {
         VStack(spacing: 0) {
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("My Lists")
+                    Text("TCG Arena")
                         .font(.system(size: 28, weight: .bold))
                         .foregroundColor(.primary)
                 }
@@ -1401,7 +1401,7 @@ struct HorizontalCardRowView: View {
                     }
                 }
                 
-                // Rarity and Condition
+                // Rarity and Deck Info
                 HStack(spacing: 12) {
                     // Rarity
                     HStack(spacing: 4) {
@@ -1412,29 +1412,26 @@ struct HorizontalCardRowView: View {
                         }
                     }
                     
-                    // Condition
-                    Text(card.condition.displayName)
-                        .font(.system(size: 11, weight: .medium))
-                        .foregroundColor(conditionColor(card.condition))
+                    // Deck/List Info (replacing condition)
+                    if let deckNames = card.deckNames, !deckNames.isEmpty {
+                        HStack(spacing: 4) {
+                            SwiftUI.Image(systemName: "rectangle.stack.fill")
+                                .font(.system(size: 10))
+                            Text(deckNames.first ?? "")
+                                .font(.system(size: 11, weight: .medium))
+                                .lineLimit(1)
+                            if deckNames.count > 1 {
+                                Text("+\(deckNames.count - 1)")
+                                    .font(.system(size: 10, weight: .bold))
+                            }
+                        }
+                        .foregroundColor(.blue)
                         .padding(.horizontal, 8)
                         .padding(.vertical, 2)
                         .background(
                             Capsule()
-                                .fill(conditionColor(card.condition).opacity(0.1))
+                                .fill(Color.blue.opacity(0.1))
                         )
-                }
-
-                // Deck Reference
-                if let deckNames = card.deckNames, !deckNames.isEmpty {
-                    HStack(spacing: 4) {
-                        SwiftUI.Image(systemName: "rectangle.stack")
-                            .font(.system(size: 10))
-                            .foregroundColor(.secondary)
-
-                        Text("Found in: \(deckNames.joined(separator: ", "))")
-                            .font(.system(size: 11))
-                            .foregroundColor(.secondary)
-                            .lineLimit(1)
                     }
                 }
             }

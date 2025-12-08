@@ -22,6 +22,7 @@ struct User: Identifiable, Codable {
     let dateJoined: String
     let isPremium: Bool
     let isMerchant: Bool
+    let isPrivate: Bool // If true, user is hidden from Discover section
     let shopId: Int64?
     let points: Int?
     let favoriteTCGTypesString: String?
@@ -45,6 +46,7 @@ struct User: Identifiable, Codable {
         case dateJoined
         case isPremium
         case isMerchant
+        case isPrivate
         case shopId
         case points
         case favoriteTCGTypesString
@@ -66,6 +68,7 @@ struct User: Identifiable, Codable {
         profileImageUrl = try container.decodeIfPresent(String.self, forKey: .profileImageUrl)
         isPremium = try container.decode(Bool.self, forKey: .isPremium)
         isMerchant = try container.decode(Bool.self, forKey: .isMerchant)
+        isPrivate = (try? container.decode(Bool.self, forKey: .isPrivate)) ?? false
         shopId = try container.decodeIfPresent(Int64.self, forKey: .shopId)
         points = try container.decodeIfPresent(Int.self, forKey: .points)
         favoriteTCGTypesString = try container.decodeIfPresent(String.self, forKey: .favoriteTCGTypesString)
@@ -117,6 +120,7 @@ struct User: Identifiable, Codable {
         try container.encodeIfPresent(profileImageUrl, forKey: .profileImageUrl)
         try container.encode(isPremium, forKey: .isPremium)
         try container.encode(isMerchant, forKey: .isMerchant)
+        try container.encode(isPrivate, forKey: .isPrivate)
         try container.encodeIfPresent(shopId, forKey: .shopId)
         try container.encodeIfPresent(points, forKey: .points)
         try container.encodeIfPresent(favoriteTCGTypesString, forKey: .favoriteTCGTypesString)

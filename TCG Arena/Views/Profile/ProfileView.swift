@@ -56,78 +56,6 @@ struct ProfileView: View {
                 
                 ScrollView {
                     VStack(spacing: 20) {
-                        // Compact Profile Header
-                        HStack(spacing: 16) {
-                            // Profile Image (smaller)
-                            if let profileImageUrl = authService.currentUser?.profileImageUrl,
-                               let url = URL(string: profileImageUrl) {
-                                AsyncImage(url: url) { image in
-                                    image
-                                        .resizable()
-                                        .scaledToFill()
-                                        .frame(width: 60, height: 60)
-                                        .clipShape(Circle())
-                                        .overlay(Circle().stroke(Color.white, lineWidth: 2))
-                                        .shadow(radius: 2)
-                                } placeholder: {
-                                    Circle()
-                                        .fill(Color(red: 0.0, green: 0.7, blue: 1.0))
-                                        .frame(width: 60, height: 60)
-                                        .overlay(
-                                            Text(authService.currentUser?.displayName.prefix(2).uppercased() ?? "TC")
-                                                .font(.system(size: 22, weight: .bold))
-                                                .foregroundColor(.white)
-                                        )
-                                }
-                            } else {
-                                Circle()
-                                    .fill(Color(red: 0.0, green: 0.7, blue: 1.0))
-                                    .frame(width: 60, height: 60)
-                                    .overlay(
-                                        Text(authService.currentUser?.displayName.prefix(2).uppercased() ?? "TC")
-                                            .font(.system(size: 22, weight: .bold))
-                                            .foregroundColor(.white)
-                                    )
-                            }
-                            
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text(authService.currentUser?.displayName ?? "TCG Collector")
-                                    .font(.system(size: 20, weight: .bold))
-                                    .foregroundColor(.primary)
-                                
-                                if let user = authService.currentUser {
-                                    HStack(spacing: 8) {
-                                        HStack(spacing: 4) {
-                                            SwiftUI.Image(systemName: "star.fill")
-                                                .font(.system(size: 10, weight: .semibold))
-                                            Text(user.isPremium ? "Premium" : "Member")
-                                                .font(.system(size: 12, weight: .semibold))
-                                        }
-                                        .foregroundColor(.white)
-                                        .padding(.horizontal, 8)
-                                        .padding(.vertical, 3)
-                                        .background(
-                                            Capsule()
-                                                .fill(user.isPremium ? Color.orange : Color.gray)
-                                        )
-                                        
-                                        Text("Joined \(formattedJoinDate(parseDate(user.dateJoined)))")
-                                            .font(.system(size: 12, weight: .medium))
-                                            .foregroundColor(.secondary)
-                                    }
-                                }
-                            }
-                            
-                            Spacer()
-                        }
-                        .padding(16)
-                        .background(
-                            RoundedRectangle(cornerRadius: 16)
-                                .fill(Color(.systemBackground))
-                                .shadow(color: Color.black.opacity(0.06), radius: 8, x: 0, y: 2)
-                        )
-                        .padding(.horizontal, 20)
-                        
                         // MARK: - Quick Actions Section (Prominent)
                         VStack(spacing: 12) {
                             // My Reservations Card
@@ -620,10 +548,15 @@ struct StatCard: View {
         @EnvironmentObject private var authService: AuthService
         @State private var selectedTCGs: Set<TCGType> = []
         
+        private let columns = [
+            GridItem(.flexible(), spacing: 12),
+            GridItem(.flexible(), spacing: 12)
+        ]
+        
         var body: some View {
-            LazyVGrid(columns: [GridItem(.adaptive(minimum: 100))], spacing: 8) {
+            LazyVGrid(columns: columns, spacing: 12) {
                 ForEach(TCGType.allCases, id: \.self) { tcgType in
-                    FavoriteTCGChip(
+                    FavoriteTCGCard(
                         tcgType: tcgType,
                         isSelected: selectedTCGs.contains(tcgType)
                     ) {
@@ -631,7 +564,7 @@ struct StatCard: View {
                     }
                 }
             }
-            .padding(.vertical, 4)
+            .padding(.vertical, 8)
             .onAppear {
                 selectedTCGs = Set(authService.favoriteTCGTypes)
             }
@@ -641,47 +574,84 @@ struct StatCard: View {
         }
         
         private func toggleTCG(_ tcgType: TCGType) {
-            if selectedTCGs.contains(tcgType) {
-                selectedTCGs.remove(tcgType)
-            } else {
-                selectedTCGs.insert(tcgType)
+            HapticManager.shared.selectionChanged()
+            
+            withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                if selectedTCGs.contains(tcgType) {
+                    selectedTCGs.remove(tcgType)
+                } else {
+                    selectedTCGs.insert(tcgType)
+                }
             }
             
             Task {
                 let success = await authService.updateFavoriteTCGs(Array(selectedTCGs))
                 if !success {
+                    HapticManager.shared.error()
                     // Revert on failure
-                    if selectedTCGs.contains(tcgType) {
-                        selectedTCGs.remove(tcgType)
-                    } else {
-                        selectedTCGs.insert(tcgType)
+                    withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                        if selectedTCGs.contains(tcgType) {
+                            selectedTCGs.remove(tcgType)
+                        } else {
+                            selectedTCGs.insert(tcgType)
+                        }
                     }
                 }
             }
         }
     }
     
-    struct FavoriteTCGChip: View {
+    struct FavoriteTCGCard: View {
         let tcgType: TCGType
         let isSelected: Bool
         let action: () -> Void
         
         var body: some View {
             Button(action: action) {
-                HStack(spacing: 4) {
-                    TCGIconView(tcgType: tcgType, size: 12)
+                VStack(spacing: 10) {
+                    // Large TCG icon
+                    ZStack {
+                        Circle()
+                            .fill(isSelected ? tcgType.themeColor.opacity(0.2) : Color(.systemGray5))
+                            .frame(width: 56, height: 56)
+                        
+                        TCGIconView(tcgType: tcgType, size: 32)
+                            .foregroundColor(isSelected ? tcgType.themeColor : .secondary)
+                        
+                        // Checkmark overlay when selected
+                        if isSelected {
+                            Circle()
+                                .fill(tcgType.themeColor)
+                                .frame(width: 20, height: 20)
+                                .overlay(
+                                    SwiftUI.Image(systemName: "checkmark")
+                                        .font(.system(size: 10, weight: .bold))
+                                        .foregroundColor(.white)
+                                )
+                                .offset(x: 20, y: -20)
+                        }
+                    }
                     
+                    // TCG name
                     Text(tcgType.displayName)
-                        .font(.system(size: 12, weight: .medium))
+                        .font(.system(size: 13, weight: isSelected ? .semibold : .medium))
+                        .foregroundColor(isSelected ? tcgType.themeColor : .primary)
                         .lineLimit(1)
                 }
-                .padding(.horizontal, 10)
-                .padding(.vertical, 6)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 16)
+                .padding(.horizontal, 8)
                 .background(
-                    Capsule()
-                        .fill(isSelected ? tcgType.themeColor : Color(.systemGray5))
+                    RoundedRectangle(cornerRadius: 16)
+                        .fill(isSelected ?
+                              tcgType.themeColor.opacity(0.1) :
+                              Color(.systemBackground))
                 )
-                .foregroundColor(isSelected ? .white : .primary)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 16)
+                        .stroke(isSelected ? tcgType.themeColor : Color(.systemGray4), lineWidth: isSelected ? 2 : 1)
+                )
+                .scaleEffect(isSelected ? 1.02 : 1.0)
             }
             .buttonStyle(PlainButtonStyle())
         }
@@ -700,6 +670,7 @@ struct StatCard: View {
         @State private var showingSignOutAlert = false
         @State private var showingDeleteAlert = false
         @State private var notificationsEnabled = true
+        @State private var isPrivate: Bool = false
         
         var body: some View {
             NavigationView {
@@ -716,7 +687,7 @@ struct StatCard: View {
                     }
                     
                     // App Settings Section
-                    Section("App Settings") {
+                    Section {
                         SettingsRow(
                             title: "Notifications",
                             icon: "bell.fill"
@@ -732,18 +703,27 @@ struct StatCard: View {
                         )
                         
                         SettingsRow(
-                            title: "Dark Mode",
-                            icon: "moon.fill"
+                            title: "Profilo Privato",
+                            icon: "eye.slash.fill"
                         ) {
-                            // Il toggle gestisce già il cambio di stato
+                            togglePrivacy()
                         }
                         .overlay(
                             HStack {
                                 Spacer()
-                                Toggle("", isOn: $settingsService.isDarkMode)
+                                Toggle("", isOn: $isPrivate)
                                     .labelsHidden()
+                                    .onChange(of: isPrivate) { newValue in
+                                        updatePrivacySetting(newValue)
+                                    }
                             }
                         )
+                    } header: {
+                        Text("App Settings")
+                    } footer: {
+                        Text("Quando attivo, il tuo profilo non sarà visibile nella sezione Discover")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
                     }
                     
                     // Account Section
@@ -887,6 +867,29 @@ struct StatCard: View {
                     },
                     alignment: .bottom
                 )
+                .onAppear {
+                    // Sync privacy state with current user
+                    isPrivate = authService.currentUser?.isPrivate ?? false
+                }
+            }
+        }
+        
+        private func togglePrivacy() {
+            HapticManager.shared.selectionChanged()
+            isPrivate.toggle()
+        }
+        
+        private func updatePrivacySetting(_ newValue: Bool) {
+            Task {
+                let success = await authService.updatePrivacy(isPrivate: newValue)
+                if !success {
+                    HapticManager.shared.error()
+                    // Revert on failure
+                    await MainActor.run {
+                        isPrivate = !newValue
+                    }
+                    ToastManager.shared.showError("Impossibile aggiornare la privacy")
+                }
             }
         }
     }
@@ -1381,42 +1384,7 @@ struct StatCard: View {
                                         )
                                 }
                             }
-                            
-                            // Favorite TCG Picker
-                            VStack(alignment: .leading, spacing: 8) {
-                                Text("TCG Preferito")
-                                    .font(.system(size: 14, weight: .medium))
-                                    .foregroundColor(.secondary)
-                                
-                                HStack(spacing: 10) {
-                                    ForEach(tcgOptions, id: \.self) { tcg in
-                                        Button(action: {
-                                            withAnimation(.easeInOut(duration: 0.2)) {
-                                                favoriteGame = tcg
-                                            }
-                                        }) {
-                                            VStack(spacing: 6) {
-                                                TCGIconView(tcgType: tcg, size: 20, color: favoriteGame == tcg ? tcg.themeColor : .secondary)
-                                                Text(tcg.displayName)
-                                                    .font(.system(size: 11, weight: .medium))
-                                                    .lineLimit(1)
-                                            }
-                                            .frame(maxWidth: .infinity)
-                                            .padding(.vertical, 12)
-                                            .background(
-                                                RoundedRectangle(cornerRadius: 12)
-                                                    .fill(favoriteGame == tcg ? tcg.themeColor.opacity(0.15) : Color(.systemGray6))
-                                            )
-                                            .overlay(
-                                                RoundedRectangle(cornerRadius: 12)
-                                                    .stroke(favoriteGame == tcg ? tcg.themeColor : Color.clear, lineWidth: 2)
-                                            )
-                                            .foregroundColor(favoriteGame == tcg ? tcg.themeColor : .secondary)
-                                        }
-                                        .buttonStyle(PlainButtonStyle())
-                                    }
-                                }
-                            }
+
                         }
                         .padding(20)
                         .background(

@@ -99,7 +99,6 @@ struct ShopDetailView: View {
                     }
             }
         }
-        .withToastSupport()
     }
     
     private func mainContent(geometry: GeometryProxy) -> some View {
@@ -677,7 +676,7 @@ struct ShopDetailView: View {
                                 DispatchQueue.main.async {
                                     switch result {
                                     case .success:
-                                        shopService.subscribedShops.remove(String(shop.id))
+                                        // State is already updated by ShopService, only show toast
                                         ToastManager.shared.showSuccess("You won't receive notifications from this shop anymore.")
                                     case .failure(let error):
                                         print("Error unsubscribing: \(error.localizedDescription)")
@@ -700,7 +699,7 @@ struct ShopDetailView: View {
                             DispatchQueue.main.async {
                                 switch result {
                                 case .success:
-                                    shopService.subscribedShops.insert(String(shop.id))
+                                    // State is already updated by ShopService, only show toast
                                     ToastManager.shared.showSuccess("You'll receive notifications from this shop.")
                                 case .failure(let error):
                                     print("Error subscribing: \(error.localizedDescription)")

@@ -17,6 +17,7 @@
 		78660E4D2EE60CA300EA2BFE /* ProductType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78660E4C2EE60CA300EA2BFE /* ProductType.swift */; };
 		78660E4F2EE6177900EA2BFE /* EmbeddedUserStats.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78660E4E2EE6177900EA2BFE /* EmbeddedUserStats.swift */; };
 		78660E522EE6E27800EA2BFE /* TCGIconView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78660E502EE6E27800EA2BFE /* TCGIconView.swift */; };
+		78660E542EE7795600EA2BFE /* HapticManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78660E532EE7795600EA2BFE /* HapticManager.swift */; };
 		786AC8602EE2CD68001A6714 /* PastTournamentCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 786AC85F2EE2CD68001A6714 /* PastTournamentCard.swift */; };
 		786AC8632EE2DC13001A6714 /* WelcomeSheet in Frameworks */ = {isa = PBXBuildFile; productRef = 786AC8622EE2DC13001A6714 /* WelcomeSheet */; };
 		786AC8652EE2DF8A001A6714 /* OnboardingPermissionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 786AC8642EE2DF8A001A6714 /* OnboardingPermissionsView.swift */; };
@@ -147,6 +148,7 @@
 		78660E4C2EE60CA300EA2BFE /* ProductType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProductType.swift; sourceTree = "<group>"; };
 		78660E4E2EE6177900EA2BFE /* EmbeddedUserStats.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmbeddedUserStats.swift; sourceTree = "<group>"; };
 		78660E502EE6E27800EA2BFE /* TCGIconView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TCGIconView.swift; sourceTree = "<group>"; };
+		78660E532EE7795600EA2BFE /* HapticManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HapticManager.swift; sourceTree = "<group>"; };
 		786AC85F2EE2CD68001A6714 /* PastTournamentCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PastTournamentCard.swift; sourceTree = "<group>"; };
 		786AC8642EE2DF8A001A6714 /* OnboardingPermissionsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingPermissionsView.swift; sourceTree = "<group>"; };
 		786AC8662EE2ECC6001A6714 /* AuthFlowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthFlowView.swift; sourceTree = "<group>"; };
@@ -348,6 +350,7 @@
 		7A7DF41F2EBBA0DE00331A52 /* Utils */ = {
 			isa = PBXGroup;
 			children = (
+				78660E532EE7795600EA2BFE /* HapticManager.swift */,
 				784090492EDB96F800CC6B9A /* ImageCacheManager.swift */,
 				7A7DF4232EBBAD5000331A52 /* ViewHelpers.swift */,
 				7A7DF4212EBBA1A100331A52 /* TCGTheme.swift */,
@@ -663,6 +666,7 @@
 				7883DF9F2EE02C87007D1C51 /* UserRequestsView.swift in Sources */,
 				7AAAA2102EDD938A0035F942 /* TournamentExtensions.swift in Sources */,
 				A1000001 /* TCGArenaApp.swift in Sources */,
+				78660E542EE7795600EA2BFE /* HapticManager.swift in Sources */,
 				7AE3FF992EC90409004EE982 /* Set.swift in Sources */,
 				786AC87C2EE4E3A4001A6714 /* TCGRulesView.swift in Sources */,
 				7AFBD61F2EBCF99F0023B5D2 /* EditCardView.swift in Sources */,

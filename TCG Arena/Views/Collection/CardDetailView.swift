@@ -149,7 +149,7 @@ struct CardDetailView: View {
     
     private var cardInfoView: some View {
         VStack(alignment: .leading, spacing: 12) {
-            InfoRow(label: "Set", value: card.set ?? "Unknown", color: .secondary)
+            InfoRow(label: "Set", value: card.set?.uppercased() ?? "Unknown", color: .secondary)
             InfoRow(label: "Number", value: card.cardNumber ?? "N/A", color: .secondary)
             InfoRow(label: "Rarity", value: card.rarity.displayName, color: card.rarity.color)
         

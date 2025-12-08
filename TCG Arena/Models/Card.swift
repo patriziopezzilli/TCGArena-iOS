@@ -151,7 +151,8 @@ struct Card: Identifiable, Codable {
     }
 }
 
-enum TCGType: String, CaseIterable, Codable {
+enum TCGType: String, CaseIterable, Codable, Identifiable {
+    var id: String { rawValue }
     case pokemon = "POKEMON"
     case onePiece = "ONE_PIECE"
     case magic = "MAGIC"

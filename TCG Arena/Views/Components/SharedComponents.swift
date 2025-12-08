@@ -149,7 +149,10 @@ struct PremiumTabButton: View {
     let action: () -> Void
     
     var body: some View {
-        Button(action: action) {
+        Button(action: {
+            HapticManager.shared.lightImpact()
+            action()
+        }) {
             HStack(spacing: 8) {
                 SwiftUI.Image(systemName: icon)
                     .font(.system(size: 14, weight: .semibold))

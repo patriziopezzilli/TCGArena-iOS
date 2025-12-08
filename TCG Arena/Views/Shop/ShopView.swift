@@ -166,17 +166,101 @@ struct ShopListView: View {
     @StateObject private var locationManager = LocationManager()
     @AppStorage("savedLocationLatitude") private var savedLatitude: Double = 45.4642
     @AppStorage("savedLocationLongitude") private var savedLongitude: Double = 9.1900
+    
+    // MARK: - Filter State
+    @State private var shopFilters = ShopFilters()
+    @State private var showingFilters = false
+    
+    // MARK: - Filtered Shops
+    private var filteredShops: [Shop] {
+        let userLocation = locationManager.location ?? CLLocation(latitude: savedLatitude, longitude: savedLongitude)
+        
+        var result = shopService.nearbyShops
+        
+        // Apply 20km distance filter
+        if shopFilters.onlyNearby {
+            result = result.filter { shop in
+                guard let lat = shop.latitude, let lon = shop.longitude else {
+                    return true // Include shops without location
+                }
+                let shopLocation = CLLocation(latitude: lat, longitude: lon)
+                let distanceKm = userLocation.distance(from: shopLocation) / 1000
+                return distanceKm <= 20
+            }
+        }
+        
+        // Apply TCG type filter
+        if !shopFilters.selectedTCGTypes.isEmpty {
+            result = result.filter { shop in
+                // Check if shop's available TCGs intersect with selected filters
+                // For now, include all shops since we don't have TCG types on shop model
+                return true
+            }
+        }
+        
+        // Sort by distance
+        result.sort { shop1, shop2 in
+            let dist1 = distanceToShop(shop1, from: userLocation)
+            let dist2 = distanceToShop(shop2, from: userLocation)
+            return dist1 < dist2
+        }
+        
+        return result
+    }
+    
+    private func distanceToShop(_ shop: Shop, from location: CLLocation) -> Double {
+        guard let lat = shop.latitude, let lon = shop.longitude else {
+            return Double.infinity
+        }
+        let shopLocation = CLLocation(latitude: lat, longitude: lon)
+        return location.distance(from: shopLocation) / 1000
+    }
 
     var body: some View {
         ZStack {
             ScrollView {
                 LazyVStack(spacing: 20) {
-                    // Summary Text
+                    // Summary Text with filter button
                     HStack {
-                        Text("\(shopService.nearbyShops.count) stores nearby")
+                        Text("\(filteredShops.count) stores\(shopFilters.onlyNearby ? " nearby" : "")")
                             .font(.system(size: 14, weight: .medium))
                             .foregroundColor(.secondary)
+                        
+                        if shopFilters.isActive {
+                            Text("• Filtered (\(shopFilters.activeFilterCount))")
+                                .font(.system(size: 12, weight: .medium))
+                                .foregroundColor(.blue)
+                        }
+                        
                         Spacer()
+                        
+                        // Filter button
+                        Button(action: {
+                            showingFilters = true
+                        }) {
+                            HStack(spacing: 4) {
+                                SwiftUI.Image(systemName: "line.3.horizontal.decrease.circle")
+                                    .font(.system(size: 14, weight: .medium))
+                                Text("Filters")
+                                    .font(.system(size: 13, weight: .medium))
+                                
+                                if shopFilters.activeFilterCount > 0 {
+                                    Text("\(shopFilters.activeFilterCount)")
+                                        .font(.system(size: 11, weight: .bold))
+                                        .foregroundColor(.white)
+                                        .padding(.horizontal, 6)
+                                        .padding(.vertical, 2)
+                                        .background(Circle().fill(Color.blue))
+                                }
+                            }
+                            .foregroundColor(.blue)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 6)
+                            .background(
+                                Capsule()
+                                    .fill(Color.blue.opacity(0.1))
+                            )
+                        }
                         
                         if shopService.isLoading {
                             ProgressView()
@@ -186,45 +270,103 @@ struct ShopListView: View {
                     .padding(.horizontal, 20)
                     .padding(.top, 16)
 
-                    if shopService.nearbyShops.isEmpty && !shopService.isLoading {
-                        // Empty state
-                        VStack(spacing: 16) {
-                            SwiftUI.Image(systemName: "storefront")
-                                .font(.system(size: 48))
-                                .foregroundColor(.secondary.opacity(0.5))
+                    if filteredShops.isEmpty && !shopService.isLoading {
+                        // Empty state - Premium design
+                        VStack(spacing: 24) {
+                            // Icon with solid background
+                            ZStack {
+                                Circle()
+                                    .fill(Color.blue.opacity(0.12))
+                                    .frame(width: 100, height: 100)
+                                
+                                SwiftUI.Image(systemName: "storefront.fill")
+                                    .font(.system(size: 40))
+                                    .foregroundColor(.blue)
+                            }
                             
-                            Text("No stores found nearby")
-                                .font(.system(size: 18, weight: .medium))
-                                .foregroundColor(.secondary)
-                            
-                            if let errorMessage = shopService.errorMessage {
-                                Text(errorMessage)
-                                    .font(.system(size: 14))
+                            // Text content
+                            VStack(spacing: 8) {
+                                Text(shopFilters.onlyNearby ? "Nessun negozio nelle vicinanze" : "Nessun negozio trovato")
+                                    .font(.system(size: 20, weight: .semibold))
+                                    .foregroundColor(.primary)
+                                
+                                Text(shopFilters.onlyNearby 
+                                    ? "Non ci sono negozi entro 20km dalla tua posizione"
+                                    : "Non sono stati trovati negozi disponibili")
+                                    .font(.system(size: 15))
                                     .foregroundColor(.secondary)
                                     .multilineTextAlignment(.center)
                                     .padding(.horizontal, 20)
                             }
                             
-                            Button(action: {
-                                let locationToUse = locationManager.location ?? CLLocation(latitude: savedLatitude, longitude: savedLongitude)
-                                Task {
-                                    await shopService.loadNearbyShops(userLocation: locationToUse)
+                            // Action buttons
+                            VStack(spacing: 12) {
+                                if shopFilters.onlyNearby {
+                                    // Primary CTA - Show all stores
+                                    Button(action: {
+                                        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                                            shopFilters.onlyNearby = false
+                                        }
+                                        HapticManager.shared.selectionChanged()
+                                    }) {
+                                        HStack(spacing: 8) {
+                                            SwiftUI.Image(systemName: "globe")
+                                                .font(.system(size: 16, weight: .semibold))
+                                            Text("Mostra tutti i negozi")
+                                                .font(.system(size: 16, weight: .semibold))
+                                        }
+                                        .foregroundColor(.white)
+                                        .frame(maxWidth: .infinity)
+                                        .padding(.vertical, 14)
+                                        .background(Color.blue)
+                                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                                    }
+                                    .padding(.horizontal, 40)
                                 }
-                            }) {
-                                Text("Try Again")
-                                    .font(.system(size: 16, weight: .medium))
+                                
+                                // Secondary CTA - Reload
+                                Button(action: {
+                                    HapticManager.shared.selectionChanged()
+                                    Task {
+                                        await shopService.loadAllShops()
+                                    }
+                                }) {
+                                    HStack(spacing: 6) {
+                                        SwiftUI.Image(systemName: "arrow.clockwise")
+                                            .font(.system(size: 14, weight: .medium))
+                                        Text("Ricarica")
+                                            .font(.system(size: 15, weight: .medium))
+                                    }
                                     .foregroundColor(.blue)
                                     .padding(.horizontal, 20)
                                     .padding(.vertical, 10)
                                     .background(
-                                        RoundedRectangle(cornerRadius: 8)
-                                            .stroke(Color.blue, lineWidth: 1)
+                                        Capsule()
+                                            .fill(Color.blue.opacity(0.1))
                                     )
+                                }
+                            }
+                            
+                            if let errorMessage = shopService.errorMessage {
+                                Text(errorMessage)
+                                    .font(.system(size: 13))
+                                    .foregroundColor(.red.opacity(0.8))
+                                    .multilineTextAlignment(.center)
+                                    .padding(.horizontal, 40)
+                                    .padding(.top, 4)
                             }
                         }
-                        .padding(.top, 40)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 60)
+                        .padding(.horizontal, 20)
+                        .background(
+                            RoundedRectangle(cornerRadius: 20)
+                                .fill(Color(.systemBackground))
+                                .shadow(color: Color.black.opacity(0.05), radius: 10, x: 0, y: 2)
+                        )
+                        .padding(.top, 20)
                     } else {
-                        ForEach(shopService.nearbyShops) { shop in
+                        ForEach(filteredShops) { shop in
                             NavigationLink(destination: ShopDetailView(shop: shop)
                                 .environmentObject(shopService)
                                 .environmentObject(inventoryService)
@@ -269,6 +411,13 @@ struct ShopListView: View {
                 let locationToUse = locationManager.location ?? CLLocation(latitude: savedLatitude, longitude: savedLongitude)
                 await shopService.loadNearbyShops(userLocation: locationToUse)
             }
+        }
+        .sheet(isPresented: $showingFilters) {
+            ShopFiltersView(filters: $shopFilters, isPresented: $showingFilters) {
+                // Filters applied - view will update automatically
+            }
+            .presentationDetents([.medium, .large])
+            .presentationDragIndicator(.visible)
         }
     }
 }
@@ -388,6 +537,21 @@ struct EventListView: View {
         if eventFilters.onlyRanked {
             filtered = filtered.filter { tournament in
                 return tournament.isRanked == true
+            }
+        }
+        
+        // Nearby filter (30km)
+        if eventFilters.onlyNearby {
+            let userLocation = locationManager.location ?? CLLocation(latitude: savedLatitude, longitude: savedLongitude)
+            filtered = filtered.filter { tournament in
+                guard let location = tournament.location,
+                      let lat = location.latitude,
+                      let lon = location.longitude else {
+                    return true // Include if no location (can't calculate distance)
+                }
+                let eventLocation = CLLocation(latitude: lat, longitude: lon)
+                let distanceKm = userLocation.distance(from: eventLocation) / 1000
+                return distanceKm <= 30
             }
         }
         
@@ -533,7 +697,7 @@ struct EventListView: View {
                         .foregroundColor(.secondary)
                     
                     if eventFilters.isActive {
-                        Text("• Filtered")
+                        Text("• Filtered (\(eventFilters.activeFilterCount))")
                             .font(.system(size: 12, weight: .medium))
                             .foregroundColor(.blue)
                     }

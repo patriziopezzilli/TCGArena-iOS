@@ -233,61 +233,42 @@ class TournamentService: ObservableObject {
         
         isLoading = false
     }
+    // MARK: - Load All Tournaments (Client-side filtering)
     
-    func loadNearbyTournaments(userLocation: CLLocation, radius: Double = 50) {
-        isLoading = true
-        errorMessage = nil
-        
-        getNearbyTournaments(latitude: userLocation.coordinate.latitude, longitude: userLocation.coordinate.longitude, radiusKm: radius) { result in
-            DispatchQueue.main.async {
-                switch result {
-                case .success(let tournaments):
-                    print("Loaded \(tournaments.count) nearby tournaments (or all tournaments sorted by distance)")
-                    self.nearbyTournaments = tournaments
-                case .failure(let error):
-                    // Check if this is a cancelled request (not a real error)
-                    if let urlError = error as? URLError, urlError.code == .cancelled {
-                        print("Nearby tournaments request was cancelled, using all tournaments as fallback")
-                    } else {
-                        self.errorMessage = error.localizedDescription
-                    }
-                    // Fallback to all tournaments if nearby fails
-                    self.nearbyTournaments = self.tournaments
-                }
-                self.isLoading = false
-            }
-        }
-    }
-    
-    // Async version for SwiftUI tasks
+    /// Loads all tournaments from the API. UI handles distance filtering client-side.
     @MainActor
-    func loadNearbyTournaments(userLocation: CLLocation, radius: Double = 50) async {
+    func loadAllTournaments() async {
         isLoading = true
         errorMessage = nil
         
-        // Assume tournaments are already loaded by the view
-        // If not, the fallback will handle it
-        
-        // Try to get nearby ones
         do {
-            let nearbyResult = try await apiClient.request("/api/tournaments/nearby?latitude=\(userLocation.coordinate.latitude)&longitude=\(userLocation.coordinate.longitude)&radiusKm=\(radius)", method: "GET") as [Tournament]
-            
-            print("Loaded \(nearbyResult.count) nearby tournaments from /api/tournaments/nearby")
-            self.nearbyTournaments = nearbyResult
+            let allTournaments: [Tournament] = try await apiClient.request("/api/tournaments", method: "GET")
+            print("✅ Loaded \(allTournaments.count) tournaments")
+            self.tournaments = allTournaments
+            self.nearbyTournaments = allTournaments // UI will filter by distance
         } catch {
-            // Check if this is a cancelled request (not a real error)
             if let urlError = error as? URLError, urlError.code == .cancelled {
-                print("Nearby tournaments request was cancelled, using all tournaments as fallback")
+                print("Tournaments request was cancelled")
             } else {
-                print("Error loading nearby tournaments: \(error), using all tournaments as fallback")
+                print("Error loading tournaments: \(error)")
                 self.errorMessage = error.localizedDescription
             }
-            // Fallback to all tournaments if nearby fails
-            self.nearbyTournaments = self.tournaments
-            print("Using \(self.nearbyTournaments.count) tournaments as fallback")
         }
         
         isLoading = false
+    }
+    
+    /// Legacy sync method - calls loadAllTournaments
+    func loadNearbyTournaments(userLocation: CLLocation, radius: Double = 50) {
+        Task {
+            await loadAllTournaments()
+        }
+    }
+    
+    /// Legacy async method - calls loadAllTournaments
+    @MainActor
+    func loadNearbyTournaments(userLocation: CLLocation, radius: Double = 50) async {
+        await loadAllTournaments()
     }
     
     // Async version for SwiftUI tasks

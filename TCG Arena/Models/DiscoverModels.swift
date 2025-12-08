@@ -153,8 +153,6 @@ struct LeaderboardEntry: Identifiable, Codable {
 enum LeaderboardType: String, CaseIterable, Identifiable {
     case tournaments = "tournaments"
     case collection = "collection"
-    case community = "community"
-    case level = "level"
     
     var id: String { rawValue }
     
@@ -162,8 +160,6 @@ enum LeaderboardType: String, CaseIterable, Identifiable {
         switch self {
         case .tournaments: return "Tournaments"
         case .collection: return "Collection"
-        case .community: return "Community"
-        case .level: return "Level"
         }
     }
     
@@ -171,8 +167,6 @@ enum LeaderboardType: String, CaseIterable, Identifiable {
         switch self {
         case .tournaments: return "trophy.fill"
         case .collection: return "square.stack.3d.up.fill"
-        case .community: return "heart.fill"
-        case .level: return "star.circle.fill"
         }
     }
     
@@ -180,8 +174,6 @@ enum LeaderboardType: String, CaseIterable, Identifiable {
         switch self {
         case .tournaments: return "Tournament wins"
         case .collection: return "Card collection size"
-        case .community: return "Community engagement"
-        case .level: return "User level"
         }
     }
     
@@ -189,8 +181,6 @@ enum LeaderboardType: String, CaseIterable, Identifiable {
         switch self {
         case .tournaments: return .orange
         case .collection: return .blue
-        case .community: return .pink
-        case .level: return .purple
         }
     }
 }

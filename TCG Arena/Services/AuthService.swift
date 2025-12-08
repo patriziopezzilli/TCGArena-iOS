@@ -373,4 +373,27 @@ class AuthService: ObservableObject {
             favoriteTCGs = currentUser?.favoriteGames ?? []
         }
     }
+    
+    // MARK: - Privacy Management
+    
+    /// Updates the user's privacy setting (hide from Discover)
+    func updatePrivacy(isPrivate: Bool) async -> Bool {
+        guard let userId = currentUserId else { return false }
+        
+        do {
+            let payload = ["isPrivate": isPrivate]
+            let _: [String: Bool] = try await APIClient.shared.request(
+                "/api/users/\(userId)/privacy",
+                method: "PUT",
+                body: payload
+            )
+            
+            // Update local user
+            await reloadUserDataIfNeeded()
+            return true
+        } catch {
+            Swift.print("❌ Failed to update privacy: \(error.localizedDescription)")
+            return false
+        }
+    }
 }

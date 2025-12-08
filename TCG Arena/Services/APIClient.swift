@@ -9,7 +9,8 @@ import Foundation
 
 class APIClient: NSObject {
     static let shared = APIClient()
-    private let baseURL = "https://api.tcgarena.it"
+   // private let baseURL = "https://api.tcgarena.it"
+    private let baseURL = "http://localhost:8080"
     
     // URLSession con configurazione basata sulla modalità (debug/disabilita cache)
     private lazy var urlSession: URLSession = {

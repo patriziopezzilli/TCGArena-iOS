@@ -135,39 +135,12 @@ class ShopService: ObservableObject {
             }
         }
     }
+    // MARK: - Load All Shops (Client-side filtering)
     
-    func loadNearbyShops(userLocation: CLLocation, radius: Double = 50000) {
-        isLoading = true
-        errorMessage = nil
-        
-        getAllShops { result in
-            DispatchQueue.main.async {
-                switch result {
-                case .success(let shops):
-                    // Filter shops within radius (only those with valid coordinates)
-                    self.nearbyShops = shops.compactMap { shop in
-                        guard let latitude = shop.latitude, let longitude = shop.longitude else { return nil }
-                        let shopLocation = CLLocation(latitude: latitude, longitude: longitude)
-                        let distance = userLocation.distance(from: shopLocation)
-                        return distance <= radius ? shop : nil
-                    }.sorted { shop1, shop2 in
-                        guard let lat1 = shop1.latitude, let lon1 = shop1.longitude,
-                              let lat2 = shop2.latitude, let lon2 = shop2.longitude else { return false }
-                        let location1 = CLLocation(latitude: lat1, longitude: lon1)
-                        let location2 = CLLocation(latitude: lat2, longitude: lon2)
-                        return userLocation.distance(from: location1) < userLocation.distance(from: location2)
-                    }
-                case .failure(let error):
-                    self.errorMessage = error.localizedDescription
-                }
-                self.isLoading = false
-            }
-        }
-    }
-    
-    // Async version for SwiftUI tasks
+    /// Loads all shops from the API without any filtering.
+    /// The UI (ShopListView) handles distance filtering client-side.
     @MainActor
-    func loadNearbyShops(userLocation: CLLocation, radius: Double = 50000) async {
+    func loadAllShops() async {
         // Prevent concurrent requests
         guard !isLoading else {
             print("Already loading shops, skipping request")
@@ -181,57 +154,41 @@ class ShopService: ObservableObject {
             print("🌐 APIClient: Making GET request to: /api/shops")
             let shops: [Shop] = try await apiClient.request("/api/shops", method: "GET")
             
-            // Filter shops within radius (only those with valid coordinates)
-            let filteredShops = shops.compactMap { shop in
-                guard let latitude = shop.latitude, let longitude = shop.longitude else { return nil }
-                let shopLocation = CLLocation(latitude: latitude, longitude: longitude)
-                let distance = userLocation.distance(from: shopLocation)
-                return distance <= radius ? shop : nil
-            }.sorted { (shop1: Shop, shop2: Shop) -> Bool in
-                guard let lat1 = shop1.latitude, let lon1 = shop1.longitude,
-                      let lat2 = shop2.latitude, let lon2 = shop2.longitude else { return false }
-                let location1 = CLLocation(latitude: lat1, longitude: lon1)
-                let location2 = CLLocation(latitude: lat2, longitude: lon2)
-                return userLocation.distance(from: location1) < userLocation.distance(from: location2)
-            }
+            // Store all shops - UI will handle filtering
+            self.nearbyShops = shops
+            self.isLoading = false
             
-            // Update on main thread
-            await MainActor.run {
-                self.nearbyShops = filteredShops
-                self.isLoading = false
-            }
-            
-            print("Loaded \(filteredShops.count) nearby shops")
+            print("✅ Loaded \(shops.count) shops")
         } catch {
-            await MainActor.run {
-                // Check if this is a cancelled request (not a real error)
-                if let urlError = error as? URLError, urlError.code == .cancelled {
-                    print("Nearby shops request was cancelled, using fallback data")
-                } else {
-                    self.errorMessage = "Unable to load shops from server. Showing nearby stores."
-                    print("Error loading nearby shops: \(error)")
-                }
-                self.isLoading = false
-                
-                // If API fails, fall back to mock data
-                if self.nearbyShops.isEmpty {
-                    print("Falling back to mock data")
-                    self.setupMockData()
-                    self.nearbyShops = self.shops.filter { shop in
-                        guard let latitude = shop.latitude, let longitude = shop.longitude else { return false }
-                        let shopLocation = CLLocation(latitude: latitude, longitude: longitude)
-                        let distance = userLocation.distance(from: shopLocation)
-                        return distance <= radius
-                    }.sorted { (shop1: Shop, shop2: Shop) -> Bool in
-                        guard let lat1 = shop1.latitude, let lon1 = shop1.longitude,
-                              let lat2 = shop2.latitude, let lon2 = shop2.longitude else { return false }
-                        let location1 = CLLocation(latitude: lat1, longitude: lon1)
-                        let location2 = CLLocation(latitude: lat2, longitude: lon2)
-                        return userLocation.distance(from: location1) < userLocation.distance(from: location2)
-                    }
-                }
+            // Check if this is a cancelled request (not a real error)
+            if let urlError = error as? URLError, urlError.code == .cancelled {
+                print("Shops request was cancelled")
+            } else {
+                self.errorMessage = "Unable to load shops from server."
+                print("Error loading shops: \(error)")
+            }
+            self.isLoading = false
+            
+            // If API fails, fall back to mock data
+            if self.nearbyShops.isEmpty {
+                print("Falling back to mock data")
+                self.setupMockData()
+                self.nearbyShops = self.shops
             }
         }
+    }
+    
+    /// Legacy sync method for compatibility - now just calls loadAllShops
+    func loadNearbyShops(userLocation: CLLocation, radius: Double = 50000) {
+        Task {
+            await loadAllShops()
+        }
+    }
+    
+    /// Legacy async method for compatibility - now just calls loadAllShops
+    @MainActor
+    func loadNearbyShops(userLocation: CLLocation, radius: Double = 50000) async {
+        await loadAllShops()
     }
     
     // MARK: - Shop News (Mock for now - backend may not have this endpoint)

@@ -16,13 +16,40 @@ struct ShopInventoryView: View {
     @State private var selectedCard: InventoryCard?
     @State private var showToast = false
     @State private var toastMessage = ""
+    @State private var showFilters = false
+    
+    // Advanced filters
+    @State private var minPrice: Double?
+    @State private var maxPrice: Double?
+    @State private var selectedCondition: InventoryCard.CardCondition?
+    @State private var selectedSet: String?
+    
+    // Available sets from inventory
+    private var availableSets: [String] {
+        let sets = Set(inventoryService.inventory.compactMap { $0.setName })
+        return Array(sets).sorted()
+    }
+    
+    // Active filter count
+    private var activeFilterCount: Int {
+        var count = 0
+        if selectedTCG != nil { count += 1 }
+        if minPrice != nil || maxPrice != nil { count += 1 }
+        if selectedCondition != nil { count += 1 }
+        if selectedSet != nil { count += 1 }
+        return count
+    }
     
     var filteredInventory: [InventoryCard] {
         inventoryService.inventory.filter { card in
             let matchesSearch = searchText.isEmpty ||
                 card.name.localizedCaseInsensitiveContains(searchText)
             let matchesTCG = selectedTCG == nil || card.tcgType == selectedTCG
-            return matchesSearch && matchesTCG && card.isAvailable
+            let matchesMinPrice = minPrice == nil || card.price >= (minPrice ?? 0)
+            let matchesMaxPrice = maxPrice == nil || card.price <= (maxPrice ?? Double.infinity)
+            let matchesCondition = selectedCondition == nil || card.condition == selectedCondition
+            let matchesSet = selectedSet == nil || card.setName == selectedSet
+            return matchesSearch && matchesTCG && matchesMinPrice && matchesMaxPrice && matchesCondition && matchesSet && card.isAvailable
         }
     }
     
@@ -30,33 +57,143 @@ struct ShopInventoryView: View {
         VStack(spacing: 0) {
             // Search & Filter
             VStack(spacing: 12) {
-                HStack {
-                    SwiftUI.Image(systemName: "magnifyingglass")
-                        .foregroundColor(.secondary)
-                    
-                    TextField("Search cards...", text: $searchText)
-                        .textFieldStyle(PlainTextFieldStyle())
-                        .font(.system(size: 16))
-                }
-                .padding(12)
-                .background(
-                    RoundedRectangle(cornerRadius: 12)
-                        .fill(Color(.systemGray6))
-                )
-                
-                // TCG Filter
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 8) {
-                        TCGFilterChip(title: "All", isSelected: selectedTCG == nil) {
-                            selectedTCG = nil
-                        }
+                // Search bar with filter button
+                HStack(spacing: 12) {
+                    HStack {
+                        SwiftUI.Image(systemName: "magnifyingglass")
+                            .foregroundColor(.secondary)
                         
-                        ForEach([TCGType.pokemon, .magic, .yugioh, .onePiece, .digimon, .dragonBallSuper, .dragonBallFusion, .fleshAndBlood, .lorcana], id: \.self) { tcg in
-                            TCGFilterChip(title: tcg.rawValue, isSelected: selectedTCG == tcg) {
-                                selectedTCG = tcg
+                        TextField("Cerca carte...", text: $searchText)
+                            .textFieldStyle(PlainTextFieldStyle())
+                            .font(.system(size: 16))
+                    }
+                    .padding(12)
+                    .background(
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(Color(.systemGray6))
+                    )
+                    
+                    // Filter toggle button
+                    Button(action: {
+                        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                            showFilters.toggle()
+                        }
+                    }) {
+                        ZStack(alignment: .topTrailing) {
+                            SwiftUI.Image(systemName: showFilters ? "line.3.horizontal.decrease.circle.fill" : "line.3.horizontal.decrease.circle")
+                                .font(.system(size: 24))
+                                .foregroundColor(activeFilterCount > 0 ? .indigo : .secondary)
+                            
+                            if activeFilterCount > 0 {
+                                Text("\(activeFilterCount)")
+                                    .font(.system(size: 10, weight: .bold))
+                                    .foregroundColor(.white)
+                                    .frame(width: 16, height: 16)
+                                    .background(Circle().fill(Color.red))
+                                    .offset(x: 4, y: -4)
                             }
                         }
                     }
+                }
+                
+                // Expandable filters section
+                if showFilters {
+                    VStack(spacing: 12) {
+                        // TCG Filter
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack(spacing: 8) {
+                                TCGFilterChip(title: "Tutti", isSelected: selectedTCG == nil) {
+                                    selectedTCG = nil
+                                }
+                                
+                                ForEach([TCGType.pokemon, .magic, .yugioh, .onePiece, .digimon], id: \.self) { tcg in
+                                    TCGFilterChip(title: tcg.displayName, isSelected: selectedTCG == tcg) {
+                                        selectedTCG = selectedTCG == tcg ? nil : tcg
+                                    }
+                                }
+                            }
+                        }
+                        
+                        // Condition Filter
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack(spacing: 8) {
+                                Text("Condizione:")
+                                    .font(.system(size: 13, weight: .medium))
+                                    .foregroundColor(.secondary)
+                                
+                                ForEach([InventoryCard.CardCondition.nearMint, .lightPlayed, .played, .poor], id: \.self) { condition in
+                                    TCGFilterChip(title: condition.shortName, isSelected: selectedCondition == condition) {
+                                        selectedCondition = selectedCondition == condition ? nil : condition
+                                    }
+                                }
+                            }
+                        }
+                        
+                        // Price Range
+                        HStack(spacing: 12) {
+                            Text("Prezzo:")
+                                .font(.system(size: 13, weight: .medium))
+                                .foregroundColor(.secondary)
+                            
+                            HStack(spacing: 8) {
+                                TextField("Min", value: $minPrice, format: .number)
+                                    .textFieldStyle(PlainTextFieldStyle())
+                                    .keyboardType(.decimalPad)
+                                    .font(.system(size: 14))
+                                    .frame(width: 60)
+                                    .padding(8)
+                                    .background(RoundedRectangle(cornerRadius: 8).fill(Color(.systemGray6)))
+                                
+                                Text("-")
+                                    .foregroundColor(.secondary)
+                                
+                                TextField("Max", value: $maxPrice, format: .number)
+                                    .textFieldStyle(PlainTextFieldStyle())
+                                    .keyboardType(.decimalPad)
+                                    .font(.system(size: 14))
+                                    .frame(width: 60)
+                                    .padding(8)
+                                    .background(RoundedRectangle(cornerRadius: 8).fill(Color(.systemGray6)))
+                                
+                                Text("€")
+                                    .font(.system(size: 14, weight: .medium))
+                                    .foregroundColor(.secondary)
+                            }
+                            
+                            Spacer()
+                            
+                            // Clear all filters button
+                            if activeFilterCount > 0 {
+                                Button(action: clearFilters) {
+                                    Text("Resetta")
+                                        .font(.system(size: 12, weight: .medium))
+                                        .foregroundColor(.red)
+                                }
+                            }
+                        }
+                        
+                        // Set Filter (if sets available)
+                        if !availableSets.isEmpty {
+                            ScrollView(.horizontal, showsIndicators: false) {
+                                HStack(spacing: 8) {
+                                    Text("Set:")
+                                        .font(.system(size: 13, weight: .medium))
+                                        .foregroundColor(.secondary)
+                                    
+                                    TCGFilterChip(title: "Tutti", isSelected: selectedSet == nil) {
+                                        selectedSet = nil
+                                    }
+                                    
+                                    ForEach(availableSets.prefix(10), id: \.self) { setName in
+                                        TCGFilterChip(title: setName, isSelected: selectedSet == setName) {
+                                            selectedSet = selectedSet == setName ? nil : setName
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    .transition(.opacity.combined(with: .move(edge: .top)))
                 }
             }
             .padding(16)
@@ -199,6 +336,16 @@ struct ShopInventoryView: View {
             await inventoryService.loadInventory(shopId: shopId, filters: InventoryFilters(onlyAvailable: true))
         }
     }
+    
+    private func clearFilters() {
+        withAnimation {
+            selectedTCG = nil
+            minPrice = nil
+            maxPrice = nil
+            selectedCondition = nil
+            selectedSet = nil
+        }
+    }
 }
 
 // MARK: - TCG Filter Chip
@@ -208,7 +355,10 @@ private struct TCGFilterChip: View {
     let action: () -> Void
     
     var body: some View {
-        Button(action: action) {
+        Button(action: {
+            HapticManager.shared.selectionChanged()
+            action()
+        }) {
             Text(title)
                 .font(.system(size: 13, weight: .semibold))
                 .foregroundColor(isSelected ? .white : .indigo)
