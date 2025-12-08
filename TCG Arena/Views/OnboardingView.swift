@@ -71,9 +71,7 @@ struct OnboardingView: View {
                                     selectedTCG = tcg
                                 }) {
                                     VStack(spacing: 8) {
-                                        SwiftUI.Image(systemName: tcg.systemIcon)
-                                            .font(.system(size: 30, weight: .medium))
-                                            .foregroundColor(selectedTCG == tcg ? .white : tcg.themeColor)
+                                        TCGIconView(tcgType: tcg, size: 30, color: selectedTCG == tcg ? .white : tcg.themeColor)
 
                                         Text(tcg.displayName)
                                             .font(.system(size: 14, weight: .medium))

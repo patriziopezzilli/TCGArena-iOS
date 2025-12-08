@@ -325,7 +325,7 @@ struct MinimalTournamentCard: View {
                             .fill(tcgColor(tournament.tcgType))
                             .frame(width: 32, height: 32)
                         
-                        SwiftUI.Image(systemName: tcgIcon(tournament.tcgType))
+                        TCGIconView(tcgType: tournament.tcgType, size: 24, color: tournament.tcgType.themeColor)
                             .font(.system(size: 14, weight: .bold))
                             .foregroundColor(.white)
                     }
@@ -359,17 +359,21 @@ struct MinimalTournamentCard: View {
                     
                     Spacer()
                     
-                    Text("€\(Int(tournament.entryFee))")
-                        .font(.system(size: 12, weight: .bold))
-                        .foregroundColor(tcgColor(tournament.tcgType))
+                    if let entryFee = tournament.entryFee {
+                        Text("€\(Int(entryFee))")
+                            .font(.system(size: 12, weight: .bold))
+                            .foregroundColor(tcgColor(tournament.tcgType))
+                    }
                 }
                 
                 // Participants progress
                 VStack(alignment: .leading, spacing: 6) {
                     HStack {
-                        Text("\(tournament.participants.count)/\(tournament.maxParticipants)")
-                            .font(.system(size: 11, weight: .semibold))
-                            .foregroundColor(.secondary)
+                        if let maxParticipants = tournament.maxParticipants {
+                            Text("\(tournament.participants.count)/\(maxParticipants)")
+                                .font(.system(size: 11, weight: .semibold))
+                                .foregroundColor(.secondary)
+                        }
                         
                         Spacer()
                         
@@ -387,12 +391,14 @@ struct MinimalTournamentCard: View {
                                 .fill(Color.gray.opacity(0.2))
                                 .frame(height: 6)
                             
-                            RoundedRectangle(cornerRadius: 3)
-                                .fill(tcgColor(tournament.tcgType))
-                                .frame(
-                                    width: geometry.size.width * (Double(tournament.registeredParticipantsCount) / Double(tournament.maxParticipants)),
-                                    height: 6
-                                )
+                            if let maxParticipants = tournament.maxParticipants, maxParticipants > 0 {
+                                RoundedRectangle(cornerRadius: 3)
+                                    .fill(tcgColor(tournament.tcgType))
+                                    .frame(
+                                        width: geometry.size.width * (Double(tournament.registeredParticipantsCount) / Double(maxParticipants)),
+                                        height: 6
+                                    )
+                            }
                         }
                     }
                     .frame(height: 6)
@@ -430,19 +436,6 @@ struct MinimalTournamentCard: View {
         case .inProgress: return Color(red: 1.0, green: 0.0, blue: 0.6) // Bright Pink
         case .completed: return Color.gray
         case .cancelled: return Color.red
-        }
-    }
-    
-    private func tcgIcon(_ tcgType: TCGType) -> String {
-        switch tcgType {
-        case .pokemon: return "bolt.fill"
-        case .onePiece: return "sailboat.fill"
-        case .magic: return "sparkles"
-        case .yugioh: return "eye.fill"
-        case .digimon: return "shield.fill"
-        case .dragonBallSuper, .dragonBallFusion: return "flame.fill"
-        case .fleshAndBlood: return "theatermasks.fill"
-        case .lorcana: return "wand.and.stars"
         }
     }
     

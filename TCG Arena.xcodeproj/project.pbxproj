@@ -16,6 +16,7 @@
 		785CF4C52EDCDA6F00BA98AD /* SkeletonUI in Frameworks */ = {isa = PBXBuildFile; productRef = 785CF4C42EDCDA6F00BA98AD /* SkeletonUI */; };
 		78660E4D2EE60CA300EA2BFE /* ProductType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78660E4C2EE60CA300EA2BFE /* ProductType.swift */; };
 		78660E4F2EE6177900EA2BFE /* EmbeddedUserStats.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78660E4E2EE6177900EA2BFE /* EmbeddedUserStats.swift */; };
+		78660E522EE6E27800EA2BFE /* TCGIconView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78660E502EE6E27800EA2BFE /* TCGIconView.swift */; };
 		786AC8602EE2CD68001A6714 /* PastTournamentCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 786AC85F2EE2CD68001A6714 /* PastTournamentCard.swift */; };
 		786AC8632EE2DC13001A6714 /* WelcomeSheet in Frameworks */ = {isa = PBXBuildFile; productRef = 786AC8622EE2DC13001A6714 /* WelcomeSheet */; };
 		786AC8652EE2DF8A001A6714 /* OnboardingPermissionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 786AC8642EE2DF8A001A6714 /* OnboardingPermissionsView.swift */; };
@@ -145,6 +146,7 @@
 		785CF4BE2EDC8D3F00BA98AD /* CreateDeckView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateDeckView.swift; sourceTree = "<group>"; };
 		78660E4C2EE60CA300EA2BFE /* ProductType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProductType.swift; sourceTree = "<group>"; };
 		78660E4E2EE6177900EA2BFE /* EmbeddedUserStats.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmbeddedUserStats.swift; sourceTree = "<group>"; };
+		78660E502EE6E27800EA2BFE /* TCGIconView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TCGIconView.swift; sourceTree = "<group>"; };
 		786AC85F2EE2CD68001A6714 /* PastTournamentCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PastTournamentCard.swift; sourceTree = "<group>"; };
 		786AC8642EE2DF8A001A6714 /* OnboardingPermissionsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingPermissionsView.swift; sourceTree = "<group>"; };
 		786AC8662EE2ECC6001A6714 /* AuthFlowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthFlowView.swift; sourceTree = "<group>"; };
@@ -279,6 +281,15 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		78660E512EE6E27800EA2BFE /* Common */ = {
+			isa = PBXGroup;
+			children = (
+				78660E502EE6E27800EA2BFE /* TCGIconView.swift */,
+			);
+			name = Common;
+			path = Views/Common;
+			sourceTree = "<group>";
+		};
 		7883DF852EDE4C9B007D1C51 /* Auth */ = {
 			isa = PBXGroup;
 			children = (
@@ -389,6 +400,7 @@
 		A5000002 /* TCG Arena */ = {
 			isa = PBXGroup;
 			children = (
+				78660E512EE6E27800EA2BFE /* Common */,
 				7A000AB22ED61E1D00A7E572 /* Helpers */,
 				A2000001 /* TCGArenaApp.swift */,
 				A2000002 /* ContentView.swift */,
@@ -731,6 +743,7 @@
 				A1000010 /* TournamentMapView.swift in Sources */,
 				784090482EDA2CD700CC6B9A /* SetDetailView.swift in Sources */,
 				7840904A2EDB96F800CC6B9A /* ImageCacheManager.swift in Sources */,
+				78660E522EE6E27800EA2BFE /* TCGIconView.swift in Sources */,
 				7A7DF4172EBB943D00331A52 /* CommunityView.swift in Sources */,
 				7A7DF41B2EBB943D00331A52 /* ProfileView.swift in Sources */,
 				7883DF8A2EDE53E8007D1C51 /* ButtonStyles.swift in Sources */,

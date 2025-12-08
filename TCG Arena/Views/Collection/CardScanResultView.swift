@@ -91,10 +91,11 @@ struct CardScanResultView: View {
                             
                             VStack(alignment: .leading, spacing: 8) {
                                 InfoPillView(
-                                    icon: selectedTCG.systemIcon,
                                     text: selectedTCG.displayName,
                                     color: selectedTCG.themeColor
-                                )
+                                ) {
+                                    TCGIconView(tcgType: selectedTCG, size: 12, color: selectedTCG.themeColor)
+                                }
                                 
                                 InfoPillView(
                                     icon: "number",
@@ -352,14 +353,26 @@ struct CardScanResultView: View {
 
 // MARK: - Supporting Views
 
-struct InfoPillView: View {
-    let icon: String
+struct InfoPillView<Icon: View>: View {
+    let icon: Icon
     let text: String
     let color: Color
     
+    init(icon: String, text: String, color: Color) where Icon == SwiftUI.Image {
+        self.icon = SwiftUI.Image(systemName: icon)
+        self.text = text
+        self.color = color
+    }
+    
+    init(text: String, color: Color, @ViewBuilder icon: () -> Icon) {
+        self.icon = icon()
+        self.text = text
+        self.color = color
+    }
+    
     var body: some View {
         HStack(spacing: 6) {
-            SwiftUI.Image(systemName: icon)
+            icon
                 .font(.system(size: 12, weight: .medium))
                 .foregroundColor(color)
             

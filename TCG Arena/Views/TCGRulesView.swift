@@ -22,9 +22,7 @@ struct TCGRulesView: View {
                                 .fill(tcgType.themeColor.opacity(0.2))
                                 .frame(width: 80, height: 80)
                             
-                            SwiftUI.Image(systemName: tcgType.systemIcon)
-                                .font(.system(size: 36))
-                                .foregroundColor(tcgType.themeColor)
+                            TCGIconView(tcgType: tcgType, size: 36, color: tcgType.themeColor)
                         }
                         
                         VStack(alignment: .leading, spacing: 4) {
@@ -502,9 +500,7 @@ struct TCGRulesRow: View {
                         .fill(tcgType.themeColor.opacity(0.15))
                         .frame(width: 36, height: 36)
                     
-                    SwiftUI.Image(systemName: tcgType.systemIcon)
-                        .font(.system(size: 16))
-                        .foregroundColor(tcgType.themeColor)
+                    TCGIconView(tcgType: tcgType, size: 16, color: tcgType.themeColor)
                 }
                 
                 Text(tcgType.displayName)

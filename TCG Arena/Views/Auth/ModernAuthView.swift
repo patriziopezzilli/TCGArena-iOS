@@ -308,8 +308,7 @@ struct ModernAuthView: View {
                         }
                     }) {
                         HStack(spacing: 8) {
-                            SUIImage(systemName: tcg.systemIcon)
-                                .font(.system(size: 20))
+                            TCGIconView(tcgType: tcg, size: 20, color: selectedTCGs.contains(tcg) ? .white : .primary)
                             Text(tcg.displayName)
                                 .font(.system(size: 14, weight: .semibold))
                             Spacer()

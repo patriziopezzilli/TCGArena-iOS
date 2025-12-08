@@ -323,9 +323,7 @@ struct TournamentListCard: View {
                         .fill(tournament.tcgType.themeColor)
                         .frame(width: 50, height: 50)
                     
-                    SwiftUI.Image(systemName: tournament.tcgType.systemIcon)
-                        .font(.system(size: 20, weight: .bold))
-                        .foregroundColor(.white)
+                    TCGIconView(tcgType: tournament.tcgType, size: 20, color: .white)
                 }
                 
                 // Tournament Info
@@ -388,15 +386,19 @@ struct TournamentListCard: View {
                     
                     // Participants and Fee
                     HStack {
-                        Text("\(tournament.registeredParticipantsCount)/\(tournament.maxParticipants)")
-                            .font(.system(size: 13, weight: .semibold))
-                            .foregroundColor(.secondary)
+                        if let maxParticipants = tournament.maxParticipants {
+                            Text("\(tournament.registeredParticipantsCount)/\(maxParticipants)")
+                                .font(.system(size: 13, weight: .semibold))
+                                .foregroundColor(.secondary)
+                        }
                         
                         Spacer()
                         
-                        Text("€\(Int(tournament.entryFee))")
-                            .font(.system(size: 16, weight: .bold))
-                            .foregroundColor(tournament.tcgType.themeColor)
+                        if let entryFee = tournament.entryFee {
+                            Text("€\(Int(entryFee))")
+                                .font(.system(size: 16, weight: .bold))
+                                .foregroundColor(tournament.tcgType.themeColor)
+                        }
                     }
                 }
                 

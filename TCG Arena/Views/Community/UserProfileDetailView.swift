@@ -1157,7 +1157,7 @@ struct RealCardListItemView: View {
             .fill(displayCard.tcgType.themeColor.opacity(0.15))
             .overlay(
                 VStack(spacing: 4) {
-                    SwiftUI.Image(systemName: displayCard.tcgType.systemIcon)
+                    TCGIconView(tcgType: displayCard.tcgType, size: 16)
                         .font(.system(size: 24))
                         .foregroundColor(displayCard.tcgType.themeColor)
                     Text(displayCard.tcgType.displayName)

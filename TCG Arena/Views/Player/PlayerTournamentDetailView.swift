@@ -195,14 +195,16 @@ struct PlayerTournamentDetailView: View {
                 HStack(spacing: 6) {
                     Image(systemName: "person.2.fill")
                         .foregroundColor(.secondary)
-                    Text("\(tournament.registeredParticipantsCount)/\(tournament.maxParticipants) Players")
-                        .font(.subheadline)
+                    if let maxParticipants = tournament.maxParticipants {
+                        Text("\(tournament.registeredParticipantsCount)/\(maxParticipants) Players")
+                            .font(.subheadline)
+                    }
                 }
                 
                 Spacer()
                 
-                if tournament.entryFee > 0 {
-                    Text("Entry: €\(tournament.entryFee, specifier: "%.2f")")
+                if let entryFee = tournament.entryFee, entryFee > 0 {
+                    Text("Entry: €\(entryFee, specifier: "%.2f")")
                         .font(.subheadline)
                         .fontWeight(.semibold)
                         .foregroundColor(Color(AdaptiveColors.primary))

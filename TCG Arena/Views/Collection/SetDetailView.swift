@@ -438,9 +438,15 @@ struct SetDetailCardView: View {
                         .fill((card.tcgType?.themeColor ?? Color.gray).opacity(0.2))
                         .aspectRatio(2.5/3.5, contentMode: .fit)
                         .overlay(
-                            SwiftUI.Image(systemName: card.tcgType?.systemIcon ?? "questionmark.circle")
-                                .font(.system(size: 20))
-                                .foregroundColor(.secondary)
+                            Group {
+                                if let tcgType = card.tcgType {
+                                    TCGIconView(tcgType: tcgType, size: 24)
+                                } else {
+                                    SwiftUI.Image(systemName: "questionmark.circle")
+                                        .font(.system(size: 24))
+                                        .foregroundColor(.gray)
+                                }
+                            }
                         )
                 @unknown default:
                     RoundedRectangle(cornerRadius: 8)

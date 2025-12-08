@@ -1,0 +1,7 @@
+<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+  <!-- Eye of Anubis -->
+  <path d="M10 50 Q50 10 90 50 Q50 90 10 50 Z" fill="none" stroke="black" stroke-width="6"/>
+  <circle cx="50" cy="50" r="15" fill="black"/>
+  <path d="M50 20 L50 40" stroke="black" stroke-width="4"/>
+  <path d="M50 60 L50 80" stroke="black" stroke-width="4"/>
+</svg>

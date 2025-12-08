@@ -231,6 +231,33 @@ enum TCGType: String, CaseIterable, Codable {
         }
     }
     
+    /// Custom icon asset name if available
+    var customIconName: String? {
+        switch self {
+        case .pokemon:
+            return "pokemon_icon"
+        case .onePiece:
+            return "onepiece_icon"
+        case .magic:
+            return "magic_icon"
+        case .yugioh:
+            return "yugioh_icon"
+        case .digimon:
+            return "digimon_icon"
+        case .dragonBallSuper, .dragonBallFusion:
+            return "dragonball_icon"
+        case .fleshAndBlood:
+            return "fleshandblood_icon"
+        case .lorcana:
+            return "lorcana_icon"
+        }
+    }
+    
+    /// Whether this TCG has a custom icon
+    var hasCustomIcon: Bool {
+        customIconName != nil
+    }
+    
     // Hierarchy configuration (matches backend)
     var level1Label: String? {
         switch self {

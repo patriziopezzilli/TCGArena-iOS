@@ -68,12 +68,28 @@ struct TournamentDetailView: View {
     private var headerView: some View {
         GeometryReader { geometry in
             let offset = geometry.frame(in: .global).minY
+            let isRanked = tournament.isRanked == true
 
             ZStack(alignment: .bottomLeading) {
-                // Background Color - extends upward on scroll
-                tournament.tcgType.themeColor
-                    .frame(height: max(250, 250 + offset))
-                    .clipped()
+                // Background Color - Gold for ranked, TCG color for local
+                Group {
+                    if isRanked {
+                        // Premium gold gradient for ranked tournaments
+                        LinearGradient(
+                            gradient: Gradient(colors: [
+                                Color(red: 0.15, green: 0.12, blue: 0.08),
+                                Color(red: 0.25, green: 0.18, blue: 0.08),
+                                Color(red: 0.35, green: 0.25, blue: 0.10)
+                            ]),
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    } else {
+                        tournament.tcgType.themeColor
+                    }
+                }
+                .frame(height: max(250, 250 + offset))
+                .clipped()
 
                 // Gradient Overlay
                 LinearGradient(
@@ -98,14 +114,38 @@ struct TournamentDetailView: View {
                             .padding(.vertical, 6)
                             .background(Color.white.opacity(0.2))
                             .cornerRadius(8)
-
-                        Text(tournament.type.rawValue)
-                            .font(.system(size: 14, weight: .medium))
-                            .foregroundColor(.white)
-                            .padding(.horizontal, 10)
-                            .padding(.vertical, 6)
-                            .background(Color.white.opacity(0.2))
+                        
+                        // Official Tournament Badge - Premium gold on dark
+                        if tournament.isRanked == true {
+                            HStack(spacing: 5) {
+                                Text("🏆")
+                                Text("Ufficiale")
+                                    .fontWeight(.bold)
+                            }
+                            .font(.system(size: 14))
+                            .foregroundColor(Color(red: 1.0, green: 0.85, blue: 0.45))
+                            .padding(.horizontal, 14)
+                            .padding(.vertical, 7)
+                            .background(Color(red: 0.85, green: 0.65, blue: 0.2).opacity(0.25))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .stroke(Color(red: 0.85, green: 0.65, blue: 0.2), lineWidth: 1.5)
+                            )
                             .cornerRadius(8)
+                            .lineLimit(1)
+                            .fixedSize(horizontal: true, vertical: false)
+                        }
+
+                        // Tournament type badge - only for local tournaments
+                        if tournament.isRanked != true, let type = tournament.type {
+                            Text(type.rawValue)
+                                .font(.system(size: 14, weight: .medium))
+                                .foregroundColor(.white)
+                                .padding(.horizontal, 10)
+                                .padding(.vertical, 6)
+                                .background(Color.white.opacity(0.2))
+                                .cornerRadius(8)
+                        }
                     }
                 }
                 .padding(20)
@@ -288,6 +328,39 @@ struct TournamentDetailView: View {
                                     .shadow(color: Color.black.opacity(0.08), radius: 12, x: 0, y: 4)
                             )
                             .padding(.horizontal, 20)
+                        } else if tournament.isRanked == true {
+                            // Safari redirect button for ranked/official tournaments
+                            Button(action: {
+                                if let urlString = tournament.externalRegistrationUrl,
+                                   let url = URL(string: urlString) {
+                                    UIApplication.shared.open(url)
+                                }
+                            }) {
+                                HStack(spacing: 10) {
+                                    SwiftUI.Image(systemName: "trophy.circle.fill")
+                                        .font(.system(size: 20))
+                                    Text("Iscrizione su App Ufficiale")
+                                        .font(.system(size: 17, weight: .semibold))
+                                    SwiftUI.Image(systemName: "arrow.up.right")
+                                        .font(.system(size: 14, weight: .bold))
+                                }
+                                .foregroundColor(.black)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 16)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 16)
+                                        .fill(
+                                            LinearGradient(
+                                                gradient: Gradient(colors: [Color.yellow, Color.orange]),
+                                                startPoint: .leading,
+                                                endPoint: .trailing
+                                            )
+                                        )
+                                        .shadow(color: Color.yellow.opacity(0.4), radius: 12, x: 0, y: 6)
+                                )
+                            }
+                            .buttonStyle(ScaleButtonStyle())
+                            .padding(.horizontal, 20)
                         } else if tournament.status == .registrationOpen && authService.isAuthenticated && authService.currentUserId != nil && !isTournamentLocked {
                             // Prominent Registration Button - only for authenticated users and tournament not locked
                             let buttonIcon: String = tournament.isFull ? "clock.badge.checkmark" : "checkmark.circle.fill"
@@ -366,12 +439,19 @@ struct TournamentDetailView: View {
                             .padding(.horizontal, 20)
                         }
 
-                        // Info Grid
+                        // Info Grid - Hide participants and entry fee for ranked tournaments
                         LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
                             InfoCard(icon: "calendar", title: "Date", value: formatDate(tournament.startDate))
                             InfoCard(icon: "clock", title: "Time", value: formatTime(tournament.startDate))
-                            InfoCard(icon: "person.2", title: "Participants", value: "\(tournament.registeredParticipantsCount)/\(tournament.maxParticipants)")
-                            InfoCard(icon: "eurosign.circle", title: "Entry Fee", value: tournament.entryFee == 0 ? "Free" : "€\(String(format: "%.0f", tournament.entryFee))")
+                            // Only show for local tournaments
+                            if tournament.isRanked != true {
+                                if let maxParticipants = tournament.maxParticipants {
+                                    InfoCard(icon: "person.2", title: "Participants", value: "\(tournament.registeredParticipantsCount)/\(maxParticipants)")
+                                }
+                                if let entryFee = tournament.entryFee {
+                                    InfoCard(icon: "eurosign.circle", title: "Entry Fee", value: entryFee == 0 ? "Free" : "€\(String(format: "%.0f", entryFee))")
+                                }
+                            }
                         }
                         .padding(.horizontal, 20)
 
@@ -408,8 +488,8 @@ struct TournamentDetailView: View {
                             .padding(.horizontal, 20)
                         }
 
-                        // Description
-                        if let description = tournament.description {
+                        // Description - Only show for local tournaments
+                        if tournament.isRanked != true, let description = tournament.description {
                             VStack(alignment: .leading, spacing: 16) {
                                 SectionHeader(title: "About", icon: "info.circle.fill", color: .blue)
 
@@ -425,8 +505,10 @@ struct TournamentDetailView: View {
                             .padding(.horizontal, 20)
                         }
                         
-                        // Participants Section
-                        participantsSection
+                        // Participants Section - Only show for local tournaments
+                        if tournament.isRanked != true {
+                            participantsSection
+                        }
 
                         Spacer(minLength: 40)
                     }

@@ -53,25 +53,29 @@ struct PastTournamentCard: View {
                         .background(Color.gray.opacity(0.1))
                         .cornerRadius(4)
 
-                    Text(tournament.type.rawValue)
-                        .font(.system(size: 10, weight: .medium))
-                        .foregroundColor(.secondary.opacity(0.7))
-                        .padding(.horizontal, 6)
-                        .padding(.vertical, 2)
-                        .background(Color(.secondarySystemBackground).opacity(0.5))
-                        .cornerRadius(4)
+                    if let type = tournament.type {
+                        Text(type.rawValue)
+                            .font(.system(size: 10, weight: .medium))
+                            .foregroundColor(.secondary.opacity(0.7))
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background(Color(.secondarySystemBackground).opacity(0.5))
+                            .cornerRadius(4)
+                    }
 
                     Spacer()
 
                     // Price
-                    if tournament.entryFee > 0 {
-                        Text("€\(tournament.entryFee, specifier: "%.0f")")
-                            .font(.system(size: 14, weight: .bold))
-                            .foregroundColor(.secondary.opacity(0.7))
-                    } else {
-                        Text("Free")
-                            .font(.system(size: 14, weight: .bold))
-                            .foregroundColor(.green.opacity(0.7))
+                    if let entryFee = tournament.entryFee {
+                        if entryFee > 0 {
+                            Text("€\(entryFee, specifier: "%.0f")")
+                                .font(.system(size: 14, weight: .bold))
+                                .foregroundColor(.secondary.opacity(0.7))
+                        } else {
+                            Text("Free")
+                                .font(.system(size: 14, weight: .bold))
+                                .foregroundColor(.green.opacity(0.7))
+                        }
                     }
                 }
 
@@ -100,8 +104,10 @@ struct PastTournamentCard: View {
                     HStack(spacing: 4) {
                         SwiftUI.Image(systemName: "person.2.fill")
                             .font(.system(size: 12))
-                        Text("\(tournament.registeredParticipantsCount)/\(tournament.maxParticipants)")
-                            .font(.system(size: 12, weight: .medium))
+                        if let maxParticipants = tournament.maxParticipants {
+                            Text("\(tournament.registeredParticipantsCount)/\(maxParticipants)")
+                                .font(.system(size: 12, weight: .medium))
+                        }
                     }
                     .foregroundColor(.secondary.opacity(0.7))
                     

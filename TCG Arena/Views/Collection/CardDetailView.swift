@@ -99,9 +99,16 @@ struct CardDetailView: View {
                             .frame(width: 120, height: 170)
                             .overlay(
                                 VStack(spacing: 8) {
-                                    SwiftUI.Image(systemName: card.tcgType?.systemIcon ?? "questionmark.circle")
-                                        .font(.system(size: 32, weight: .medium))
-                                        .foregroundColor((card.tcgType?.themeColor ?? Color.gray).opacity(0.6))
+                                    Group {
+                                        if let tcgType = card.tcgType {
+                                            TCGIconView(tcgType: tcgType, size: 40)
+                                        } else {
+                                            SwiftUI.Image(systemName: "questionmark.circle")
+                                                .font(.system(size: 40))
+                                                .foregroundColor(.gray)
+                                        }
+                                    }
+                                    .opacity(0.6)
                                     
                                     Text("Image Error")
                                         .font(.system(size: 11, weight: .medium))
@@ -120,9 +127,16 @@ struct CardDetailView: View {
                     .frame(width: 120, height: 170)
                     .overlay(
                         VStack(spacing: 8) {
-                            SwiftUI.Image(systemName: card.tcgType?.systemIcon ?? "questionmark.circle")
-                                .font(.system(size: 32, weight: .medium))
-                                .foregroundColor((card.tcgType?.themeColor ?? Color.gray).opacity(0.6))
+                            Group {
+                                if let tcgType = card.tcgType {
+                                    TCGIconView(tcgType: tcgType, size: 24)
+                                } else {
+                                    SwiftUI.Image(systemName: "questionmark.circle")
+                                        .font(.system(size: 24))
+                                        .foregroundColor(.gray)
+                                }
+                            }
+                            .opacity(0.6)
                             
                             Text("Card Image")
                                 .font(.system(size: 11, weight: .medium))

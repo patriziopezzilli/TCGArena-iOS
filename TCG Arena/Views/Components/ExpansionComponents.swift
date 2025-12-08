@@ -25,9 +25,7 @@ struct ExpansionCard: View {
                         .fill(expansion.tcgType.themeColor.opacity(0.2))
                         .overlay(
                             VStack(spacing: 6) {
-                                SwiftUI.Image(systemName: expansion.tcgType.systemIcon)
-                                    .font(.system(size: 28, weight: .bold))
-                                    .foregroundColor(expansion.tcgType.themeColor)
+                                TCGIconView(tcgType: expansion.tcgType, size: 28, color: expansion.tcgType.themeColor)
                                 
                                 Text("\(expansion.sets.count) set\(expansion.sets.count == 1 ? "" : "s")")
                                     .font(.system(size: 10, weight: .bold))
@@ -133,9 +131,7 @@ struct ExpansionRow: View {
                 RoundedRectangle(cornerRadius: 8)
                     .fill(expansion.tcgType.themeColor.opacity(0.2))
                     .overlay(
-                        SwiftUI.Image(systemName: expansion.tcgType.systemIcon)
-                            .font(.system(size: 20, weight: .bold))
-                            .foregroundColor(expansion.tcgType.themeColor)
+                        TCGIconView(tcgType: expansion.tcgType, size: 20, color: expansion.tcgType.themeColor)
                         )
             }
             .frame(width: 60, height: 60)
@@ -232,9 +228,7 @@ struct ExpansionBadge: View {
     var body: some View {
         Button(action: action) {
             HStack(spacing: 6) {
-                SwiftUI.Image(systemName: expansion.tcgType.systemIcon)
-                    .font(.system(size: 10, weight: .semibold))
-                    .foregroundColor(expansion.tcgType.themeColor)
+                TCGIconView(tcgType: expansion.tcgType, size: 10, color: expansion.tcgType.themeColor)
                 
                 Text(expansion.title)
                     .font(.system(size: 11, weight: .semibold))

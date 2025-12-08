@@ -307,9 +307,7 @@ struct GameTypeOption: View {
                         .fill(isSelected ? tcg.themeColor : Color.gray.opacity(0.1))
                         .frame(width: 44, height: 44)
                     
-                    SwiftUI.Image(systemName: tcg.systemIcon)
-                        .font(.system(size: 20))
-                        .foregroundColor(isSelected ? .white : tcg.themeColor)
+                    TCGIconView(tcgType: tcg, size: 20, color: isSelected ? .white : tcg.themeColor)
                 }
                 .shadow(color: isSelected ? tcg.themeColor.opacity(0.4) : .clear, radius: 4, y: 2)
                 

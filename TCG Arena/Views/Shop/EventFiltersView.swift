@@ -13,6 +13,7 @@ struct EventFilters {
     var priceRange: PriceRangeFilter = .all
     var selectedTCGTypes: Set<TCGType> = []
     var selectedTournamentTypes: Set<Tournament.TournamentType> = []
+    var onlyRanked: Bool = false
     
     enum DateRangeFilter: String, CaseIterable {
         case all = "All"
@@ -60,7 +61,10 @@ struct EventFilters {
         dateRange != .all ||
         priceRange != .all ||
         !selectedTCGTypes.isEmpty ||
-        !selectedTournamentTypes.isEmpty
+        priceRange != .all ||
+        !selectedTCGTypes.isEmpty ||
+        !selectedTournamentTypes.isEmpty ||
+        onlyRanked
     }
     
     var activeFilterCount: Int {
@@ -68,7 +72,9 @@ struct EventFilters {
         if dateRange != .all { count += 1 }
         if priceRange != .all { count += 1 }
         count += selectedTCGTypes.count
+        count += selectedTCGTypes.count
         count += selectedTournamentTypes.count
+        if onlyRanked { count += 1 }
         return count
     }
     
@@ -77,6 +83,7 @@ struct EventFilters {
         priceRange = .all
         selectedTCGTypes = []
         selectedTournamentTypes = []
+        onlyRanked = false
     }
 }
 
@@ -136,7 +143,6 @@ struct EventFiltersView: View {
                             ForEach([TCGType.pokemon, .magic, .yugioh, .onePiece], id: \.self) { tcgType in
                                 FilterChip(
                                     title: tcgType.displayName,
-                                    icon: tcgType.systemIcon,
                                     isSelected: tempFilters.selectedTCGTypes.contains(tcgType),
                                     accentColor: tcgType.themeColor
                                 ) {
@@ -164,6 +170,19 @@ struct EventFiltersView: View {
                                         tempFilters.selectedTournamentTypes.insert(type)
                                     }
                                 }
+                            }
+                        }
+                    }
+                    
+                    // Category Filter Section
+                    FilterSection(title: "Category", icon: "star.circle.fill") {
+                        LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
+                            FilterChip(
+                                title: "Official Only 🏆",
+                                isSelected: tempFilters.onlyRanked,
+                                accentColor: .yellow
+                            ) {
+                                tempFilters.onlyRanked.toggle()
                             }
                         }
                     }

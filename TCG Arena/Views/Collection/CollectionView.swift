@@ -658,9 +658,7 @@ struct CollectionView: View {
                     }) {
                         HStack(spacing: 8) {
                             if let type = tcgType {
-                                SwiftUI.Image(systemName: type.systemIcon)
-                                    .font(.system(size: 15, weight: .semibold))
-                                    .foregroundColor(iconColorFor(tcgType, type: type))
+                                TCGIconView(tcgType: type, size: 15, color: iconColorFor(tcgType, type: type))
                             }
 
                             Text(tcgType?.displayName ?? "All Games")
@@ -1344,9 +1342,15 @@ struct HorizontalCardRowView: View {
                             .fill((card.tcgType?.themeColor ?? Color.gray).opacity(0.2))
                             .frame(width: 60, height: 84)
                             .overlay(
-                                SwiftUI.Image(systemName: card.tcgType?.systemIcon ?? "questionmark.circle")
-                                    .font(.system(size: 24, weight: .semibold))
-                                    .foregroundColor(card.tcgType?.themeColor ?? Color.gray)
+                                Group {
+                                    if let tcgType = card.tcgType {
+                                        TCGIconView(tcgType: tcgType, size: 24, color: tcgType.themeColor)
+                                    } else {
+                                        SwiftUI.Image(systemName: "questionmark.circle")
+                                            .font(.system(size: 24, weight: .semibold))
+                                            .foregroundColor(Color.gray)
+                                    }
+                                }
                             )
                     @unknown default:
                         RoundedRectangle(cornerRadius: 8)
@@ -1360,9 +1364,15 @@ struct HorizontalCardRowView: View {
                     .fill((card.tcgType?.themeColor ?? Color.gray).opacity(0.2))
                     .frame(width: 60, height: 84)
                     .overlay(
-                        SwiftUI.Image(systemName: card.tcgType?.systemIcon ?? "questionmark.circle")
-                            .font(.system(size: 24, weight: .semibold))
-                            .foregroundColor(card.tcgType?.themeColor ?? Color.gray)
+                        Group {
+                            if let tcgType = card.tcgType {
+                                TCGIconView(tcgType: tcgType, size: 24, color: tcgType.themeColor)
+                            } else {
+                                SwiftUI.Image(systemName: "questionmark.circle")
+                                    .font(.system(size: 24, weight: .semibold))
+                                    .foregroundColor(Color.gray)
+                            }
+                        }
                     )
             }
             
@@ -1439,14 +1449,13 @@ struct HorizontalCardRowView: View {
                         .foregroundColor(.primary)
                 }
                 
-                SwiftUI.Image(systemName: card.tcgType.map { tcgIcon($0) } ?? "questionmark.circle")
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundColor(card.tcgType?.themeColor ?? Color.gray)
-                    .frame(width: 28, height: 28)
-                    .background(
-                        Circle()
-                            .fill((card.tcgType?.themeColor ?? Color.gray).opacity(0.1))
-                    )
+                if let tcgType = card.tcgType {
+                    TCGIconView(tcgType: tcgType, size: 12, color: tcgType.themeColor)
+                } else {
+                    SwiftUI.Image(systemName: "questionmark.circle")
+                        .font(.system(size: 12))
+                        .foregroundColor(.gray)
+                }
             }
         }
         .padding(.vertical, 8)
@@ -1626,9 +1635,7 @@ struct CardDiscoverView: View {
                     }) {
                         HStack(spacing: 6) {
                             if let type = tcgType {
-                                SwiftUI.Image(systemName: type.systemIcon)
-                                    .font(.system(size: 14, weight: .semibold))
-                                    .foregroundColor(iconColorFor(tcgType, type: type))
+                                TCGIconView(tcgType: type, size: 14, color: iconColorFor(tcgType, type: type))
                             }
                             
                             Text(tcgType?.displayName ?? "All")
@@ -1884,9 +1891,15 @@ struct CardDiscoverView: View {
                     case .failure:
                         Color(.secondarySystemBackground)
                             .overlay(
-                                SwiftUI.Image(systemName: card.tcgType?.systemIcon ?? "questionmark.circle")
-                                    .font(.system(size: 30))
-                                    .foregroundColor(.secondary)
+                                Group {
+                                    if let tcgType = card.tcgType {
+                                        TCGIconView(tcgType: tcgType, size: 30, color: .secondary)
+                                    } else {
+                                        SwiftUI.Image(systemName: "questionmark.circle")
+                                            .font(.system(size: 30))
+                                            .foregroundColor(.secondary)
+                                    }
+                                }
                             )
                     @unknown default:
                         Color(.secondarySystemBackground)

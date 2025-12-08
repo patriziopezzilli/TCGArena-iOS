@@ -130,7 +130,9 @@ struct TournamentDetailManagementView: View {
             
             // Quick Stats
             HStack(spacing: 16) {
-                StatBox(icon: "person.2.fill", value: "\(tournament.registeredParticipantsCount)/\(tournament.maxParticipants)", label: "Players")
+                if let maxParticipants = tournament.maxParticipants {
+                    StatBox(icon: "person.2.fill", value: "\(tournament.registeredParticipantsCount)/\(maxParticipants)", label: "Players")
+                }
                 StatBox(icon: "calendar", value: tournament.date.formatted(date: .abbreviated, time: .omitted), label: "Date")
                 if let prize = tournament.prizePool {
                     StatBox(icon: "trophy.fill", value: prize, label: "Prize")
@@ -241,7 +243,9 @@ struct TournamentOverviewTab: View {
                         DetailRow(label: "TCG Type", value: tournament.tcgType.rawValue)
                         DetailRow(label: "Format", value: tournament.format.displayName)
                         DetailRow(label: "Date & Time", value: tournament.date.formatted(date: .long, time: .shortened))
-                        DetailRow(label: "Max Participants", value: "\(tournament.maxParticipants)")
+                        if let maxParticipants = tournament.maxParticipants {
+                            DetailRow(label: "Max Participants", value: "\(maxParticipants)")
+                        }
                         
                         if let entryFee = tournament.entryFee {
                             DetailRow(label: "Entry Fee", value: "€\(String(format: "%.2f", entryFee))")

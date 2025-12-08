@@ -364,7 +364,8 @@ struct EventListView: View {
         // Price filter
         if eventFilters.priceRange != .all, let range = eventFilters.priceRange.priceRange {
             filtered = filtered.filter { tournament in
-                return range.contains(tournament.entryFee)
+                guard let entryFee = tournament.entryFee else { return true }
+                return range.contains(entryFee)
             }
         }
         
@@ -378,7 +379,15 @@ struct EventListView: View {
         // Tournament Type filter
         if !eventFilters.selectedTournamentTypes.isEmpty {
             filtered = filtered.filter { tournament in
-                return eventFilters.selectedTournamentTypes.contains(tournament.type)
+                guard let type = tournament.type else { return true }
+                return eventFilters.selectedTournamentTypes.contains(type)
+            }
+        }
+        
+        // Official/Ranked filter
+        if eventFilters.onlyRanked {
+            filtered = filtered.filter { tournament in
+                return tournament.isRanked == true
             }
         }
         

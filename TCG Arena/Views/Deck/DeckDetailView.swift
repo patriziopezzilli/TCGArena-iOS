@@ -121,8 +121,7 @@ struct DeckDetailView: View {
                     HStack(spacing: 8) {
                         // TCG Badge
                         HStack(spacing: 4) {
-                            SwiftUI.Image(systemName: deck.tcgType.systemIcon)
-                                .font(.system(size: 12, weight: .bold))
+                            TCGIconView(tcgType: deck.tcgType, size: 12)
                             Text(deck.tcgType.displayName)
                                 .font(.system(size: 12, weight: .bold))
                         }
@@ -330,9 +329,7 @@ struct DeckDetailView: View {
                     .offset(x: -geo.size.width * 0.2, y: geo.size.height * 0.5)
                 
                 // Stylized TCG icon in center-right
-                SwiftUI.Image(systemName: deck.tcgType.systemIcon)
-                    .font(.system(size: 80, weight: .ultraLight))
-                    .foregroundColor(.white.opacity(0.12))
+                TCGIconView(tcgType: deck.tcgType, size: 80, color: .white.opacity(0.12))
                     .offset(x: geo.size.width * 0.55, y: geo.size.height * 0.35)
             }
             

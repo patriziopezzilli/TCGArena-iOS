@@ -102,6 +102,27 @@ struct TournamentCardView: View {
                         LiveBadgeView()
                     }
                     
+                    // Official Tournament Badge - Clean gold style
+                    if tournament.isRanked == true {
+                        HStack(spacing: 4) {
+                            Text("🏆")
+                            Text("Ufficiale")
+                                .fontWeight(.bold)
+                        }
+                        .font(.system(size: 10))
+                        .foregroundColor(Color(red: 0.6, green: 0.45, blue: 0.1))
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 3)
+                        .background(Color(red: 1.0, green: 0.85, blue: 0.4).opacity(0.3))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 6)
+                                .stroke(Color(red: 0.85, green: 0.65, blue: 0.2), lineWidth: 1)
+                        )
+                        .cornerRadius(6)
+                        .lineLimit(1)
+                        .fixedSize(horizontal: true, vertical: false)
+                    }
+                    
                     Text(tournament.tcgType.displayName)
                         .font(.system(size: 10, weight: .bold))
                         .foregroundColor(tournament.tcgType.themeColor)
@@ -110,22 +131,25 @@ struct TournamentCardView: View {
                         .background(tournament.tcgType.themeColor.opacity(0.1))
                         .cornerRadius(4)
 
-                    Text(tournament.type.rawValue)
-                        .font(.system(size: 10, weight: .medium))
-                        .foregroundColor(.secondary)
-                        .padding(.horizontal, 6)
-                        .padding(.vertical, 2)
-                        .background(Color(.secondarySystemBackground))
-                        .cornerRadius(4)
+                    // Tournament type badge - only for local tournaments
+                    if tournament.isRanked != true, let type = tournament.type {
+                        Text(type.rawValue)
+                            .font(.system(size: 10, weight: .medium))
+                            .foregroundColor(.secondary)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background(Color(.secondarySystemBackground))
+                            .cornerRadius(4)
+                    }
 
                     Spacer()
 
                     // Price
-                    if tournament.entryFee > 0 {
-                        Text("€\(tournament.entryFee, specifier: "%.0f")")
+                    if let entryFee = tournament.entryFee, entryFee > 0 {
+                        Text("€\(entryFee, specifier: "%.0f")")
                             .font(.system(size: 14, weight: .bold))
                             .foregroundColor(.primary)
-                    } else {
+                    } else if tournament.entryFee != nil {
                         Text("Free")
                             .font(.system(size: 14, weight: .bold))
                             .foregroundColor(.green)
@@ -157,8 +181,10 @@ struct TournamentCardView: View {
                     HStack(spacing: 4) {
                         SwiftUI.Image(systemName: "person.2.fill")
                             .font(.system(size: 12))
-                        Text("\(tournament.registeredParticipantsCount)/\(tournament.maxParticipants)")
-                            .font(.system(size: 12, weight: .medium))
+                        if let maxParticipants = tournament.maxParticipants {
+                            Text("\(tournament.registeredParticipantsCount)/\(maxParticipants)")
+                                .font(.system(size: 12, weight: .medium))
+                        }
                     }
                     .foregroundColor(.secondary)
                     
@@ -184,9 +210,32 @@ struct TournamentCardView: View {
             .padding(.vertical, 16)
             .padding(.trailing, 16)
         }
-        .background(Color(.systemBackground))
+        .background(
+            Group {
+                if tournament.isRanked == true {
+                    // Premium gold gradient overlay for ranked tournaments
+                    ZStack {
+                        Color(.systemBackground)
+                        LinearGradient(
+                            gradient: Gradient(colors: [Color(red: 1.0, green: 0.9, blue: 0.6).opacity(0.15), Color.clear]),
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    }
+                } else {
+                    Color(.systemBackground)
+                }
+            }
+        )
         .cornerRadius(16)
-        .shadow(color: Color.black.opacity(0.05), radius: 8, x: 0, y: 2)
+        .overlay(
+            RoundedRectangle(cornerRadius: 16)
+                .stroke(
+                    tournament.isRanked == true ? Color(red: 0.85, green: 0.65, blue: 0.2) : Color.clear,
+                    lineWidth: tournament.isRanked == true ? 2 : 0
+                )
+        )
+        .shadow(color: tournament.isRanked == true ? Color(red: 0.85, green: 0.65, blue: 0.2).opacity(0.3) : Color.black.opacity(0.05), radius: 8, x: 0, y: 2)
     }
 
     // MARK: - Helpers

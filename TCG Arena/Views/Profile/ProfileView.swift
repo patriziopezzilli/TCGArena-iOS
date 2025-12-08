@@ -571,10 +571,7 @@ struct StatCard: View {
         var body: some View {
             Button(action: toggleFavorite) {
                 HStack(spacing: 12) {
-                    SwiftUI.Image(systemName: tcgType.systemIcon)
-                        .font(.title3)
-                        .foregroundColor(tcgType.themeColor)
-                        .frame(width: 24, height: 24)
+                    TCGIconView(tcgType: tcgType, size: 20, color: tcgType.themeColor)
                     
                     Text(tcgType.displayName)
                         .font(.body)
@@ -672,8 +669,7 @@ struct StatCard: View {
         var body: some View {
             Button(action: action) {
                 HStack(spacing: 4) {
-                    SwiftUI.Image(systemName: tcgType.systemIcon)
-                        .font(.system(size: 12, weight: .semibold))
+                    TCGIconView(tcgType: tcgType, size: 12)
                     
                     Text(tcgType.displayName)
                         .font(.system(size: 12, weight: .medium))
@@ -1400,8 +1396,7 @@ struct StatCard: View {
                                             }
                                         }) {
                                             VStack(spacing: 6) {
-                                                SwiftUI.Image(systemName: tcg.systemIcon)
-                                                    .font(.system(size: 20, weight: .medium))
+                                                TCGIconView(tcgType: tcg, size: 20, color: favoriteGame == tcg ? tcg.themeColor : .secondary)
                                                 Text(tcg.displayName)
                                                     .font(.system(size: 11, weight: .medium))
                                                     .lineLimit(1)

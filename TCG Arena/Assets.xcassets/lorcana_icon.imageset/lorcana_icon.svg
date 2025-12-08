@@ -1,0 +1,9 @@
+<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+  <!-- Lorcana: Ink Quill -->
+  <path d="M70 10 Q80 10 75 30 Q60 70 40 80" fill="none" stroke="black" stroke-width="6" stroke-linecap="round"/>
+  <path d="M40 80 L35 90 L45 85" fill="none" stroke="black" stroke-width="4" stroke-linecap="round"/>
+  <circle cx="25" cy="85" r="10" fill="none" stroke="black" stroke-width="4"/>
+  <path d="M25 78 L25 82" stroke="black" stroke-width="4"/>
+  <!-- Sparkle -->
+  <path d="M80 40 L82 35 L84 40 L89 42 L84 44 L82 49 L80 44 L75 42 Z" fill="black"/>
+</svg>

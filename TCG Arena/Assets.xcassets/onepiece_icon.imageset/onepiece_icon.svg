@@ -1,0 +1,15 @@
+<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+  <!-- Skull -->
+  <path d="M50 25 C35 25 25 35 25 50 C25 60 30 70 50 70 C70 70 75 60 75 50 C75 35 65 25 50 25 Z" fill="none" stroke="black" stroke-width="6"/>
+  <!-- Eyes -->
+  <circle cx="40" cy="45" r="6" fill="black"/>
+  <circle cx="60" cy="45" r="6" fill="black"/>
+  <!-- Nose -->
+  <path d="M48 55 L52 55 L50 52 Z" fill="black"/>
+  <!-- Bones Cross -->
+  <line x1="20" y1="20" x2="80" y2="80" stroke="black" stroke-width="6" stroke-linecap="round"/>
+  <line x1="80" y1="20" x2="20" y2="80" stroke="black" stroke-width="6" stroke-linecap="round"/>
+  <!-- Straw Hat -->
+  <path d="M20 25 Q50 5 80 25" fill="none" stroke="black" stroke-width="6"/>
+  <rect x="30" y="10" width="40" height="15" fill="none" stroke="black" stroke-width="6"/>
+</svg>

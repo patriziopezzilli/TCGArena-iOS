@@ -13,14 +13,14 @@ struct Tournament: Identifiable, Codable {
     let title: String
     let description: String?
     let tcgType: TCGType
-    let type: TournamentType
+    let type: TournamentType?  // Optional for ranked tournaments
     let status: TournamentStatus
     let startDate: String
-    let endDate: String
-    let maxParticipants: Int
+    let endDate: String?  // Optional for ranked tournaments
+    let maxParticipants: Int?  // Optional for ranked tournaments
     let currentParticipants: Int?  // From backend - total registered participants count
-    let entryFee: Double
-    let prizePool: String
+    let entryFee: Double?  // Optional for ranked tournaments
+    let prizePool: String?  // Optional for ranked tournaments
     let organizerId: Int64
     
     // Frontend-specific fields (computed or additional)
@@ -29,6 +29,8 @@ struct Tournament: Identifiable, Codable {
     var location: TournamentLocation?
     var rules: String?
     var winnerId: Int64? // Winner's user ID
+    var isRanked: Bool? // True for official/ranked tournaments
+    var externalRegistrationUrl: String? // External registration URL for ranked tournaments
     
     enum TournamentType: String, CaseIterable, Codable {
         case casual = "CASUAL"
@@ -79,6 +81,8 @@ struct Tournament: Identifiable, Codable {
         case organizerId
         case location
         case winnerId
+        case isRanked
+        case externalRegistrationUrl
         case tournamentParticipants = "participants"
     }
     
@@ -106,7 +110,7 @@ struct Tournament: Identifiable, Codable {
     }
     
     var formattedEndDate: String {
-        endDate
+        endDate ?? startDate  // Fallback to startDate if endDate is nil
     }
     
     var registeredParticipantsCount: Int {
@@ -118,8 +122,8 @@ struct Tournament: Identifiable, Codable {
     }
     
     var isFull: Bool {
-        // Use registeredParticipantsCount which considers both backend currentParticipants
-        // and local tournamentParticipants array
-        return registeredParticipantsCount >= maxParticipants
+        // If maxParticipants is nil (ranked tournament), never consider it full
+        guard let max = maxParticipants else { return false }
+        return registeredParticipantsCount >= max
     }
 }

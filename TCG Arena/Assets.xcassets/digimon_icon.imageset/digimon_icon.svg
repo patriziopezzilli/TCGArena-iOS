@@ -1,0 +1,8 @@
+<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+  <!-- Digimon Crest -->
+  <path d="M50 10 L85 30 L85 70 L50 90 L15 70 L15 30 Z" fill="none" stroke="black" stroke-width="6"/>
+  <rect x="35" y="35" width="30" height="30" fill="none" stroke="black" stroke-width="4"/>
+  <circle cx="50" cy="50" r="8" fill="black"/>
+  <line x1="50" y1="35" x2="50" y2="65" stroke="black" stroke-width="2"/>
+  <line x1="35" y1="50" x2="65" y2="50" stroke="black" stroke-width="2"/>
+</svg>

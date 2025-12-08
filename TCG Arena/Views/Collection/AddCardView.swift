@@ -431,8 +431,7 @@ struct TCGSelectionPill: View {
     var body: some View {
         Button(action: action) {
             HStack(spacing: 6) {
-                SwiftUI.Image(systemName: tcg.systemIcon)
-                    .font(.system(size: 12))
+                TCGIconView(tcgType: tcg, size: 12, color: isSelected ? tcg.themeColor : .secondary)
                 Text(tcg.displayName)
                     .font(.system(size: 14, weight: .medium))
             }

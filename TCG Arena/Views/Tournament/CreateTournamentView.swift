@@ -70,9 +70,7 @@ struct CreateTournamentView: View {
                     .fill(selectedTCG.themeColor.opacity(0.2))
                     .frame(width: 80, height: 80)
                 
-                SwiftUI.Image(systemName: selectedTCG.systemIcon)
-                    .font(.system(size: 32, weight: .bold))
-                    .foregroundColor(selectedTCG.themeColor)
+                TCGIconView(tcgType: selectedTCG, size: 32, color: selectedTCG.themeColor)
             }
             
             Text("New Tournament")

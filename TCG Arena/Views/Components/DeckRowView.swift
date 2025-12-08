@@ -34,8 +34,7 @@ struct DeckRowView: View {
                 HStack {
                     // TCG Badge
                     HStack(spacing: 4) {
-                        SwiftUI.Image(systemName: deck.tcgType.systemIcon)
-                            .font(.system(size: 10, weight: .bold))
+                        TCGIconView(tcgType: deck.tcgType, size: 10)
                         Text(deck.tcgType.displayName)
                             .font(.system(size: 10, weight: .bold))
                     }
@@ -157,9 +156,7 @@ struct DeckRowView: View {
                     .offset(x: -geo.size.width * 0.15, y: geo.size.height * 0.4)
                 
                 // Stylized TCG icon in center-right
-                SwiftUI.Image(systemName: deck.tcgType.systemIcon)
-                    .font(.system(size: 50, weight: .ultraLight))
-                    .foregroundColor(.white.opacity(0.15))
+                TCGIconView(tcgType: deck.tcgType, size: 50, color: .white.opacity(0.15))
                     .offset(x: geo.size.width * 0.6, y: geo.size.height * 0.3)
             }
             

@@ -1,0 +1,10 @@
+<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+  <!-- Mana Pentagon -->
+  <circle cx="50" cy="20" r="8" fill="none" stroke="black" stroke-width="4"/>
+  <circle cx="80" cy="40" r="8" fill="none" stroke="black" stroke-width="4"/>
+  <circle cx="70" cy="80" r="8" fill="none" stroke="black" stroke-width="4"/>
+  <circle cx="30" cy="80" r="8" fill="none" stroke="black" stroke-width="4"/>
+  <circle cx="20" cy="40" r="8" fill="none" stroke="black" stroke-width="4"/>
+  
+  <path d="M50 28 L80 48 L70 72 L30 72 L20 48 Z" fill="none" stroke="black" stroke-width="4"/>
+</svg>

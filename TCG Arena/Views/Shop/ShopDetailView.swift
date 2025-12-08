@@ -1219,8 +1219,7 @@ struct ShopDetailView: View {
         var body: some View {
             if let tcg = tcgType {
                 HStack(spacing: 8) {
-                    SwiftUI.Image(systemName: tcg.systemIcon)
-                    .font(.system(size: 16, weight: .semibold))
+                    TCGIconView(tcgType: tcg, size: 16, color: .white)
                     
                     Text(tcg.displayName)
                         .font(.system(size: 14, weight: .semibold))

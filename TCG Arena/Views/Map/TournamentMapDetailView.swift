@@ -25,9 +25,7 @@ struct TournamentMapDetailView: View {
                             .fill(tournament.tcgType.themeColor)
                             .frame(width: 60, height: 60)
                         
-                        SwiftUI.Image(systemName: tournament.tcgType.systemIcon)
-                            .font(.system(size: 24, weight: .bold))
-                            .foregroundColor(.white)
+                        TCGIconView(tcgType: tournament.tcgType, size: 24, color: .white)
                     }
                     
                     VStack(alignment: .leading, spacing: 4) {
@@ -53,9 +51,15 @@ struct TournamentMapDetailView: View {
                         VStack(spacing: 12) {
                             InfoRow(icon: "calendar", title: "Date", value: tournament.formattedStartDate)
                             InfoRow(icon: "clock", title: "Time", value: tournament.formattedStartDate)
-                            InfoRow(icon: "person.2", title: "Players", value: "\(tournament.registeredParticipantsCount)/\(tournament.maxParticipants)")
-                            InfoRow(icon: "dollarsign.circle", title: "Entry Fee", value: tournament.entryFee > 0 ? String(format: "$%.0f", tournament.entryFee) : "Free")
-                            InfoRow(icon: "trophy", title: "Prize Pool", value: tournament.prizePool)
+                            if let maxParticipants = tournament.maxParticipants {
+                                InfoRow(icon: "person.2", title: "Players", value: "\(tournament.registeredParticipantsCount)/\(maxParticipants)")
+                            }
+                            if let entryFee = tournament.entryFee {
+                                InfoRow(icon: "dollarsign.circle", title: "Entry Fee", value: entryFee > 0 ? String(format: "$%.0f", entryFee) : "Free")
+                            }
+                            if let prizePool = tournament.prizePool {
+                                InfoRow(icon: "trophy", title: "Prize Pool", value: prizePool)
+                            }
                         }
                     }
                     
