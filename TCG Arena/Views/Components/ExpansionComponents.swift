@@ -159,20 +159,14 @@ struct ExpansionRow: View {
                 }
                 
                 HStack(spacing: 12) {
-                    Text(expansion.formattedReleaseDate)
-                        .font(.system(size: 12, weight: .medium))
-                        .foregroundColor(.secondary)
-                    
-                    if showCards {
-                        HStack(spacing: 4) {
-                            SwiftUI.Image(systemName: "square.stack.3d.up.fill")
-                                .font(.system(size: 10))
-                                .foregroundColor(.secondary)
-                            
-                            Text("\(expansion.cardCount) cards")
-                                .font(.system(size: 12, weight: .medium))
-                                .foregroundColor(.secondary)
-                        }
+                    HStack(spacing: 4) {
+                        SwiftUI.Image(systemName: "square.stack.3d.up.fill")
+                            .font(.system(size: 10))
+                            .foregroundColor(.secondary)
+                        
+                        Text("\(expansion.cardCount) cards")
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundColor(.secondary)
                     }
                 }
             }

@@ -36,4 +36,23 @@ class UserService {
         let leaderboard: [UserStats] = try await apiClient.request(endpoint, method: "GET")
         return leaderboard
     }
+    
+    /// Update user profile with displayName, bio, and favoriteGame
+    func updateUserProfile(userId: Int64, displayName: String, bio: String?, favoriteGame: TCGType) async throws {
+        let endpoint = "/api/users/\(userId)/profile"
+        
+        struct UpdateProfileRequest: Codable {
+            let displayName: String
+            let bio: String?
+            let favoriteGame: String
+        }
+        
+        let requestBody = UpdateProfileRequest(
+            displayName: displayName,
+            bio: bio,
+            favoriteGame: favoriteGame.rawValue
+        )
+        
+        let _: User = try await apiClient.request(endpoint, method: "PATCH", body: requestBody)
+    }
 }

@@ -16,7 +16,8 @@ extension TCGType {
         case .magic: return "sparkles"
         case .yugioh: return "eye.fill"
         case .digimon: return "shield.fill"
-        case .dragonBall: return "flame.fill"
+        case .dragonBallSuper, .dragonBallFusion: return "flame.fill"
+        case .fleshAndBlood: return "theatermasks.fill"
         case .lorcana: return "wand.and.stars"
         }
     }
@@ -28,7 +29,8 @@ extension TCGType {
         case .magic: return Color(red: 1.0, green: 0.5, blue: 0.0) // Bright Orange #FF8000
         case .yugioh: return Color(red: 0.8, green: 0.0, blue: 1.0) // Bright Purple #CC00FF
         case .digimon: return Color.cyan // Cyan
-        case .dragonBall: return Color.orange // Orange
+        case .dragonBallSuper, .dragonBallFusion: return Color.orange // Orange
+        case .fleshAndBlood: return Color.red.opacity(0.7)
         case .lorcana: return Color.indigo // Indigo
         }
     }
@@ -47,6 +49,7 @@ extension Rarity {
         case .mythic: return 5
         case .legendary: return 6
         case .secretRare: return 5
+        case .superRare: return 5
         }
     }
 }

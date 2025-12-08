@@ -28,6 +28,10 @@ struct Deck: Identifiable, Codable {
         let cardImageUrl: String?
         let condition: CardCondition?
         
+        // Additional card info (optional, may not always be returned)
+        let rarity: String?
+        let setName: String?
+        
         // Grading fields (optional, may not be returned by backend for deck cards)
         let isGraded: Bool?
         let gradingCompany: GradeService?
@@ -43,6 +47,8 @@ struct Deck: Identifiable, Codable {
             case cardName = "card_name"
             case cardImageUrl = "card_image_url"
             case condition
+            case rarity
+            case setName = "set_name"
             case isGraded = "isGraded"
             case gradingCompany = "gradeService"
             case grade

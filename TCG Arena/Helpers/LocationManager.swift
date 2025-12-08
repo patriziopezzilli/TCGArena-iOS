@@ -27,6 +27,12 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
     
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         location = locations.first
+        
+        // Save location to UserDefaults for distance calculations
+        if let currentLocation = locations.first {
+            UserDefaults.standard.set(currentLocation.coordinate.latitude, forKey: "userLatitude")
+            UserDefaults.standard.set(currentLocation.coordinate.longitude, forKey: "userLongitude")
+        }
     }
     
     func locationManager(_ manager: CLLocationManager, didChangeAuthorization status: CLAuthorizationStatus) {

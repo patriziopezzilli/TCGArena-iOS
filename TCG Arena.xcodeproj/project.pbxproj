@@ -14,6 +14,8 @@
 		785CF4BD2EDC8B2B00BA98AD /* DeckTypeBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 785CF4BC2EDC8B2B00BA98AD /* DeckTypeBadge.swift */; };
 		785CF4BF2EDC8D3F00BA98AD /* CreateDeckView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 785CF4BE2EDC8D3F00BA98AD /* CreateDeckView.swift */; };
 		785CF4C52EDCDA6F00BA98AD /* SkeletonUI in Frameworks */ = {isa = PBXBuildFile; productRef = 785CF4C42EDCDA6F00BA98AD /* SkeletonUI */; };
+		78660E4D2EE60CA300EA2BFE /* ProductType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78660E4C2EE60CA300EA2BFE /* ProductType.swift */; };
+		78660E4F2EE6177900EA2BFE /* EmbeddedUserStats.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78660E4E2EE6177900EA2BFE /* EmbeddedUserStats.swift */; };
 		786AC8602EE2CD68001A6714 /* PastTournamentCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 786AC85F2EE2CD68001A6714 /* PastTournamentCard.swift */; };
 		786AC8632EE2DC13001A6714 /* WelcomeSheet in Frameworks */ = {isa = PBXBuildFile; productRef = 786AC8622EE2DC13001A6714 /* WelcomeSheet */; };
 		786AC8652EE2DF8A001A6714 /* OnboardingPermissionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 786AC8642EE2DF8A001A6714 /* OnboardingPermissionsView.swift */; };
@@ -141,6 +143,8 @@
 		7840904D2EDB9DCB00CC6B9A /* SearchCardResultView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchCardResultView.swift; sourceTree = "<group>"; };
 		785CF4BC2EDC8B2B00BA98AD /* DeckTypeBadge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeckTypeBadge.swift; sourceTree = "<group>"; };
 		785CF4BE2EDC8D3F00BA98AD /* CreateDeckView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateDeckView.swift; sourceTree = "<group>"; };
+		78660E4C2EE60CA300EA2BFE /* ProductType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProductType.swift; sourceTree = "<group>"; };
+		78660E4E2EE6177900EA2BFE /* EmbeddedUserStats.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmbeddedUserStats.swift; sourceTree = "<group>"; };
 		786AC85F2EE2CD68001A6714 /* PastTournamentCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PastTournamentCard.swift; sourceTree = "<group>"; };
 		786AC8642EE2DF8A001A6714 /* OnboardingPermissionsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingPermissionsView.swift; sourceTree = "<group>"; };
 		786AC8662EE2ECC6001A6714 /* AuthFlowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthFlowView.swift; sourceTree = "<group>"; };
@@ -412,6 +416,8 @@
 		A5000004 /* Models */ = {
 			isa = PBXGroup;
 			children = (
+				78660E4E2EE6177900EA2BFE /* EmbeddedUserStats.swift */,
+				78660E4C2EE60CA300EA2BFE /* ProductType.swift */,
 				786AC86B2EE40EE4001A6714 /* Partner+Extensions.swift */,
 				786AC86C2EE40EE4001A6714 /* PartnerModels.swift */,
 				786AC86D2EE40EE4001A6714 /* Reward+Extensions.swift */,
@@ -721,6 +727,7 @@
 				7A8B2E8A2EC1F308004F6826 /* DiscoverService.swift in Sources */,
 				786AC8672EE2ECC6001A6714 /* AuthFlowView.swift in Sources */,
 				7A1CC9492ED2753B00A61395 /* TournamentDetailView.swift in Sources */,
+				78660E4F2EE6177900EA2BFE /* EmbeddedUserStats.swift in Sources */,
 				A1000010 /* TournamentMapView.swift in Sources */,
 				784090482EDA2CD700CC6B9A /* SetDetailView.swift in Sources */,
 				7840904A2EDB96F800CC6B9A /* ImageCacheManager.swift in Sources */,
@@ -738,6 +745,7 @@
 				7A817B902EC7693C00500F32 /* ShopDetailView.swift in Sources */,
 				7A8B2E7E2EC1ECC3004F6826 /* LoadingComponents.swift in Sources */,
 				A1000014 /* TCGButton.swift in Sources */,
+				78660E4D2EE60CA300EA2BFE /* ProductType.swift in Sources */,
 				7AAAA2182EDD93A90035F942 /* ShopInventoryView.swift in Sources */,
 				7A7DF3DC2EBB938A00331A52 /* CollectionView.swift in Sources */,
 				7A1CC91D2ED1EC3B00A61395 /* OnboardingView.swift in Sources */,

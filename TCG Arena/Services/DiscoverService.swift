@@ -73,6 +73,22 @@ class DiscoverService: ObservableObject {
             }
         }
     }
+    
+    func getUserActivities(userId: Int64, limit: Int = 20, completion: @escaping (Result<[UserActivity], Error>) -> Void) {
+        apiClient.request(endpoint: "/api/user-activities/\(userId)?limit=\(limit)", method: .get) { result in
+            switch result {
+            case .success(let data):
+                do {
+                    let activities = try JSONDecoder().decode([UserActivity].self, from: data)
+                    completion(.success(activities))
+                } catch {
+                    completion(.failure(error))
+                }
+            case .failure(let error):
+                completion(.failure(error))
+            }
+        }
+    }
     // MARK: - User Interface Methods
     
     func loadData() {

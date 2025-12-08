@@ -69,7 +69,8 @@ struct TCGCardView: View {
         case .magic: return Color(red: 0.8, green: 0.4, blue: 0.1) // Orange
         case .yugioh: return Color(red: 0.6, green: 0.2, blue: 0.8) // Purple
         case .digimon: return Color.cyan // Cyan
-        case .dragonBall: return Color.orange // Orange for Dragon Ball
+        case .dragonBallSuper, .dragonBallFusion: return Color.orange // Orange for Dragon Ball
+        case .fleshAndBlood: return Color.red.opacity(0.7)
         case .lorcana: return Color.indigo // Indigo for Lorcana
         case .none: return Color.gray
         }
@@ -103,7 +104,7 @@ struct RarityBadge: View {
     
     var body: some View {
         HStack(spacing: 2) {
-            ForEach(0..<rarityStars, id: \.self) { _ in
+            ForEach(0..<rarityLevel, id: \.self) { _ in
                 SwiftUI.Image(systemName: "star.fill")
                     .font(.caption2)
                     .foregroundColor(rarityColor)
@@ -111,13 +112,13 @@ struct RarityBadge: View {
         }
     }
     
-    private var rarityStars: Int {
+    private var rarityLevel: Int {
         switch rarity {
         case .common: return 1
         case .uncommon: return 2
         case .rare: return 3
         case .ultraRare, .holographic: return 4
-        case .secretRare, .mythic: return 5
+        case .secretRare, .superRare, .mythic: return 5
         case .promo: return 3
         case .legendary: return 6
         }
@@ -128,7 +129,7 @@ struct RarityBadge: View {
         case .common, .uncommon: return TCGTheme.Colors.textMuted
         case .rare: return TCGTheme.Colors.rareBorder
         case .ultraRare, .holographic: return TCGTheme.Colors.accent
-        case .secretRare, .mythic: return TCGTheme.Colors.epicBorder
+        case .secretRare, .superRare, .mythic: return TCGTheme.Colors.epicBorder
         case .promo: return TCGTheme.Colors.textMuted
         case .legendary: return TCGTheme.Colors.legendaryBorder
         }

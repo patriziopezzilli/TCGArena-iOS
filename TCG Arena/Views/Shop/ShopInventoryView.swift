@@ -51,7 +51,7 @@ struct ShopInventoryView: View {
                             selectedTCG = nil
                         }
                         
-                        ForEach([TCGType.pokemon, .magic, .yugioh, .onePiece, .dragonBall, .lorcana], id: \.self) { tcg in
+                        ForEach([TCGType.pokemon, .magic, .yugioh, .onePiece, .digimon, .dragonBallSuper, .dragonBallFusion, .fleshAndBlood, .lorcana], id: \.self) { tcg in
                             TCGFilterChip(title: tcg.rawValue, isSelected: selectedTCG == tcg) {
                                 selectedTCG = tcg
                             }

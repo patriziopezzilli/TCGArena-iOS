@@ -120,7 +120,9 @@ struct CardRowView: View {
         case .magic: return Color(red: 0.8, green: 0.4, blue: 0.1) // Orange
         case .yugioh: return Color(red: 0.6, green: 0.2, blue: 0.8) // Purple
         case .digimon: return Color.cyan // Cyan
-        case .dragonBall: return Color.orange // Orange for Dragon Ball
+        case .dragonBallSuper: return Color.orange // Orange for Dragon Ball Super
+        case .dragonBallFusion: return Color.green // Green for Dragon Ball Fusion
+        case .fleshAndBlood: return Color.red.opacity(0.7) // Red for Flesh and Blood
         case .lorcana: return Color.indigo // Indigo for Lorcana
         case .none: return Color.gray
         }

@@ -618,6 +618,8 @@ class CardService: ObservableObject {
                     cardName: existingCard.cardName,
                     cardImageUrl: existingCard.cardImageUrl,
                     condition: updatedCard.condition,
+                    rarity: existingCard.rarity,
+                    setName: existingCard.setName,
                     isGraded: updatedCard.gradingCompany != nil ? true : false,
                     gradingCompany: updatedCard.gradingCompany,
                     grade: updatedCard.grade,

@@ -500,10 +500,10 @@ func deleteDeck(deckId: Int64, userId: Int64, completion: @escaping (Result<Void
 
     private func createMockDecks(for userId: Int64) -> [Deck] {
         let mockCards: [Deck.DeckCard] = [
-            Deck.DeckCard(id: 1, cardId: 1001, quantity: 4, cardName: "Pikachu", cardImageUrl: nil, condition: .nearMint, isGraded: nil, gradingCompany: nil, grade: nil, certificateNumber: nil),
-            Deck.DeckCard(id: 2, cardId: 1002, quantity: 4, cardName: "Charizard", cardImageUrl: nil, condition: .nearMint, isGraded: nil, gradingCompany: nil, grade: nil, certificateNumber: nil),
-            Deck.DeckCard(id: 3, cardId: 1003, quantity: 2, cardName: "Blastoise", cardImageUrl: nil, condition: .nearMint, isGraded: nil, gradingCompany: nil, grade: nil, certificateNumber: nil),
-            Deck.DeckCard(id: 4, cardId: 1004, quantity: 4, cardName: "Venusaur", cardImageUrl: nil, condition: .nearMint, isGraded: nil, gradingCompany: nil, grade: nil, certificateNumber: nil),
+            Deck.DeckCard(id: 1, cardId: 1001, quantity: 4, cardName: "Pikachu", cardImageUrl: nil, condition: .nearMint, rarity: "COMMON", setName: "Base Set", isGraded: nil, gradingCompany: nil, grade: nil, certificateNumber: nil),
+            Deck.DeckCard(id: 2, cardId: 1002, quantity: 4, cardName: "Charizard", cardImageUrl: nil, condition: .nearMint, rarity: "RARE", setName: "Base Set", isGraded: nil, gradingCompany: nil, grade: nil, certificateNumber: nil),
+            Deck.DeckCard(id: 3, cardId: 1003, quantity: 2, cardName: "Blastoise", cardImageUrl: nil, condition: .nearMint, rarity: "RARE", setName: "Base Set", isGraded: nil, gradingCompany: nil, grade: nil, certificateNumber: nil),
+            Deck.DeckCard(id: 4, cardId: 1004, quantity: 4, cardName: "Venusaur", cardImageUrl: nil, condition: .nearMint, rarity: "RARE", setName: "Base Set", isGraded: nil, gradingCompany: nil, grade: nil, certificateNumber: nil),
         ]
 
         return [

@@ -91,7 +91,7 @@ struct TCGCardStyle: ViewModifier {
         switch rarity {
         case .rare, .ultraRare:
             return TCGTheme.Colors.rareBorder
-        case .secretRare, .mythic:
+        case .secretRare, .superRare, .mythic:
             return TCGTheme.Colors.epicBorder
         case .legendary:
             return TCGTheme.Colors.legendaryBorder

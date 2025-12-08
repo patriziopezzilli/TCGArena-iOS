@@ -12,11 +12,13 @@ struct Expansion: Identifiable, Codable {
     let title: String
     let tcgType: TCGType
     let imageUrl: String?
+    let productType: ProductType?
     let sets: [TCGSet]
     
     enum CodingKeys: String, CodingKey {
         case id, title, tcgType
         case imageUrl = "imageUrl"
+        case productType = "productType"
         case sets
     }
     

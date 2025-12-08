@@ -19,6 +19,20 @@ struct UserProfileDetailView: View {
     @State private var isLoadingActivities = false
     @Environment(\.presentationMode) var presentationMode
     
+    // Computed card count from loaded decks (more accurate than cached stats)
+    private var totalCardsCount: Int {
+        userDecks.reduce(0) { total, deck in
+            total + deck.cards.reduce(0) { cardTotal, card in
+                cardTotal + card.quantity
+            }
+        }
+    }
+    
+    // Computed deck count from loaded decks
+    private var totalDecksCount: Int {
+        userDecks.count
+    }
+    
     private let tabs = ["Overview", "Decks", "Activity"]
     
     var body: some View {
@@ -68,6 +82,20 @@ struct UserProfileDetailView: View {
                     userDecks = decks.filter { $0.deckType == .lista }
                 case .failure(let error):
                     print("Failed to load user decks: \(error)")
+                }
+            }
+        }
+        
+        // Load user's recent activities from backend
+        isLoadingActivities = true
+        discoverService.getUserActivities(userId: userId, limit: 10) { result in
+            DispatchQueue.main.async {
+                isLoadingActivities = false
+                switch result {
+                case .success(let activities):
+                    userActivities = activities
+                case .failure(let error):
+                    print("Failed to load user activities: \(error)")
                 }
             }
         }
@@ -165,7 +193,7 @@ struct UserProfileDetailView: View {
                     } label: {
                         VStack(spacing: 4) {
                             HStack(spacing: 4) {
-                                Text("\(userProfile.stats.totalCards)")
+                                Text("\(totalCardsCount)")
                                     .font(.system(size: 20, weight: .bold))
                                     .foregroundColor(.primary)
                                 
@@ -196,7 +224,7 @@ struct UserProfileDetailView: View {
                         )
                     }
                     
-                    compactStatCard(title: "Decks", value: "\(userProfile.stats.totalDecks)")
+                    compactStatCard(title: "Decks", value: "\(totalDecksCount)")
                     compactStatCard(title: "Wins", value: "\(userProfile.stats.tournamentsWon)")
                 }
             }
@@ -270,8 +298,8 @@ struct UserProfileDetailView: View {
                     .padding(.horizontal, 20)
                 
                 LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 2), spacing: 12) {
-                    statDetailCard(title: "Cards Collected", value: "\(userProfile.stats.totalCards)")
-                    statDetailCard(title: "Decks Created", value: "\(userProfile.stats.totalDecks)")
+                    statDetailCard(title: "Cards Collected", value: "\(totalCardsCount)")
+                    statDetailCard(title: "Decks Created", value: "\(totalDecksCount)")
                     statDetailCard(title: "Tournaments Won", value: "\(userProfile.stats.tournamentsWon)")
                     statDetailCard(title: "Trades Made", value: "\(userProfile.stats.totalTrades)")
                 }
@@ -285,23 +313,120 @@ struct UserProfileDetailView: View {
                     .foregroundColor(.primary)
                     .padding(.horizontal, 20)
                 
-                LazyVStack(spacing: 8) {
-                    ForEach(discoverService.recentActivities.filter { $0.userProfile?.id == userProfile.id }.prefix(5)) { activity in
-                        // Simplified activity view to avoid component conflicts
-                        HStack {
-                            Text("📈")
-                            Text(activity.description)
-                                .font(.system(size: 14))
-                            Spacer()
+                if isLoadingActivities {
+                    // Loading skeleton
+                    VStack(spacing: 8) {
+                        ForEach(0..<3, id: \.self) { _ in
+                            RoundedRectangle(cornerRadius: 10)
+                                .fill(Color(.systemGray5))
+                                .frame(height: 60)
                         }
-                        .padding()
-                        .background(Color(.systemGray6))
-                        .cornerRadius(8)
                     }
+                    .padding(.horizontal, 20)
+                } else if userActivities.isEmpty {
+                    // No activities
+                    HStack {
+                        SwiftUI.Image(systemName: "clock")
+                            .foregroundColor(.secondary)
+                        Text("Nessuna attività recente")
+                            .font(.system(size: 14))
+                            .foregroundColor(.secondary)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding()
+                    .background(Color(.systemGray6))
+                    .cornerRadius(8)
+                    .padding(.horizontal, 20)
+                } else {
+                    // Show real activities from backend
+                    LazyVStack(spacing: 8) {
+                        ForEach(userActivities.prefix(5)) { activity in
+                            HStack(spacing: 12) {
+                                ZStack {
+                                    Circle()
+                                        .fill(activityColor(for: activity.activityType).opacity(0.2))
+                                        .frame(width: 36, height: 36)
+                                    SwiftUI.Image(systemName: activityIcon(for: activity.activityType))
+                                        .foregroundColor(activityColor(for: activity.activityType))
+                                        .font(.system(size: 14))
+                                }
+                                
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(activity.description)
+                                        .font(.system(size: 14, weight: .medium))
+                                        .foregroundColor(.primary)
+                                        .lineLimit(2)
+                                    
+                                    Text(formatActivityDate(activity.timestamp))
+                                        .font(.system(size: 12))
+                                        .foregroundColor(.secondary)
+                                }
+                                
+                                Spacer()
+                            }
+                            .padding(12)
+                            .background(Color(.systemGray6))
+                            .cornerRadius(10)
+                        }
+                    }
+                    .padding(.horizontal, 20)
                 }
-                .padding(.horizontal, 20)
             }
         }
+    }
+    
+    // MARK: - Activity Helpers
+    
+    private func activityIcon(for type: String) -> String {
+        switch type {
+        case "DECK_CREATED": return "rectangle.stack.fill.badge.plus"
+        case "DECK_UPDATED": return "pencil.circle.fill"
+        case "DECK_DELETED": return "trash.fill"
+        case "CARD_ADDED_TO_COLLECTION": return "plus.circle.fill"
+        case "CARD_REMOVED_FROM_COLLECTION": return "minus.circle.fill"
+        case "REWARD_REDEEMED": return "gift.fill"
+        case "POINTS_EARNED": return "star.fill"
+        case "USER_REGISTERED": return "person.badge.plus"
+        case "PROFILE_UPDATED": return "person.fill.checkmark"
+        default: return "clock.fill"
+        }
+    }
+    
+    private func activityColor(for type: String) -> Color {
+        switch type {
+        case "DECK_CREATED": return .blue
+        case "DECK_UPDATED": return .orange
+        case "DECK_DELETED": return .red
+        case "CARD_ADDED_TO_COLLECTION": return .green
+        case "CARD_REMOVED_FROM_COLLECTION": return .red
+        case "REWARD_REDEEMED": return .purple
+        case "POINTS_EARNED": return .yellow
+        case "USER_REGISTERED": return .blue
+        case "PROFILE_UPDATED": return .teal
+        default: return .gray
+        }
+    }
+    
+    private func formatActivityDate(_ dateString: String) -> String {
+        // Try to parse ISO date format
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        
+        if let date = formatter.date(from: dateString) {
+            let relativeFormatter = RelativeDateTimeFormatter()
+            relativeFormatter.unitsStyle = .abbreviated
+            return relativeFormatter.localizedString(for: date, relativeTo: Date())
+        }
+        
+        // Fallback: try without fractional seconds
+        formatter.formatOptions = [.withInternetDateTime]
+        if let date = formatter.date(from: dateString) {
+            let relativeFormatter = RelativeDateTimeFormatter()
+            relativeFormatter.unitsStyle = .abbreviated
+            return relativeFormatter.localizedString(for: date, relativeTo: Date())
+        }
+        
+        return dateString
     }
     
     private var collectionsTab: some View {
@@ -437,9 +562,17 @@ struct UserProfileDetailView: View {
                 .foregroundColor(.primary)
                 .padding(.horizontal, 20)
             
-            let userActivities = discoverService.recentActivities.filter { $0.userProfile?.id == userProfile.id }
-            
-            if userActivities.isEmpty {
+            if isLoadingActivities {
+                // Loading skeleton
+                VStack(spacing: 8) {
+                    ForEach(0..<5, id: \.self) { _ in
+                        RoundedRectangle(cornerRadius: 10)
+                            .fill(Color(.systemGray5))
+                            .frame(height: 60)
+                    }
+                }
+                .padding(.horizontal, 20)
+            } else if userActivities.isEmpty {
                 // Empty State
                 VStack(spacing: 20) {
                     ZStack {
@@ -465,17 +598,35 @@ struct UserProfileDetailView: View {
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 40)
             } else {
+                // Show all activities with proper formatting
                 LazyVStack(spacing: 8) {
-                    ForEach(userActivities.prefix(5)) { activity in
-                        HStack {
-                            Text("📈")
-                            Text(activity.description)
-                                .font(.system(size: 14))
+                    ForEach(userActivities) { activity in
+                        HStack(spacing: 12) {
+                            ZStack {
+                                Circle()
+                                    .fill(activityColor(for: activity.activityType).opacity(0.2))
+                                    .frame(width: 40, height: 40)
+                                SwiftUI.Image(systemName: activityIcon(for: activity.activityType))
+                                    .foregroundColor(activityColor(for: activity.activityType))
+                                    .font(.system(size: 16))
+                            }
+                            
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(activity.description)
+                                    .font(.system(size: 14, weight: .medium))
+                                    .foregroundColor(.primary)
+                                    .lineLimit(2)
+                                
+                                Text(formatActivityDate(activity.timestamp))
+                                    .font(.system(size: 12))
+                                    .foregroundColor(.secondary)
+                            }
+                            
                             Spacer()
                         }
-                        .padding()
+                        .padding(12)
                         .background(Color(.systemGray6))
-                        .cornerRadius(8)
+                        .cornerRadius(10)
                     }
                 }
                 .padding(.horizontal, 20)
@@ -688,7 +839,8 @@ struct UserProfileDetailView: View {
         case .magic: return ["Blue Control", "Red Burn", "Green Ramp"][index % 3]
         case .yugioh: return ["Blue-Eyes", "Dark Magician", "Exodia"][index % 3]
         case .digimon: return ["Agumon Bond", "Gabumon Control", "WarGreymon Aggro"][index % 3]
-        case .dragonBall: return ["Goku Rush", "Vegeta Control", "Frieza Aggro"][index % 3]
+        case .dragonBallSuper, .dragonBallFusion: return ["Goku Rush", "Vegeta Control", "Frieza Aggro"][index % 3]
+        case .fleshAndBlood: return ["Bravo Aggro", "Rhinar Smash", "Prism Control"][index % 3]
         case .lorcana: return ["Mickey Tempo", "Elsa Control", "Stitch Aggro"][index % 3]
         case .none: return ["Mixed Deck", "Custom Build", "Experimental"][index % 3]
         }
@@ -858,59 +1010,135 @@ struct UserCardCollectionView: View {
 struct RealCardListItemView: View {
     let displayCard: UserCardCollectionView.DisplayCard
     
+    // Compose proper image URL
+    private var cardImageURL: String? {
+        guard let baseUrl = displayCard.card.cardImageUrl, !baseUrl.isEmpty else { return nil }
+        // If URL already has /high.webp, use as-is
+        if baseUrl.contains("/high.webp") {
+            return baseUrl
+        }
+        // Otherwise append /high.webp
+        return "\(baseUrl)/high.webp"
+    }
+    
+    // Get rarity color
+    private func rarityColor(for rarity: String?) -> Color {
+        guard let rarity = rarity?.lowercased() else { return .secondary }
+        switch rarity {
+        case "secret rare", "ultra rare", "mythic rare", "leader", "special art":
+            return .purple
+        case "super rare", "rare", "art rare":
+            return .blue
+        case "common", "uncommon":
+            return .secondary
+        default:
+            return .orange
+        }
+    }
+    
     var body: some View {
         HStack(spacing: 16) {
-            // Card image
-            AsyncImage(url: URL(string: displayCard.card.cardImageUrl ?? "")) { image in
-                image
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-            } placeholder: {
-                RoundedRectangle(cornerRadius: 8)
-                    .fill(displayCard.tcgType.themeColor.opacity(0.15))
-                    .overlay(
-                        VStack(spacing: 4) {
-                            SwiftUI.Image(systemName: displayCard.tcgType.systemIcon)
-                                .font(.system(size: 24))
-                                .foregroundColor(displayCard.tcgType.themeColor)
-                            Text(displayCard.tcgType.displayName)
-                                .font(.system(size: 8, weight: .medium))
-                                .foregroundColor(displayCard.tcgType.themeColor)
-                        }
-                    )
+            // Card image with proper URL composition
+            AsyncImage(url: URL(string: cardImageURL ?? "")) { phase in
+                switch phase {
+                case .success(let image):
+                    image
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                case .failure(_):
+                    placeholderView
+                case .empty:
+                    placeholderView
+                        .overlay(
+                            ProgressView()
+                                .scaleEffect(0.6)
+                        )
+                @unknown default:
+                    placeholderView
+                }
             }
-            .frame(width: 60, height: 84)
+            .frame(width: 65, height: 90)
             .clipShape(RoundedRectangle(cornerRadius: 8))
             .overlay(
                 RoundedRectangle(cornerRadius: 8)
                     .stroke(displayCard.tcgType.themeColor.opacity(0.3), lineWidth: 1)
             )
+            .shadow(color: .black.opacity(0.1), radius: 2, x: 0, y: 1)
             
             // Card details
-            VStack(alignment: .leading, spacing: 6) {
+            VStack(alignment: .leading, spacing: 8) {
                 Text(displayCard.card.cardName)
                     .font(.system(size: 16, weight: .semibold))
                     .foregroundColor(.primary)
                     .lineLimit(2)
                 
+                // Badges row
                 HStack(spacing: 8) {
-                    Circle()
-                        .fill(displayCard.tcgType.themeColor)
-                        .frame(width: 8, height: 8)
+                    // TCG Badge
+                    HStack(spacing: 4) {
+                        Circle()
+                            .fill(displayCard.tcgType.themeColor)
+                            .frame(width: 8, height: 8)
+                        Text(displayCard.tcgType.displayName)
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundColor(displayCard.tcgType.themeColor)
+                    }
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(
+                        RoundedRectangle(cornerRadius: 6)
+                            .fill(displayCard.tcgType.themeColor.opacity(0.1))
+                    )
                     
-                    Text(displayCard.tcgType.displayName)
-                        .font(.system(size: 13, weight: .medium))
-                        .foregroundColor(displayCard.tcgType.themeColor)
+                    // Rarity Badge (if available)
+                    if let rarity = displayCard.card.rarity, !rarity.isEmpty {
+                        HStack(spacing: 4) {
+                            SwiftUI.Image(systemName: "star.fill")
+                                .font(.system(size: 8))
+                                .foregroundColor(rarityColor(for: rarity))
+                            Text(rarity)
+                                .font(.system(size: 10, weight: .medium))
+                                .foregroundColor(rarityColor(for: rarity))
+                                .lineLimit(1)
+                        }
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(
+                            RoundedRectangle(cornerRadius: 6)
+                                .fill(rarityColor(for: rarity).opacity(0.1))
+                        )
+                    }
                 }
                 
-                HStack(spacing: 4) {
-                    Text("x\(displayCard.card.quantity)")
-                        .font(.system(size: 14, weight: .bold))
-                        .foregroundColor(.secondary)
+                // Quantity
+                HStack(spacing: 8) {
+                    HStack(spacing: 4) {
+                        SwiftUI.Image(systemName: "number.square.fill")
+                            .font(.system(size: 12))
+                            .foregroundColor(.secondary)
+                        Text("x\(displayCard.card.quantity)")
+                            .font(.system(size: 14, weight: .bold))
+                            .foregroundColor(.primary)
+                    }
+                    
+                    // Set name if available
+                    if let setName = displayCard.card.setName, !setName.isEmpty {
+                        Text("•")
+                            .foregroundColor(.secondary)
+                        Text(setName)
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundColor(.secondary)
+                            .lineLimit(1)
+                    }
                 }
             }
             
             Spacer()
+            
+            // Chevron
+            SwiftUI.Image(systemName: "chevron.right")
+                .font(.system(size: 14, weight: .medium))
+                .foregroundColor(.secondary.opacity(0.5))
         }
         .padding(16)
         .background(
@@ -922,6 +1150,21 @@ struct RealCardListItemView: View {
             RoundedRectangle(cornerRadius: 12)
                 .stroke(Color(.systemGray5), lineWidth: 0.5)
         )
+    }
+    
+    private var placeholderView: some View {
+        RoundedRectangle(cornerRadius: 8)
+            .fill(displayCard.tcgType.themeColor.opacity(0.15))
+            .overlay(
+                VStack(spacing: 4) {
+                    SwiftUI.Image(systemName: displayCard.tcgType.systemIcon)
+                        .font(.system(size: 24))
+                        .foregroundColor(displayCard.tcgType.themeColor)
+                    Text(displayCard.tcgType.displayName)
+                        .font(.system(size: 8, weight: .medium))
+                        .foregroundColor(displayCard.tcgType.themeColor)
+                }
+            )
     }
 }
 

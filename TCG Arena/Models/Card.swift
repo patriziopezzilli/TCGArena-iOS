@@ -38,6 +38,12 @@ struct Card: Identifiable, Codable {
     // Computed property per ottenere l'URL completo dell'immagine
     var fullImageURL: String? {
         guard let baseUrl = imageURL else { return nil }
+        
+        // Se l'URL contiene "tcgplayer", usalo direttamente (logica JustTCG)
+        if baseUrl.lowercased().contains("tcgplayer") {
+            return baseUrl
+        }
+        
         // Se l'URL è già completo (contiene "/high.webp"), restituiscilo così com'è
         if baseUrl.contains("/high.webp") {
             return baseUrl
@@ -151,7 +157,9 @@ enum TCGType: String, CaseIterable, Codable {
     case magic = "MAGIC"
     case yugioh = "YUGIOH"
     case digimon = "DIGIMON"
-    case dragonBall = "DRAGON_BALL"
+    case dragonBallSuper = "DRAGON_BALL_SUPER"
+    case dragonBallFusion = "DRAGON_BALL_FUSION"
+    case fleshAndBlood = "FLESH_AND_BLOOD"
     case lorcana = "LORCANA"
     
     var displayName: String {
@@ -166,8 +174,12 @@ enum TCGType: String, CaseIterable, Codable {
             return "Yu-Gi-Oh!"
         case .digimon:
             return "Digimon"
-        case .dragonBall:
-            return "Dragon Ball"
+        case .dragonBallSuper:
+            return "Dragon Ball Super"
+        case .dragonBallFusion:
+            return "Dragon Ball Fusion World"
+        case .fleshAndBlood:
+            return "Flesh and Blood"
         case .lorcana:
             return "Disney Lorcana"
         }
@@ -185,8 +197,12 @@ enum TCGType: String, CaseIterable, Codable {
             return Color.purple
         case .digimon:
             return Color.cyan
-        case .dragonBall:
+        case .dragonBallSuper:
             return Color.orange.opacity(0.8)
+        case .dragonBallFusion:
+            return Color.green
+        case .fleshAndBlood:
+            return Color.red.opacity(0.7)
         case .lorcana:
             return Color.indigo
         }
@@ -195,20 +211,58 @@ enum TCGType: String, CaseIterable, Codable {
     var systemIcon: String {
         switch self {
         case .pokemon:
-            return "star.fill" // Star for Pokemon
+            return "star.fill"
         case .onePiece:
-            return "sailboat.fill" // Sailboat for One Piece
+            return "sailboat.fill"
         case .magic:
-            return "sparkles" // Sparkles for Magic: The Gathering
+            return "sparkles"
         case .yugioh:
-            return "eye.fill" // Eye for Yu-Gi-Oh!
+            return "eye.fill"
         case .digimon:
-            return "shield.fill" // Shield for Digimon
-        case .dragonBall:
-            return "flame.fill" // Flame for Dragon Ball
+            return "shield.fill"
+        case .dragonBallSuper:
+            return "flame.fill"
+        case .dragonBallFusion:
+            return "flame.circle.fill"
+        case .fleshAndBlood:
+            return "theatermasks.fill"
         case .lorcana:
-            return "wand.and.stars" // Magic wand for Lorcana
+            return "wand.and.stars"
         }
+    }
+    
+    // Hierarchy configuration (matches backend)
+    var level1Label: String? {
+        switch self {
+        case .pokemon: return "Era"
+        case .magic: return "Block"
+        default: return nil
+        }
+    }
+    
+    var level2Label: String {
+        switch self {
+        case .digimon: return "Booster Set"
+        default: return "Set"
+        }
+    }
+    
+    var hasRotation: Bool {
+        switch self {
+        case .pokemon, .magic, .lorcana: return true
+        default: return false
+        }
+    }
+    
+    var usesBanlist: Bool {
+        switch self {
+        case .fleshAndBlood, .lorcana: return false
+        default: return true
+        }
+    }
+    
+    var hasHierarchy: Bool {
+        return level1Label != nil
     }
 }
 

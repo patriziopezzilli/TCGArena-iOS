@@ -344,6 +344,8 @@ struct CardScanResultView: View {
         case .promo: return .mint
         case .mythic: return .red
         case .legendary: return .yellow
+        case .superRare:
+            return .red
         }
     }
 }

@@ -16,7 +16,9 @@ struct ShopView: View {
     @StateObject private var locationManager = LocationManager()
     @State private var selectedSection = 0
     @State private var showingLocationInput = false
-    @State private var userLocationText = "Milano, Italy"
+    @AppStorage("userLocationText") private var userLocationText = "Milano, Italy"
+    @AppStorage("savedLocationLatitude") private var savedLatitude: Double = 45.4642
+    @AppStorage("savedLocationLongitude") private var savedLongitude: Double = 9.1900
     @State private var hasLoadedInitialData = false
     @State private var isLoading = true
 
@@ -124,17 +126,30 @@ struct ShopView: View {
                 // Load tournaments
                 await tournamentService.loadTournaments()
 
+                // Use saved location or device location or default
+                let locationToUse: CLLocation
                 if let userLocation = locationManager.location {
-                    await tournamentService.loadNearbyTournaments(userLocation: userLocation)
+                    locationToUse = userLocation
                 } else {
-                    let milanoCenter = CLLocation(latitude: 45.4642, longitude: 9.1900)
-                    await tournamentService.loadNearbyTournaments(userLocation: milanoCenter)
+                    // Use saved coordinates from UserDefaults
+                    locationToUse = CLLocation(latitude: savedLatitude, longitude: savedLongitude)
                 }
+                await tournamentService.loadNearbyTournaments(userLocation: locationToUse)
 
                 isLoading = false
             }
             .sheet(isPresented: $showingLocationInput) {
-                LocationInputView(locationText: $userLocationText)
+                LocationInputView(locationText: $userLocationText) { newLocation in
+                    // Save coordinates to UserDefaults
+                    savedLatitude = newLocation.coordinate.latitude
+                    savedLongitude = newLocation.coordinate.longitude
+                    
+                    // Reload shops and tournaments with new location
+                    Task {
+                        await shopService.loadNearbyShops(userLocation: newLocation)
+                        await tournamentService.loadNearbyTournaments(userLocation: newLocation)
+                    }
+                }
             }
         }
     }
@@ -149,6 +164,8 @@ struct ShopListView: View {
     @EnvironmentObject var inventoryService: InventoryService
     @EnvironmentObject var authService: AuthService
     @StateObject private var locationManager = LocationManager()
+    @AppStorage("savedLocationLatitude") private var savedLatitude: Double = 45.4642
+    @AppStorage("savedLocationLongitude") private var savedLongitude: Double = 9.1900
 
     var body: some View {
         ZStack {
@@ -189,15 +206,9 @@ struct ShopListView: View {
                             }
                             
                             Button(action: {
-                                if let userLocation = locationManager.location {
-                                    Task {
-                                        await shopService.loadNearbyShops(userLocation: userLocation)
-                                    }
-                                } else {
-                                    let milanoCenter = CLLocation(latitude: 45.4642, longitude: 9.1900)
-                                    Task {
-                                        await shopService.loadNearbyShops(userLocation: milanoCenter)
-                                    }
+                                let locationToUse = locationManager.location ?? CLLocation(latitude: savedLatitude, longitude: savedLongitude)
+                                Task {
+                                    await shopService.loadNearbyShops(userLocation: locationToUse)
                                 }
                             }) {
                                 Text("Try Again")
@@ -232,12 +243,8 @@ struct ShopListView: View {
                 let generator = UIImpactFeedbackGenerator(style: .medium)
                 generator.impactOccurred()
                 
-                if let userLocation = locationManager.location {
-                    await shopService.loadNearbyShops(userLocation: userLocation)
-                } else {
-                    let milanoCenter = CLLocation(latitude: 45.4642, longitude: 9.1900)
-                    await shopService.loadNearbyShops(userLocation: milanoCenter)
-                }
+                let locationToUse = locationManager.location ?? CLLocation(latitude: savedLatitude, longitude: savedLongitude)
+                await shopService.loadNearbyShops(userLocation: locationToUse)
             }
             
             // Loading overlay
@@ -259,12 +266,8 @@ struct ShopListView: View {
         .task {
             // Load shops when view appears
             if shopService.nearbyShops.isEmpty {
-                if let userLocation = locationManager.location {
-                    await shopService.loadNearbyShops(userLocation: userLocation)
-                } else {
-                    let milanoCenter = CLLocation(latitude: 45.4642, longitude: 9.1900)
-                    await shopService.loadNearbyShops(userLocation: milanoCenter)
-                }
+                let locationToUse = locationManager.location ?? CLLocation(latitude: savedLatitude, longitude: savedLongitude)
+                await shopService.loadNearbyShops(userLocation: locationToUse)
             }
         }
     }
@@ -275,6 +278,8 @@ struct EventListView: View {
     @EnvironmentObject var tournamentService: TournamentService
     @EnvironmentObject var authService: AuthService
     @StateObject private var locationManager = LocationManager()
+    @AppStorage("savedLocationLatitude") private var savedLatitude: Double = 45.4642
+    @AppStorage("savedLocationLongitude") private var savedLongitude: Double = 9.1900
     @State private var showingCreateEvent = false
     @State private var registeringTournamentId: Int64?
     @State private var selectedEventSection = 0 // 0 = Upcoming, 1 = Past, 2 = My Events
@@ -561,12 +566,8 @@ struct EventListView: View {
             await tournamentService.loadTournaments()
             await tournamentService.loadPastTournaments()
 
-            if let userLocation = locationManager.location {
-                await tournamentService.loadNearbyTournaments(userLocation: userLocation)
-            } else {
-                let milanoCenter = CLLocation(latitude: 45.4642, longitude: 9.1900)
-                await tournamentService.loadNearbyTournaments(userLocation: milanoCenter)
-            }
+            let locationToUse = locationManager.location ?? CLLocation(latitude: savedLatitude, longitude: savedLongitude)
+            await tournamentService.loadNearbyTournaments(userLocation: locationToUse)
         }
     }
     
@@ -657,12 +658,8 @@ struct EventListView: View {
             await tournamentService.loadTournaments()
             await tournamentService.loadPastTournaments()
 
-            if let userLocation = locationManager.location {
-                await tournamentService.loadNearbyTournaments(userLocation: userLocation)
-            } else {
-                let milanoCenter = CLLocation(latitude: 45.4642, longitude: 9.1900)
-                await tournamentService.loadNearbyTournaments(userLocation: milanoCenter)
-            }
+            let locationToUse = locationManager.location ?? CLLocation(latitude: savedLatitude, longitude: savedLongitude)
+            await tournamentService.loadNearbyTournaments(userLocation: locationToUse)
         }
     }
     private func emptyStateView(icon: String, title: String, message: String) -> some View {
@@ -968,25 +965,31 @@ private func formatServiceName(_ service: String) -> String {
 
 // MARK: - Distance Formatter
 private func formatDistance(lat: Double, lng: Double) -> String {
-    // Get saved user location from UserDefaults
-    let userLat = UserDefaults.standard.double(forKey: "userLatitude")
-    let userLng = UserDefaults.standard.double(forKey: "userLongitude")
+    // Get saved user location from UserDefaults (matching keys used by location selector)
+    let userLat = UserDefaults.standard.double(forKey: "savedLocationLatitude")
+    let userLng = UserDefaults.standard.double(forKey: "savedLocationLongitude")
     
-    // Default to Milan if no location saved
-    let effectiveLat = userLat != 0 ? userLat : 45.4642
-    let effectiveLng = userLng != 0 ? userLng : 9.1900
+    // Debug logging
+    print("📍 Distance calc - Shop: (\(lat), \(lng)) | User: (\(userLat), \(userLng))")
+    
+    // If no user location saved, return placeholder
+    if userLat == 0 && userLng == 0 {
+        return "-- km"
+    }
     
     // Calculate distance using Haversine formula
     let earthRadius = 6371.0 // km
     
-    let dLat = (lat - effectiveLat) * .pi / 180
-    let dLng = (lng - effectiveLng) * .pi / 180
+    let dLat = (lat - userLat) * .pi / 180
+    let dLng = (lng - userLng) * .pi / 180
     
     let a = sin(dLat/2) * sin(dLat/2) +
-            cos(effectiveLat * .pi / 180) * cos(lat * .pi / 180) *
+            cos(userLat * .pi / 180) * cos(lat * .pi / 180) *
             sin(dLng/2) * sin(dLng/2)
     let c = 2 * atan2(sqrt(a), sqrt(1-a))
     let distance = earthRadius * c
+    
+    print("📍 Calculated distance: \(distance) km")
     
     if distance < 1 {
         return String(format: "%.0f m", distance * 1000)

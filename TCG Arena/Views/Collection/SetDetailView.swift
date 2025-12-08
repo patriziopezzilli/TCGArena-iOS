@@ -53,6 +53,12 @@ struct SetDetailView: View {
         }
     }
     
+    private var cardColor: Color {
+        let hash = abs(set.setCode.hashValue)
+        let hue = Double(hash % 360) / 360.0
+        return Color(hue: hue, saturation: 0.6, brightness: 0.8)
+    }
+    
     var body: some View {
         ScrollView {
             VStack(spacing: 20) {
@@ -104,42 +110,31 @@ struct SetDetailView: View {
             }
             
             // Set Info
-            VStack(spacing: 12) {
-                HStack {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(set.name)
-                            .font(.system(size: 28, weight: .bold))
-                            .foregroundColor(.primary)
-                        
-                        Text(set.setCode.uppercased())
-                            .font(.system(size: 16, weight: .semibold))
-                            .foregroundColor(.blue)
-                    }
-                    
-                    Spacer()
-                    
-                    VStack(alignment: .trailing, spacing: 4) {
-                        Text("Released")
-                            .font(.system(size: 12, weight: .medium))
-                            .foregroundColor(.secondary)
-                        
-                        Text(set.formattedReleaseDate)
-                            .font(.system(size: 14, weight: .semibold))
-                            .foregroundColor(.primary)
-                    }
-                }
+            VStack(spacing: 8) {
+                Text(set.name)
+                    .font(.system(size: 28, weight: .bold))
+                    .foregroundColor(.primary)
+                    .multilineTextAlignment(.center)
                 
-                if let description = set.description {
-                    Text(description)
+                HStack(spacing: 6) {
+                    Circle()
+                        .fill(cardColor)
+                        .frame(width: 8, height: 8)
+                        
+                    Text("\(set.cardCount) Cards")
                         .font(.system(size: 16, weight: .medium))
                         .foregroundColor(.secondary)
-                        .multilineTextAlignment(.leading)
                 }
             }
             .padding(20)
+            .frame(maxWidth: .infinity)
             .background(
                 RoundedRectangle(cornerRadius: 16)
-                    .fill(Color(.systemGray6))
+                    .fill(cardColor.opacity(0.1))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 16)
+                    .stroke(cardColor.opacity(0.2), lineWidth: 1)
             )
         }
     }
@@ -473,6 +468,8 @@ struct SetDetailCardView: View {
         releaseDateString: "2023-01-01T00:00:00Z",
         cardCount: 100,
         description: "A mock set for testing",
+        productType: nil,
+        parentSetId: nil,
         cards: []
     )
     SetDetailView(set: mockSet)

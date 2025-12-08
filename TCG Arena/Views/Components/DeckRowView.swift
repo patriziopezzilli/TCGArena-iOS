@@ -192,8 +192,10 @@ struct DeckRowView: View {
             return Color.blue
         case .digimon:
             return Color.cyan
-        case .dragonBall:
+        case .dragonBallSuper, .dragonBallFusion:
             return Color.yellow
+        case .fleshAndBlood:
+            return Color.red.opacity(0.7)
         case .lorcana:
             return Color.orange
         }

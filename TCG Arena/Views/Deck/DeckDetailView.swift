@@ -365,8 +365,12 @@ struct DeckDetailView: View {
             return Color.blue
         case .digimon:
             return Color.cyan
-        case .dragonBall:
+        case .dragonBallSuper:
             return Color.yellow
+        case .dragonBallFusion:
+            return Color.green
+        case .fleshAndBlood:
+            return Color.red.opacity(0.7)
         case .lorcana:
             return Color.gray
         }

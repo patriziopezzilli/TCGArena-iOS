@@ -241,6 +241,8 @@ struct CollectionView: View {
     @State private var selectedRulesTCG: TCGType? = nil
     @AppStorage("dismissedTCGRulesBanners") private var dismissedBannersData: Data = Data()
     @State private var isHeaderCollapsed = false // For collapsible header on scroll
+    @State private var animatedDeckIds: Set<Int64> = [] // Track decks that have animated in
+    @State private var animatedCardIds: Set<String> = [] // Track cards that have animated in
 
     enum ViewMode {
         case lists, allCards
@@ -633,9 +635,22 @@ struct CollectionView: View {
     }
 
     private var tcgFilterView: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
+        // Get TCGs that user actually has content for (cards in decks)
+        let tcgsWithContent: [TCGType] = {
+            var tcgSet = Set<TCGType>()
+            for deck in deckService.userDecks {
+                tcgSet.insert(deck.tcgType)
+            }
+            return Array(tcgSet).sorted { $0.displayName < $1.displayName }
+        }()
+        
+        let availableTCGs: [TCGType?] = tcgsWithContent.isEmpty 
+            ? [nil] + TCGType.allCases 
+            : [nil] + tcgsWithContent
+        
+        return ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 12) {
-                ForEach([nil] + TCGType.allCases, id: \.self) { tcgType in
+                ForEach(availableTCGs, id: \.self) { tcgType in
                     Button(action: {
                         withAnimation(.easeInOut(duration: 0.2)) {
                             selectedTCGType = tcgType
@@ -824,13 +839,29 @@ struct CollectionView: View {
                     .opacity(0)
 
                     DeckRowView(deck: deck)
+                        .opacity(animatedDeckIds.contains(deck.id ?? 0) ? 1.0 : 0.0)
+                        .offset(y: animatedDeckIds.contains(deck.id ?? 0) ? 0 : 30)
+                        .scaleEffect(animatedDeckIds.contains(deck.id ?? 0) ? 1.0 : 0.95)
+                        .transition(.move(edge: .bottom).combined(with: .opacity))
+                        .onAppear {
+                            withAnimation(.spring(response: 0.5, dampingFraction: 0.8).delay(Double(index) * 0.05)) {
+                                if let deckId = deck.id {
+                                    animatedDeckIds.insert(deckId)
+                                }
+                            }
+                        }
                 }
                 .listRowSeparator(.hidden)
                 .listRowInsets(EdgeInsets(top: 4, leading: 20, bottom: 4, trailing: 20))
+                .listRowBackground(Color.clear)
             }
         }
         .listStyle(PlainListStyle())
         .background(Color(.systemBackground))
+        .onChange(of: filteredDecks.count) { _ in
+            // Reset animations when deck list changes significantly (e.g., after refresh)
+            // to enable re-animation
+        }
         .simultaneousGesture(
             DragGesture().onChanged { value in
                 let verticalMovement = value.translation.height
@@ -921,7 +952,8 @@ struct CollectionView: View {
                         .listRowBackground(Color.clear)
                 }
             } else {
-                ForEach(filteredCards, id: \.id) { card in
+                ForEach(Array(filteredCards.enumerated()), id: \.element.id) { index, card in
+                    let cardId = card.id.map { String($0) } ?? ""
                     ZStack {
                         NavigationLink(destination: CardDetailView(card: card, isFromDiscover: false) { updatedCard in
                             // Update local state immediately for instant UI feedback
@@ -934,15 +966,26 @@ struct CollectionView: View {
                         .opacity(0)
 
                         CardRowView(card: card, deckService: deckService)
+                            .opacity(animatedCardIds.contains(cardId) ? 1.0 : 0.0)
+                            .offset(y: animatedCardIds.contains(cardId) ? 0 : 15)
+                            .scaleEffect(animatedCardIds.contains(cardId) ? 1.0 : 0.96)
+                            .onAppear {
+                                // Limit stagger delay to first 10 items for performance
+                                let delay = min(Double(index), 10.0) * 0.04
+                                withAnimation(.spring(response: 0.45, dampingFraction: 0.75).delay(delay)) {
+                                    animatedCardIds.insert(cardId)
+                                }
+                            }
                     }
                     .listRowSeparator(.hidden)
                     .listRowInsets(EdgeInsets(top: 4, leading: 20, bottom: 4, trailing: 20))
+                    .listRowBackground(Color.clear)
                 }
             }
         }
         .listStyle(PlainListStyle())
         .background(Color(.systemGroupedBackground))
-        .animation(.easeInOut(duration: 0.25), value: isLoadingCards)
+        .animation(.easeInOut(duration: 0.3), value: isLoadingCards)
     }
 
     private var cardNavigationLink: some View {
@@ -1015,6 +1058,19 @@ struct CollectionView: View {
         let generator = UIImpactFeedbackGenerator(style: .medium)
         generator.impactOccurred()
         
+        // Show skeleton while refreshing (don't clear data, just show loading state)
+        await MainActor.run {
+            // Only show skeleton if we're in lists mode to avoid flicker
+            if viewMode == .lists {
+                isLoadingDecks = true
+            } else {
+                isLoadingCards = true
+            }
+            // Reset animated IDs for fresh animation when data arrives
+            animatedDeckIds.removeAll()
+            animatedCardIds.removeAll()
+        }
+        
         // Refresh market data
         marketService.loadMarketData()
 
@@ -1022,6 +1078,14 @@ struct CollectionView: View {
         if let userId = authService.currentUserId {
             await withCheckedContinuation { continuation in
                 deckService.refreshUserDecks(userId: userId) { result in
+                    DispatchQueue.main.async {
+                        // Hide skeleton with smooth transition
+                        withAnimation(.easeOut(duration: 0.3)) {
+                            self.isLoadingDecks = false
+                        }
+                        // Reload enriched cards after decks are refreshed
+                        self.loadEnrichedAllCards()
+                    }
                     switch result {
                     case .success:
                         print("🔄 CollectionView: Decks refreshed successfully")
@@ -1031,13 +1095,21 @@ struct CollectionView: View {
                     continuation.resume()
                 }
             }
+        } else {
+            await MainActor.run {
+                withAnimation(.easeOut(duration: 0.3)) {
+                    isLoadingDecks = false
+                }
+            }
         }
 
-        // Refresh user card collection and enriched cards
+        // Refresh user card collection
         await withCheckedContinuation { continuation in
             loadUserCards()
-            // Wait a bit for async operations to complete
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                withAnimation(.easeOut(duration: 0.3)) {
+                    self.isLoadingCards = false
+                }
                 continuation.resume()
             }
         }
@@ -1172,6 +1244,57 @@ struct DeckRowSkeletonView: View {
                 RoundedRectangle(cornerRadius: 4)
                     .fill(Color(.systemGray5))
                     .frame(width: 100, height: 12)
+            }
+            
+            Spacer()
+            
+            // Chevron skeleton
+            RoundedRectangle(cornerRadius: 4)
+                .fill(Color(.systemGray5))
+                .frame(width: 10, height: 16)
+        }
+        .padding(16)
+        .background(
+            RoundedRectangle(cornerRadius: 16)
+                .fill(Color(.secondarySystemGroupedBackground))
+                .shadow(color: Color.black.opacity(0.08), radius: 10, x: 0, y: 3)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 16)
+                .stroke(Color(.separator).opacity(0.3), lineWidth: 1)
+        )
+    }
+}
+
+struct ExpansionRowSkeletonView: View {
+    var body: some View {
+        HStack(spacing: 16) {
+            // Expansion image skeleton
+            RoundedRectangle(cornerRadius: 12)
+                .fill(Color(.systemGray5))
+                .frame(width: 60, height: 60)
+            
+            VStack(alignment: .leading, spacing: 8) {
+                // Expansion title skeleton
+                RoundedRectangle(cornerRadius: 4)
+                    .fill(Color(.systemGray4))
+                    .frame(width: 180, height: 18)
+                
+                // TCG type badge skeleton
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(Color(.systemGray4))
+                    .frame(width: 80, height: 22)
+                
+                // Sets count skeleton
+                HStack(spacing: 6) {
+                    RoundedRectangle(cornerRadius: 4)
+                        .fill(Color(.systemGray5))
+                        .frame(width: 60, height: 14)
+                    
+                    RoundedRectangle(cornerRadius: 4)
+                        .fill(Color(.systemGray5))
+                        .frame(width: 80, height: 14)
+                }
             }
             
             Spacer()
@@ -1333,6 +1456,7 @@ struct HorizontalCardRowView: View {
 // MARK: - Discover Info Box
 struct DiscoverInfoBox: View {
     @State private var showingDiscoverSheet = false
+    @EnvironmentObject private var authService: AuthService
     
     var body: some View {
         Button(action: {
@@ -1378,6 +1502,7 @@ struct DiscoverInfoBox: View {
         )
         .sheet(isPresented: $showingDiscoverSheet) {
             CardDiscoverView()
+                .environmentObject(authService)
         }
     }
 }
@@ -1386,7 +1511,9 @@ struct DiscoverInfoBox: View {
 struct CardDiscoverView: View {
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject var cardService: CardService
+    @EnvironmentObject var authService: AuthService
     @StateObject private var expansionService = ExpansionService()
+    @StateObject private var marketService = MarketDataService() // Needed for SetDetailView
     @State private var selectedTCGType: TCGType? = nil
     @State private var searchText = ""
     @State private var searchResults: [CardTemplate] = []
@@ -1481,9 +1608,19 @@ struct CardDiscoverView: View {
     }
     
     private var tcgFilterView: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
+        // Show only favorite TCGs if user has some, otherwise show all
+        let availableTCGs: [TCGType?] = {
+            let favorites = authService.favoriteTCGTypes
+            if favorites.isEmpty {
+                return [nil] + TCGType.allCases
+            } else {
+                return [nil] + favorites
+            }
+        }()
+        
+        return ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 12) {
-                ForEach([nil] + TCGType.allCases, id: \.self) { tcgType in
+                ForEach(availableTCGs, id: \.self) { tcgType in
                     Button(action: {
                         selectedTCGType = tcgType
                     }) {
@@ -1514,17 +1651,34 @@ struct CardDiscoverView: View {
     private var featuredExpansionsView: some View {
         VStack(alignment: .leading, spacing: 16) {
             HStack {
-                Text("All Expansions")
-                    .font(.system(size: 20, weight: .bold))
-                    .foregroundColor(.primary)
                 
-                Spacer()
+                if expansionService.isLoading {
+                    ProgressView()
+                        .scaleEffect(0.8)
+                }
             }
             
-            VStack(spacing: 16) {
-                ForEach(filteredExpansions) { expansion in
-                    NavigationLink(destination: ExpansionDetailView(expansion: expansion).environmentObject(expansionService)) {
-                        ExpansionRow(expansion: expansion, isButton: false) { }
+            if expansionService.isLoading && filteredExpansions.isEmpty {
+                // Skeleton loading view
+                VStack(spacing: 16) {
+                    ForEach(0..<5, id: \.self) { _ in
+                        ExpansionRowSkeletonView()
+                    }
+                }
+            } else if filteredExpansions.isEmpty {
+                EmptyStateRow(message: "No expansions found")
+            } else {
+                VStack(spacing: 16) {
+                    ForEach(filteredExpansions) { expansion in
+                        if let firstSet = expansion.sets.first, expansion.sets.count == 1 {
+                            NavigationLink(destination: SetDetailView(set: firstSet).environmentObject(marketService)) {
+                                ExpansionRow(expansion: expansion, isButton: false) { }
+                            }
+                        } else {
+                            NavigationLink(destination: ExpansionDetailView(expansion: expansion).environmentObject(expansionService)) {
+                                ExpansionRow(expansion: expansion, isButton: false) { }
+                            }
+                        }
                     }
                 }
             }
@@ -1585,6 +1739,12 @@ struct CardDiscoverView: View {
     // Computed properties for filtering and search
     private var filteredExpansions: [Expansion] {
         var expansions = expansionService.expansions
+        
+        // Filter by user's favorite TCGs (fallback to all if none set)
+        let favorites = authService.favoriteTCGTypes
+        if !favorites.isEmpty {
+            expansions = expansions.filter { favorites.contains($0.tcgType) }
+        }
         
         if let selectedType = selectedTCGType {
             expansions = expansions.filter { $0.tcgType == selectedType }
@@ -1696,6 +1856,10 @@ struct CardDiscoverView: View {
             .navigationBarHidden(true)
             .task {
                 await expansionService.loadExpansions()
+            }
+            .onAppear {
+                // Ensure favorites are loaded from currentUser on view appear
+                authService.loadFavoritesFromUser()
             }
             .onChange(of: searchText) { newValue in
                 performSearch(query: newValue)

@@ -41,13 +41,25 @@ struct CardTemplate: Identifiable, Codable {
     // Computed property per ottenere l'URL completo dell'immagine
     var fullImageUrl: String? {
         guard let baseUrl = imageUrl else { return nil }
-        // Aggiungi qualità "high" e formato "webp" come raccomandato
+        
+        // Se l'URL contiene "tcgplayer", usalo direttamente (logica JustTCG)
+        if baseUrl.lowercased().contains("tcgplayer") {
+            return baseUrl
+        }
+        
+        // Altrimenti aggiungi qualità "high" e formato "webp" come raccomandato
         return "\(baseUrl)/high.webp"
     }
     
     // Versione con parametri personalizzabili
     func imageUrl(quality: String = "high", format: String = "webp") -> String? {
         guard let baseUrl = imageUrl else { return nil }
+        
+        // Se l'URL contiene "tcgplayer", usalo direttamente
+        if baseUrl.lowercased().contains("tcgplayer") {
+            return baseUrl
+        }
+        
         return "\(baseUrl)/\(quality).\(format)"
     }
     
@@ -194,6 +206,7 @@ enum Rarity: String, Codable, CaseIterable {
     case uncommon = "UNCOMMON"
     case rare = "RARE"
     case ultraRare = "ULTRA_RARE"
+    case superRare = "SUPER_RARE"
     case secretRare = "SECRET_RARE"
     case holographic = "HOLOGRAPHIC"
     case promo = "PROMO"
@@ -208,6 +221,7 @@ enum Rarity: String, Codable, CaseIterable {
         case "UNCOMMON": self = .uncommon
         case "RARE": self = .rare
         case "ULTRA_RARE": self = .ultraRare
+        case "SUPER_RARE": self = .superRare
         case "SECRET_RARE", "SECRET": self = .secretRare
         case "HOLOGRAPHIC": self = .holographic
         case "PROMO": self = .promo
@@ -224,6 +238,7 @@ enum Rarity: String, Codable, CaseIterable {
         case .uncommon: return "Uncommon"
         case .rare: return "Rare"
         case .ultraRare: return "Ultra Rare"
+        case .superRare: return "Super Rare"
         case .secretRare: return "Secret Rare"
         case .holographic: return "Holographic"
         case .promo: return "Promo"
@@ -242,6 +257,8 @@ enum Rarity: String, Codable, CaseIterable {
             return Color.blue
         case .ultraRare:
             return Color.purple
+        case .superRare:
+            return Color.red.opacity(0.8)
         case .secretRare:
             return Color.red
         case .holographic:
@@ -261,6 +278,7 @@ enum Rarity: String, Codable, CaseIterable {
         case .uncommon: return "U"
         case .rare: return "R"
         case .ultraRare: return "UR"
+        case .superRare: return "SPR"
         case .secretRare: return "SR"
         case .holographic: return "H"
         case .promo: return "P"

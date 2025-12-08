@@ -320,4 +320,57 @@ class AuthService: ObservableObject {
             // Handle error silently
         }
     }
+    
+    // MARK: - Favorite TCGs Management
+    
+    @Published var favoriteTCGs: [TCGType] = [] {
+        didSet {
+            // Persist to UserDefaults
+            let typeStrings = favoriteTCGs.map { $0.rawValue }
+            UserDefaults.standard.set(typeStrings, forKey: "favoriteTCGs")
+        }
+    }
+    
+    /// Updates the user's favorite TCG types on the server
+    func updateFavoriteTCGs(_ tcgTypes: [TCGType]) async -> Bool {
+        guard let userId = currentUserId else { return false }
+        
+        do {
+            let result: [TCGType] = try await APIClient.shared.request(
+                "/api/users/\(userId)/favorite-tcgs",
+                method: "PUT",
+                body: tcgTypes
+            )
+            
+            // Update local state directly (avoid failing /api/auth/me call)
+            await MainActor.run {
+                self.favoriteTCGs = result
+            }
+            return true
+        } catch {
+            Swift.print("❌ Failed to update favorite TCGs: \(error.localizedDescription)")
+            return false
+        }
+    }
+    
+    /// Get user's current favorite TCG types
+    var favoriteTCGTypes: [TCGType] {
+        // Use published favorites if available, otherwise fall back to currentUser
+        if !favoriteTCGs.isEmpty {
+            return favoriteTCGs
+        }
+        return currentUser?.favoriteGames ?? []
+    }
+    
+    /// Load favorites from UserDefaults or current user
+    func loadFavoritesFromUser() {
+        // First try to load from UserDefaults
+        if let savedStrings = UserDefaults.standard.stringArray(forKey: "favoriteTCGs"),
+           !savedStrings.isEmpty {
+            favoriteTCGs = savedStrings.compactMap { TCGType(rawValue: $0) }
+        } else {
+            // Fall back to currentUser
+            favoriteTCGs = currentUser?.favoriteGames ?? []
+        }
+    }
 }

@@ -47,42 +47,31 @@ struct ExpansionDetailView: View {
     // MARK: - Header Section
     private var expansionHeaderSection: some View {
         VStack(spacing: 16) {
-            // Expansion Info
-            VStack(spacing: 12) {
-                HStack {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(currentExpansion.title)
-                            .font(.system(size: 28, weight: .bold))
-                            .foregroundColor(.primary)
-                        
-                        HStack(spacing: 8) {
-                            Circle()
-                                .fill(currentExpansion.tcgType.themeColor)
-                                .frame(width: 8, height: 8)
-                            
-                            Text(currentExpansion.tcgType.displayName)
-                                .font(.system(size: 16, weight: .semibold))
-                                .foregroundColor(currentExpansion.tcgType.themeColor)
-                        }
-                    }
+            VStack(spacing: 8) {
+                Text(currentExpansion.title)
+                    .font(.system(size: 28, weight: .bold))
+                    .foregroundColor(.primary)
+                    .multilineTextAlignment(.center)
+                
+                HStack(spacing: 6) {
+                    Circle()
+                        .fill(currentExpansion.tcgType.themeColor)
+                        .frame(width: 8, height: 8)
                     
-                    Spacer()
-                    
-                    VStack(alignment: .trailing, spacing: 4) {
-                        Text("Released")
-                            .font(.system(size: 12, weight: .medium))
-                            .foregroundColor(.secondary)
-                        
-                        Text(currentExpansion.sets.first?.formattedReleaseDate ?? "Unknown")
-                            .font(.system(size: 14, weight: .semibold))
-                            .foregroundColor(.primary)
-                    }
+                    Text("\(currentExpansion.sets.count) sets")
+                        .font(.system(size: 16, weight: .medium))
+                        .foregroundColor(.secondary)
                 }
             }
             .padding(20)
+            .frame(maxWidth: .infinity)
             .background(
                 RoundedRectangle(cornerRadius: 16)
-                    .fill(Color(.systemGray6))
+                    .fill(currentExpansion.tcgType.themeColor.opacity(0.1))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 16)
+                    .stroke(currentExpansion.tcgType.themeColor.opacity(0.2), lineWidth: 1)
             )
         }
     }
@@ -90,7 +79,7 @@ struct ExpansionDetailView: View {
     // MARK: - Sets Section
     private var expansionSetsSection: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("Sets in this Expansion")
+            Text("Sets List")
                 .font(.system(size: 20, weight: .bold))
                 .foregroundColor(.primary)
             
@@ -220,6 +209,7 @@ struct SetDetailCard: View {
                     Text(set.name)
                         .font(.system(size: 16, weight: .semibold))
                         .foregroundColor(.primary)
+                        .lineLimit(1)
                     
                     Spacer()
                     
@@ -232,33 +222,14 @@ struct SetDetailCard: View {
                         .clipShape(Capsule())
                 }
                 
-                if let description = set.description {
-                    Text(description)
+                HStack(spacing: 4) {
+                    SwiftUI.Image(systemName: "square.stack.3d.up.fill")
+                        .font(.system(size: 12))
+                        .foregroundColor(.secondary)
+                    
+                    Text("\(set.cardCount) cards")
                         .font(.system(size: 14, weight: .medium))
                         .foregroundColor(.secondary)
-                        .lineLimit(2)
-                }
-                
-                HStack(spacing: 16) {
-                    HStack(spacing: 4) {
-                        SwiftUI.Image(systemName: "square.stack.3d.up.fill")
-                            .font(.system(size: 12))
-                            .foregroundColor(.secondary)
-                        
-                        Text("\(set.cardCount) cards")
-                            .font(.system(size: 14, weight: .medium))
-                            .foregroundColor(.secondary)
-                    }
-                    
-                    HStack(spacing: 4) {
-                        SwiftUI.Image(systemName: "calendar")
-                            .font(.system(size: 12))
-                            .foregroundColor(.secondary)
-                        
-                        Text(set.formattedReleaseDate)
-                            .font(.system(size: 14, weight: .medium))
-                            .foregroundColor(.secondary)
-                    }
                 }
             }
         }
@@ -284,6 +255,8 @@ struct SetDetailCard: View {
         releaseDateString: "2023-01-01T00:00:00Z",
         cardCount: 100,
         description: "A mock set for testing",
+        productType: nil,
+        parentSetId: nil,
         cards: []
     )
     let mockExpansion = Expansion(
@@ -291,6 +264,7 @@ struct SetDetailCard: View {
         title: "Mock Expansion",
         tcgType: .magic,
         imageUrl: nil,
+        productType: nil,
         sets: [mockSet]
     )
     ExpansionDetailView(expansion: mockExpansion)

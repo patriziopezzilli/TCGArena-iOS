@@ -15,6 +15,8 @@ struct TCGSet: Identifiable, Codable {
     let releaseDateString: String
     let cardCount: Int
     let description: String?
+    let productType: ProductType?
+    let parentSetId: Int64?  // For sub-sets (e.g., Shiny Vault → Hidden Fates)
     let cards: [CardTemplate]? // Recent cards (up to 5)
     
     enum CodingKeys: String, CodingKey {
@@ -25,6 +27,8 @@ struct TCGSet: Identifiable, Codable {
         case releaseDateString = "releaseDate"
         case cardCount = "cardCount"
         case description
+        case productType = "productType"
+        case parentSetId = "parentSetId"
         case cards
     }
     

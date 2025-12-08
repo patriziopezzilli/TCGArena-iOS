@@ -563,6 +563,134 @@ struct StatCard: View {
         }
     }
     
+    struct FavoriteTCGRow: View {
+        let tcgType: TCGType
+        @EnvironmentObject private var authService: AuthService
+        @State private var isSelected: Bool = false
+        
+        var body: some View {
+            Button(action: toggleFavorite) {
+                HStack(spacing: 12) {
+                    SwiftUI.Image(systemName: tcgType.systemIcon)
+                        .font(.title3)
+                        .foregroundColor(tcgType.themeColor)
+                        .frame(width: 24, height: 24)
+                    
+                    Text(tcgType.displayName)
+                        .font(.body)
+                        .foregroundColor(.primary)
+                    
+                    Spacer()
+                    
+                    SwiftUI.Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
+                        .font(.title3)
+                        .foregroundColor(isSelected ? tcgType.themeColor : .secondary)
+                }
+                .padding(.vertical, 8)
+            }
+            .buttonStyle(PlainButtonStyle())
+            .onAppear {
+                isSelected = authService.favoriteTCGTypes.contains(tcgType)
+            }
+            .onChange(of: authService.currentUser?.id) { _ in
+                isSelected = authService.favoriteTCGTypes.contains(tcgType)
+            }
+        }
+        
+        private func toggleFavorite() {
+            isSelected.toggle()
+            
+            Task {
+                var updatedFavorites = authService.favoriteTCGTypes
+                if isSelected {
+                    if !updatedFavorites.contains(tcgType) {
+                        updatedFavorites.append(tcgType)
+                    }
+                } else {
+                    updatedFavorites.removeAll { $0 == tcgType }
+                }
+                
+                let success = await authService.updateFavoriteTCGs(updatedFavorites)
+                if !success {
+                    // Revert on failure
+                    isSelected.toggle()
+                }
+            }
+        }
+    }
+    
+    struct FavoriteTCGChipsView: View {
+        @EnvironmentObject private var authService: AuthService
+        @State private var selectedTCGs: Set<TCGType> = []
+        
+        var body: some View {
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: 100))], spacing: 8) {
+                ForEach(TCGType.allCases, id: \.self) { tcgType in
+                    FavoriteTCGChip(
+                        tcgType: tcgType,
+                        isSelected: selectedTCGs.contains(tcgType)
+                    ) {
+                        toggleTCG(tcgType)
+                    }
+                }
+            }
+            .padding(.vertical, 4)
+            .onAppear {
+                selectedTCGs = Set(authService.favoriteTCGTypes)
+            }
+            .onChange(of: authService.favoriteTCGs) { newValue in
+                selectedTCGs = Set(newValue)
+            }
+        }
+        
+        private func toggleTCG(_ tcgType: TCGType) {
+            if selectedTCGs.contains(tcgType) {
+                selectedTCGs.remove(tcgType)
+            } else {
+                selectedTCGs.insert(tcgType)
+            }
+            
+            Task {
+                let success = await authService.updateFavoriteTCGs(Array(selectedTCGs))
+                if !success {
+                    // Revert on failure
+                    if selectedTCGs.contains(tcgType) {
+                        selectedTCGs.remove(tcgType)
+                    } else {
+                        selectedTCGs.insert(tcgType)
+                    }
+                }
+            }
+        }
+    }
+    
+    struct FavoriteTCGChip: View {
+        let tcgType: TCGType
+        let isSelected: Bool
+        let action: () -> Void
+        
+        var body: some View {
+            Button(action: action) {
+                HStack(spacing: 4) {
+                    SwiftUI.Image(systemName: tcgType.systemIcon)
+                        .font(.system(size: 12, weight: .semibold))
+                    
+                    Text(tcgType.displayName)
+                        .font(.system(size: 12, weight: .medium))
+                        .lineLimit(1)
+                }
+                .padding(.horizontal, 10)
+                .padding(.vertical, 6)
+                .background(
+                    Capsule()
+                        .fill(isSelected ? tcgType.themeColor : Color(.systemGray5))
+                )
+                .foregroundColor(isSelected ? .white : .primary)
+            }
+            .buttonStyle(PlainButtonStyle())
+        }
+    }
+    
     struct SettingsView: View {
         @Environment(\.presentationMode) var presentationMode
         @EnvironmentObject private var settingsService: SettingsService
@@ -580,6 +708,17 @@ struct StatCard: View {
         var body: some View {
             NavigationView {
                 List {
+                    // Favorite TCGs Section - Compact horizontal chips
+                    Section {
+                        FavoriteTCGChipsView()
+                    } header: {
+                        Text("Favorite TCGs")
+                    } footer: {
+                        Text("Filter Discover section by your favorite games")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+                    
                     // App Settings Section
                     Section("App Settings") {
                         SettingsRow(
@@ -1142,175 +1281,269 @@ struct StatCard: View {
         @EnvironmentObject private var authService: AuthService
         @State private var displayName: String = ""
         @State private var bio = ""
-        @State private var favoriteGame: String = ""
+        @State private var favoriteGame: TCGType = .pokemon
         @State private var isPublic = true
-        @State private var selectedItem: PhotosPickerItem? = nil
-        @State private var selectedImageData: Data? = nil
-        @State private var isUploadingImage = false
-        @State private var showingImagePicker = false
+        @State private var isSaving = false
         
-        let tcgOptions = ["Pokemon", "Magic: The Gathering", "Yu-Gi-Oh!", "One Piece"]
+        let tcgOptions: [TCGType] = [.pokemon, .magic, .yugioh, .onePiece]
         
         init() {
             // Initialize with current user data if available
             if let user = AuthService.shared.currentUser {
                 _displayName = State(initialValue: user.displayName)
-                _favoriteGame = State(initialValue: user.favoriteGame?.rawValue.capitalized ?? "Pokemon")
+                // bio is optional and not in User model, so leave empty
+                _favoriteGame = State(initialValue: user.favoriteGame ?? .pokemon)
             }
         }
         
         var body: some View {
             NavigationView {
-                Form {
-                    Section("Profile Picture") {
-                        HStack {
-                            Spacer()
-                            VStack {
-                                if let imageData = selectedImageData, let uiImage = UIImage(data: imageData) {
-                                    SwiftUI.Image(uiImage: uiImage)
-                                        .resizable()
-                                        .scaledToFill()
-                                        .frame(width: 100, height: 100)
-                                        .clipShape(Circle())
-                                        .overlay(Circle().stroke(Color.gray.opacity(0.3), lineWidth: 2))
-                                } else if let profileImageUrl = authService.currentUser?.profileImageUrl,
-                                          let url = URL(string: profileImageUrl) {
-                                    AsyncImage(url: url) { image in
-                                        image
-                                            .resizable()
-                                            .scaledToFill()
-                                            .frame(width: 100, height: 100)
-                                            .clipShape(Circle())
-                                            .overlay(Circle().stroke(Color.gray.opacity(0.3), lineWidth: 2))
-                                    } placeholder: {
-                                        Circle()
-                                            .fill(Color.gray.opacity(0.3))
-                                            .frame(width: 100, height: 100)
-                                            .overlay(
-                                                Text(authService.currentUser?.displayName.prefix(2).uppercased() ?? "TC")
-                                                    .font(.system(size: 28, weight: .bold))
-                                                    .foregroundColor(.white)
-                                            )
-                                    }
-                                } else {
-                                    Circle()
-                                        .fill(Color.gray.opacity(0.3))
-                                        .frame(width: 100, height: 100)
-                                        .overlay(
-                                            Text(displayName.prefix(2).uppercased())
-                                                .font(.system(size: 28, weight: .bold))
-                                                .foregroundColor(.white)
+                ScrollView {
+                    VStack(spacing: 24) {
+                        // Header with User Avatar (display only, not editable)
+                        VStack(spacing: 16) {
+                            ZStack {
+                                Circle()
+                                    .fill(
+                                        LinearGradient(
+                                            gradient: Gradient(colors: [Color.blue, Color.purple]),
+                                            startPoint: .topLeading,
+                                            endPoint: .bottomTrailing
                                         )
-                                }
+                                    )
+                                    .frame(width: 80, height: 80)
                                 
-                                if isUploadingImage {
-                                    ProgressView()
-                                        .padding(.top, 8)
-                                }
+                                Text(displayName.prefix(2).uppercased())
+                                    .font(.system(size: 28, weight: .bold))
+                                    .foregroundColor(.white)
                             }
-                            Spacer()
+                            
+                            Text("Modifica Profilo")
+                                .font(.system(size: 24, weight: .bold))
+                                .foregroundColor(.primary)
                         }
+                        .padding(.top, 20)
                         
-                        PhotosPicker(selection: $selectedItem, matching: .images) {
-                            Text("Change Profile Picture")
-                                .foregroundColor(.blue)
-                        }
-                        .onChange(of: selectedItem) { newItem in
-                            Task {
-                                if let data = try? await newItem?.loadTransferable(type: Data.self) {
-                                    selectedImageData = data
-                                }
+                        // Profile Information Card
+                        VStack(alignment: .leading, spacing: 20) {
+                            // Section Header
+                            HStack(spacing: 8) {
+                                SwiftUI.Image(systemName: "person.fill")
+                                    .font(.system(size: 14, weight: .semibold))
+                                    .foregroundColor(.blue)
+                                Text("Informazioni Profilo")
+                                    .font(.system(size: 16, weight: .semibold))
+                                    .foregroundColor(.primary)
                             }
-                        }
-                    }
-                    
-                    Section("Profile Information") {
-                        HStack {
-                            Text("Display Name")
-                            TextField("Display Name", text: $displayName)
-                                .multilineTextAlignment(.trailing)
-                        }
-                        
-                        VStack(alignment: .leading) {
-                            Text("Bio")
-                            TextEditor(text: $bio)
-                                .frame(height: 60)
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 8)
-                                        .stroke(Color(.systemGray4), lineWidth: 1)
-                                )
-                        }
-                        
-                        Picker("Favorite TCG", selection: $favoriteGame) {
-                            ForEach(tcgOptions, id: \.self) { game in
-                                Text(game).tag(game)
+                            
+                            // Display Name Field
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text("Nome Visualizzato")
+                                    .font(.system(size: 14, weight: .medium))
+                                    .foregroundColor(.secondary)
+                                
+                                TextField("Il tuo nome", text: $displayName)
+                                    .font(.system(size: 16, weight: .medium))
+                                    .padding(14)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 12)
+                                            .fill(Color(.systemGray6))
+                                    )
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 12)
+                                            .stroke(Color(.systemGray4), lineWidth: 1)
+                                    )
                             }
-                        }
-                    }
-                    
-                    Section("Privacy") {
-                        HStack {
-                            Text("Public Profile")
-                            Spacer()
-                            Toggle("", isOn: $isPublic)
-                        }
-                        
-                        Text("When enabled, other users can view your collection and activity")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    }
-                    
-                    Section {
-                        Button(action: {
-                            // Upload profile image if selected
-                            if let imageData = selectedImageData {
-                                isUploadingImage = true
-                                ImageService.shared.uploadProfileImage(imageData: imageData, filename: "profile.jpg") { result in
-                                    switch result {
-                                    case .success(let image):
-                                        // Update user profile image URL via API
-                                        let updateData = ["profileImageUrl": image.url]
-                                        APIClient.shared.request(endpoint: "/api/users/\(authService.currentUserId ?? 0)/profile-image", 
-                                                               method: .put, 
-                                                               body: image.url.data(using: .utf8), 
-                                                               headers: ["Content-Type": "text/plain"]) { result in
-                                            switch result {
-                                            case .success(_):
-                                                // Refresh user data
-                                                Task {
-                                                    await authService.refreshCurrentUser()
-                                                }
-                                            case .failure(let error):
-                                                break
-                                            }
-                                            isUploadingImage = false
-                                        }
-                                    case .failure(let error):
-                                        isUploadingImage = false
+                            
+                            // Bio Field
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text("Bio (Opzionale)")
+                                    .font(.system(size: 14, weight: .medium))
+                                    .foregroundColor(.secondary)
+                                
+                                ZStack(alignment: .topLeading) {
+                                    if bio.isEmpty {
+                                        Text("Racconta qualcosa di te...")
+                                            .foregroundColor(.secondary.opacity(0.6))
+                                            .padding(.top, 14)
+                                            .padding(.leading, 14)
+                                            .font(.system(size: 16))
                                     }
+                                    
+                                    TextEditor(text: $bio)
+                                        .font(.system(size: 16))
+                                        .frame(minHeight: 80)
+                                        .padding(10)
+                                        .scrollContentBackground(.hidden)
+                                        .background(
+                                            RoundedRectangle(cornerRadius: 12)
+                                                .fill(Color(.systemGray6))
+                                        )
+                                        .overlay(
+                                            RoundedRectangle(cornerRadius: 12)
+                                                .stroke(Color(.systemGray4), lineWidth: 1)
+                                        )
                                 }
                             }
                             
-                            // Save profile changes
-                            presentationMode.wrappedValue.dismiss()
-                        }) {
-                            Text("Save Changes")
-                                .frame(maxWidth: .infinity)
-                                .foregroundColor(.white)
-                                .padding()
-                                .background(Color.blue)
-                                .cornerRadius(8)
+                            // Favorite TCG Picker
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text("TCG Preferito")
+                                    .font(.system(size: 14, weight: .medium))
+                                    .foregroundColor(.secondary)
+                                
+                                HStack(spacing: 10) {
+                                    ForEach(tcgOptions, id: \.self) { tcg in
+                                        Button(action: {
+                                            withAnimation(.easeInOut(duration: 0.2)) {
+                                                favoriteGame = tcg
+                                            }
+                                        }) {
+                                            VStack(spacing: 6) {
+                                                SwiftUI.Image(systemName: tcg.systemIcon)
+                                                    .font(.system(size: 20, weight: .medium))
+                                                Text(tcg.displayName)
+                                                    .font(.system(size: 11, weight: .medium))
+                                                    .lineLimit(1)
+                                            }
+                                            .frame(maxWidth: .infinity)
+                                            .padding(.vertical, 12)
+                                            .background(
+                                                RoundedRectangle(cornerRadius: 12)
+                                                    .fill(favoriteGame == tcg ? tcg.themeColor.opacity(0.15) : Color(.systemGray6))
+                                            )
+                                            .overlay(
+                                                RoundedRectangle(cornerRadius: 12)
+                                                    .stroke(favoriteGame == tcg ? tcg.themeColor : Color.clear, lineWidth: 2)
+                                            )
+                                            .foregroundColor(favoriteGame == tcg ? tcg.themeColor : .secondary)
+                                        }
+                                        .buttonStyle(PlainButtonStyle())
+                                    }
+                                }
+                            }
                         }
-                        .disabled(isUploadingImage)
+                        .padding(20)
+                        .background(
+                            RoundedRectangle(cornerRadius: 16)
+                                .fill(Color(.systemBackground))
+                                .shadow(color: Color.black.opacity(0.06), radius: 8, x: 0, y: 2)
+                        )
+                        .padding(.horizontal, 20)
+                        
+                        // Privacy Card
+                        VStack(alignment: .leading, spacing: 16) {
+                            // Section Header
+                            HStack(spacing: 8) {
+                                SwiftUI.Image(systemName: "lock.shield.fill")
+                                    .font(.system(size: 14, weight: .semibold))
+                                    .foregroundColor(.green)
+                                Text("Privacy")
+                                    .font(.system(size: 16, weight: .semibold))
+                                    .foregroundColor(.primary)
+                            }
+                            
+                            HStack {
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text("Profilo Pubblico")
+                                        .font(.system(size: 16, weight: .medium))
+                                        .foregroundColor(.primary)
+                                    Text("Altri utenti possono vedere la tua collezione e attività")
+                                        .font(.system(size: 13))
+                                        .foregroundColor(.secondary)
+                                }
+                                
+                                Spacer()
+                                
+                                Toggle("", isOn: $isPublic)
+                                    .labelsHidden()
+                            }
+                        }
+                        .padding(20)
+                        .background(
+                            RoundedRectangle(cornerRadius: 16)
+                                .fill(Color(.systemBackground))
+                                .shadow(color: Color.black.opacity(0.06), radius: 8, x: 0, y: 2)
+                        )
+                        .padding(.horizontal, 20)
+                        
+                        // Save Button
+                        Button(action: saveProfile) {
+                            HStack(spacing: 8) {
+                                if isSaving {
+                                    ProgressView()
+                                        .tint(.white)
+                                } else {
+                                    SwiftUI.Image(systemName: "checkmark.circle.fill")
+                                        .font(.system(size: 18, weight: .semibold))
+                                    Text("Salva Modifiche")
+                                        .font(.system(size: 17, weight: .semibold))
+                                }
+                            }
+                            .foregroundColor(.white)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 16)
+                            .background(
+                                RoundedRectangle(cornerRadius: 14)
+                                    .fill(displayName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? Color.gray : Color.blue)
+                            )
+                        }
+                        .disabled(displayName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || isSaving)
+                        .padding(.horizontal, 20)
+                        .padding(.bottom, 24)
                     }
                 }
-                .navigationTitle("Edit Profile")
+                .background(Color(.systemGroupedBackground))
+                .navigationTitle("")
                 .navigationBarTitleDisplayMode(.inline)
-                .navigationBarItems(
-                    leading: Button("Cancel") {
+                .toolbar {
+                    ToolbarItem(placement: .navigationBarLeading) {
+                        Button("Annulla") {
+                            presentationMode.wrappedValue.dismiss()
+                        }
+                        .foregroundColor(.blue)
+                    }
+                }
+            }
+        }
+        
+        private func saveProfile() {
+            guard let userId = authService.currentUserId else {
+                ToastManager.shared.showError("Impossibile salvare: utente non trovato")
+                return
+            }
+            
+            let trimmedName = displayName.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !trimmedName.isEmpty else {
+                ToastManager.shared.showError("Il nome non può essere vuoto")
+                return
+            }
+            
+            isSaving = true
+            
+            Task {
+                do {
+                    try await UserService.shared.updateUserProfile(
+                        userId: userId,
+                        displayName: trimmedName,
+                        bio: bio.isEmpty ? nil : bio,
+                        favoriteGame: favoriteGame
+                    )
+                    
+                    // Refresh the user data in AuthService
+                    await authService.refreshCurrentUser()
+                    
+                    await MainActor.run {
+                        isSaving = false
+                        ToastManager.shared.showSuccess("Profilo aggiornato con successo!")
                         presentationMode.wrappedValue.dismiss()
                     }
-                )
+                } catch {
+                    await MainActor.run {
+                        isSaving = false
+                        ToastManager.shared.showError("Errore nel salvataggio: \(error.localizedDescription)")
+                    }
+                }
             }
         }
     }

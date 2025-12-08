@@ -77,8 +77,10 @@ struct TCGRulesView: View {
             onePieceRules
         case .digimon:
             digimonRules
-        case .dragonBall:
+        case .dragonBallSuper, .dragonBallFusion:
             dragonBallRules
+        case .fleshAndBlood:
+            fleshAndBloodRules
         case .lorcana:
             lorcanaRules
         }
@@ -269,6 +271,27 @@ struct TCGRulesView: View {
         }
     }
     
+    private var fleshAndBloodRules: some View {
+        VStack(alignment: .leading, spacing: 20) {
+            RuleSection(title: "🎮 Obiettivo del Gioco", content: """
+            Ridurre la vita dell'avversario a 0 usando il tuo eroe e le sue abilità.
+            """)
+            
+            RuleSection(title: "🃏 Composizione del Mazzo", content: """
+            • 60+ carte nel mazzo
+            • 1 Eroe e equipaggiamenti
+            • Massimo 3 copie per carta
+            """)
+            
+            RuleSection(title: "⚔️ Tipi di Carte", content: """
+            • Eroe: Il tuo personaggio principale
+            • Armi: Permettono di attaccare
+            • Equipaggiamenti: Armatura e accessori
+            • Azioni: Mosse offensive e difensive
+            """)
+        }
+    }
+    
     private var externalLinksSection: some View {
         VStack(alignment: .leading, spacing: 16) {
             Text("🔗 Link Utili")
@@ -306,8 +329,10 @@ struct TCGRulesView: View {
             return "https://en.onepiece-cardgame.com/rule/"
         case .digimon:
             return "https://world.digimoncard.com/rule/"
-        case .dragonBall:
+        case .dragonBallSuper, .dragonBallFusion:
             return "https://www.dbs-cardgame.com/us-en/rule/"
+        case .fleshAndBlood:
+            return "https://fabtcg.com/resources/rules-and-policy/"
         case .lorcana:
             return "https://www.disneylorcana.com/en-US/resources"
         }
@@ -325,8 +350,10 @@ struct TCGRulesView: View {
             return "https://www.youtube.com/watch?v=t_Q6NV_o6qU"
         case .digimon:
             return "https://www.youtube.com/watch?v=IvXyVcvUJIY"
-        case .dragonBall:
+        case .dragonBallSuper, .dragonBallFusion:
             return "https://www.youtube.com/watch?v=8DqK2I6j0UE"
+        case .fleshAndBlood:
+            return "https://www.youtube.com/watch?v=N8tCxLvT0Hk"
         case .lorcana:
             return "https://www.youtube.com/watch?v=KeJ9jbhnN_U"
         }

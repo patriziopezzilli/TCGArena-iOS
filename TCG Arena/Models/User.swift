@@ -29,6 +29,7 @@ struct User: Identifiable, Codable {
     let favoriteGame: TCGType?
     let favoriteGames: [TCGType]?
     let location: UserLocation?
+    let stats: EmbeddedUserStats?  // Stats embedded from backend
     
     // Chiave privata per decodificare l'array di oggetti dal backend
     private enum FavoriteGamesKeys: String, CodingKey {
@@ -51,9 +52,9 @@ struct User: Identifiable, Codable {
         case favoriteGame = "favorite_game"
         case favoriteGames = "favorite_games"
         case location
+        case stats
     }
     
-    // Custom decoder per gestire la conversione da LocalDateTime a Date
     // Custom decoder per gestire la conversione da LocalDateTime a Date
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
@@ -101,6 +102,9 @@ struct User: Identifiable, Codable {
             formatter.dateFormat = "dd MMM yyyy, HH:mm"
             dateJoined = formatter.string(from: Date())
         }
+        
+        // Decode embedded stats from backend
+        stats = try container.decodeIfPresent(EmbeddedUserStats.self, forKey: .stats)
     }
     
     func encode(to encoder: Encoder) throws {
@@ -120,6 +124,7 @@ struct User: Identifiable, Codable {
         try container.encodeIfPresent(favoriteGame, forKey: .favoriteGame)
         try container.encodeIfPresent(favoriteGames, forKey: .favoriteGames)
         try container.encodeIfPresent(location, forKey: .location)
+        try container.encodeIfPresent(stats, forKey: .stats)
         
         // La data è già una stringa formattata dal backend
         try container.encode(dateJoined, forKey: .dateJoined)
@@ -131,6 +136,35 @@ struct User: Identifiable, Codable {
         formatter.dateFormat = "dd MMM yyyy, HH:mm"
         formatter.locale = Locale(identifier: "en_US_POSIX")
         let joinDate = formatter.date(from: dateJoined) ?? Date()
+        
+        // Use real stats from backend if available, otherwise estimate from points
+        let userStats: DiscoverUserStats
+        if let backendStats = stats {
+            // Use real stats from backend
+            userStats = DiscoverUserStats(
+                totalCards: backendStats.totalCards,
+                totalDecks: backendStats.totalDecks,
+                tournamentsWon: backendStats.tournamentsWon,
+                tournamentsPlayed: backendStats.tournamentsPlayed,
+                tradesToday: 0,
+                totalTrades: 0,
+                communityPoints: points ?? 0,
+                achievementsUnlocked: 0
+            )
+        } else {
+            // Fallback: estimate from points
+            let userPoints = points ?? 0
+            userStats = DiscoverUserStats(
+                totalCards: userPoints / 10,
+                totalDecks: userPoints / 50,
+                tournamentsWon: userPoints / 100,
+                tournamentsPlayed: userPoints / 50,
+                tradesToday: 0,
+                totalTrades: userPoints / 30,
+                communityPoints: userPoints,
+                achievementsUnlocked: userPoints / 200
+            )
+        }
 
         return UserProfile(
             id: String(id),
@@ -141,9 +175,9 @@ struct User: Identifiable, Codable {
             joinDate: joinDate,
             lastActiveDate: joinDate,
             isVerified: false,
-            level: 1,
-            experience: 0,
-            stats: DiscoverUserStats(totalCards: 0, totalDecks: 0, tournamentsWon: 0, tournamentsPlayed: 0, tradesToday: 0, totalTrades: 0, communityPoints: 0, achievementsUnlocked: 0),
+            level: max(1, (points ?? 0) / 100),
+            experience: points ?? 0,
+            stats: userStats,
             badges: [],
             favoriteCard: nil,
             preferredTCG: favoriteGames?.first ?? favoriteGame,
