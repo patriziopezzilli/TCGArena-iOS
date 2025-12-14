@@ -38,6 +38,8 @@
 		7883DF8A2EDE53E8007D1C51 /* ButtonStyles.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7883DF892EDE53E8007D1C51 /* ButtonStyles.swift */; };
 		7883DF9D2EE02C80007D1C51 /* SendRequestToShopView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7883DF9C2EE02C80007D1C51 /* SendRequestToShopView.swift */; };
 		7883DF9F2EE02C87007D1C51 /* UserRequestsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7883DF9E2EE02C87007D1C51 /* UserRequestsView.swift */; };
+		78BBCF2F2EEED17A00FCEA14 /* TournamentUpdatesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78BBCF2E2EEED17A00FCEA14 /* TournamentUpdatesView.swift */; };
+		78BBCF312EEED18D00FCEA14 /* TournamentUpdate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78BBCF302EEED18D00FCEA14 /* TournamentUpdate.swift */; };
 		78D54AAE2EE0EEE6009A04C7 /* LocationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78D54AAD2EE0EEE6009A04C7 /* LocationManager.swift */; };
 		78D54AB92EE1A335009A04C7 /* MyReservationsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78D54AB02EE1A335009A04C7 /* MyReservationsView.swift */; };
 		78D54ADB2EE1B894009A04C7 /* DeckDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78D54AD92EE1B894009A04C7 /* DeckDetailView.swift */; };
@@ -166,6 +168,8 @@
 		7883DF892EDE53E8007D1C51 /* ButtonStyles.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ButtonStyles.swift; sourceTree = "<group>"; };
 		7883DF9C2EE02C80007D1C51 /* SendRequestToShopView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SendRequestToShopView.swift; sourceTree = "<group>"; };
 		7883DF9E2EE02C87007D1C51 /* UserRequestsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserRequestsView.swift; sourceTree = "<group>"; };
+		78BBCF2E2EEED17A00FCEA14 /* TournamentUpdatesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TournamentUpdatesView.swift; sourceTree = "<group>"; };
+		78BBCF302EEED18D00FCEA14 /* TournamentUpdate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TournamentUpdate.swift; sourceTree = "<group>"; };
 		78D54AAD2EE0EEE6009A04C7 /* LocationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationManager.swift; sourceTree = "<group>"; };
 		78D54AB02EE1A335009A04C7 /* MyReservationsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MyReservationsView.swift; sourceTree = "<group>"; };
 		78D54AD92EE1B894009A04C7 /* DeckDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeckDetailView.swift; sourceTree = "<group>"; };
@@ -376,6 +380,7 @@
 		7AA785862EBC8A5600A11D94 /* Tournament */ = {
 			isa = PBXGroup;
 			children = (
+				78BBCF2E2EEED17A00FCEA14 /* TournamentUpdatesView.swift */,
 				7A1CC9482ED2753B00A61395 /* TournamentDetailView.swift */,
 				7A8B2E972EC21F61004F6826 /* CreateTournamentView.swift */,
 				7AA785842EBC8A4A00A11D94 /* TournamentView.swift */,
@@ -431,6 +436,7 @@
 		A5000004 /* Models */ = {
 			isa = PBXGroup;
 			children = (
+				78BBCF302EEED18D00FCEA14 /* TournamentUpdate.swift */,
 				78660E4E2EE6177900EA2BFE /* EmbeddedUserStats.swift */,
 				78660E4C2EE60CA300EA2BFE /* ProductType.swift */,
 				786AC86B2EE40EE4001A6714 /* Partner+Extensions.swift */,
@@ -677,6 +683,7 @@
 				7A817B962EC76B0800500F32 /* TCGTypeBadge.swift in Sources */,
 				A1000003 /* Card.swift in Sources */,
 				7AE3FF942EC8FFE6004EE982 /* RewardsMainView.swift in Sources */,
+				78BBCF312EEED18D00FCEA14 /* TournamentUpdate.swift in Sources */,
 				7AE3FF952EC8FFE6004EE982 /* RewardsView.swift in Sources */,
 				7AE3FF912EC89098004EE982 /* DeckRowView.swift in Sources */,
 				7AA785852EBC8A4A00A11D94 /* TournamentView.swift in Sources */,
@@ -752,6 +759,7 @@
 				7A7DF41B2EBB943D00331A52 /* ProfileView.swift in Sources */,
 				7883DF8A2EDE53E8007D1C51 /* ButtonStyles.swift in Sources */,
 				A1000012 /* CardScannerView.swift in Sources */,
+				78BBCF2F2EEED17A00FCEA14 /* TournamentUpdatesView.swift in Sources */,
 				7A7DF3DF2EBB940300331A52 /* DeckService.swift in Sources */,
 				7A8B2E982EC21F61004F6826 /* CreateTournamentView.swift in Sources */,
 				A1000013 /* AddCardView.swift in Sources */,

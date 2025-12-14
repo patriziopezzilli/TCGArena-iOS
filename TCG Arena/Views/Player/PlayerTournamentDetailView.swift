@@ -422,12 +422,16 @@ struct PlayerTournamentDetailView: View {
                 try await tournamentService.checkIn(tournamentId: tournament.id)
                 
                 await MainActor.run {
-                    successMessage = "Successfully checked in!"
+                    successMessage = "Check-in effettuato con successo! +25 punti"
                     loadData()
+                }
+            } catch let error as TournamentService.CheckInError {
+                await MainActor.run {
+                    errorMessage = error.localizedDescription
                 }
             } catch {
                 await MainActor.run {
-                    errorMessage = "Failed to check in"
+                    errorMessage = "Errore check-in: \(error.localizedDescription)"
                 }
             }
         }

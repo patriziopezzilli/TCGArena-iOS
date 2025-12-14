@@ -71,7 +71,8 @@ struct OnboardingView: View {
                                     selectedTCG = tcg
                                 }) {
                                     VStack(spacing: 8) {
-                                        TCGIconView(tcgType: tcg, size: 30, color: selectedTCG == tcg ? .white : tcg.themeColor)
+                                        TCGIconView(tcgType: tcg, size: 28, color: selectedTCG == tcg ? .white : tcg.themeColor)
+                                            .frame(width: 32, height: 32)
 
                                         Text(tcg.displayName)
                                             .font(.system(size: 14, weight: .medium))

@@ -7,6 +7,7 @@
 
 import Foundation
 import SwiftUI
+import UIKit
 
 @MainActor
 class ToastManager: ObservableObject {
@@ -67,6 +68,9 @@ class ToastManager: ObservableObject {
     ) {
         let toast = Toast(message: message, type: type, duration: duration)
         currentToast = toast
+        
+        // Trigger haptic feedback
+        triggerHaptic(for: type)
 
         // Auto-dismiss after duration
         Task {
@@ -78,6 +82,23 @@ class ToastManager: ObservableObject {
                     }
                 }
             }
+        }
+    }
+    
+    private func triggerHaptic(for type: ToastType) {
+        switch type {
+        case .success:
+            let generator = UINotificationFeedbackGenerator()
+            generator.notificationOccurred(.success)
+        case .error:
+            let generator = UINotificationFeedbackGenerator()
+            generator.notificationOccurred(.error)
+        case .warning:
+            let generator = UINotificationFeedbackGenerator()
+            generator.notificationOccurred(.warning)
+        case .info:
+            let generator = UIImpactFeedbackGenerator(style: .light)
+            generator.impactOccurred()
         }
     }
 

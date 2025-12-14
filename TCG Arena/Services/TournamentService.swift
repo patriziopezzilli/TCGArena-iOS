@@ -211,41 +211,68 @@ class TournamentService: ObservableObject {
         }
     }
     
-    // Async version for SwiftUI tasks
+    // MARK: - Data Loading Implementation
+    
+    /// Internal method to fetch active tournaments without managing isLoading state
+    private func fetchAllTournaments() async throws -> [Tournament] {
+        return try await apiClient.request("/api/tournaments", method: "GET")
+    }
+    
+    /// Internal method to fetch past tournaments without managing isLoading state
+    private func fetchPastTournaments() async throws -> [Tournament] {
+        return try await apiClient.request("/api/tournaments/past", method: "GET")
+    }
+    
+    // MARK: - Public Loading Methods
+    
+    /// Refreshes all tournament data (active and past) in parallel
+    /// This prevents multiple UI updates and potential cancellation issues
     @MainActor
-    func loadTournaments() async {
+    func refreshAllData() async {
+        guard !isLoading else { return }
+        
         isLoading = true
         errorMessage = nil
         
+        print("🔄 TournamentService: Starting full refresh")
+        
         do {
-            let result = try await getTournaments()
-            self.tournaments = result.tournaments
-            print("Loaded \(result.tournaments.count) tournaments from /api/tournaments")
+            // Run fetches in parallel
+            async let activeTask = fetchAllTournaments()
+            async let pastTask = fetchPastTournaments()
+            
+            // Wait for both to complete
+            let (active, past) = try await (activeTask, pastTask)
+            
+            // Update state atomically
+            self.tournaments = active
+            self.nearbyTournaments = active // UI handles filtering
+            self.pastTournaments = past
+            
+            print("✅ TournamentService: Full refresh complete. Loaded \(active.count) active, \(past.count) past.")
         } catch {
-            // Check if this is a cancelled request (not a real error)
             if let urlError = error as? URLError, urlError.code == .cancelled {
-                print("Tournaments request was cancelled")
+                print("⚠️ TournamentService: Refresh request cancelled")
             } else {
+                print("❌ TournamentService: Error refreshing data: \(error)")
                 self.errorMessage = error.localizedDescription
-                print("Error loading tournaments: \(error)")
             }
         }
         
         isLoading = false
     }
-    // MARK: - Load All Tournaments (Client-side filtering)
-    
-    /// Loads all tournaments from the API. UI handles distance filtering client-side.
+
+    /// Loads active tournaments
     @MainActor
     func loadAllTournaments() async {
         isLoading = true
         errorMessage = nil
         
         do {
-            let allTournaments: [Tournament] = try await apiClient.request("/api/tournaments", method: "GET")
+            let allTournaments = try await fetchAllTournaments()
             print("✅ Loaded \(allTournaments.count) tournaments")
             self.tournaments = allTournaments
-            self.nearbyTournaments = allTournaments // UI will filter by distance
+            self.nearbyTournaments = allTournaments
         } catch {
             if let urlError = error as? URLError, urlError.code == .cancelled {
                 print("Tournaments request was cancelled")
@@ -256,6 +283,12 @@ class TournamentService: ObservableObject {
         }
         
         isLoading = false
+    }
+    
+    /// Legacy alias
+    @MainActor
+    func loadTournaments() async {
+        await loadAllTournaments()
     }
     
     /// Legacy sync method - calls loadAllTournaments
@@ -271,19 +304,16 @@ class TournamentService: ObservableObject {
         await loadAllTournaments()
     }
     
-    // Async version for SwiftUI tasks
     @MainActor
     func loadPastTournaments() async {
         isLoading = true
         errorMessage = nil
         
         do {
-            let pastResult = try await apiClient.request("/api/tournaments/past", method: "GET") as [Tournament]
-            
-            print("Loaded \(pastResult.count) past tournaments from /api/tournaments/past")
+            let pastResult = try await fetchPastTournaments()
+            print("Loaded \(pastResult.count) past tournaments")
             self.pastTournaments = pastResult
         } catch {
-            // Check if this is a cancelled request (not a real error)
             if let urlError = error as? URLError, urlError.code == .cancelled {
                 print("Past tournaments request was cancelled")
             } else {
@@ -697,8 +727,63 @@ class TournamentService: ObservableObject {
     /// Self check-in - allows user to check themselves in for a tournament
     @MainActor
     func checkIn(tournamentId: Int64) async throws {
-        let _: TournamentParticipant = try await apiClient.request("/api/tournaments/\(tournamentId)/self-checkin", method: "POST")
-        print("Successfully checked in for tournament \(tournamentId)")
+        print("🎫 [CheckIn] Starting self check-in for tournamentId: \(tournamentId)")
+        
+        do {
+            let _: TournamentParticipant = try await apiClient.request("/api/tournaments/\(tournamentId)/self-checkin", method: "POST")
+            print("✅ [CheckIn] Successfully checked in for tournament \(tournamentId)")
+        } catch let error as DecodingError {
+            print("🔴 [CheckIn] Decoding error: \(error)")
+            // If we get a decoding error, the backend might have returned an error message
+            // Re-throw with a more descriptive message
+            throw CheckInError.decodingFailed("Check-in failed - unable to parse server response")
+        } catch let error as APIError {
+            print("🔴 [CheckIn] API error: \(error)")
+            switch error {
+            case .serverError(let code):
+                throw CheckInError.serverError(code)
+            case .sessionExpired:
+                throw CheckInError.sessionExpired
+            case .unauthorized:
+                throw CheckInError.unauthorized
+            default:
+                throw error
+            }
+        } catch {
+            print("🔴 [CheckIn] Unexpected error: \(error.localizedDescription)")
+            throw error
+        }
+    }
+    
+    /// Check-in specific errors
+    enum CheckInError: LocalizedError {
+        case decodingFailed(String)
+        case serverError(Int)
+        case sessionExpired
+        case unauthorized
+        case checkInNotAvailable(String)
+        
+        var errorDescription: String? {
+            switch self {
+            case .decodingFailed(let message):
+                return message
+            case .serverError(let code):
+                switch code {
+                case 400:
+                    return "Check-in non disponibile. Verifica che il torneo sia nella finestra di check-in (da 1 ora prima a 30 minuti dopo l'inizio)."
+                case 404:
+                    return "Torneo non trovato."
+                default:
+                    return "Errore del server (codice: \(code))"
+                }
+            case .sessionExpired:
+                return "Sessione scaduta. Effettua di nuovo il login."
+            case .unauthorized:
+                return "Non sei autorizzato. Effettua il login."
+            case .checkInNotAvailable(let message):
+                return message
+            }
+        }
     }
     
     /// Get tournament participants with user details (for organizers)
@@ -766,5 +851,31 @@ class TournamentService: ObservableObject {
         
         let participant: TournamentParticipant = try await apiClient.request("/api/tournaments/\(tournamentId)/participants/manual", method: "POST", body: data)
         return participant
+    }
+    
+    // MARK: - Tournament Live Updates
+    
+    @MainActor
+    func getTournamentUpdates(tournamentId: Int64) async throws -> [TournamentUpdate] {
+        let updates: [TournamentUpdate] = try await apiClient.request("/api/tournaments/\(tournamentId)/updates", method: "GET")
+        return updates
+    }
+    
+    func getTournamentUpdates(tournamentId: Int64, completion: @escaping (Result<[TournamentUpdate], Error>) -> Void) {
+        apiClient.request(endpoint: "/api/tournaments/\(tournamentId)/updates", method: .get) { result in
+            switch result {
+            case .success(let data):
+                do {
+                    let decoder = JSONDecoder()
+                    let updates = try decoder.decode([TournamentUpdate].self, from: data)
+                    completion(.success(updates))
+                } catch {
+                    print("Error decoding updates: \(error)")
+                    completion(.failure(error))
+                }
+            case .failure(let error):
+                completion(.failure(error))
+            }
+        }
     }
 }

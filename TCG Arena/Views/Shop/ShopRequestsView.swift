@@ -444,9 +444,8 @@ private struct MessageBubble: View {
     let message: RequestMessage
     
     private var isFromCurrentUser: Bool {
-        // This would need to be determined based on the current user
-        // For now, assume messages from the user are right-aligned
-        return message.senderId == "current_user" // Placeholder
+        // User messages go on the right, shop messages on the left
+        message.senderType == .user
     }
     
     var body: some View {

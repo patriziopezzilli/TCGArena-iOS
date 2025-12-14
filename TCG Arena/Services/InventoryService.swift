@@ -38,7 +38,7 @@ class InventoryService: ObservableObject {
         
         var endpoint = "/api/inventory"
         
-        var queryParams = ["shopId": merchantId]
+        var queryParams = ["shopId": merchantId, "size": "1000"] // Load all items, not just default 20
         
         if let filters = filters {
             for (key, value) in filters.queryParameters {

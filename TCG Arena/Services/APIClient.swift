@@ -9,8 +9,8 @@ import Foundation
 
 class APIClient: NSObject {
     static let shared = APIClient()
-   // private let baseURL = "https://api.tcgarena.it"
-    private let baseURL = "http://localhost:8080"
+   private let baseURL = "https://api.tcgarena.it"
+    //private let baseURL = "http://localhost:8080"
     
     // URLSession con configurazione basata sulla modalità (debug/disabilita cache)
     private lazy var urlSession: URLSession = {
@@ -217,12 +217,21 @@ class APIClient: NSObject {
             throw APIError.invalidResponse
         }
         
-        // Log per debug
-        // if let responseString = String(data: data, encoding: .utf8) {
-        //     print("Response (\(httpResponse.statusCode)): \(responseString)")
-        // }
+        // Log per debug - sempre attivo per endpoint di check-in
+        if endpoint.contains("checkin") || endpoint.contains("check-in") {
+            print("🌐 [APIClient] Check-in request to: \(url.absoluteString)")
+            print("🌐 [APIClient] Response status: \(httpResponse.statusCode)")
+            if let responseString = String(data: data, encoding: .utf8) {
+                print("🌐 [APIClient] Response body: \(responseString)")
+            }
+        }
 
         guard (200...299).contains(httpResponse.statusCode) else {
+            // Log error responses for debugging
+            if let responseString = String(data: data, encoding: .utf8) {
+                print("🔴 APIClient: Error response (\(httpResponse.statusCode)): \(responseString)")
+            }
+            
             if httpResponse.statusCode == 401 {
                 // Prova a refreshare il token se non è già un tentativo di retry
                 if retryCount == 0 {

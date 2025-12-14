@@ -9,9 +9,44 @@ import SwiftUI
 
 struct DiscoverView: View {
     @StateObject private var discoverService = DiscoverService()
+    @EnvironmentObject var authService: AuthService
 
     @State private var selectedLeaderboardType: LeaderboardType = .tournaments
     @State private var showingUserProfile: UserProfile?
+    @State private var locationFilter: LocationFilter = .global
+    
+    enum LocationFilter: String, CaseIterable {
+        case global = "Globale"
+        case nearby = "Vicino a me"
+        
+        var icon: String {
+            switch self {
+            case .global: return "globe"
+            case .nearby: return "location.fill"
+            }
+        }
+    }
+    
+    // Filter leaderboard entries by location
+    private func filteredEntries(_ entries: [LeaderboardEntry]) -> [LeaderboardEntry] {
+        guard locationFilter == .nearby,
+              let currentUserId = authService.currentUserId else {
+            return entries
+        }
+        
+        // Get current user's city from leaderboard or service
+        let currentUserCity = entries
+            .first { $0.userProfile.id == String(currentUserId) }?
+            .userProfile.location?.city
+        
+        guard let city = currentUserCity, !city.isEmpty else {
+            return entries // Return all if no city found
+        }
+        
+        return entries.filter { entry in
+            entry.userProfile.location?.city.lowercased() == city.lowercased()
+        }
+    }
     
     var body: some View {
         ScrollView {
@@ -41,6 +76,33 @@ struct DiscoverView: View {
                 VStack(alignment: .leading, spacing: 16) {
                     DiscoverSectionHeader(title: "Leaderboards", subtitle: "See who's leading the charts")
                     
+                    // Location Filter Row
+                    HStack(spacing: 12) {
+                        ForEach(LocationFilter.allCases, id: \.rawValue) { filter in
+                            Button(action: {
+                                withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                                    locationFilter = filter
+                                }
+                            }) {
+                                HStack(spacing: 6) {
+                                    SwiftUI.Image(systemName: filter.icon)
+                                        .font(.system(size: 12))
+                                    Text(filter.rawValue)
+                                        .font(.system(size: 13, weight: .semibold))
+                                }
+                                .foregroundColor(locationFilter == filter ? .white : .secondary)
+                                .padding(.horizontal, 14)
+                                .padding(.vertical, 8)
+                                .background(
+                                    Capsule()
+                                        .fill(locationFilter == filter ? Color.green : Color(.systemGray5))
+                                )
+                            }
+                        }
+                        Spacer()
+                    }
+                    .padding(.horizontal, 20)
+                    
                     // Type Selector
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 12) {
@@ -60,10 +122,24 @@ struct DiscoverView: View {
                     
                     // List
                     VStack(spacing: 12) {
-                        if let entries = discoverService.leaderboards[selectedLeaderboardType], !entries.isEmpty {
-                            ForEach(Array(entries.prefix(5).enumerated()), id: \.element.id) { index, entry in
-                                LeaderboardRowItem(entry: entry, rank: index + 1) {
-                                    showingUserProfile = entry.userProfile
+                        if let entries = discoverService.leaderboards[selectedLeaderboardType] {
+                            let filtered = filteredEntries(entries)
+                            if filtered.isEmpty {
+                                VStack(spacing: 12) {
+                                    SwiftUI.Image(systemName: locationFilter == .nearby ? "location.slash" : "person.3")
+                                        .font(.system(size: 32))
+                                        .foregroundColor(.secondary.opacity(0.5))
+                                    Text(locationFilter == .nearby ? "Nessun giocatore nella tua città" : "No leaderboard data available")
+                                        .font(.system(size: 14, weight: .medium))
+                                        .foregroundColor(.secondary)
+                                }
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 30)
+                            } else {
+                                ForEach(Array(filtered.prefix(10).enumerated()), id: \.element.id) { index, entry in
+                                    LeaderboardRowItem(entry: entry, rank: index + 1) {
+                                        showingUserProfile = entry.userProfile
+                                    }
                                 }
                             }
                         } else {

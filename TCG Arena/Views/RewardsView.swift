@@ -598,25 +598,205 @@ struct PremiumRewardCard: View {
     }
 }
 
-// MARK: - Redeemed Rewards View (Kept as is, just ensuring it compiles)
+// MARK: - Redeemed Rewards View
 struct RedeemedRewardsView: View {
-    @State private var redeemedRewards: [RedeemedReward] = [] // Should load from API in real app
+    @EnvironmentObject var rewardsService: RewardsService
+    @State private var transactions: [RewardTransaction] = []
+    @State private var isLoading = true
 
     var body: some View {
         ScrollView {
-            VStack(spacing: 20) {
-                if redeemedRewards.isEmpty {
-                    Text("No redemption history")
-                        .foregroundColor(.secondary)
+            VStack(spacing: 16) {
+                if isLoading {
+                    ProgressView()
                         .padding(.top, 40)
+                } else if transactions.isEmpty {
+                    VStack(spacing: 16) {
+                        SwiftUI.Image(systemName: "gift")
+                            .font(.system(size: 48))
+                            .foregroundColor(.secondary.opacity(0.5))
+                        Text("Nessun premio riscattato")
+                            .font(.system(size: 16, weight: .medium))
+                            .foregroundColor(.secondary)
+                    }
+                    .padding(.top, 40)
                 } else {
-                    ForEach(redeemedRewards) { reward in
-                        RedeemedRewardCard(reward: reward)
+                    ForEach(transactions) { transaction in
+                        TransactionHistoryCard(transaction: transaction)
                     }
                 }
             }
             .padding(20)
         }
+        .onAppear {
+            loadTransactions()
+        }
+    }
+    
+    private func loadTransactions() {
+        isLoading = true
+        rewardsService.getTransactionHistory { result in
+            switch result {
+            case .success(let allTransactions):
+                // Filter only reward redemptions (negative points AND has rewardId)
+                // This excludes tournament cancellations and other penalties
+                transactions = allTransactions.filter { $0.pointsChange < 0 && $0.rewardId != nil }
+            case .failure(let error):
+                print("Error loading transactions: \(error)")
+            }
+            isLoading = false
+        }
+    }
+}
+
+// MARK: - Transaction History Card
+struct TransactionHistoryCard: View {
+    let transaction: RewardTransaction
+    
+    private var statusColor: Color {
+        guard let status = transaction.status else { return .orange }
+        switch status.color {
+        case "orange": return .orange
+        case "blue": return .blue
+        case "green": return .green
+        default: return .orange
+        }
+    }
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            // Header Row
+            HStack(spacing: 12) {
+                // Icon
+                ZStack {
+                    Circle()
+                        .fill(Color.purple.opacity(0.15))
+                        .frame(width: 44, height: 44)
+                    
+                    SwiftUI.Image(systemName: "gift.fill")
+                        .font(.system(size: 18, weight: .semibold))
+                        .foregroundColor(.purple)
+                }
+                
+                // Title & Date
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(transaction.description)
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundColor(.primary)
+                        .lineLimit(2)
+                    
+                    Text(formatTimestamp(transaction.timestamp))
+                        .font(.system(size: 12))
+                        .foregroundColor(.secondary)
+                }
+                
+                Spacer()
+                
+                // Points spent
+                Text("\(transaction.pointsChange) pts")
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundColor(.red)
+            }
+            
+            // Status & Details Section
+            VStack(alignment: .leading, spacing: 8) {
+                // Status Badge
+                HStack(spacing: 6) {
+                    SwiftUI.Image(systemName: transaction.status?.icon ?? "clock.fill")
+                        .font(.system(size: 12))
+                    Text(transaction.status?.displayName ?? "In preparazione")
+                        .font(.system(size: 12, weight: .semibold))
+                }
+                .foregroundColor(statusColor)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 5)
+                .background(statusColor.opacity(0.12))
+                .cornerRadius(6)
+                
+                // Voucher Code (for digital rewards)
+                if let voucherCode = transaction.voucherCode, !voucherCode.isEmpty {
+                    HStack(spacing: 8) {
+                        SwiftUI.Image(systemName: "ticket.fill")
+                            .font(.system(size: 14))
+                            .foregroundColor(.blue)
+                        
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Codice Voucher")
+                                .font(.system(size: 11, weight: .medium))
+                                .foregroundColor(.secondary)
+                            Text(voucherCode)
+                                .font(.system(size: 14, weight: .bold, design: .monospaced))
+                                .foregroundColor(.primary)
+                        }
+                        
+                        Spacer()
+                        
+                        Button(action: {
+                            UIPasteboard.general.string = voucherCode
+                            ToastManager.shared.showSuccess("Codice copiato!")
+                        }) {
+                            SwiftUI.Image(systemName: "doc.on.doc")
+                                .font(.system(size: 14))
+                                .foregroundColor(.blue)
+                        }
+                    }
+                    .padding(12)
+                    .background(Color.blue.opacity(0.08))
+                    .cornerRadius(8)
+                }
+                
+                // Tracking Number (for physical rewards)
+                if let trackingNumber = transaction.trackingNumber, !trackingNumber.isEmpty {
+                    HStack(spacing: 8) {
+                        SwiftUI.Image(systemName: "shippingbox.fill")
+                            .font(.system(size: 14))
+                            .foregroundColor(.orange)
+                        
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Numero Tracking")
+                                .font(.system(size: 11, weight: .medium))
+                                .foregroundColor(.secondary)
+                            Text(trackingNumber)
+                                .font(.system(size: 14, weight: .bold, design: .monospaced))
+                                .foregroundColor(.primary)
+                        }
+                        
+                        Spacer()
+                        
+                        Button(action: {
+                            UIPasteboard.general.string = trackingNumber
+                            ToastManager.shared.showSuccess("Tracking copiato!")
+                        }) {
+                            SwiftUI.Image(systemName: "doc.on.doc")
+                                .font(.system(size: 14))
+                                .foregroundColor(.orange)
+                        }
+                    }
+                    .padding(12)
+                    .background(Color.orange.opacity(0.08))
+                    .cornerRadius(8)
+                }
+            }
+        }
+        .padding(16)
+        .background(Color(.systemBackground))
+        .cornerRadius(12)
+        .shadow(color: Color.black.opacity(0.03), radius: 4, x: 0, y: 2)
+    }
+    
+    private func formatTimestamp(_ timestamp: String) -> String {
+        let isoFormatter = ISO8601DateFormatter()
+        isoFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        
+        guard let date = isoFormatter.date(from: timestamp) else {
+            return timestamp
+        }
+        
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        formatter.timeStyle = .short
+        formatter.locale = Locale(identifier: "it_IT")
+        return formatter.string(from: date)
     }
 }
 
@@ -731,48 +911,53 @@ struct PointsActivityView: View {
     
     private func loadActivities() {
         isLoading = true
-        // Load activities from API
-        Task {
-            do {
-                if let userId = AuthService.shared.currentUserId {
-                    let userActivities = try await UserService.shared.getUserActivities(userId: userId)
-                    await MainActor.run {
-                        // Convert to PointsActivity
-                        activities = userActivities.compactMap { activity in
-                            // Filter only activities that affect points
-                            let pointsChange = getPointsForActivityType(activity.activityType)
-                            if pointsChange != 0 {
-                                return PointsActivity(
-                                    id: String(activity.id),
-                                    type: activity.activityType,
-                                    description: activity.description,
-                                    pointsChange: pointsChange,
-                                    timestamp: activity.timestamp
-                                )
-                            }
-                            return nil
-                        }
-                        isLoading = false
-                    }
+        // Load activities from RewardTransaction history (the real points tracking)
+        rewardsService.getTransactionHistory { result in
+            switch result {
+            case .success(let transactions):
+                // Show ALL transactions (both positive and negative) for full activity history
+                // Filter out reward redemptions (they have rewardId) since those are shown in "Premi Riscattati" tab
+                activities = transactions.filter { $0.rewardId == nil }.map { transaction in
+                    PointsActivity(
+                        id: String(transaction.id),
+                        type: getActivityTypeFromDescription(transaction.description),
+                        description: transaction.description,
+                        pointsChange: transaction.pointsChange,
+                        timestamp: transaction.timestamp
+                    )
                 }
-            } catch {
-                await MainActor.run {
-                    isLoading = false
-                }
+                isLoading = false
+            case .failure(let error):
+                print("Error loading activities: \(error)")
+                isLoading = false
             }
         }
     }
     
-    private func getPointsForActivityType(_ type: String) -> Int {
-        switch type {
-        case "TOURNAMENT_WON": return 100
-        case "TOURNAMENT_JOINED": return 20
-        case "DECK_CREATED": return 5
-        case "CARD_ADDED_TO_COLLECTION": return 1
-        case "USER_REGISTERED": return 50
-        case "REWARD_REDEEMED": return -1 // Indicates point deduction
-        default: return 0
+    private func getActivityTypeFromDescription(_ description: String) -> String {
+        let lowercased = description.lowercased()
+        if lowercased.contains("1st place") || lowercased.contains("1° posto") {
+            return "TOURNAMENT_FIRST_PLACE"
+        } else if lowercased.contains("2nd place") || lowercased.contains("2° posto") {
+            return "TOURNAMENT_SECOND_PLACE"
+        } else if lowercased.contains("3rd place") || lowercased.contains("3° posto") {
+            return "TOURNAMENT_THIRD_PLACE"
+        } else if lowercased.contains("check-in") || lowercased.contains("checkin") {
+            return "TOURNAMENT_CHECKIN"
+        } else if lowercased.contains("registration") || lowercased.contains("iscrizione") {
+            return "TOURNAMENT_JOINED"
+        } else if lowercased.contains("cancellation") || lowercased.contains("cancellazione") {
+            return "TOURNAMENT_UNREGISTERED"
+        } else if lowercased.contains("deck") {
+            return "DECK_CREATED"
+        } else if lowercased.contains("reservation") || lowercased.contains("prenotazione") {
+            return "RESERVATION_MADE"
+        } else if lowercased.contains("wishlist") {
+            return "WISHLIST_ADDED"
+        } else if lowercased.contains("achievement") {
+            return "ACHIEVEMENT_UNLOCKED"
         }
+        return "POINTS_EARNED"
     }
 }
 
@@ -787,24 +972,39 @@ struct PointsActivity: Identifiable {
     
     var displayType: String {
         switch type {
-        case "TOURNAMENT_WON": return "Vittoria Torneo"
+        case "TOURNAMENT_WON", "TOURNAMENT_FIRST_PLACE": return "🥇 1° Posto"
+        case "TOURNAMENT_SECOND_PLACE": return "🥈 2° Posto"
+        case "TOURNAMENT_THIRD_PLACE": return "🥉 3° Posto"
         case "TOURNAMENT_JOINED": return "Iscrizione Torneo"
+        case "TOURNAMENT_CHECKIN": return "Check-in Torneo"
+        case "TOURNAMENT_UNREGISTERED": return "Cancellazione"
         case "DECK_CREATED": return "Deck Creato"
         case "CARD_ADDED_TO_COLLECTION": return "Carta Aggiunta"
         case "USER_REGISTERED": return "Registrazione"
         case "REWARD_REDEEMED": return "Premio Riscattato"
-        default: return type
+        case "RESERVATION_MADE": return "Prenotazione"
+        case "WISHLIST_ADDED": return "Carta in Wishlist"
+        case "ACHIEVEMENT_UNLOCKED": return "Achievement"
+        case "POINTS_EARNED": return "Bonus Punti"
+        default: return "Attività"
         }
     }
     
     var icon: String {
         switch type {
-        case "TOURNAMENT_WON": return "trophy.fill"
-        case "TOURNAMENT_JOINED": return "person.2.fill"
+        case "TOURNAMENT_WON", "TOURNAMENT_FIRST_PLACE": return "trophy.fill"
+        case "TOURNAMENT_SECOND_PLACE": return "medal.fill"
+        case "TOURNAMENT_THIRD_PLACE": return "star.fill"
+        case "TOURNAMENT_JOINED": return "ticket.fill"
+        case "TOURNAMENT_CHECKIN": return "checkmark.circle.fill"
+        case "TOURNAMENT_UNREGISTERED": return "xmark.circle.fill"
         case "DECK_CREATED": return "rectangle.stack.badge.plus"
         case "CARD_ADDED_TO_COLLECTION": return "plus.circle.fill"
         case "USER_REGISTERED": return "person.badge.plus"
         case "REWARD_REDEEMED": return "gift.fill"
+        case "RESERVATION_MADE": return "calendar.badge.plus"
+        case "WISHLIST_ADDED": return "heart.fill"
+        case "ACHIEVEMENT_UNLOCKED": return "star.circle.fill"
         default: return "star.fill"
         }
     }

@@ -52,19 +52,60 @@ enum RewardType: String, Codable {
 
 struct RewardTransaction: Codable, Identifiable {
     let id: Int
-    let userId: Int
+    let userId: Int?
     let pointsChange: Int
     let description: String
     let rewardId: Int?
     let timestamp: String
+    let voucherCode: String?
+    let trackingNumber: String?
+    let status: FulfillmentStatus?
 
     enum CodingKeys: String, CodingKey {
         case id
-        case userId = "user_id"
-        case pointsChange = "points_change"
+        case userId
+        case pointsChange
         case description
-        case rewardId = "reward_id"
+        case rewardId
         case timestamp
+        case voucherCode
+        case trackingNumber
+        case status
+    }
+    
+    enum FulfillmentStatus: String, Codable {
+        case PENDING
+        case PROCESSING
+        case SHIPPED
+        case DELIVERED
+        case COMPLETED
+        
+        var displayName: String {
+            switch self {
+            case .PENDING: return "In preparazione"
+            case .PROCESSING: return "In lavorazione"
+            case .SHIPPED: return "Spedito"
+            case .DELIVERED: return "Consegnato"
+            case .COMPLETED: return "Completato"
+            }
+        }
+        
+        var color: String {
+            switch self {
+            case .PENDING, .PROCESSING: return "orange"
+            case .SHIPPED: return "blue"
+            case .DELIVERED, .COMPLETED: return "green"
+            }
+        }
+        
+        var icon: String {
+            switch self {
+            case .PENDING: return "clock.fill"
+            case .PROCESSING: return "gear"
+            case .SHIPPED: return "shippingbox.fill"
+            case .DELIVERED, .COMPLETED: return "checkmark.circle.fill"
+            }
+        }
     }
 }
 

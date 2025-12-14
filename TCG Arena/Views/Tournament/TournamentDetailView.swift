@@ -20,6 +20,7 @@ struct TournamentDetailView: View {
     @State private var participants: [TournamentParticipantWithUser] = []
     @State private var isLoadingParticipants = false
     @State private var showAllParticipants = false
+    @State private var showLiveUpdates = false
     
     /// Check if tournament is locked (no more changes allowed)
     private var isTournamentLocked: Bool {
@@ -172,6 +173,66 @@ struct TournamentDetailView: View {
                                 .padding(.horizontal, 20)
                         }
                         
+                        // Live Updates Button - shown when IN_PROGRESS and user is participant
+                        if tournament.status == .inProgress && userRegistrationStatus != nil {
+                            Button {
+                                showLiveUpdates = true
+                            } label: {
+                                HStack(spacing: 12) {
+                                    ZStack {
+                                        Circle()
+                                            .fill(
+                                                LinearGradient(
+                                                    colors: [.purple, .blue],
+                                                    startPoint: .topLeading,
+                                                    endPoint: .bottomTrailing
+                                                )
+                                            )
+                                            .frame(width: 44, height: 44)
+                                        
+                                        SwiftUI.Image(systemName: "megaphone.fill")
+                                            .font(.system(size: 18, weight: .semibold))
+                                            .foregroundColor(.white)
+                                    }
+                                    
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text("Aggiornamenti Live")
+                                            .font(.system(size: 16, weight: .bold))
+                                            .foregroundColor(.primary)
+                                        
+                                        Text("Tabellone, accoppiamenti e messaggi")
+                                            .font(.system(size: 12))
+                                            .foregroundColor(.secondary)
+                                    }
+                                    
+                                    Spacer()
+                                    
+                                    SwiftUI.Image(systemName: "chevron.right")
+                                        .font(.system(size: 14, weight: .semibold))
+                                        .foregroundColor(.secondary)
+                                }
+                                .padding(16)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 16)
+                                        .fill(Color(.systemBackground))
+                                        .shadow(color: Color.purple.opacity(0.15), radius: 8, x: 0, y: 4)
+                                )
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 16)
+                                        .stroke(
+                                            LinearGradient(
+                                                colors: [.purple.opacity(0.3), .blue.opacity(0.3)],
+                                                startPoint: .topLeading,
+                                                endPoint: .bottomTrailing
+                                            ),
+                                            lineWidth: 1
+                                        )
+                                )
+                            }
+                            .buttonStyle(PlainButtonStyle())
+                            .padding(.horizontal, 20)
+                        }
+                        
                         // Winner Podium Section - shown when tournament is completed
                         if tournament.status == .completed {
                             let placedParticipants = participants.filter { $0.placement != nil }.sorted { ($0.placement ?? 99) < ($1.placement ?? 99) }
@@ -296,7 +357,7 @@ struct TournamentDetailView: View {
                                                 ProgressView()
                                                     .progressViewStyle(CircularProgressViewStyle(tint: .white))
                                             } else {
-                                                SwiftUI.Image(systemName: "qrcode.viewfinder")
+                                                SwiftUI.Image(systemName: "person.fill.checkmark")
                                                     .font(.system(size: 18))
                                                 Text("Check In Now")
                                                     .font(.system(size: 16, weight: .bold))
@@ -542,6 +603,10 @@ struct TournamentDetailView: View {
                 checkRegistrationStatus()
                 loadParticipants()
             }
+        }
+        .sheet(isPresented: $showLiveUpdates) {
+            TournamentUpdatesView(tournament: tournament)
+                .environmentObject(tournamentService)
         }
     }
     

@@ -18,7 +18,7 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
         super.init()
         manager.delegate = self
         manager.desiredAccuracy = kCLLocationAccuracyBest
-        requestLocationPermission()
+        // Do NOT request permission here - let the onboarding flow handle it
     }
     
     func requestLocationPermission() {

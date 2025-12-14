@@ -209,22 +209,24 @@ struct ShopDetailView: View {
                         servicesSection
                     }
                     
-                    // About Section
-                    VStack(alignment: .leading, spacing: 16) {
-                        SectionHeader(title: "About", icon: "info.circle.fill", color: .blue)
-                        
-                        VStack(alignment: .leading, spacing: 12) {
-                            Text(shop.description ?? "No description available.")
-                                .font(.system(size: 15))
-                                .foregroundColor(.secondary)
-                                .lineSpacing(4)
+                    // About Section - Only show if description exists
+                    if let description = shop.description, !description.isEmpty {
+                        VStack(alignment: .leading, spacing: 16) {
+                            SectionHeader(title: "About", icon: "info.circle.fill", color: .blue)
+                            
+                            VStack(alignment: .leading, spacing: 12) {
+                                Text(description)
+                                    .font(.system(size: 15))
+                                    .foregroundColor(.secondary)
+                                    .lineSpacing(4)
+                            }
+                            .padding(16)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .background(Color(.systemBackground))
+                            .cornerRadius(12)
                         }
-                        .padding(16)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .background(Color(.systemBackground))
-                        .cornerRadius(12)
+                        .padding(.horizontal, 20)
                     }
-                    .padding(.horizontal, 20)
                     
                     // Location Section
                     if shop.latitude != nil && shop.longitude != nil {

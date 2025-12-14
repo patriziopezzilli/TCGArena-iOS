@@ -135,14 +135,12 @@ class ShopService: ObservableObject {
             }
         }
     }
-    // MARK: - Load All Shops (Client-side filtering)
-    
     /// Loads all shops from the API without any filtering.
     /// The UI (ShopListView) handles distance filtering client-side.
     @MainActor
-    func loadAllShops() async {
-        // Prevent concurrent requests
-        guard !isLoading else {
+    func loadAllShops(forceRefresh: Bool = false) async {
+        // Only prevent concurrent requests if not forcing refresh
+        if !forceRefresh && isLoading {
             print("Already loading shops, skipping request")
             return
         }

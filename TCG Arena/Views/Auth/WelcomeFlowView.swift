@@ -101,6 +101,11 @@ struct WelcomeFlowView: View {
                 }
             }
         }
+        .onChange(of: continueAsGuest) { newValue in
+            if newValue {
+                dismiss()
+            }
+        }
     }
     
     // MARK: - Welcome Background View

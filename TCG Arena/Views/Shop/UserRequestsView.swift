@@ -497,7 +497,9 @@ private struct RequestDetailView: View {
                     .padding(.vertical, 40)
                 } else {
                     ForEach(messages) { message in
-                        MessageBubble(message: message, isFromCurrentUser: message.senderType == .user)
+                        // Compare senderId with current user ID for proper alignment
+                        let isFromMe = message.senderId == String(authService.currentUserId ?? 0)
+                        MessageBubble(message: message, isFromCurrentUser: isFromMe)
                     }
                 }
             }

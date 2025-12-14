@@ -984,6 +984,19 @@ struct CollectionView: View {
         .listStyle(PlainListStyle())
         .background(Color(.systemGroupedBackground))
         .animation(.easeInOut(duration: 0.3), value: isLoadingCards)
+        .simultaneousGesture(
+            DragGesture().onChanged { value in
+                let verticalMovement = value.translation.height
+                withAnimation(.easeInOut(duration: 0.25)) {
+                    // Collapse header when scrolling down, expand when scrolling up
+                    if verticalMovement < -20 && !isHeaderCollapsed {
+                        isHeaderCollapsed = true
+                    } else if verticalMovement > 20 && isHeaderCollapsed {
+                        isHeaderCollapsed = false
+                    }
+                }
+            }
+        )
     }
 
     private var cardNavigationLink: some View {

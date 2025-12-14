@@ -167,6 +167,9 @@ struct ShopListView: View {
     @AppStorage("savedLocationLatitude") private var savedLatitude: Double = 45.4642
     @AppStorage("savedLocationLongitude") private var savedLongitude: Double = 9.1900
     
+    // MARK: - View Mode (persisted)
+    @AppStorage("shopListViewMode") private var isCompactMode: Bool = false
+    
     // MARK: - Filter State
     @State private var shopFilters = ShopFilters()
     @State private var showingFilters = false
@@ -219,88 +222,140 @@ struct ShopListView: View {
     var body: some View {
         ZStack {
             ScrollView {
-                LazyVStack(spacing: 20) {
-                    // Summary Text with filter button
-                    HStack {
-                        Text("\(filteredShops.count) stores\(shopFilters.onlyNearby ? " nearby" : "")")
-                            .font(.system(size: 14, weight: .medium))
-                            .foregroundColor(.secondary)
+                LazyVStack(spacing: 16) {
+                    // MARK: - Premium Toolbar
+                    HStack(spacing: 12) {
+                        // Store count pill
+                        HStack(spacing: 6) {
+                            SwiftUI.Image(systemName: "storefront.fill")
+                                .font(.system(size: 11, weight: .semibold))
+                                .foregroundColor(.white.opacity(0.9))
+                            
+                            Text("\(filteredShops.count)")
+                                .font(.system(size: 13, weight: .bold, design: .rounded))
+                                .foregroundColor(.white)
+                        }
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 6)
+                        .background(
+                            Capsule()
+                                .fill(Color.indigo)
+                        )
                         
-                        if shopFilters.isActive {
-                            Text("• Filtered (\(shopFilters.activeFilterCount))")
-                                .font(.system(size: 12, weight: .medium))
-                                .foregroundColor(.blue)
+                        // Nearby badge
+                        if shopFilters.onlyNearby {
+                            HStack(spacing: 4) {
+                                SwiftUI.Image(systemName: "location.fill")
+                                    .font(.system(size: 10, weight: .semibold))
+                                Text("20km")
+                                    .font(.system(size: 12, weight: .semibold))
+                            }
+                            .foregroundColor(.green)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 5)
+                            .background(
+                                Capsule()
+                                    .fill(Color.green.opacity(0.12))
+                            )
                         }
                         
                         Spacer()
                         
+                        // Loading indicator
+                        if shopService.isLoading {
+                            ProgressView()
+                                .scaleEffect(0.7)
+                        }
+                        
+                        // View Mode Toggle
+                        Button(action: {
+                            withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                                isCompactMode.toggle()
+                            }
+                            HapticManager.shared.selectionChanged()
+                        }) {
+                            SwiftUI.Image(systemName: isCompactMode ? "square.grid.2x2" : "rectangle.grid.1x2")
+                                .font(.system(size: 15, weight: .medium))
+                                .foregroundColor(Color(.label))
+                                .frame(width: 38, height: 34)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 10)
+                                        .fill(Color(.secondarySystemFill))
+                                )
+                        }
+                        
                         // Filter button
                         Button(action: {
                             showingFilters = true
+                            HapticManager.shared.selectionChanged()
                         }) {
-                            HStack(spacing: 4) {
-                                SwiftUI.Image(systemName: "line.3.horizontal.decrease.circle")
-                                    .font(.system(size: 14, weight: .medium))
-                                Text("Filters")
-                                    .font(.system(size: 13, weight: .medium))
+                            ZStack(alignment: .topTrailing) {
+                                SwiftUI.Image(systemName: "slider.horizontal.3")
+                                    .font(.system(size: 15, weight: .medium))
+                                    .foregroundColor(shopFilters.isActive ? .white : Color(.label))
+                                    .frame(width: 38, height: 34)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 10)
+                                            .fill(shopFilters.isActive ? Color.indigo : Color(.secondarySystemFill))
+                                    )
                                 
                                 if shopFilters.activeFilterCount > 0 {
                                     Text("\(shopFilters.activeFilterCount)")
-                                        .font(.system(size: 11, weight: .bold))
+                                        .font(.system(size: 9, weight: .bold, design: .rounded))
                                         .foregroundColor(.white)
-                                        .padding(.horizontal, 6)
-                                        .padding(.vertical, 2)
-                                        .background(Circle().fill(Color.blue))
+                                        .frame(width: 15, height: 15)
+                                        .background(Circle().fill(Color.red))
+                                        .offset(x: 5, y: -5)
                                 }
                             }
-                            .foregroundColor(.blue)
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 6)
-                            .background(
-                                Capsule()
-                                    .fill(Color.blue.opacity(0.1))
-                            )
-                        }
-                        
-                        if shopService.isLoading {
-                            ProgressView()
-                                .scaleEffect(0.8)
                         }
                     }
                     .padding(.horizontal, 20)
-                    .padding(.top, 16)
+                    .padding(.top, 12)
 
                     if filteredShops.isEmpty && !shopService.isLoading {
-                        // Empty state - Premium design
-                        VStack(spacing: 24) {
-                            // Icon with solid background
+                        // MARK: - Premium Empty State
+                        VStack(spacing: 32) {
+                            // Animated icon with rings
                             ZStack {
+                                // Outer ring
                                 Circle()
-                                    .fill(Color.blue.opacity(0.12))
-                                    .frame(width: 100, height: 100)
+                                    .stroke(Color(.systemGray5), lineWidth: 2)
+                                    .frame(width: 140, height: 140)
                                 
-                                SwiftUI.Image(systemName: "storefront.fill")
-                                    .font(.system(size: 40))
-                                    .foregroundColor(.blue)
+                                // Middle ring
+                                Circle()
+                                    .stroke(Color(.systemGray4), lineWidth: 2)
+                                    .frame(width: 110, height: 110)
+                                
+                                // Inner solid circle with icon
+                                Circle()
+                                    .fill(Color(.systemGray6))
+                                    .frame(width: 80, height: 80)
+                                
+                                SwiftUI.Image(systemName: shopFilters.onlyNearby ? "mappin.slash" : "storefront")
+                                    .font(.system(size: 32, weight: .light))
+                                    .foregroundColor(Color(.systemGray))
                             }
                             
                             // Text content
-                            VStack(spacing: 8) {
+                            VStack(spacing: 10) {
                                 Text(shopFilters.onlyNearby ? "Nessun negozio nelle vicinanze" : "Nessun negozio trovato")
-                                    .font(.system(size: 20, weight: .semibold))
+                                    .font(.system(size: 22, weight: .semibold))
                                     .foregroundColor(.primary)
                                 
                                 Text(shopFilters.onlyNearby 
-                                    ? "Non ci sono negozi entro 20km dalla tua posizione"
-                                    : "Non sono stati trovati negozi disponibili")
+                                    ? "Non ci sono negozi entro 20km dalla tua posizione. Prova ad ampliare la ricerca."
+                                    : "Non sono stati trovati negozi disponibili al momento.")
                                     .font(.system(size: 15))
                                     .foregroundColor(.secondary)
                                     .multilineTextAlignment(.center)
-                                    .padding(.horizontal, 20)
+                                    .lineSpacing(4)
+                                    .padding(.horizontal, 24)
                             }
                             
                             // Action buttons
-                            VStack(spacing: 12) {
+                            VStack(spacing: 14) {
                                 if shopFilters.onlyNearby {
                                     // Primary CTA - Show all stores
                                     Button(action: {
@@ -311,38 +366,37 @@ struct ShopListView: View {
                                     }) {
                                         HStack(spacing: 8) {
                                             SwiftUI.Image(systemName: "globe")
-                                                .font(.system(size: 16, weight: .semibold))
+                                                .font(.system(size: 15, weight: .semibold))
                                             Text("Mostra tutti i negozi")
-                                                .font(.system(size: 16, weight: .semibold))
+                                                .font(.system(size: 15, weight: .semibold))
                                         }
                                         .foregroundColor(.white)
-                                        .frame(maxWidth: .infinity)
+                                        .frame(maxWidth: 220)
                                         .padding(.vertical, 14)
-                                        .background(Color.blue)
-                                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                                        .background(Color.indigo)
+                                        .clipShape(RoundedRectangle(cornerRadius: 14))
                                     }
-                                    .padding(.horizontal, 40)
                                 }
                                 
                                 // Secondary CTA - Reload
                                 Button(action: {
                                     HapticManager.shared.selectionChanged()
                                     Task {
-                                        await shopService.loadAllShops()
+                                        await shopService.loadAllShops(forceRefresh: true)
                                     }
                                 }) {
                                     HStack(spacing: 6) {
                                         SwiftUI.Image(systemName: "arrow.clockwise")
+                                            .font(.system(size: 13, weight: .medium))
+                                        Text("Aggiorna")
                                             .font(.system(size: 14, weight: .medium))
-                                        Text("Ricarica")
-                                            .font(.system(size: 15, weight: .medium))
                                     }
-                                    .foregroundColor(.blue)
-                                    .padding(.horizontal, 20)
+                                    .foregroundColor(.secondary)
+                                    .padding(.horizontal, 18)
                                     .padding(.vertical, 10)
                                     .background(
-                                        Capsule()
-                                            .fill(Color.blue.opacity(0.1))
+                                        RoundedRectangle(cornerRadius: 10)
+                                            .fill(Color(.tertiarySystemFill))
                                     )
                                 }
                             }
@@ -350,14 +404,13 @@ struct ShopListView: View {
                             if let errorMessage = shopService.errorMessage {
                                 Text(errorMessage)
                                     .font(.system(size: 13))
-                                    .foregroundColor(.red.opacity(0.8))
+                                    .foregroundColor(.orange)
                                     .multilineTextAlignment(.center)
-                                    .padding(.horizontal, 40)
-                                    .padding(.top, 4)
+                                    .padding(.horizontal, 32)
                             }
                         }
                         .frame(maxWidth: .infinity)
-                        .padding(.vertical, 60)
+                        .padding(.vertical, 80)
                         .padding(.horizontal, 20)
                         .background(
                             RoundedRectangle(cornerRadius: 20)
@@ -371,10 +424,17 @@ struct ShopListView: View {
                                 .environmentObject(shopService)
                                 .environmentObject(inventoryService)
                                 .environmentObject(authService)) {
-                                ShopCardView(shop: shop, hasNews: !shopService.getNews(for: shop.id.description).isEmpty)
+                                if isCompactMode {
+                                    CompactShopCardView(shop: shop, hasNews: !shopService.getNews(for: shop.id.description).isEmpty)
+                                        .transition(.opacity.combined(with: .scale(scale: 0.95)))
+                                } else {
+                                    ShopCardView(shop: shop, hasNews: !shopService.getNews(for: shop.id.description).isEmpty)
+                                        .transition(.opacity.combined(with: .scale(scale: 0.95)))
+                                }
                             }
                             .buttonStyle(PlainButtonStyle())
                         }
+                        .animation(.easeInOut(duration: 0.3), value: isCompactMode)
                     }
                 }
                 .padding(.horizontal, 20)
@@ -385,8 +445,8 @@ struct ShopListView: View {
                 let generator = UIImpactFeedbackGenerator(style: .medium)
                 generator.impactOccurred()
                 
-                let locationToUse = locationManager.location ?? CLLocation(latitude: savedLatitude, longitude: savedLongitude)
-                await shopService.loadNearbyShops(userLocation: locationToUse)
+                // Force refresh from server
+                await shopService.loadAllShops(forceRefresh: true)
             }
             
             // Loading overlay
@@ -587,7 +647,7 @@ struct EventListView: View {
     var body: some View {
         ZStack(alignment: .bottomTrailing) {
             VStack(spacing: 0) {
-                // Section Tabs with Filter Button
+                // MARK: - Premium Section Tabs & Filter
                 HStack(spacing: 12) {
                     // Section Tabs
                     HStack(spacing: 0) {
@@ -595,41 +655,60 @@ struct EventListView: View {
                             withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
                                 selectedEventSection = 0
                             }
+                            HapticManager.shared.selectionChanged()
                         }
                         
                         EventSectionTab(title: "Past", isSelected: selectedEventSection == 1) {
                             withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
                                 selectedEventSection = 1
                             }
+                            HapticManager.shared.selectionChanged()
                         }
 
                         EventSectionTab(title: "My Events", isSelected: selectedEventSection == 2) {
                             withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
                                 selectedEventSection = 2
                             }
+                            HapticManager.shared.selectionChanged()
                         }
                     }
                     .background(
                         Capsule()
-                            .fill(Color(.tertiarySystemFill))
+                            .fill(Color(.secondarySystemFill))
                     )
+                    
+                    Spacer()
+                    
+                    // Loading indicator
+                    if tournamentService.isLoading {
+                        ProgressView()
+                            .scaleEffect(0.7)
+                    }
                     
                     // Filter Button (only show for Upcoming section)
                     if selectedEventSection == 0 {
-                        Button(action: { showingFilters = true }) {
+                        Button(action: { 
+                            showingFilters = true 
+                            HapticManager.shared.selectionChanged()
+                        }) {
                             ZStack(alignment: .topTrailing) {
-                                SwiftUI.Image(systemName: eventFilters.isActive ? "line.3.horizontal.decrease.circle.fill" : "line.3.horizontal.decrease.circle")
-                                    .font(.system(size: 22))
-                                    .foregroundColor(eventFilters.isActive ? .blue : .secondary)
+                                SwiftUI.Image(systemName: "slider.horizontal.3")
+                                    .font(.system(size: 15, weight: .medium))
+                                    .foregroundColor(eventFilters.isActive ? .white : Color(.label))
+                                    .frame(width: 38, height: 34)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 10)
+                                            .fill(eventFilters.isActive ? Color.orange : Color(.secondarySystemFill))
+                                    )
                                 
                                 // Badge for active filters
                                 if eventFilters.activeFilterCount > 0 {
                                     Text("\(eventFilters.activeFilterCount)")
-                                        .font(.system(size: 10, weight: .bold))
+                                        .font(.system(size: 9, weight: .bold, design: .rounded))
                                         .foregroundColor(.white)
-                                        .frame(width: 16, height: 16)
+                                        .frame(width: 15, height: 15)
                                         .background(Circle().fill(Color.red))
-                                        .offset(x: 6, y: -6)
+                                        .offset(x: 5, y: -5)
                                 }
                             }
                         }
@@ -689,30 +768,57 @@ struct EventListView: View {
     // MARK: - Upcoming Events View
     private var upcomingEventsView: some View {
         ScrollView {
-            LazyVStack(spacing: 20) {
-                // Summary Text with filter indicator
+            LazyVStack(spacing: 16) {
+                // Count Pill
                 HStack {
-                    Text("\(upcomingTournaments.count) upcoming events")
-                        .font(.system(size: 14, weight: .medium))
-                        .foregroundColor(.secondary)
+                    HStack(spacing: 6) {
+                        SwiftUI.Image(systemName: "calendar")
+                            .font(.system(size: 11, weight: .semibold))
+                            .foregroundColor(.white.opacity(0.9))
+                        
+                        Text("\(upcomingTournaments.count) upcoming")
+                            .font(.system(size: 13, weight: .bold, design: .rounded))
+                            .foregroundColor(.white)
+                    }
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 6)
+                    .background(
+                        Capsule()
+                            .fill(Color.orange)
+                    )
                     
-                    if eventFilters.isActive {
-                        Text("• Filtered (\(eventFilters.activeFilterCount))")
-                            .font(.system(size: 12, weight: .medium))
-                            .foregroundColor(.blue)
+                    if eventFilters.onlyNearby {
+                        HStack(spacing: 4) {
+                            SwiftUI.Image(systemName: "location.fill")
+                                .font(.system(size: 10, weight: .semibold))
+                            Text("30km")
+                                .font(.system(size: 12, weight: .semibold))
+                        }
+                        .foregroundColor(.green)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 5)
+                        .background(
+                            Capsule()
+                                .fill(Color.green.opacity(0.12))
+                        )
                     }
                     
                     Spacer()
                 }
                 .padding(.horizontal, 20)
-                .padding(.top, 8)
-
+                .padding(.top, 4)
 
                 if upcomingTournaments.isEmpty {
-                    emptyStateView(
+                    premiumEmptyStateView(
                         icon: "calendar.badge.clock",
-                        title: "No Upcoming Events",
-                        message: "Check back later for new events in your area"
+                        title: "Nessun evento in arrivo",
+                        message: "Non ci sono tornei programmati a breve. Controlla i filtri o torna più tardi.",
+                        actionTitle: "Aggiorna",
+                        action: {
+                            Task {
+                                await tournamentService.loadTournaments()
+                            }
+                        }
                     )
                 } else {
                     ForEach(upcomingTournaments) { tournament in
@@ -736,11 +842,7 @@ struct EventListView: View {
             .padding(.bottom, 80) // Space for FAB
         }
         .refreshable {
-            await tournamentService.loadTournaments()
-            await tournamentService.loadPastTournaments()
-
-            let locationToUse = locationManager.location ?? CLLocation(latitude: savedLatitude, longitude: savedLongitude)
-            await tournamentService.loadNearbyTournaments(userLocation: locationToUse)
+            await tournamentService.refreshAllData()
         }
     }
     
@@ -748,21 +850,39 @@ struct EventListView: View {
     private var pastEventsView: some View {
         ScrollView {
             LazyVStack(spacing: 16) {
-                // Summary Text
+                // Count Pill
                 HStack {
-                    Text("\(filteredPastTournaments.count) past events")
-                        .font(.system(size: 14, weight: .medium))
-                        .foregroundColor(.secondary)
+                    HStack(spacing: 6) {
+                        SwiftUI.Image(systemName: "clock.arrow.circlepath")
+                            .font(.system(size: 11, weight: .semibold))
+                            .foregroundColor(.white.opacity(0.9))
+                        
+                        Text("\(filteredPastTournaments.count) past")
+                            .font(.system(size: 13, weight: .bold, design: .rounded))
+                            .foregroundColor(.white)
+                    }
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 6)
+                    .background(
+                        Capsule()
+                            .fill(Color.gray)
+                    )
                     Spacer()
                 }
                 .padding(.horizontal, 20)
-                .padding(.top, 8)
+                .padding(.top, 4)
 
                 if filteredPastTournaments.isEmpty {
-                    emptyStateView(
+                    premiumEmptyStateView(
                         icon: "calendar.badge.checkmark",
-                        title: "No Past Events",
-                        message: "Your completed events will appear here"
+                        title: "Nessun evento passato",
+                        message: "I tornei completati appariranno qui.",
+                        actionTitle: "Aggiorna",
+                        action: {
+                            Task {
+                                await tournamentService.refreshAllData()
+                            }
+                        }
                     )
                 } else {
                     ForEach(filteredPastTournaments) { tournament in
@@ -775,7 +895,7 @@ struct EventListView: View {
             .padding(.bottom, 80) // Space for FAB
         }
         .refreshable {
-            await tournamentService.loadPastTournaments()
+            await tournamentService.refreshAllData() // Load everything just in case status changed
         }
     }
 
@@ -783,21 +903,39 @@ struct EventListView: View {
     private var myEventsView: some View {
         ScrollView {
             LazyVStack(spacing: 16) {
-                // Summary Text
+                // Count Pill
                 HStack {
-                    Text("\(myEvents.count) my events")
-                        .font(.system(size: 14, weight: .medium))
-                        .foregroundColor(.secondary)
+                    HStack(spacing: 6) {
+                        SwiftUI.Image(systemName: "person.fill")
+                            .font(.system(size: 11, weight: .semibold))
+                            .foregroundColor(.white.opacity(0.9))
+                        
+                        Text("\(myEvents.count) my events")
+                            .font(.system(size: 13, weight: .bold, design: .rounded))
+                            .foregroundColor(.white)
+                    }
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 6)
+                    .background(
+                        Capsule()
+                            .fill(Color.blue)
+                    )
                     Spacer()
                 }
                 .padding(.horizontal, 20)
-                .padding(.top, 8)
+                .padding(.top, 4)
 
                 if myEvents.isEmpty {
-                    emptyStateView(
-                        icon: "person.circle",
-                        title: "No Events Yet",
-                        message: "Events you're registered for will appear here"
+                    premiumEmptyStateView(
+                        icon: "ticket.fill",
+                        title: "Nessuna iscrizione",
+                        message: "Iscriviti ai tornei per vederli apparire in questa lista.",
+                        actionTitle: "Cerca Eventi",
+                        action: {
+                            withAnimation {
+                                selectedEventSection = 0 // Switch to upcoming
+                            }
+                        }
                     )
                 } else {
                     ForEach(myEvents.sorted(by: { parseTournamentDate($0.startDate) ?? Date() > parseTournamentDate($1.startDate) ?? Date() })) { tournament in
@@ -828,30 +966,77 @@ struct EventListView: View {
             .padding(.bottom, 80) // Space for FAB
         }
         .refreshable {
-            await tournamentService.loadTournaments()
-            await tournamentService.loadPastTournaments()
-
-            let locationToUse = locationManager.location ?? CLLocation(latitude: savedLatitude, longitude: savedLongitude)
-            await tournamentService.loadNearbyTournaments(userLocation: locationToUse)
+            await tournamentService.refreshAllData()
         }
     }
-    private func emptyStateView(icon: String, title: String, message: String) -> some View {
-        VStack(spacing: 16) {
-            SwiftUI.Image(systemName: icon)
-                .font(.system(size: 48))
-                .foregroundColor(.secondary.opacity(0.5))
+    
+    private func premiumEmptyStateView(icon: String, title: String, message: String, actionTitle: String? = nil, action: (() -> Void)? = nil) -> some View {
+        VStack(spacing: 32) {
+            // Animated icon with rings
+            ZStack {
+                // Outer ring
+                Circle()
+                    .stroke(Color(.systemGray5), lineWidth: 2)
+                    .frame(width: 140, height: 140)
+                
+                // Middle ring
+                Circle()
+                    .stroke(Color(.systemGray4), lineWidth: 2)
+                    .frame(width: 110, height: 110)
+                
+                // Inner solid circle with icon
+                Circle()
+                    .fill(Color(.systemGray6))
+                    .frame(width: 80, height: 80)
+                
+                SwiftUI.Image(systemName: icon)
+                    .font(.system(size: 32, weight: .light))
+                    .foregroundColor(Color(.systemGray))
+            }
             
-            Text(title)
-                .font(.system(size: 18, weight: .medium))
-                .foregroundColor(.secondary)
+            // Text content
+            VStack(spacing: 10) {
+                Text(title)
+                    .font(.system(size: 22, weight: .semibold))
+                    .foregroundColor(.primary)
+                
+                Text(message)
+                    .font(.system(size: 15))
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
+                    .lineSpacing(4)
+                    .padding(.horizontal, 24)
+            }
             
-            Text(message)
-                .font(.system(size: 14))
-                .foregroundColor(.secondary.opacity(0.7))
-                .multilineTextAlignment(.center)
+            // Action button
+            if let actionTitle = actionTitle, let action = action {
+                Button(action: {
+                    HapticManager.shared.selectionChanged()
+                    action()
+                }) {
+                    HStack(spacing: 6) {
+                        if actionTitle == "Aggiorna" {
+                            SwiftUI.Image(systemName: "arrow.clockwise")
+                        } else if actionTitle == "Cerca Eventi" {
+                            SwiftUI.Image(systemName: "magnifyingglass")
+                        }
+                        
+                        Text(actionTitle)
+                    }
+                    .font(.system(size: 15, weight: .medium))
+                    .foregroundColor(.secondary)
+                    .padding(.horizontal, 24)
+                    .padding(.vertical, 12)
+                    .background(
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(Color(.tertiarySystemFill))
+                    )
+                }
+            }
         }
-        .padding(.top, 60)
-        .padding(.horizontal, 40)
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 80)
+        .padding(.horizontal, 20)
     }
 
     private func getUserRegistrationStatus(for tournament: Tournament) -> ParticipantStatus? {
@@ -928,149 +1113,236 @@ struct EventSectionTab: View {
     }
 }
 
-// MARK: - Shop Card View
+// MARK: - Shop Card View (Expanded - Modern Design)
 struct ShopCardView: View {
     let shop: Shop
     var hasNews: Bool = false
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            // Card Image / Placeholder
-            ZStack(alignment: .topTrailing) {
-                // Shop Image or Placeholder
+        HStack(spacing: 0) {
+            // Left: Shop Image (square, contained)
+            ZStack(alignment: .topLeading) {
                 if let photoBase64 = shop.photoBase64, let image = base64ToImage(photoBase64) {
                     image
                         .resizable()
                         .scaledToFill()
-                        .frame(height: 200)
-                        .frame(maxWidth: .infinity)
+                        .frame(width: 120, height: 140)
                         .clipped()
                 } else {
-                    // No photo - show default gradient
+                    // No photo - show default gradient with icon
                     LinearGradient(
-                        gradient: Gradient(colors: [Color.blue.opacity(0.3), Color.purple.opacity(0.3)]),
+                        gradient: Gradient(colors: [Color.blue.opacity(0.2), Color.purple.opacity(0.2)]),
                         startPoint: .topLeading,
                         endPoint: .bottomTrailing
                     )
-                    .frame(height: 200)
+                    .frame(width: 120, height: 140)
                     .overlay(
                         SwiftUI.Image(systemName: "storefront.fill")
-                            .font(.system(size: 60))
-                            .foregroundColor(Color.blue.opacity(0.3))
+                            .font(.system(size: 36))
+                            .foregroundColor(Color.blue.opacity(0.4))
                     )
                 }
                 
-                // Badges Stack (top-right corner)
-                VStack(alignment: .trailing, spacing: 6) {
-                    // Verified Badge
+                // Badges (top-left on image)
+                VStack(alignment: .leading, spacing: 4) {
                     if shop.isVerified {
-                        HStack(spacing: 4) {
+                        HStack(spacing: 3) {
                             SwiftUI.Image(systemName: "checkmark.seal.fill")
-                                .font(.system(size: 12))
+                                .font(.system(size: 9))
                             Text("VERIFIED")
-                                .font(.system(size: 10, weight: .bold))
+                                .font(.system(size: 8, weight: .bold))
                         }
                         .foregroundColor(.white)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 3)
                         .background(
                             Capsule()
                                 .fill(Color.blue)
                         )
                     }
                     
-                    // News Badge
                     if hasNews {
-                        HStack(spacing: 4) {
+                        HStack(spacing: 3) {
                             SwiftUI.Image(systemName: "newspaper.fill")
-                                .font(.system(size: 10))
+                                .font(.system(size: 8))
                             Text("NEWS")
-                                .font(.system(size: 10, weight: .bold))
+                                .font(.system(size: 8, weight: .bold))
                         }
                         .foregroundColor(.white)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 3)
                         .background(
                             Capsule()
                                 .fill(Color.purple)
                         )
                     }
                 }
-                .padding(12)
+                .padding(8)
             }
-
-            // Content below image
-            VStack(alignment: .leading, spacing: 12) {
+            .clipShape(
+                RoundedCorner(radius: 12, corners: [.topLeft, .bottomLeft])
+            )
+            
+            // Right: Shop Info
+            VStack(alignment: .leading, spacing: 8) {
                 // Shop Name
                 Text(shop.name)
-                    .font(.system(size: 18, weight: .bold))
+                    .font(.system(size: 16, weight: .bold))
                     .foregroundColor(.primary)
-                    .lineLimit(1)
+                    .lineLimit(2)
+                    .fixedSize(horizontal: false, vertical: true)
                 
-                // Address
+                // City
                 HStack(spacing: 4) {
-                    SwiftUI.Image(systemName: "mappin.and.ellipse")
-                        .font(.system(size: 12))
-                        .foregroundColor(.secondary)
+                    SwiftUI.Image(systemName: "mappin.circle.fill")
+                        .font(.system(size: 11))
+                        .foregroundColor(.blue)
                     
                     Text(shop.address)
-                        .font(.system(size: 13))
+                        .font(.system(size: 12, weight: .medium))
                         .foregroundColor(.secondary)
                         .lineLimit(1)
                 }
                 
-                // Tags
+                // TCG Tags
                 ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 8) {
-                        ForEach(shop.tcgTypes ?? [], id: \.self) { tcg in
-                            TCGTypeBadge(tcgTypeString: tcg)
-                        }
-
-                        ForEach((shop.services ?? []).prefix(3), id: \.self) { service in
-                            Text(formatServiceName(service))
-                                .font(.system(size: 11, weight: .medium))
-                                .padding(.horizontal, 8)
-                                .padding(.vertical, 4)
-                                .background(Color(.systemGray6))
-                                .cornerRadius(6)
-                                .foregroundColor(.secondary)
+                    HStack(spacing: 6) {
+                        ForEach((shop.tcgTypes ?? []).prefix(3), id: \.self) { tcg in
+                            Text(tcg.uppercased())
+                                .font(.system(size: 9, weight: .semibold))
+                                .padding(.horizontal, 6)
+                                .padding(.vertical, 3)
+                                .background(Color.blue.opacity(0.1))
+                                .cornerRadius(4)
+                                .foregroundColor(.blue)
                         }
                     }
                 }
-
-                Divider()
-
-                // Footer Info
+                
+                Spacer()
+                
+                // Footer: Status + Distance
                 HStack {
-                    // Status (Open/Closed)
+                    // Status
                     HStack(spacing: 4) {
                         Circle()
                             .fill(shop.isOpenNow ? Color.green : Color.red)
-                            .frame(width: 8, height: 8)
-                        Text(shop.openStatusText)
-                            .font(.system(size: 12, weight: .medium))
+                            .frame(width: 6, height: 6)
+                        Text(shop.isOpenNow ? "Open" : "Closed")
+                            .font(.system(size: 11, weight: .medium))
                             .foregroundColor(shop.isOpenNow ? .green : .red)
                     }
-
+                    
                     Spacer()
-
-                    // Distance (if available from service)
+                    
+                    // Distance
                     if let lat = shop.latitude, let lng = shop.longitude {
-                        HStack(spacing: 4) {
-                            SwiftUI.Image(systemName: "location")
-                                .font(.system(size: 12))
+                        HStack(spacing: 3) {
+                            SwiftUI.Image(systemName: "location.fill")
+                                .font(.system(size: 9))
                             Text(formatDistance(lat: lat, lng: lng))
-                                .font(.system(size: 12, weight: .medium))
+                                .font(.system(size: 11, weight: .medium))
                         }
                         .foregroundColor(.secondary)
                     }
                 }
             }
-            .padding(16)
+            .padding(12)
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
+        .frame(height: 140)
         .background(Color(.systemBackground))
-        .cornerRadius(16)
-        .shadow(color: Color.black.opacity(0.08), radius: 12, x: 0, y: 4)
+        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .shadow(color: Color.black.opacity(0.06), radius: 8, x: 0, y: 2)
+    }
+}
+
+// MARK: - Compact Shop Card View (No Photo)
+struct CompactShopCardView: View {
+    let shop: Shop
+    var hasNews: Bool = false
+    
+    var body: some View {
+        HStack(spacing: 12) {
+            // Avatar with initials (no photo)
+            ZStack {
+                Circle()
+                    .fill(Color.blue.opacity(0.15))
+                    .frame(width: 50, height: 50)
+                
+                Text(shop.name.prefix(2).uppercased())
+                    .font(.system(size: 18, weight: .bold))
+                    .foregroundColor(.blue)
+                
+                // Verified badge
+                if shop.isVerified {
+                    VStack {
+                        HStack {
+                            Spacer()
+                            SwiftUI.Image(systemName: "checkmark.seal.fill")
+                                .font(.system(size: 10))
+                                .foregroundColor(.blue)
+                                .background(Circle().fill(.white).frame(width: 14, height: 14))
+                        }
+                        Spacer()
+                    }
+                    .frame(width: 50, height: 50)
+                }
+            }
+            
+            // Shop Info
+            VStack(alignment: .leading, spacing: 4) {
+                // Name
+                Text(shop.name)
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundColor(.primary)
+                    .lineLimit(1)
+                
+                // Address
+                Text(shop.address)
+                    .font(.system(size: 12))
+                    .foregroundColor(.secondary)
+                    .lineLimit(1)
+                
+                // Status and TCG badges
+                HStack(spacing: 6) {
+                    HStack(spacing: 3) {
+                        Circle()
+                            .fill(shop.isOpenNow ? Color.green : Color.red)
+                            .frame(width: 6, height: 6)
+                        Text(shop.isOpenNow ? "Aperto" : "Chiuso")
+                            .font(.system(size: 10, weight: .medium))
+                            .foregroundColor(shop.isOpenNow ? .green : .red)
+                    }
+                    
+                    if let tcgTypes = shop.tcgTypes, !tcgTypes.isEmpty {
+                        HStack(spacing: 3) {
+                            ForEach(tcgTypes.prefix(3), id: \.self) { tcg in
+                                Text(tcg.prefix(3).uppercased())
+                                    .font(.system(size: 8, weight: .bold))
+                                    .foregroundColor(.secondary)
+                                    .padding(.horizontal, 4)
+                                    .padding(.vertical, 2)
+                                    .background(Color(.tertiarySystemFill))
+                                    .cornerRadius(3)
+                            }
+                        }
+                    }
+                }
+            }
+            
+            Spacer()
+            
+            // Chevron
+            SwiftUI.Image(systemName: "chevron.right")
+                .font(.system(size: 12, weight: .medium))
+                .foregroundColor(Color.gray.opacity(0.5))
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 12)
+        .background(Color(.systemBackground))
+        .cornerRadius(12)
+        .shadow(color: Color.black.opacity(0.04), radius: 4, x: 0, y: 2)
     }
 }
 
