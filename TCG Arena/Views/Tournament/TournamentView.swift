@@ -433,6 +433,8 @@ struct TournamentListCard: View {
         case .inProgress: return Color(red: 1.0, green: 0.0, blue: 0.6)
         case .completed: return Color.gray
         case .cancelled: return Color.red
+        case .pendingApproval: return Color.orange
+        case .rejected: return Color.red
         }
     }
 }

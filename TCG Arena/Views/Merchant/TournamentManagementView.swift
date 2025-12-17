@@ -16,12 +16,14 @@ struct TournamentManagementView: View {
     @State private var selectedTournament: Tournament?
     
     enum TournamentFilter: String, CaseIterable {
+        case pendingRequests = "Richieste"
         case upcoming = "Upcoming"
         case inProgress = "In Progress"
         case completed = "Completed"
         
         var icon: String {
             switch self {
+            case .pendingRequests: return "clock.badge.exclamationmark"
             case .upcoming: return "calendar"
             case .inProgress: return "play.circle.fill"
             case .completed: return "checkmark.circle.fill"
@@ -32,6 +34,8 @@ struct TournamentManagementView: View {
     var filteredTournaments: [Tournament] {
         tournamentService.tournaments.filter { tournament in
             switch selectedFilter {
+            case .pendingRequests:
+                return tournament.status == .pendingApproval
             case .upcoming:
                 return tournament.status == .scheduled || tournament.status == .registrationOpen
             case .inProgress:
@@ -79,6 +83,7 @@ struct TournamentManagementView: View {
                             icon: filter.icon,
                             count: tournamentService.tournaments.filter { tournament in
                                 switch filter {
+                                case .pendingRequests: return tournament.status == .pendingApproval
                                 case .upcoming: return tournament.status == .scheduled || tournament.status == .registrationOpen
                                 case .inProgress: return tournament.status == .inProgress
                                 case .completed: return tournament.status == .completed
@@ -181,76 +186,320 @@ struct TournamentManagementCard: View {
     let tournament: Tournament
     let onTap: () -> Void
     
+    @State private var showApproveAlert = false
+    @State private var showRejectSheet = false
+    @State private var rejectionReason = ""
+    @State private var isProcessing = false
+    @EnvironmentObject var authService: AuthService
+    @EnvironmentObject var tournamentService: TournamentService
+    
     var body: some View {
-        Button(action: onTap) {
+        Button(action: { if tournament.status != .pendingApproval { onTap() } }) {
             VStack(alignment: .leading, spacing: 12) {
                 // Header
                 HStack {
                     VStack(alignment: .leading, spacing: 4) {
-                        Text(tournament.name)
+                        Text(tournament.title)
                             .font(.system(size: 18, weight: .bold))
                             .foregroundColor(.primary)
-                            .lineLimit(1)
+                            .lineLimit(2)
                         
-                        Text(tournament.format.rawValue)
-                            .font(.system(size: 13))
-                            .foregroundColor(.secondary)
+                        if tournament.status == .pendingApproval, let creatorId = tournament.createdByUserId {
+                            Text("Richiesto da utente #\(creatorId)")
+                                .font(.system(size: 13))
+                                .foregroundColor(.secondary)
+                        }
                     }
                     
                     Spacer()
                     
                     // Status Badge
-                    Text(tournament.status.displayName)
+                    if tournament.status == .pendingApproval {
+                        HStack(spacing: 4) {
+                            Image(systemName: "clock.fill")
+                                .font(.system(size: 9))
+                            Text("In Attesa")
+                        }
                         .font(.system(size: 11, weight: .semibold))
-                        .foregroundColor(.white)
+                        .foregroundColor(.orange)
                         .padding(.horizontal, 10)
                         .padding(.vertical, 5)
                         .background(
                             Capsule()
-                                .fill(Color(tournament.status.color))
+                                .fill(Color.orange.opacity(0.15))
                         )
+                        .overlay(
+                            Capsule()
+                                .stroke(Color.orange.opacity(0.3), lineWidth: 1)
+                        )
+                    }
                 }
                 
-                // Info Grid
-                LazyVGrid(columns: [
-                    GridItem(.flexible()),
-                    GridItem(.flexible()),
-                    GridItem(.flexible())
-                ], spacing: 12) {
-                    InfoCell(icon: "calendar", value: tournament.date.formatted(date: .abbreviated, time: .omitted))
+                // Tournament Details
+                VStack(alignment: .leading, spacing: 8) {
+                    DetailRow(icon: "calendar", text: formatDate(tournament.startDate))
+                    DetailRow(icon: "gamecontroller.fill", text: tournament.tcgType.displayName)
                     if let maxParticipants = tournament.maxParticipants {
-                        InfoCell(icon: "person.2.fill", value: "\(tournament.registeredParticipantsCount)/\(maxParticipants)")
+                        DetailRow(icon: "person.2.fill", text: "\(maxParticipants) giocatori max")
                     }
-                    InfoCell(icon: "trophy.fill", value: tournament.prizePool ?? "No Prize")
+                    if let entryFee = tournament.entryFee, entryFee > 0 {
+                        DetailRow(icon: "eurosign.circle", text: "€\(String(format: "%.0f", entryFee))")
+                    }
                 }
                 
-                // Quick Actions
-                if tournament.status == .registrationOpen {
+                // Pending Approval Actions
+                if tournament.status == .pendingApproval {
                     Divider()
+                        .padding(.vertical, 4)
                     
                     HStack(spacing: 12) {
-                        QuickActionLabel(icon: "person.badge.plus", text: "Manage Registrations", color: AdaptiveColors.brandPrimary)
-                        Spacer()
-                        QuickActionLabel(icon: "play.circle.fill", text: "Start Tournament", color: AdaptiveColors.success)
-                    }
-                } else if tournament.status == .inProgress {
-                    Divider()
-                    
-                    HStack(spacing: 12) {
-                        QuickActionLabel(icon: "list.bullet.clipboard", text: "Enter Results", color: AdaptiveColors.brandPrimary)
-                        Spacer()
-                        QuickActionLabel(icon: "chart.bar.fill", text: "View Standings", color: AdaptiveColors.brandSecondary)
+                        // Approve Button
+                        Button(action: { showApproveAlert = true }) {
+                            HStack(spacing: 6) {
+                                Image(systemName: "checkmark.circle.fill")
+                                Text("Approva")
+                            }
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundColor(.white)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 12)
+                            .background(
+                                RoundedRectangle(cornerRadius: 10)
+                                    .fill(Color.green)
+                            )
+                        }
+                        .disabled(isProcessing)
+                        
+                        // Reject Button
+                        Button(action: { showRejectSheet = true }) {
+                            HStack(spacing: 6) {
+                                Image(systemName: "xmark.circle.fill")
+                                Text("Rifiuta")
+                            }
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundColor(.white)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 12)
+                            .background(
+                                RoundedRectangle(cornerRadius: 10)
+                                    .fill(Color.red)
+                            )
+                        }
+                        .disabled(isProcessing)
                     }
                 }
             }
             .padding(16)
             .background(
                 RoundedRectangle(cornerRadius: 16)
-                    .fill(AdaptiveColors.backgroundSecondary)
+                    .fill(Color(.secondarySystemBackground))
                     .shadow(color: .black.opacity(0.05), radius: 4, x: 0, y: 2)
             )
         }
         .buttonStyle(PlainButtonStyle())
+        .alert("Approva Richiesta", isPresented: $showApproveAlert) {
+            Button("Annulla", role: .cancel) {}
+            Button("Approva") {
+                approveTournament()
+            }
+        } message: {
+            Text("Vuoi approvare questa richiesta di torneo? Il torneo diventerà visibile pubblicamente.")
+        }
+        .sheet(isPresented: $showRejectSheet) {
+            RejectTournamentSheet(
+                tournamentTitle: tournament.title,
+                rejectionReason: $rejectionReason,
+                onReject: rejectTournament
+            )
+        }
+    }
+    
+    private func formatDate(_ dateString: String) -> String {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime]
+        
+        if let date = formatter.date(from: dateString) {
+            let displayFormatter = DateFormatter()
+            displayFormatter.dateStyle = .medium
+            displayFormatter.timeStyle = .short
+            return displayFormatter.string(from: date)
+        }
+        return dateString
+    }
+    
+    private func approveTournament() {
+        guard let tournamentId = tournament.id else { return }
+        
+        isProcessing = true
+        
+        Task {
+            do {
+                guard let url = URL(string: "\(APIConfig.baseURL)/api/tournaments/\(tournamentId)/approve") else { return }
+                
+                var request = URLRequest(url: url)
+                request.httpMethod = "PUT"
+                
+                if let token = authService.authToken {
+                    request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+                }
+                
+                let (_, response) = try await URLSession.shared.data(for: request)
+                
+                guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
+                    throw NSError(domain: "", code: -1, userInfo: [NSLocalizedDescriptionKey: "Errore nell'approvazione"])
+                }
+                
+                await MainActor.run {
+                    isProcessing = false
+                    // Reload tournaments
+                    Task {
+                        await tournamentService.loadTournaments()
+                    }
+                }
+            } catch {
+                await MainActor.run {
+                    isProcessing = false
+                }
+            }
+        }
+    }
+    
+    private func rejectTournament() {
+        guard let tournamentId = tournament.id else { return }
+        
+        isProcessing = true
+        
+        Task {
+            do {
+                guard let url = URL(string: "\(APIConfig.baseURL)/api/tournaments/\(tournamentId)/reject") else { return }
+                
+                var request = URLRequest(url: url)
+                request.httpMethod = "PUT"
+                request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+                
+                if let token = authService.authToken {
+                    request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+                }
+                
+                let body: [String: String] = ["reason": rejectionReason]
+                request.httpBody = try JSONSerialization.data(withJSONObject: body)
+                
+                let (_, response) = try await URLSession.shared.data(for: request)
+                
+                guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
+                    throw NSError(domain: "", code: -1, userInfo: [NSLocalizedDescriptionKey: "Errore nel rifiuto"])
+                }
+                
+                await MainActor.run {
+                    isProcessing = false
+                    showRejectSheet = false
+                    // Reload tournaments
+                    Task {
+                        await tournamentService.loadTournaments()
+                    }
+                }
+            } catch {
+                await MainActor.run {
+                    isProcessing = false
+                }
+            }
+        }
+    }
+}
+
+struct DetailRow: View {
+    let icon: String
+    let text: String
+    
+    var body: some View {
+        HStack(spacing: 8) {
+            Image(systemName: icon)
+                .font(.system(size: 12))
+                .foregroundColor(.secondary)
+                .frame(width: 16)
+            Text(text)
+                .font(.system(size: 14))
+                .foregroundColor(.secondary)
+        }
+    }
+}
+
+struct RejectTournamentSheet: View {
+    let tournamentTitle: String
+    @Binding var rejectionReason: String
+    let onReject: () -> Void
+    @Environment(\.dismiss) var dismiss
+    
+    var body: some View {
+        NavigationView {
+            VStack(alignment: .leading, spacing: 20) {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Stai rifiutando:")
+                        .font(.system(size: 14))
+                        .foregroundColor(.secondary)
+                    Text(tournamentTitle)
+                        .font(.system(size: 18, weight: .bold))
+                }
+                .padding(.horizontal, 20)
+                .padding(.top, 20)
+                
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("Motivo del rifiuto")
+                        .font(.system(size: 16, weight: .semibold))
+                    
+                    TextEditor(text: $rejectionReason)
+                        .font(.system(size: 15))
+                        .frame(height: 120)
+                        .padding(12)
+                        .background(
+                            RoundedRectangle(cornerRadius: 12)
+                                .fill(Color(.tertiarySystemBackground))
+                        )
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 12)
+                                .stroke(Color(.separator), lineWidth: 1)
+                        )
+                    
+                    Text("Spiega perché questa richiesta non può essere accettata.")
+                        .font(.system(size: 13))
+                        .foregroundColor(.secondary)
+                }
+                .padding(.horizontal, 20)
+                
+                Spacer()
+                
+                Button(action: {
+                    onReject()
+                    dismiss()
+                }) {
+                    HStack(spacing: 8) {
+                        Image(systemName: "xmark.circle.fill")
+                        Text("Conferma Rifiuto")
+                    }
+                    .font(.system(size: 17, weight: .semibold))
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 16)
+                    .background(
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(!rejectionReason.isEmpty ? Color.red : Color.gray)
+                    )
+                }
+                .disabled(rejectionReason.isEmpty)
+                .padding(.horizontal, 20)
+                .padding(.bottom, 20)
+            }
+            .background(Color(.systemBackground))
+            .navigationTitle("Rifiuta Richiesta")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Annulla") {
+                        dismiss()
+                    }
+                }
+            }
+        }
     }
 }
 

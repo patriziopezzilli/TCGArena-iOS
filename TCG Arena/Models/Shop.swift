@@ -25,8 +25,9 @@ struct Shop: Identifiable, Codable {
     let isVerified: Bool
     let active: Bool?
     let ownerId: Int64
-    let openingHours: String?
-    let openingDays: String?
+    let openingHours: String? // Legacy - deprecated
+    let openingDays: String?  // Legacy - deprecated
+    let openingHoursStructured: OpeningHours? // New structured opening hours
     let tcgTypes: [String]?
     let services: [String]?
     let inventory: [InventoryItem]?
@@ -34,7 +35,8 @@ struct Shop: Identifiable, Codable {
     enum CodingKeys: String, CodingKey {
         case id, name, description, address, latitude, longitude, phoneNumber, email
         case websiteUrl, instagramUrl, facebookUrl, twitterUrl, photoBase64
-        case type, isVerified, active, ownerId, openingHours, openingDays, tcgTypes, services, inventory
+        case type, isVerified, active, ownerId, openingHours, openingDays
+        case openingHoursStructured, tcgTypes, services, inventory
     }
     
     init(from decoder: Decoder) throws {
@@ -59,6 +61,7 @@ struct Shop: Identifiable, Codable {
         ownerId = try container.decode(Int64.self, forKey: .ownerId)
         openingHours = try container.decodeIfPresent(String.self, forKey: .openingHours)
         openingDays = try container.decodeIfPresent(String.self, forKey: .openingDays)
+        openingHoursStructured = try container.decodeIfPresent(OpeningHours.self, forKey: .openingHoursStructured)
         inventory = try container.decodeIfPresent([InventoryItem].self, forKey: .inventory)
         
         // Parse tcgTypes: can be comma-separated string or array
@@ -91,6 +94,12 @@ struct Shop: Identifiable, Codable {
     
     /// Check if the shop is currently open based on openingHours and openingDays
     var isOpenNow: Bool {
+        // Prefer structured opening hours if available
+        if let structured = openingHoursStructured {
+            return structured.isOpenNow
+        }
+        
+        // Fallback to legacy logic
         guard let hours = openingHours else { return true } // If no hours set, assume open
         
         // First check if today is an open day
@@ -214,6 +223,7 @@ struct Shop: Identifiable, Codable {
         ownerId: Int64,
         openingHours: String? = nil,
         openingDays: String? = nil,
+        openingHoursStructured: OpeningHours? = nil,
         tcgTypes: [String]? = nil,
         services: [String]? = nil,
         inventory: [InventoryItem]? = nil
@@ -237,6 +247,7 @@ struct Shop: Identifiable, Codable {
         self.ownerId = ownerId
         self.openingHours = openingHours
         self.openingDays = openingDays
+        self.openingHoursStructured = openingHoursStructured
         self.tcgTypes = tcgTypes
         self.services = services
         self.inventory = inventory

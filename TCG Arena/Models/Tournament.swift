@@ -32,6 +32,12 @@ struct Tournament: Identifiable, Codable {
     var isRanked: Bool? // True for official/ranked tournaments
     var externalRegistrationUrl: String? // External registration URL for ranked tournaments
     
+    // Approval workflow fields
+    var createdByUserId: Int64? // Customer who requested the tournament
+    var approvedByUserId: Int64? // Merchant who approved the tournament
+    var approvalDate: String? // When the tournament was approved
+    var rejectionReason: String? // Reason for rejection if rejected
+    
     enum TournamentType: String, CaseIterable, Codable {
         case casual = "CASUAL"
         case competitive = "COMPETITIVE"
@@ -39,12 +45,14 @@ struct Tournament: Identifiable, Codable {
     }
     
     enum TournamentStatus: String, CaseIterable, Codable {
+        case pendingApproval = "PENDING_APPROVAL"
         case upcoming = "UPCOMING"
         case registrationOpen = "REGISTRATION_OPEN"
         case registrationClosed = "REGISTRATION_CLOSED"
         case inProgress = "IN_PROGRESS"
         case completed = "COMPLETED"
         case cancelled = "CANCELLED"
+        case rejected = "REJECTED"
     }
     
     struct TournamentLocation: Codable {
@@ -84,6 +92,10 @@ struct Tournament: Identifiable, Codable {
         case isRanked
         case externalRegistrationUrl
         case tournamentParticipants = "participants"
+        case createdByUserId
+        case approvedByUserId
+        case approvalDate
+        case rejectionReason
     }
     
     init(title: String, description: String?, tcgType: TCGType, type: TournamentType, status: TournamentStatus = .upcoming, startDate: String, endDate: String, maxParticipants: Int, currentParticipants: Int? = nil, entryFee: Double, prizePool: String, organizerId: Int64, location: TournamentLocation? = nil, rules: String? = nil) {

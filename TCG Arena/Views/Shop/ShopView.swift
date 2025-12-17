@@ -210,7 +210,21 @@ struct ShopListView: View {
     
     // MARK: - Filtered Shops
     private var filteredShops: [Shop] {
-        let userLocation = locationManager.location ?? CLLocation(latitude: savedLatitude, longitude: savedLongitude)
+        // Priority: Use saved location if user has set one (not default Milano), otherwise use LocationManager
+        // Default Milano coordinates: 45.4642, 9.1900
+        let isDefaultLocation = (savedLatitude == 45.4642 && savedLongitude == 9.1900)
+        let userLocation: CLLocation
+        
+        if !isDefaultLocation {
+            // User has set a custom location - use it
+            userLocation = CLLocation(latitude: savedLatitude, longitude: savedLongitude)
+        } else if let deviceLocation = locationManager.location {
+            // Use device GPS location
+            userLocation = deviceLocation
+        } else {
+            // Fallback to saved (default) location
+            userLocation = CLLocation(latitude: savedLatitude, longitude: savedLongitude)
+        }
         
         var result = shopService.nearbyShops
         
@@ -539,6 +553,7 @@ struct EventListView: View {
     /// - IN_PROGRESS tournaments should always appear here
     private var upcomingTournaments: [Tournament] {
         let now = Date()
+        
         let upcoming = tournamentService.nearbyTournaments.filter { tournament in
             // IN_PROGRESS tournaments should ALWAYS appear in upcoming
             if tournament.status == .inProgress {
@@ -548,6 +563,11 @@ struct EventListView: View {
             // COMPLETED and CANCELLED tournaments should not appear in upcoming
             if tournament.status == .completed || tournament.status == .cancelled {
                 return false
+            }
+            
+            // PENDING_APPROVAL and UPCOMING should always be included
+            if tournament.status == .pendingApproval || tournament.status == .upcoming {
+                return true
             }
             
             // For other statuses, check if the date is in the future
@@ -856,18 +876,28 @@ struct EventListView: View {
                     )
                 } else {
                     ForEach(upcomingTournaments) { tournament in
-                        NavigationLink(destination: TournamentDetailView(tournament: tournament)
-                            .environmentObject(tournamentService)
-                            .environmentObject(authService)) {
+                        // PENDING_APPROVAL tournaments are not clickable
+                        if tournament.status == .pendingApproval {
                             TournamentCardView(
                                 tournament: tournament,
                                 userRegistrationStatus: getUserRegistrationStatus(for: tournament),
-                                onRegisterTap: {
-                                    handleRegisterTap(for: tournament)
-                                }
+                                onRegisterTap: { }
                             )
+                            .opacity(0.8)
+                        } else {
+                            NavigationLink(destination: TournamentDetailView(tournament: tournament)
+                                .environmentObject(tournamentService)
+                                .environmentObject(authService)) {
+                                TournamentCardView(
+                                    tournament: tournament,
+                                    userRegistrationStatus: getUserRegistrationStatus(for: tournament),
+                                    onRegisterTap: {
+                                        handleRegisterTap(for: tournament)
+                                    }
+                                )
+                            }
+                            .buttonStyle(PlainButtonStyle())
                         }
-                        .buttonStyle(PlainButtonStyle())
                     }
                 }
             }
@@ -973,25 +1003,57 @@ struct EventListView: View {
                     )
                 } else {
                     ForEach(myEvents.sorted(by: { parseTournamentDate($0.startDate) ?? Date() > parseTournamentDate($1.startDate) ?? Date() })) { tournament in
-                        NavigationLink(destination: TournamentDetailView(tournament: tournament)
-                            .environmentObject(tournamentService)
-                            .environmentObject(authService)) {
-                            // Check status, not just date - IN_PROGRESS should show as "upcoming/active"
-                            if tournament.status == .completed || tournament.status == .cancelled {
-                                // Past/completed event
-                                PastTournamentCard(tournament: tournament)
-                            } else {
-                                // Upcoming or in-progress event
-                                TournamentCardView(
-                                    tournament: tournament,
-                                    userRegistrationStatus: getUserRegistrationStatus(for: tournament),
-                                    onRegisterTap: {
-                                        handleRegisterTap(for: tournament)
-                                    }
-                                )
+                        // Disable navigation for pending approval or rejected tournaments
+                        if tournament.status == .pendingApproval || tournament.status == .rejected {
+                            // Show card but without navigation
+                            VStack(spacing: 0) {
+                                if tournament.status == .completed || tournament.status == .cancelled || tournament.status == .rejected {
+                                    PastTournamentCard(tournament: tournament)
+                                } else {
+                                    TournamentCardView(
+                                        tournament: tournament,
+                                        userRegistrationStatus: getUserRegistrationStatus(for: tournament),
+                                        onRegisterTap: {
+                                            // No action for pending tournaments
+                                        }
+                                    )
+                                }
+                                
+                                // Show message below card
+                                if tournament.status == .pendingApproval {
+                                    Text("In attesa di approvazione dal negozio")
+                                        .font(.system(size: 12))
+                                        .foregroundColor(.orange)
+                                        .padding(.top, 4)
+                                } else if tournament.status == .rejected {
+                                    Text("Richiesta rifiutata")
+                                        .font(.system(size: 12))
+                                        .foregroundColor(.red)
+                                        .padding(.top, 4)
+                                }
                             }
+                        } else {
+                            // Normal navigation for approved tournaments
+                            NavigationLink(destination: TournamentDetailView(tournament: tournament)
+                                .environmentObject(tournamentService)
+                                .environmentObject(authService)) {
+                                // Check status, not just date - IN_PROGRESS should show as "upcoming/active"
+                                if tournament.status == .completed || tournament.status == .cancelled {
+                                    // Past/completed event
+                                    PastTournamentCard(tournament: tournament)
+                                } else {
+                                    // Upcoming or in-progress event
+                                    TournamentCardView(
+                                        tournament: tournament,
+                                        userRegistrationStatus: getUserRegistrationStatus(for: tournament),
+                                        onRegisterTap: {
+                                            handleRegisterTap(for: tournament)
+                                        }
+                                    )
+                                }
+                            }
+                            .buttonStyle(PlainButtonStyle())
                         }
-                        .buttonStyle(PlainButtonStyle())
                     }
                 }
             }

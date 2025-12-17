@@ -96,65 +96,7 @@ struct TournamentCardView: View {
             // Right Side: Info
             VStack(alignment: .leading, spacing: 8) {
                 // Badges
-                HStack(spacing: 8) {
-                    // LIVE badge for IN_PROGRESS tournaments
-                    if tournament.status == .inProgress {
-                        LiveBadgeView()
-                    }
-                    
-                    // Official Tournament Badge - Clean gold style
-                    if tournament.isRanked == true {
-                        HStack(spacing: 4) {
-                            Text("🏆")
-                            Text("Ufficiale")
-                                .fontWeight(.bold)
-                        }
-                        .font(.system(size: 10))
-                        .foregroundColor(Color(red: 0.6, green: 0.45, blue: 0.1))
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 3)
-                        .background(Color(red: 1.0, green: 0.85, blue: 0.4).opacity(0.3))
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 6)
-                                .stroke(Color(red: 0.85, green: 0.65, blue: 0.2), lineWidth: 1)
-                        )
-                        .cornerRadius(6)
-                        .lineLimit(1)
-                        .fixedSize(horizontal: true, vertical: false)
-                    }
-                    
-                    Text(tournament.tcgType.displayName)
-                        .font(.system(size: 10, weight: .bold))
-                        .foregroundColor(tournament.tcgType.themeColor)
-                        .padding(.horizontal, 6)
-                        .padding(.vertical, 2)
-                        .background(tournament.tcgType.themeColor.opacity(0.1))
-                        .cornerRadius(4)
-
-                    // Tournament type badge - only for local tournaments
-                    if tournament.isRanked != true, let type = tournament.type {
-                        Text(type.rawValue)
-                            .font(.system(size: 10, weight: .medium))
-                            .foregroundColor(.secondary)
-                            .padding(.horizontal, 6)
-                            .padding(.vertical, 2)
-                            .background(Color(.secondarySystemBackground))
-                            .cornerRadius(4)
-                    }
-
-                    Spacer()
-
-                    // Price
-                    if let entryFee = tournament.entryFee, entryFee > 0 {
-                        Text("€\(entryFee, specifier: "%.0f")")
-                            .font(.system(size: 14, weight: .bold))
-                            .foregroundColor(.primary)
-                    } else if tournament.entryFee != nil {
-                        Text("Free")
-                            .font(.system(size: 14, weight: .bold))
-                            .foregroundColor(.green)
-                    }
-                }
+                badgesSection
 
                 // Title
                 Text(tournament.title)
@@ -176,7 +118,7 @@ struct TournamentCardView: View {
                     }
                 }
                 
-                // Footer: Participants & Button
+                // Footer: Participants & Button/Badge
                 HStack {
                     HStack(spacing: 4) {
                         SwiftUI.Image(systemName: "person.2.fill")
@@ -190,7 +132,10 @@ struct TournamentCardView: View {
                     
                     Spacer()
 
-                    if tournament.status == .registrationOpen && authService.isAuthenticated && authService.currentUserId != nil {
+                    // Show pending approval badge in footer
+                    if tournament.status == .pendingApproval {
+                        pendingApprovalBadge
+                    } else if (tournament.status == .registrationOpen || tournament.status == .upcoming) && authService.isAuthenticated && authService.currentUserId != nil {
                         Button(action: onRegisterTap) {
                             Text(buttonText)
                                 .font(.system(size: 12, weight: .semibold))
@@ -236,6 +181,128 @@ struct TournamentCardView: View {
                 )
         )
         .shadow(color: tournament.isRanked == true ? Color(red: 0.85, green: 0.65, blue: 0.2).opacity(0.3) : Color.black.opacity(0.05), radius: 8, x: 0, y: 2)
+    }
+    
+    // MARK: - Badge Section
+    private var badgesSection: some View {
+        HStack(spacing: 8) {
+            if tournament.status == .inProgress {
+                LiveBadgeView()
+            }
+            
+            if tournament.status == .rejected {
+                rejectedBadge
+            }
+            
+            if tournament.isRanked == true {
+                officialBadge
+            }
+            
+            tcgTypeBadge
+            
+            if tournament.isRanked != true, let type = tournament.type {
+                tournamentTypeBadge(type)
+            }
+
+            Spacer()
+
+            priceBadge
+        }
+    }
+    
+    private var pendingApprovalBadge: some View {
+        HStack(spacing: 4) {
+            SwiftUI.Image(systemName: "clock.fill")
+                .font(.system(size: 8))
+            Text("In Approvazione")
+                .fontWeight(.bold)
+        }
+        .font(.system(size: 10))
+        .foregroundColor(Color.orange)
+        .padding(.horizontal, 8)
+        .padding(.vertical, 3)
+        .background(Color.orange.opacity(0.15))
+        .overlay(
+            RoundedRectangle(cornerRadius: 6)
+                .stroke(Color.orange.opacity(0.4), lineWidth: 1)
+        )
+        .cornerRadius(6)
+        .lineLimit(1)
+        .fixedSize(horizontal: true, vertical: false)
+    }
+    
+    private var rejectedBadge: some View {
+        HStack(spacing: 4) {
+            SwiftUI.Image(systemName: "xmark.circle.fill")
+                .font(.system(size: 8))
+            Text("Rifiutato")
+                .fontWeight(.bold)
+        }
+        .font(.system(size: 10))
+        .foregroundColor(Color.red)
+        .padding(.horizontal, 8)
+        .padding(.vertical, 3)
+        .background(Color.red.opacity(0.15))
+        .overlay(
+            RoundedRectangle(cornerRadius: 6)
+                .stroke(Color.red.opacity(0.4), lineWidth: 1)
+        )
+        .cornerRadius(6)
+        .lineLimit(1)
+        .fixedSize(horizontal: true, vertical: false)
+    }
+    
+    private var officialBadge: some View {
+        HStack(spacing: 4) {
+            Text("🏆")
+            Text("Ufficiale")
+                .fontWeight(.bold)
+        }
+        .font(.system(size: 10))
+        .foregroundColor(Color(red: 0.6, green: 0.45, blue: 0.1))
+        .padding(.horizontal, 8)
+        .padding(.vertical, 3)
+        .background(Color(red: 1.0, green: 0.85, blue: 0.4).opacity(0.3))
+        .overlay(
+            RoundedRectangle(cornerRadius: 6)
+                .stroke(Color(red: 0.85, green: 0.65, blue: 0.2), lineWidth: 1)
+        )
+        .cornerRadius(6)
+        .lineLimit(1)
+        .fixedSize(horizontal: true, vertical: false)
+    }
+    
+    private var tcgTypeBadge: some View {
+        Text(tournament.tcgType.displayName)
+            .font(.system(size: 10, weight: .bold))
+            .foregroundColor(tournament.tcgType.themeColor)
+            .padding(.horizontal, 6)
+            .padding(.vertical, 2)
+            .background(tournament.tcgType.themeColor.opacity(0.1))
+            .cornerRadius(4)
+    }
+    
+    private func tournamentTypeBadge(_ type: Tournament.TournamentType) -> some View {
+        Text(type.rawValue)
+            .font(.system(size: 10, weight: .medium))
+            .foregroundColor(.secondary)
+            .padding(.horizontal, 6)
+            .padding(.vertical, 2)
+            .background(Color(.secondarySystemBackground))
+            .cornerRadius(4)
+    }
+    
+    @ViewBuilder
+    private var priceBadge: some View {
+        if let entryFee = tournament.entryFee, entryFee > 0 {
+            Text("€\(entryFee, specifier: "%.0f")")
+                .font(.system(size: 14, weight: .bold))
+                .foregroundColor(.primary)
+        } else if tournament.entryFee != nil {
+            Text("Free")
+                .font(.system(size: 14, weight: .bold))
+                .foregroundColor(.green)
+        }
     }
 
     // MARK: - Helpers

@@ -213,13 +213,15 @@ struct SetDetailCard: View {
                     
                     Spacer()
                     
-                    Text(set.setCode.uppercased())
-                        .font(.system(size: 12, weight: .bold))
-                        .foregroundColor(cardColor)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                        .background(cardColor.opacity(0.1))
-                        .clipShape(Capsule())
+                    if set.setCode.count <= 5 {
+                        Text(set.setCode.uppercased())
+                            .font(.system(size: 12, weight: .bold))
+                            .foregroundColor(cardColor)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
+                            .background(cardColor.opacity(0.1))
+                            .clipShape(Capsule())
+                    }
                 }
                 
                 HStack(spacing: 4) {

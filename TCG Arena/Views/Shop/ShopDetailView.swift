@@ -19,6 +19,7 @@ struct ShopDetailView: View {
     @State private var showingSendRequest = false
     @State private var showingMyRequests = false
     @State private var showingMyShopRequests = false
+    @State private var showingTournamentRequest = false
     @State private var showToast = false
     @State private var toastMessage = ""
     @State private var newsLoaded = false
@@ -98,6 +99,10 @@ struct ShopDetailView: View {
                         }
                     }
             }
+        }
+        .sheet(isPresented: $showingTournamentRequest) {
+            TournamentRequestView(shop: shop)
+                .environmentObject(authService)
         }
     }
     
@@ -237,12 +242,53 @@ struct ShopDetailView: View {
                                 Text(shop.address)
                                     .font(.system(size: 15, weight: .medium))
                                 
-                                HStack(alignment: .top, spacing: 8) {
-                                    SwiftUI.Image(systemName: "clock.fill")
-                                        .foregroundColor(.orange)
-                                        .font(.system(size: 14))
-                                    
-                                    if let hours = shop.openingHours {
+                                // Opening Hours Section
+                                if let structured = shop.openingHoursStructured {
+                                    VStack(alignment: .leading, spacing: 12) {
+                                        HStack(spacing: 8) {
+                                            SwiftUI.Image(systemName: "clock.fill")
+                                                .foregroundColor(structured.isOpenNow ? .green : .orange)
+                                                .font(.system(size: 14))
+                                            
+                                            Text(structured.isOpenNow ? "Aperto ora" : "Chiuso ora")
+                                                .font(.system(size: 14, weight: .semibold))
+                                                .foregroundColor(structured.isOpenNow ? .green : .orange)
+                                            
+                                            Text("•")
+                                                .foregroundColor(.secondary)
+                                            
+                                            Text(structured.todaySchedule.displayString)
+                                                .font(.system(size: 13))
+                                                .foregroundColor(.secondary)
+                                        }
+                                        
+                                        // Show all week schedule
+                                        DisclosureGroup("Orari Settimanali") {
+                                            VStack(alignment: .leading, spacing: 8) {
+                                                ForEach(Array(structured.allDays.enumerated()), id: \.0) { _, day in
+                                                    HStack {
+                                                        Text(day.0)
+                                                            .font(.system(size: 13, weight: .medium))
+                                                            .frame(width: 80, alignment: .leading)
+                                                        
+                                                        Text(day.1.displayString)
+                                                            .font(.system(size: 13))
+                                                            .foregroundColor(.secondary)
+                                                    }
+                                                }
+                                            }
+                                            .padding(.top, 8)
+                                        }
+                                        .font(.system(size: 13, weight: .medium))
+                                        .foregroundColor(.primary)
+                                    }
+                                } else if let hours = shop.openingHours {
+                                    // Legacy display
+                                    HStack(alignment: .top, spacing: 8) {
+                                        SwiftUI.Image(systemName: "clock.fill")
+                                            .foregroundColor(.orange)
+                                            .font(.system(size: 14))
+                                        
                                         VStack(alignment: .leading, spacing: 2) {
                                             Text("Aperto Oggi")
                                                 .font(.system(size: 14, weight: .medium))
@@ -250,7 +296,13 @@ struct ShopDetailView: View {
                                                 .font(.system(size: 13))
                                                 .foregroundColor(.secondary)
                                         }
-                                    } else {
+                                    }
+                                } else {
+                                    HStack(spacing: 8) {
+                                        SwiftUI.Image(systemName: "clock.fill")
+                                            .foregroundColor(.gray)
+                                            .font(.system(size: 14))
+                                        
                                         Text("Orari non disponibili")
                                             .font(.system(size: 13))
                                             .foregroundColor(.secondary)
@@ -431,6 +483,42 @@ struct ShopDetailView: View {
                                     .foregroundColor(.primary)
                                 
                                 Text("Chiedi informazioni su disponibilità, prezzi o altro")
+                                    .font(.system(size: 13))
+                                    .foregroundColor(.secondary)
+                            }
+                            
+                            Spacer()
+                            
+                            SwiftUI.Image(systemName: "chevron.right")
+                                .font(.system(size: 14, weight: .semibold))
+                                .foregroundColor(.secondary)
+                        }
+                        .padding(16)
+                    }
+                    .buttonStyle(ScaleButtonStyle())
+                    
+                    Divider()
+                        .padding(.leading, 72)
+                    
+                    // Request Tournament Button
+                    Button(action: { showingTournamentRequest = true }) {
+                        HStack(spacing: 12) {
+                            ZStack {
+                                Circle()
+                                    .fill(Color.orange.opacity(0.15))
+                                    .frame(width: 44, height: 44)
+                                
+                                SwiftUI.Image(systemName: "trophy.fill")
+                                    .font(.system(size: 18, weight: .semibold))
+                                    .foregroundColor(.orange)
+                            }
+                            
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Richiedi Torneo")
+                                    .font(.system(size: 16, weight: .semibold))
+                                    .foregroundColor(.primary)
+                                
+                                Text("Proponi l'organizzazione di un torneo in questo negozio")
                                     .font(.system(size: 13))
                                     .foregroundColor(.secondary)
                             }

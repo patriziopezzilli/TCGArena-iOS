@@ -147,6 +147,8 @@ struct TournamentMapPin: View {
         case .inProgress: return .purple
         case .completed: return .gray
         case .cancelled: return .red
+        case .pendingApproval: return .orange
+        case .rejected: return .red
         }
     }
     
@@ -303,6 +305,8 @@ struct TournamentRowView: View {
         case .inProgress: return .purple
         case .completed: return .gray
         case .cancelled: return .red
+        case .pendingApproval: return .orange
+        case .rejected: return .red
         }
     }
 }
@@ -436,6 +440,8 @@ struct MinimalTournamentCard: View {
         case .inProgress: return Color(red: 1.0, green: 0.0, blue: 0.6) // Bright Pink
         case .completed: return Color.gray
         case .cancelled: return Color.red
+        case .pendingApproval: return Color.orange
+        case .rejected: return Color.red
         }
     }
     

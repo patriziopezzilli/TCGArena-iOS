@@ -31,6 +31,8 @@
 		786778F22EF2A5E9000928C4 /* CreateRequestView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 786778F12EF2A5E9000928C4 /* CreateRequestView.swift */; };
 		786778F92EF2ACAE000928C4 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 786778F82EF2ACAE000928C4 /* GoogleService-Info.plist */; };
 		786778FA2EF2ACAE000928C4 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 786778F82EF2ACAE000928C4 /* GoogleService-Info.plist */; };
+		786778FC2EF2E643000928C4 /* OpeningHours.swift in Sources */ = {isa = PBXBuildFile; fileRef = 786778FB2EF2E643000928C4 /* OpeningHours.swift */; };
+		786778FE2EF2EB5C000928C4 /* TournamentRequestView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 786778FD2EF2EB5C000928C4 /* TournamentRequestView.swift */; };
 		786AC8602EE2CD68001A6714 /* PastTournamentCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 786AC85F2EE2CD68001A6714 /* PastTournamentCard.swift */; };
 		786AC8632EE2DC13001A6714 /* WelcomeSheet in Frameworks */ = {isa = PBXBuildFile; productRef = 786AC8622EE2DC13001A6714 /* WelcomeSheet */; };
 		786AC8652EE2DF8A001A6714 /* OnboardingPermissionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 786AC8642EE2DF8A001A6714 /* OnboardingPermissionsView.swift */; };
@@ -200,6 +202,8 @@
 		786778EF2EF2A5CA000928C4 /* PlayerRequestListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerRequestListView.swift; sourceTree = "<group>"; };
 		786778F12EF2A5E9000928C4 /* CreateRequestView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateRequestView.swift; sourceTree = "<group>"; };
 		786778F82EF2ACAE000928C4 /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
+		786778FB2EF2E643000928C4 /* OpeningHours.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpeningHours.swift; sourceTree = "<group>"; };
+		786778FD2EF2EB5C000928C4 /* TournamentRequestView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TournamentRequestView.swift; sourceTree = "<group>"; };
 		786AC85F2EE2CD68001A6714 /* PastTournamentCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PastTournamentCard.swift; sourceTree = "<group>"; };
 		786AC8642EE2DF8A001A6714 /* OnboardingPermissionsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingPermissionsView.swift; sourceTree = "<group>"; };
 		786AC8662EE2ECC6001A6714 /* AuthFlowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthFlowView.swift; sourceTree = "<group>"; };
@@ -390,6 +394,7 @@
 		78D54AB62EE1A335009A04C7 /* Player */ = {
 			isa = PBXGroup;
 			children = (
+				786778FD2EF2EB5C000928C4 /* TournamentRequestView.swift */,
 				786778F12EF2A5E9000928C4 /* CreateRequestView.swift */,
 				786778EF2EF2A5CA000928C4 /* PlayerRequestListView.swift */,
 				786778ED2EF2A57B000928C4 /* PlayerRequestDetailView.swift */,
@@ -524,6 +529,7 @@
 		A5000004 /* Models */ = {
 			isa = PBXGroup;
 			children = (
+				786778FB2EF2E643000928C4 /* OpeningHours.swift */,
 				786778D92EF210FD000928C4 /* TournamentActivityAttributes.swift */,
 				78BBCF302EEED18D00FCEA14 /* TournamentUpdate.swift */,
 				78660E4E2EE6177900EA2BFE /* EmbeddedUserStats.swift */,
@@ -880,6 +886,7 @@
 				7A1CC9422ED2392C00A61395 /* RewardsService.swift in Sources */,
 				7A1CC9432ED2392C00A61395 /* UserService.swift in Sources */,
 				7A1CC9442ED2392C00A61395 /* AchievementService.swift in Sources */,
+				786778FE2EF2EB5C000928C4 /* TournamentRequestView.swift in Sources */,
 				7A1CC9452ED2392C00A61395 /* ImageService.swift in Sources */,
 				786AC8782EE461D5001A6714 /* ShopRequestsView.swift in Sources */,
 				7A1CC9462ED2392C00A61395 /* APIClient.swift in Sources */,
@@ -929,6 +936,7 @@
 				7A817B8B2EC7692500500F32 /* Shop.swift in Sources */,
 				78D54ADB2EE1B894009A04C7 /* DeckDetailView.swift in Sources */,
 				A1000015 /* CardRowView.swift in Sources */,
+				786778FC2EF2E643000928C4 /* OpeningHours.swift in Sources */,
 				A1000016 /* TournamentCardView.swift in Sources */,
 				7AAAA2142EDD93980035F942 /* InventoryService.swift in Sources */,
 				7AAAA2152EDD93980035F942 /* ReservationService.swift in Sources */,
