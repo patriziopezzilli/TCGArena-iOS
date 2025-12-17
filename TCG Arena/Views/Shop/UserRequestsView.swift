@@ -499,7 +499,7 @@ private struct RequestDetailView: View {
                     ForEach(messages) { message in
                         // Compare senderId with current user ID for proper alignment
                         let isFromMe = message.senderId == String(authService.currentUserId ?? 0)
-                        MessageBubble(message: message, isFromCurrentUser: isFromMe)
+                        UserMessageBubble(message: message, isFromCurrentUser: isFromMe)
                     }
                 }
             }
@@ -609,8 +609,8 @@ private struct RequestDetailView: View {
     }
 }
 
-// MARK: - Message Bubble
-private struct MessageBubble: View {
+// MARK: - User Message Bubble
+private struct UserMessageBubble: View {
     let message: RequestMessage
     let isFromCurrentUser: Bool
     

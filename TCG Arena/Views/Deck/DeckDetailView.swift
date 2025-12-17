@@ -102,7 +102,7 @@ struct DeckDetailView: View {
                 ZStack(alignment: .bottomLeading) {
                     // Abstract Gradient Background
                     abstractHeaderBackground
-                        .frame(width: geometry.size.width, height: 280 + safeAreaTop)
+                        .frame(width: geometry.size.width, height: 180 + safeAreaTop)
                     
                     // Gradient Overlay
                     LinearGradient(
@@ -116,17 +116,17 @@ struct DeckDetailView: View {
                     )
                 
                 // Header Content
-                VStack(alignment: .leading, spacing: 8) {
+                VStack(alignment: .leading, spacing: 6) {
                     // Badges
                     HStack(spacing: 8) {
                         // TCG Badge
                         HStack(spacing: 4) {
-                            TCGIconView(tcgType: deck.tcgType, size: 12)
+                            TCGIconView(tcgType: deck.tcgType, size: 10)
                             Text(deck.tcgType.displayName)
-                                .font(.system(size: 12, weight: .bold))
+                                .font(.system(size: 11, weight: .bold))
                         }
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 3)
                         .background(Material.thinMaterial)
                         .clipShape(Capsule())
                         .foregroundColor(.white)
@@ -134,35 +134,28 @@ struct DeckDetailView: View {
                         // Card Count Badge
                         HStack(spacing: 4) {
                             SwiftUI.Image(systemName: "rectangle.stack.fill")
-                                .font(.system(size: 12))
+                                .font(.system(size: 10))
                             Text("\(deck.totalCards) cards")
-                                .font(.system(size: 12, weight: .bold))
+                                .font(.system(size: 11, weight: .bold))
                         }
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 3)
                         .background(Color.black.opacity(0.6))
                         .clipShape(Capsule())
                         .foregroundColor(.white)
                     }
                     
                     Text(deck.name)
-                        .font(.system(size: 32, weight: .bold))
+                        .font(.system(size: 24, weight: .bold))
                         .foregroundColor(.white)
-                        .shadow(radius: 4)
-                    
-                    if let description = deck.description, !description.isEmpty {
-                        Text(description)
-                            .font(.system(size: 16, weight: .medium))
-                            .foregroundColor(.white.opacity(0.9))
-                            .lineLimit(2)
-                            .shadow(radius: 2)
-                    }
+                        .shadow(radius: 2)
+                        .lineLimit(1)
                 }
                 .padding(.horizontal, 20)
-                .padding(.bottom, 20)
-                .padding(.top, safeAreaTop + 50) // Spazio dinamico per Dynamic Island
+                .padding(.bottom, 16)
+                .padding(.top, safeAreaTop + 44) // Spazio dinamico per Dynamic Island + back button
             }
-            .frame(height: 280 + safeAreaTop) // Altezza dinamica
+            .frame(height: 180 + safeAreaTop) // Altezza compatta
             .frame(maxWidth: .infinity)
             .ignoresSafeArea(edges: .top)
             .overlay(
@@ -254,17 +247,17 @@ struct DeckDetailView: View {
             }
             .listStyle(PlainListStyle())
             .background(Color(.systemGroupedBackground))
-            .padding(.top, 270 + safeAreaTop) // Match header height
+            .padding(.top, 170 + safeAreaTop) // Match header height
         }
         }
         .navigationBarHidden(true)
-        .confirmationDialog("Delete Deck", isPresented: $showingDeleteAlert) {
-            Button("Delete", role: .destructive) {
+        .confirmationDialog("Elimina Mazzo", isPresented: $showingDeleteAlert) {
+            Button("Elimina", role: .destructive) {
                 deleteDeck()
             }
-            Button("Cancel", role: .cancel) { }
+            Button("Annulla", role: .cancel) { }
         } message: {
-            Text("Are you sure you want to delete \"\(deck.name)\"? This action cannot be undone.")
+            Text("Sei sicuro di voler eliminare \"\(deck.name)\"? Questa azione non può essere annullata.")
         }
         .sheet(isPresented: $showingEditSheet) {
             EditDeckView(
@@ -389,11 +382,11 @@ struct DeckDetailView: View {
             }
             
             VStack(spacing: 8) {
-                Text("No Cards Yet")
+                Text("Nessuna Carta")
                     .font(.system(size: 20, weight: .bold))
                     .foregroundColor(.primary)
                 
-                Text("This deck is empty. Add cards from the search or scan them to build your deck.")
+                Text("Questo mazzo è vuoto. Aggiungi carte dalla ricerca o scansionale.")
                     .font(.system(size: 15, weight: .medium))
                     .foregroundColor(.secondary)
                     .multilineTextAlignment(.center)
@@ -407,7 +400,7 @@ struct DeckDetailView: View {
             }) {
                 HStack(spacing: 8) {
                     SwiftUI.Image(systemName: "plus")
-                    Text("Add Cards")
+                    Text("Aggiungi Carte")
                 }
                 .font(.system(size: 16, weight: .semibold))
                 .foregroundColor(.white)
@@ -443,9 +436,9 @@ struct DeckDetailView: View {
                     presentationMode.wrappedValue.dismiss()
                 case .failure(let error):
                     if case APIError.unauthorized = error {
-                        ToastManager.shared.showError("Your session has expired. Please log in again.")
+                        ToastManager.shared.showError("La sessione è scaduta. Accedi di nuovo.")
                     } else {
-                        ToastManager.shared.showError("Unable to update deck. Please check your connection and try again.")
+                        ToastManager.shared.showError("Impossibile aggiornare il mazzo. Controlla la connessione e riprova.")
                     }
                 }
             }
@@ -465,9 +458,9 @@ struct DeckDetailView: View {
                     presentationMode.wrappedValue.dismiss()
                 case .failure(let error):
                     if case APIError.unauthorized = error {
-                        ToastManager.shared.showError("Your session has expired. Please log in again.")
+                        ToastManager.shared.showError("La sessione è scaduta. Accedi di nuovo.")
                     } else {
-                        ToastManager.shared.showError("Unable to delete deck. Please check your connection and try again.")
+                        ToastManager.shared.showError("Impossibile eliminare il mazzo. Controlla la connessione e riprova.")
                     }
                 }
             }
@@ -506,7 +499,7 @@ struct EditDeckView: View {
                         }
                         
                         VStack(spacing: 4) {
-                            Text("Edit Deck")
+                            Text("Modifica Mazzo")
                                 .font(.system(size: 24, weight: .bold))
                                 .foregroundColor(.primary)
                             
@@ -524,11 +517,11 @@ struct EditDeckView: View {
                         VStack(spacing: 16) {
                             // Deck Name
                             VStack(alignment: .leading, spacing: 8) {
-                                Text("Deck Name")
+                                Text("Nome Mazzo")
                                     .font(.system(size: 14, weight: .semibold))
                                     .foregroundColor(.primary)
                                 
-                                TextField("Enter deck name", text: $name)
+                                TextField("Inserisci nome mazzo", text: $name)
                                     .padding(12)
                                     .background(
                                         RoundedRectangle(cornerRadius: 12)
@@ -542,7 +535,7 @@ struct EditDeckView: View {
                             
                             // Description
                             VStack(alignment: .leading, spacing: 8) {
-                                Text("Description (Optional)")
+                                Text("Descrizione (Opzionale)")
                                     .font(.system(size: 14, weight: .semibold))
                                     .foregroundColor(.primary)
                                 
@@ -574,8 +567,8 @@ struct EditDeckView: View {
                     
                     // Save Button
                     LoadingButton(
-                        title: "Save Changes",
-                        loadingTitle: "Updating Deck...",
+                        title: "Salva Modifiche",
+                        loadingTitle: "Aggiornamento...",
                         isLoading: isUpdating,
                         isDisabled: name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
                         color: deck.tcgType.themeColor,
@@ -585,18 +578,18 @@ struct EditDeckView: View {
                     .padding(.bottom, 24)
                 }
             }
-            .navigationTitle("Edit Deck")
+            .navigationTitle("Modifica Mazzo")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Cancel") {
+                    Button("Annulla") {
                         dismiss()
                     }
                 }
             }
             .overlay {
                 if isUpdating {
-                    LoadingOverlay(message: "Updating your deck...")
+                    LoadingOverlay(message: "Aggiornamento in corso...")
                 }
             }
             .withToastSupport()

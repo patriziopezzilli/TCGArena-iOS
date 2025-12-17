@@ -30,7 +30,7 @@ struct ReadOnlyContentView: View {
                     .environmentObject(authService)
                     .tabItem {
                         SwiftUI.Image(systemName: "rectangle.stack")
-                        Text("Decks")
+                        Text("Mazzi")
                     }
                     .tag(0)
 
@@ -42,7 +42,7 @@ struct ReadOnlyContentView: View {
                     .environmentObject(authService)
                     .tabItem {
                         SwiftUI.Image(systemName: "storefront")
-                        Text("Stores")
+                        Text("Negozi")
                     }
                     .tag(1)
 
@@ -50,7 +50,7 @@ struct ReadOnlyContentView: View {
                 ReadOnlyRewardsView()
                     .tabItem {
                         SwiftUI.Image(systemName: "gift.fill")
-                        Text("Rewards")
+                        Text("Premi")
                     }
                     .tag(2)
 
@@ -76,7 +76,7 @@ struct ReadOnlyContentView: View {
                     VStack(spacing: 4) {
                         SwiftUI.Image(systemName: "eye.fill")
                             .font(.system(size: 12))
-                        Text("GUEST MODE")
+                        Text("MODALITÀ OSPITE")
                             .font(.system(size: 10, weight: .bold))
                     }
                     .foregroundColor(.secondary)
@@ -110,11 +110,11 @@ struct ReadOnlyCollectionView: View {
     
     // Marketing slides data
     private let marketingSlides: [(icon: String, title: String, subtitle: String, color: Color)] = [
-        ("rectangle.stack.fill.badge.plus", "Create Your Collection", "Track and organize your TCG cards", .blue),
-        ("gamecontroller.fill", "Build Custom Decks", "Design winning strategies", .purple),
-        ("trophy.fill", "Compete in Tournaments", "Join competitive events", .orange),
-        ("cart.fill", "Shop & Trade", "Buy, sell and trade cards", .green),
-        ("person.2.fill", "Connect with Community", "Share decks and strategies", .pink)
+        ("rectangle.stack.fill.badge.plus", "Crea la Tua Collezione", "Organizza e traccia le tue carte TCG", .blue),
+        ("gamecontroller.fill", "Costruisci Mazzi Personalizzati", "Progetta strategie vincenti", .purple),
+        ("trophy.fill", "Partecipa ai Tornei", "Unisciti agli eventi competitivi", .orange),
+        ("cart.fill", "Compra e Scambia", "Acquista, vendi e scambia carte", .green),
+        ("person.2.fill", "Connettiti con la Community", "Condividi mazzi e strategie", .pink)
     ]
     
     // Computed properties for filtered expansions
@@ -140,7 +140,7 @@ struct ReadOnlyCollectionView: View {
                 VStack(spacing: 24) {
                     // Welcome Header
                     VStack(spacing: 8) {
-                        Text("Welcome in TCG Arena")
+                        Text("Benvenuto in TCG Arena")
                             .font(.system(size: 28, weight: .bold))
                             .foregroundColor(.primary)
                             .multilineTextAlignment(.center)
@@ -220,7 +220,7 @@ struct ReadOnlyCollectionView: View {
                             Button(action: {
                                 showLoginPrompt = true
                             }) {
-                                Text("Sign In to Unlock")
+                                Text("Accedi per Sbloccare")
                                     .font(.system(size: 16, weight: .semibold))
                                     .foregroundColor(.white)
                                     .frame(maxWidth: .infinity)
@@ -255,7 +255,7 @@ struct ReadOnlyCollectionView: View {
                     VStack(alignment: .leading, spacing: 16) {
                         // Header with filters
                         HStack {
-                            Text("Browse Expansions")
+                            Text("Esplora le Espansioni")
                                 .font(.system(size: 20, weight: .bold))
                                 .foregroundColor(.primary)
                             Spacer()
@@ -269,7 +269,7 @@ struct ReadOnlyCollectionView: View {
                                 Button(action: {
                                     selectedTCGFilter = nil
                                 }) {
-                                    Text("All")
+                                    Text("Tutte")
                                         .font(.system(size: 14, weight: selectedTCGFilter == nil ? .semibold : .medium))
                                         .foregroundColor(selectedTCGFilter == nil ? .white : .secondary)
                                         .padding(.horizontal, 16)
@@ -312,7 +312,7 @@ struct ReadOnlyCollectionView: View {
                                 SwiftUI.Image(systemName: "square.stack.3d.up.slash")
                                     .font(.system(size: 40))
                                     .foregroundColor(.secondary)
-                                Text(selectedTCGFilter != nil ? "No expansions found for this TCG" : "No expansions available")
+                                Text(selectedTCGFilter != nil ? "Nessuna espansione per questo TCG" : "Nessuna espansione disponibile")
                                     .font(.system(size: 16))
                                     .foregroundColor(.secondary)
                             }
@@ -334,7 +334,7 @@ struct ReadOnlyCollectionView: View {
                                         showAllExpansions.toggle()
                                     }) {
                                         HStack {
-                                            Text(showAllExpansions ? "Show Less" : "View All Expansions (\(filteredExpansions.count))")
+                                            Text(showAllExpansions ? "Mostra Meno" : "Vedi Tutte le Espansioni (\(filteredExpansions.count))")
                                                 .font(.system(size: 16, weight: .semibold))
                                                 .foregroundColor(.blue)
                                             Spacer()
@@ -435,11 +435,11 @@ struct PublicExpansionCard: View {
                 }
                 
                 HStack(spacing: 12) {
-                    Label("\(expansion.sets.count) sets", systemImage: "square.stack.3d.up.fill")
+                    Label("\(expansion.sets.count) set", systemImage: "square.stack.3d.up.fill")
                         .font(.system(size: 13))
                         .foregroundColor(.secondary)
                     
-                    Label("\(expansion.cardCount) cards", systemImage: "rectangle.stack")
+                    Label("\(expansion.cardCount) carte", systemImage: "rectangle.stack")
                         .font(.system(size: 13))
                         .foregroundColor(.secondary)
                 }
@@ -468,11 +468,11 @@ struct ReadOnlyRewardsView: View {
                 VStack(spacing: 24) {
                     // Header
                     VStack(spacing: 8) {
-                        Text("Rewards")
+                        Text("Premi")
                             .font(.system(size: 28, weight: .bold))
                             .foregroundColor(.primary)
 
-                        Text("Earn points and unlock rewards")
+                        Text("Guadagna punti e sblocca premi")
                             .font(.system(size: 16, weight: .medium))
                             .foregroundColor(.secondary)
                     }
@@ -484,12 +484,12 @@ struct ReadOnlyRewardsView: View {
                             .font(.system(size: 40, weight: .bold))
                             .foregroundColor(.purple)
 
-                        Text("Create an account to earn rewards")
+                        Text("Crea un account per guadagnare premi")
                             .font(.system(size: 18, weight: .semibold))
                             .foregroundColor(.primary)
                             .multilineTextAlignment(.center)
 
-                        Text("Complete challenges, earn points, and unlock exclusive content")
+                        Text("Completa sfide, guadagna punti e sblocca contenuti esclusivi")
                             .font(.system(size: 14, weight: .medium))
                             .foregroundColor(.secondary)
                             .multilineTextAlignment(.center)
@@ -497,7 +497,7 @@ struct ReadOnlyRewardsView: View {
                         Button(action: {
                             showLoginPrompt = true
                         }) {
-                            Text("Sign In to Earn Rewards")
+                            Text("Accedi per Guadagnare Premi")
                                 .font(.system(size: 16, weight: .semibold))
                                 .foregroundColor(.white)
                                 .frame(maxWidth: .infinity)
@@ -534,7 +534,7 @@ struct ReadOnlyCommunityView: View {
                             .font(.system(size: 28, weight: .bold))
                             .foregroundColor(.primary)
 
-                        Text("Connect with fellow collectors")
+                        Text("Connettiti con altri collezionisti")
                             .font(.system(size: 16, weight: .medium))
                             .foregroundColor(.secondary)
                     }
@@ -546,12 +546,12 @@ struct ReadOnlyCommunityView: View {
                             .font(.system(size: 40, weight: .bold))
                             .foregroundColor(.blue)
 
-                        Text("Join the TCG Arena community")
+                        Text("Unisciti alla community di TCG Arena")
                             .font(.system(size: 18, weight: .semibold))
                             .foregroundColor(.primary)
                             .multilineTextAlignment(.center)
 
-                        Text("Follow players, share decks, and participate in tournaments")
+                        Text("Segui giocatori, condividi mazzi e partecipa ai tornei")
                             .font(.system(size: 14, weight: .medium))
                             .foregroundColor(.secondary)
                             .multilineTextAlignment(.center)
@@ -559,7 +559,7 @@ struct ReadOnlyCommunityView: View {
                         Button(action: {
                             showLoginPrompt = true
                         }) {
-                            Text("Sign In to Connect")
+                            Text("Accedi per Connetterti")
                                 .font(.system(size: 16, weight: .semibold))
                                 .foregroundColor(.white)
                                 .frame(maxWidth: .infinity)
@@ -602,12 +602,12 @@ struct LoginPromptView: View {
                         .font(.system(size: 50, weight: .bold))
                         .foregroundColor(.blue)
 
-                    Text("Sign in to unlock this feature")
+                    Text("Accedi per sbloccare questa funzione")
                         .font(.system(size: 20, weight: .semibold))
                         .foregroundColor(.primary)
                         .multilineTextAlignment(.center)
 
-                    Text("Create collections, join tournaments, and connect with the community")
+                    Text("Crea collezioni, partecipa a tornei e connettiti con la community")
                         .font(.system(size: 16, weight: .medium))
                         .foregroundColor(.secondary)
                         .multilineTextAlignment(.center)
@@ -619,7 +619,7 @@ struct LoginPromptView: View {
                         isPresented = false
                         showRegister = true
                     }) {
-                        Text("Create Account")
+                        Text("Crea Account")
                             .font(.system(size: 18, weight: .semibold))
                             .foregroundColor(.white)
                             .frame(maxWidth: .infinity)
@@ -632,7 +632,7 @@ struct LoginPromptView: View {
                         isPresented = false
                         showLogin = true
                     }) {
-                        Text("Sign In")
+                        Text("Accedi")
                             .font(.system(size: 18, weight: .semibold))
                             .foregroundColor(.blue)
                             .frame(maxWidth: .infinity)
@@ -650,7 +650,7 @@ struct LoginPromptView: View {
                 Button(action: {
                     isPresented = false
                 }) {
-                    Text("Continue as Guest")
+                    Text("Continua come Ospite")
                         .font(.system(size: 16, weight: .medium))
                         .foregroundColor(.secondary)
                 }

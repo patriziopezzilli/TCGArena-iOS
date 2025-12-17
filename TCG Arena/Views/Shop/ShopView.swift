@@ -41,7 +41,7 @@ struct ShopView: View {
                     VStack(spacing: 16) {
                         // Top Bar with Location
                         HStack {
-                            Text("Discover")
+                            Text("Esplora")
                                 .font(.system(size: 34, weight: .bold))
                                 .foregroundColor(.primary)
 
@@ -76,10 +76,10 @@ struct ShopView: View {
                         .padding(.top, 10)
 
                         // Custom Segmented Control
-                        HStack(spacing: 12) {
-                            PremiumTabButton(
-                                title: "Stores",
+                        HStack(spacing: 0) {
+                            CompactTabButton(
                                 icon: "storefront.fill",
+                                label: "Negozi",
                                 isSelected: selectedSection == 0
                             ) {
                                 withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
@@ -87,16 +87,31 @@ struct ShopView: View {
                                 }
                             }
 
-                            PremiumTabButton(
-                                title: "Events",
+                            CompactTabButton(
                                 icon: "calendar",
+                                label: "Eventi",
                                 isSelected: selectedSection == 1
                             ) {
                                 withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
                                     selectedSection = 1
                                 }
                             }
+                            
+                            CompactTabButton(
+                                icon: "list.clipboard.fill",
+                                label: "Attività",
+                                isSelected: selectedSection == 2
+                            ) {
+                                withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                                    selectedSection = 2
+                                }
+                            }
                         }
+                        .padding(4)
+                        .background(
+                            RoundedRectangle(cornerRadius: 14)
+                                .fill(Color(.systemGray6))
+                        )
                         .padding(.horizontal, 20)
                         .padding(.bottom, 10)
                     }
@@ -108,13 +123,28 @@ struct ShopView: View {
                     .zIndex(1)
 
                     // Content
-                    if selectedSection == 0 {
-                        ShopListView()
-                            .transition(.opacity)
-                    } else {
-                        EventListView()
-                            .transition(.opacity)
+                    Group {
+                        if selectedSection == 0 {
+                            ShopListView()
+                                .transition(.asymmetric(
+                                    insertion: .opacity.combined(with: .move(edge: .leading)),
+                                    removal: .opacity.combined(with: .move(edge: .trailing))
+                                ))
+                        } else if selectedSection == 1 {
+                            EventListView()
+                                .transition(.asymmetric(
+                                    insertion: .opacity.combined(with: .move(edge: .trailing)),
+                                    removal: .opacity.combined(with: .move(edge: .leading))
+                                ))
+                        } else {
+                            MyActivityView()
+                                .transition(.asymmetric(
+                                    insertion: .opacity.combined(with: .move(edge: .trailing)),
+                                    removal: .opacity.combined(with: .move(edge: .leading))
+                                ))
+                        }
                     }
+                    .animation(.spring(response: 0.4, dampingFraction: 0.8), value: selectedSection)
                 }
             }
             .navigationTitle("")
@@ -144,9 +174,13 @@ struct ShopView: View {
                     savedLatitude = newLocation.coordinate.latitude
                     savedLongitude = newLocation.coordinate.longitude
                     
+                    // Force UI refresh by triggering objectWillChange
+                    shopService.objectWillChange.send()
+                    tournamentService.objectWillChange.send()
+                    
                     // Reload shops and tournaments with new location
                     Task {
-                        await shopService.loadNearbyShops(userLocation: newLocation)
+                        await shopService.loadAllShops(forceRefresh: true)
                         await tournamentService.loadNearbyTournaments(userLocation: newLocation)
                     }
                 }
@@ -459,7 +493,7 @@ struct ShopListView: View {
                     ProgressView()
                         .scaleEffect(1.5)
                     
-                    Text("Loading nearby stores...")
+                    Text("Caricamento negozi vicini...")
                         .font(.system(size: 16, weight: .medium))
                         .foregroundColor(.secondary)
                 }
@@ -651,21 +685,21 @@ struct EventListView: View {
                 HStack(spacing: 12) {
                     // Section Tabs
                     HStack(spacing: 0) {
-                        EventSectionTab(title: "Upcoming", isSelected: selectedEventSection == 0) {
+                        EventSectionTab(title: "In Arrivo", isSelected: selectedEventSection == 0) {
                             withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
                                 selectedEventSection = 0
                             }
                             HapticManager.shared.selectionChanged()
                         }
                         
-                        EventSectionTab(title: "Past", isSelected: selectedEventSection == 1) {
+                        EventSectionTab(title: "Passati", isSelected: selectedEventSection == 1) {
                             withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
                                 selectedEventSection = 1
                             }
                             HapticManager.shared.selectionChanged()
                         }
 
-                        EventSectionTab(title: "My Events", isSelected: selectedEventSection == 2) {
+                        EventSectionTab(title: "I Miei", isSelected: selectedEventSection == 2) {
                             withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
                                 selectedEventSection = 2
                             }
@@ -1070,8 +1104,8 @@ struct EventListView: View {
                     registeringTournamentId = nil
                     // Show appropriate message based on status
                     let message = participant.status == .REGISTERED
-                        ? "Successfully registered for the tournament!"
-                        : "Added to waiting list. You'll be notified if a spot opens up."
+                        ? "Iscrizione completata!"
+                        : "Aggiunto alla lista d'attesa. Ti avviseremo se si libera un posto."
                     // ToastManager.showSuccess(message)
                     print("Registration success: \(message)")
                 }
@@ -1118,6 +1152,31 @@ struct ShopCardView: View {
     let shop: Shop
     var hasNews: Bool = false
     
+    // Reactive location for distance calculation
+    @AppStorage("savedLocationLatitude") private var savedLatitude: Double = 45.4642
+    @AppStorage("savedLocationLongitude") private var savedLongitude: Double = 9.1900
+    
+    private func calculateDistance(lat: Double, lng: Double) -> String {
+        if savedLatitude == 0 && savedLongitude == 0 {
+            return "-- km"
+        }
+        
+        let earthRadius = 6371.0 // km
+        let dLat = (lat - savedLatitude) * .pi / 180
+        let dLng = (lng - savedLongitude) * .pi / 180
+        let a = sin(dLat/2) * sin(dLat/2) +
+                cos(savedLatitude * .pi / 180) * cos(lat * .pi / 180) *
+                sin(dLng/2) * sin(dLng/2)
+        let c = 2 * atan2(sqrt(a), sqrt(1-a))
+        let distance = earthRadius * c
+        
+        if distance < 1 {
+            return String(format: "%.0f m", distance * 1000)
+        } else {
+            return String(format: "%.1f km", distance)
+        }
+    }
+    
     var body: some View {
         HStack(spacing: 0) {
             // Left: Shop Image (square, contained)
@@ -1149,7 +1208,7 @@ struct ShopCardView: View {
                         HStack(spacing: 3) {
                             SwiftUI.Image(systemName: "checkmark.seal.fill")
                                 .font(.system(size: 9))
-                            Text("VERIFIED")
+                            Text("VERIFICATO")
                                 .font(.system(size: 8, weight: .bold))
                         }
                         .foregroundColor(.white)
@@ -1165,7 +1224,7 @@ struct ShopCardView: View {
                         HStack(spacing: 3) {
                             SwiftUI.Image(systemName: "newspaper.fill")
                                 .font(.system(size: 8))
-                            Text("NEWS")
+                            Text("NOVITÀ")
                                 .font(.system(size: 8, weight: .bold))
                         }
                         .foregroundColor(.white)
@@ -1228,7 +1287,7 @@ struct ShopCardView: View {
                         Circle()
                             .fill(shop.isOpenNow ? Color.green : Color.red)
                             .frame(width: 6, height: 6)
-                        Text(shop.isOpenNow ? "Open" : "Closed")
+                        Text(shop.isOpenNow ? "Aperto" : "Chiuso")
                             .font(.system(size: 11, weight: .medium))
                             .foregroundColor(shop.isOpenNow ? .green : .red)
                     }
@@ -1240,7 +1299,7 @@ struct ShopCardView: View {
                         HStack(spacing: 3) {
                             SwiftUI.Image(systemName: "location.fill")
                                 .font(.system(size: 9))
-                            Text(formatDistance(lat: lat, lng: lng))
+                            Text(calculateDistance(lat: lat, lng: lng))
                                 .font(.system(size: 11, weight: .medium))
                         }
                         .foregroundColor(.secondary)
@@ -1261,6 +1320,31 @@ struct ShopCardView: View {
 struct CompactShopCardView: View {
     let shop: Shop
     var hasNews: Bool = false
+    
+    // Reactive location for distance calculation
+    @AppStorage("savedLocationLatitude") private var savedLatitude: Double = 45.4642
+    @AppStorage("savedLocationLongitude") private var savedLongitude: Double = 9.1900
+    
+    private func calculateDistance(lat: Double, lng: Double) -> String {
+        if savedLatitude == 0 && savedLongitude == 0 {
+            return "-- km"
+        }
+        
+        let earthRadius = 6371.0 // km
+        let dLat = (lat - savedLatitude) * .pi / 180
+        let dLng = (lng - savedLongitude) * .pi / 180
+        let a = sin(dLat/2) * sin(dLat/2) +
+                cos(savedLatitude * .pi / 180) * cos(lat * .pi / 180) *
+                sin(dLng/2) * sin(dLng/2)
+        let c = 2 * atan2(sqrt(a), sqrt(1-a))
+        let distance = earthRadius * c
+        
+        if distance < 1 {
+            return String(format: "%.0f m", distance * 1000)
+        } else {
+            return String(format: "%.1f km", distance)
+        }
+    }
     
     var body: some View {
         HStack(spacing: 12) {
@@ -1332,6 +1416,17 @@ struct CompactShopCardView: View {
             }
             
             Spacer()
+            
+            // Distance
+            if let lat = shop.latitude, let lng = shop.longitude {
+                HStack(spacing: 3) {
+                    SwiftUI.Image(systemName: "location.fill")
+                        .font(.system(size: 9))
+                    Text(calculateDistance(lat: lat, lng: lng))
+                        .font(.system(size: 10, weight: .medium))
+                }
+                .foregroundColor(.secondary)
+            }
             
             // Chevron
             SwiftUI.Image(systemName: "chevron.right")

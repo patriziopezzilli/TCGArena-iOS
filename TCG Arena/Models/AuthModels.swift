@@ -21,12 +21,22 @@ struct RegisterRequest: Codable {
     let password: String
     let favoriteGames: [TCGType]?
     
+    // Location fields (from onboarding GPS)
+    let city: String?
+    let country: String?
+    let latitude: Double?
+    let longitude: Double?
+    
     enum CodingKeys: String, CodingKey {
         case email
         case username
         case displayName = "display_name"
         case password
         case favoriteGames = "favorite_games"
+        case city
+        case country
+        case latitude
+        case longitude
     }
 }
 

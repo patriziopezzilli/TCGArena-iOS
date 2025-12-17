@@ -135,6 +135,9 @@ struct ManualAddCardView: View {
                                     accentColor: accentColor
                                 )
                                 .onTapGesture(count: 2) {
+                                    // Immediate haptic feedback on double tap
+                                    let generator = UIImpactFeedbackGenerator(style: .medium)
+                                    generator.impactOccurred()
                                     addCardToDeck(card)
                                 }
                                 .onTapGesture(count: 1) {

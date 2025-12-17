@@ -61,11 +61,11 @@ struct PlayerRequestListView: View {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     HStack(spacing: 16) {
                         Button(action: loadRequests) {
-                            Image(systemName: "arrow.clockwise")
+                            SwiftUI.Image(systemName: "arrow.clockwise")
                         }
                         
                         Button(action: { showingCreateRequest = true }) {
-                            Image(systemName: "plus")
+                            SwiftUI.Image(systemName: "plus")
                         }
                     }
                 }
@@ -123,7 +123,7 @@ struct PlayerRequestListView: View {
     
     private var emptyStateView: some View {
         VStack(spacing: 16) {
-            Image(systemName: "bubble.left.and.bubble.right.fill")
+            SwiftUI.Image(systemName: "bubble.left.and.bubble.right.fill")
                 .font(.system(size: 60))
                 .foregroundColor(.gray)
             
@@ -135,9 +135,11 @@ struct PlayerRequestListView: View {
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
             
-            Button(action: { showingCreateRequest = true }) {
+            Button {
+                showingCreateRequest = true
+            } label: {
                 HStack {
-                    Image(systemName: "plus")
+                    SwiftUI.Image(systemName: "plus")
                     Text("Create Request")
                 }
                 .font(.headline)
@@ -153,21 +155,16 @@ struct PlayerRequestListView: View {
     }
     
     private func loadRequests() {
-        guard let userId = authService.currentUser?.id else { return }
+        guard let userId = authService.currentUserId else { return }
         
         isLoading = true
         
         Task {
             do {
-                let response = try await requestService.getRequests(
-                    status: nil,
-                    type: nil,
-                    userId: userId,
-                    shopId: nil
-                )
+                let loadedRequests = try await requestService.getUserRequests(userId: String(userId))
                 
                 await MainActor.run {
-                    requests = response.requests
+                    requests = loadedRequests
                     isLoading = false
                 }
             } catch {
@@ -202,30 +199,29 @@ struct RequestCardView: View {
             }
             
             // Shop
-            if let shop = request.shop {
+            if let shopName = request.shopName {
                 HStack(spacing: 6) {
-                    Image(systemName: "storefront.fill")
+                    SwiftUI.Image(systemName: "storefront.fill")
                         .font(.caption)
                         .foregroundColor(.secondary)
                     
-                    Text(shop.name)
+                    Text(shopName)
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                 }
             }
             
             // Description preview
-            if !request.description.isEmpty {
-                Text(request.description)
+            if let desc = request.description, !desc.isEmpty {
+                Text(desc)
                     .font(.subheadline)
                     .foregroundColor(.secondary)
                     .lineLimit(2)
             }
             
-            // Footer
             HStack {
                 HStack(spacing: 6) {
-                    Image(systemName: "calendar")
+                    SwiftUI.Image(systemName: "calendar")
                         .font(.caption)
                     
                     Text(request.createdAt, style: .date)
@@ -237,7 +233,7 @@ struct RequestCardView: View {
                 
                 if request.hasUnreadMessages {
                     HStack(spacing: 4) {
-                        Image(systemName: "circle.fill")
+                        SwiftUI.Image(systemName: "circle.fill")
                             .font(.system(size: 8))
                             .foregroundColor(Color(AdaptiveColors.primary))
                         

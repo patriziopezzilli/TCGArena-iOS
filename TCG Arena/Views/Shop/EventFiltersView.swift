@@ -111,7 +111,7 @@ struct EventFiltersView: View {
             ScrollView {
                 VStack(spacing: 24) {
                     // Date Filter Section
-                    FilterSection(title: "Date", icon: "calendar") {
+                    FilterSection(title: "Data", icon: "calendar") {
                         LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
                             ForEach(EventFilters.DateRangeFilter.allCases, id: \.self) { option in
                                 FilterChip(
@@ -161,7 +161,7 @@ struct EventFiltersView: View {
                     }
                     
                     // Tournament Type Filter Section
-                    FilterSection(title: "Tournament Type", icon: "trophy") {
+                    FilterSection(title: "Tipo Torneo", icon: "trophy") {
                         HStack(spacing: 10) {
                             ForEach(Tournament.TournamentType.allCases, id: \.self) { type in
                                 FilterChip(
@@ -190,7 +190,7 @@ struct EventFiltersView: View {
                             }
                             
                             FilterChip(
-                                title: "Official Only 🏆",
+                                title: "Solo Ufficiali 🏆",
                                 isSelected: tempFilters.onlyRanked,
                                 accentColor: .yellow
                             ) {
@@ -204,7 +204,7 @@ struct EventFiltersView: View {
                 .padding(.horizontal, 20)
                 .padding(.top, 16)
             }
-            .navigationTitle("Filter Events")
+            .navigationTitle("Filtra Eventi")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
@@ -233,7 +233,7 @@ struct EventFiltersView: View {
                         isPresented = false
                     }) {
                         HStack {
-                            Text("Apply Filters")
+                            Text("Applica Filtri")
                                 .font(.system(size: 17, weight: .semibold))
                             
                             if tempFilters.activeFilterCount > 0 {
@@ -255,7 +255,7 @@ struct EventFiltersView: View {
                         Button(action: {
                             tempFilters.reset()
                         }) {
-                            Text("Clear All")
+                            Text("Cancella Tutto")
                                 .font(.system(size: 15, weight: .medium))
                                 .foregroundColor(.secondary)
                         }
@@ -438,7 +438,7 @@ struct ShopFiltersView: View {
                 .padding(.horizontal, 20)
                 .padding(.top, 16)
             }
-            .navigationTitle("Filter Stores")
+            .navigationTitle("Filtra Negozi")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
@@ -467,7 +467,7 @@ struct ShopFiltersView: View {
                         isPresented = false
                     }) {
                         HStack {
-                            Text("Apply Filters")
+                            Text("Applica Filtri")
                                 .font(.system(size: 17, weight: .semibold))
                             
                             if tempFilters.activeFilterCount > 0 {
@@ -489,7 +489,7 @@ struct ShopFiltersView: View {
                         Button(action: {
                             tempFilters.reset()
                         }) {
-                            Text("Clear All")
+                            Text("Cancella Tutto")
                                 .font(.system(size: 15, weight: .medium))
                                 .foregroundColor(.secondary)
                         }

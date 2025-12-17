@@ -26,7 +26,7 @@ struct ProfileView: View {
                 // Clean Header
                 HStack {
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("Profile")
+                        Text("Profilo")
                             .font(.system(size: UIConstants.headerFontSize, weight: .bold))
                             .foregroundColor(.primary)
                         
@@ -679,9 +679,9 @@ struct StatCard: View {
                     Section {
                         FavoriteTCGChipsView()
                     } header: {
-                        Text("Favorite TCGs")
+                        Text("TCG Preferiti")
                     } footer: {
-                        Text("Filter Discover section by your favorite games")
+                        Text("Filtra la sezione Discover per i tuoi giochi preferiti")
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }
@@ -689,7 +689,7 @@ struct StatCard: View {
                     // App Settings Section
                     Section {
                         SettingsRow(
-                            title: "Notifications",
+                            title: "Notifiche",
                             icon: "bell.fill"
                         ) {
                             notificationsEnabled.toggle()
@@ -719,7 +719,7 @@ struct StatCard: View {
                             }
                         )
                     } header: {
-                        Text("App Settings")
+                        Text("Impostazioni App")
                     } footer: {
                         Text("Quando attivo, il tuo profilo non sarà visibile nella sezione Discover")
                             .font(.caption)
@@ -729,7 +729,7 @@ struct StatCard: View {
                     // Account Section
                     Section("Account") {
                         SettingsRow(
-                            title: "Edit Profile",
+                            title: "Modifica Profilo",
                             icon: "person.circle.fill"
                         ) {
                             showingEditProfile = true
@@ -737,7 +737,7 @@ struct StatCard: View {
                     }
                     
                     // Support Section
-                    Section("Support & Legal") {
+                    Section("Supporto e Legale") {
                         SettingsRow(
                             title: "FAQ",
                             icon: "questionmark.circle.fill"
@@ -746,14 +746,14 @@ struct StatCard: View {
                         }
                         
                         SettingsRow(
-                            title: "Contact Support",
+                            title: "Contatta Supporto",
                             icon: "envelope.fill"
                         ) {
                             showingSupport = true
                         }
                         
                         SettingsRow(
-                            title: "Terms & Conditions",
+                            title: "Termini e Condizioni",
                             icon: "doc.text.fill"
                         ) {
                             showingTerms = true
@@ -767,7 +767,7 @@ struct StatCard: View {
                         }
                         
                         SettingsRow(
-                            title: "Rate App",
+                            title: "Valuta App",
                             icon: "star.fill"
                         ) {
                             // TODO: App Store rating
@@ -775,14 +775,14 @@ struct StatCard: View {
                     }
                     
                     // App Info Section
-                    Section("About") {
+                    Section("Info App") {
                         HStack {
                             SwiftUI.Image(systemName: "info.circle.fill")
                                 .font(.title3)
                                 .foregroundColor(.blue)
                                 .frame(width: 24, height: 24)
                             
-                            Text("Version")
+                            Text("Versione")
                                 .font(.body)
                             
                             Spacer()
@@ -794,17 +794,10 @@ struct StatCard: View {
                         .padding(.vertical, 4)
                     }
                     
-                    // TCG Rules Section
-                    Section("Regolamenti TCG") {
-                        ForEach(TCGType.allCases, id: \.self) { tcgType in
-                            TCGRulesRow(tcgType: tcgType)
-                        }
-                    }
-                    
                     // Danger Zone
-                    Section("Account Actions") {
+                    Section("Azioni Account") {
                         SettingsRow(
-                            title: "Sign Out",
+                            title: "Esci",
                             icon: "rectangle.portrait.and.arrow.right.fill",
                             isDestructive: true
                         ) {
@@ -812,7 +805,7 @@ struct StatCard: View {
                         }
                         
                         SettingsRow(
-                            title: "Delete Account",
+                            title: "Elimina Account",
                             icon: "trash.fill",
                             isDestructive: true
                         ) {
@@ -820,10 +813,10 @@ struct StatCard: View {
                         }
                     }
                 }
-                .navigationTitle("Settings")
+                .navigationTitle("Impostazioni")
                 .navigationBarTitleDisplayMode(.inline)
                 .navigationBarItems(
-                    trailing: Button("Done") {
+                    trailing: Button("Fatto") {
                         presentationMode.wrappedValue.dismiss()
                     }
                 )
@@ -842,22 +835,22 @@ struct StatCard: View {
                 .sheet(isPresented: $showingEditProfile) {
                     EditProfileView()
                 }
-                .confirmationDialog("Sign Out", isPresented: $showingSignOutAlert) {
-                    Button("Sign Out", role: .destructive) {
+                .confirmationDialog("Esci", isPresented: $showingSignOutAlert) {
+                    Button("Esci", role: .destructive) {
                         authService.signOut()
                     }
-                    Button("Cancel", role: .cancel) { }
+                    Button("Annulla", role: .cancel) { }
                 } message: {
-                    Text("Are you sure you want to sign out? You'll need to sign back in to access your collection.")
+                    Text("Sei sicuro di voler uscire? Dovrai rieffettuare l'accesso per accedere alla tua collezione.")
                 }
-                .confirmationDialog("Delete Account", isPresented: $showingDeleteAlert) {
-                    Button("Delete", role: .destructive) {
+                .confirmationDialog("Elimina Account", isPresented: $showingDeleteAlert) {
+                    Button("Elimina", role: .destructive) {
                         // Handle account deletion
                         presentationMode.wrappedValue.dismiss()
                     }
-                    Button("Cancel", role: .cancel) { }
+                    Button("Annulla", role: .cancel) { }
                 } message: {
-                    Text("This action cannot be undone. All your collection data, decks, and progress will be permanently deleted.")
+                    Text("Questa azione non può essere annullata. Tutti i dati della collezione, mazzi e progressi saranno eliminati permanentemente.")
                 }
                 .overlay(
                     ToastManager.shared.currentToast.map { toast in

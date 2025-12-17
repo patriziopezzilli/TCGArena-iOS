@@ -55,4 +55,25 @@ class UserService {
         
         let _: User = try await apiClient.request(endpoint, method: "PATCH", body: requestBody)
     }
+    /// Update user location
+    func updateUserLocation(userId: Int64, city: String?, country: String?, latitude: Double?, longitude: Double?) async throws -> User {
+        let endpoint = "/api/users/\(userId)/location"
+        
+        struct LocationUpdateRequest: Codable {
+            let city: String?
+            let country: String?
+            let latitude: Double?
+            let longitude: Double?
+        }
+        
+        let requestBody = LocationUpdateRequest(
+            city: city,
+            country: country,
+            latitude: latitude,
+            longitude: longitude
+        )
+        
+        let updatedUser: User = try await apiClient.request(endpoint, method: "PUT", body: requestBody)
+        return updatedUser
+    }
 }

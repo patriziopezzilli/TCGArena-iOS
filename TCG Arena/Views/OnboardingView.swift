@@ -31,11 +31,11 @@ struct OnboardingView: View {
                         .foregroundColor(.blue.opacity(0.8))
 
                     VStack(spacing: 8) {
-                        Text("Join TCG Arena")
+                        Text("Unisciti a TCG Arena")
                             .font(.system(size: 32, weight: .bold))
                             .foregroundColor(.black)
 
-                        Text("Enter your email to get started")
+                        Text("Inserisci la tua email per iniziare")
                             .font(.system(size: 18, weight: .regular))
                             .foregroundColor(.gray)
                     }
@@ -43,7 +43,7 @@ struct OnboardingView: View {
 
                 // Email field
                 VStack(spacing: 20) {
-                    TextField("Email address", text: $email)
+                    TextField("Indirizzo email", text: $email)
                         .font(.system(size: 18))
                         .keyboardType(.emailAddress)
                         .autocapitalization(.none)
@@ -61,7 +61,7 @@ struct OnboardingView: View {
 
                     // TCG Selection
                     VStack(alignment: .leading, spacing: 12) {
-                        Text("Choose your favorite TCG")
+                        Text("Scegli il tuo TCG preferito")
                             .font(.system(size: 16, weight: .semibold))
                             .foregroundColor(.black)
 
@@ -98,7 +98,7 @@ struct OnboardingView: View {
                             ProgressView()
                                 .progressViewStyle(CircularProgressViewStyle(tint: .white))
                         } else {
-                            Text("Continue")
+                            Text("Continua")
                                 .font(.system(size: 18, weight: .semibold))
                                 .foregroundColor(.white)
                         }
@@ -119,7 +119,7 @@ struct OnboardingView: View {
                     UserDefaults.standard.set(true, forKey: "hasCompletedOnboarding")
                     dismiss()
                 }) {
-                    Text("Continue as Guest")
+                    Text("Continua come Ospite")
                         .font(.system(size: 16, weight: .regular))
                         .foregroundColor(.gray)
                 }

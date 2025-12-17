@@ -15,13 +15,14 @@ struct CreateRequestView: View {
     let onComplete: (Bool) -> Void
     
     @State private var selectedShop: Shop?
-    @State private var selectedType: CustomerRequest.RequestType = .cardSearch
+    @State private var selectedType: CustomerRequest.RequestType = .availability
     @State private var title = ""
     @State private var description = ""
     @State private var isSubmitting = false
     @State private var errorMessage: String?
     @State private var showSuccessMessage = false
     @State private var successMessage = ""
+    @State private var showingShopPicker = false
     
     // Mock shops - in real app, fetch from API
     @State private var availableShops: [Shop] = []
@@ -37,7 +38,7 @@ struct CreateRequestView: View {
                     Picker("Request Type", selection: $selectedType) {
                         ForEach(CustomerRequest.RequestType.allCases, id: \.self) { type in
                             HStack {
-                                Image(systemName: type.icon)
+                                SwiftUI.Image(systemName: type.icon)
                                 Text(type.displayName)
                             }
                             .tag(type)
@@ -135,7 +136,7 @@ struct CreateRequestView: View {
                                     .fill(Color.white.opacity(0.2))
                                     .frame(width: 100, height: 100)
                                 
-                                Image(systemName: "checkmark.circle.fill")
+                                SwiftUI.Image(systemName: "checkmark.circle.fill")
                                     .font(.system(size: 60, weight: .bold))
                                     .foregroundColor(.white)
                             }
@@ -169,20 +170,18 @@ struct CreateRequestView: View {
     
     private var typeHelpText: String {
         switch selectedType {
-        case .cardSearch:
-            return "Describe the card(s) you're looking for. Include name, edition, condition, and language if specific."
-        case .priceCheck:
-            return "Provide details about the cards you want price information for."
-        case .bulkSale:
-            return "Describe the collection you want to sell. Include approximate quantity and general condition."
-        case .tradeIn:
-            return "List the cards you want to trade in and what you're looking for in exchange."
-        case .repairService:
-            return "Describe the repair or restoration service you need for your cards."
-        case .customOrder:
-            return "Explain your custom request in detail (deck building, sealed product orders, etc.)."
+        case .availability:
+            return "Descrivi le carte che stai cercando. Includi nome, edizione, condizione e lingua."
+        case .evaluation:
+            return "Fornisci dettagli sulle carte di cui vuoi una valutazione."
+        case .sell:
+            return "Descrivi la collezione che vuoi vendere. Includi quantità approssimativa e condizioni."
+        case .buy:
+            return "Descrivi cosa vuoi acquistare dal negozio."
+        case .trade:
+            return "Elenca le carte che vuoi scambiare e cosa cerchi in cambio."
         case .general:
-            return "Describe your question or request."
+            return "Descrivi la tua domanda o richiesta."
         }
     }
     
@@ -243,7 +242,7 @@ struct ShopPickerView: View {
         } else {
             return shops.filter { shop in
                 shop.name.localizedCaseInsensitiveContains(searchText) ||
-                shop.city.localizedCaseInsensitiveContains(searchText)
+                shop.address.localizedCaseInsensitiveContains(searchText)
             }
         }
     }
@@ -261,11 +260,9 @@ struct ShopPickerView: View {
                                 .font(.headline)
                                 .foregroundColor(.primary)
                             
-                            if !shop.city.isEmpty {
-                                Text("\(shop.city), \(shop.country)")
-                                    .font(.subheadline)
-                                    .foregroundColor(.secondary)
-                            }
+                            Text(shop.address)
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
                         }
                         .padding(.vertical, 4)
                     }

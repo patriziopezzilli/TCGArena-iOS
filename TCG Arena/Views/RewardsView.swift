@@ -66,7 +66,7 @@ struct RewardsView: View {
                     VStack(spacing: 16) {
                         // Title
                         HStack {
-                            Text("Rewards")
+                            Text("Premi")
                                 .font(.system(size: 34, weight: .bold))
                                 .foregroundColor(.primary)
                             Spacer()
@@ -75,10 +75,10 @@ struct RewardsView: View {
                         .padding(.top, 10)
                         
                         // Tabs
-                        HStack(spacing: 12) {
-                            PremiumTabButton(
-                                title: "Available",
+                        HStack(spacing: 0) {
+                            CompactTabButton(
                                 icon: "gift.fill",
+                                label: "Premi",
                                 isSelected: selectedTab == 0
                             ) {
                                 withAnimation {
@@ -86,9 +86,9 @@ struct RewardsView: View {
                                 }
                             }
                             
-                            PremiumTabButton(
-                                title: "History",
+                            CompactTabButton(
                                 icon: "clock.arrow.circlepath",
+                                label: "Storico",
                                 isSelected: selectedTab == 1
                             ) {
                                 withAnimation {
@@ -96,9 +96,9 @@ struct RewardsView: View {
                                 }
                             }
                             
-                            PremiumTabButton(
-                                title: "Earn Points",
+                            CompactTabButton(
                                 icon: "star.circle.fill",
+                                label: "Guadagna",
                                 isSelected: selectedTab == 2
                             ) {
                                 withAnimation {
@@ -106,6 +106,11 @@ struct RewardsView: View {
                                 }
                             }
                         }
+                        .padding(4)
+                        .background(
+                            RoundedRectangle(cornerRadius: 14)
+                                .fill(Color(.systemGray6))
+                        )
                         .padding(.horizontal, 20)
                         .padding(.bottom, 10)
                     }
@@ -117,6 +122,7 @@ struct RewardsView: View {
                     .zIndex(1)
                     
                     // Content
+                    Group {
                     if selectedTab == 0 {
                         ScrollView {
                             VStack(spacing: 24) {
@@ -128,14 +134,14 @@ struct RewardsView: View {
                                 // 2. Partners Section
                                 VStack(alignment: .leading, spacing: 12) {
                                     HStack {
-                                        Text("Partner Brands")
+                                        Text("Brand Partner")
                                             .font(.system(size: 20, weight: .bold))
                                             .foregroundColor(.primary)
                                         
                                         Spacer()
                                         
                                         if selectedPartner != nil {
-                                            Button("Clear Filter") {
+                                            Button("Rimuovi Filtro") {
                                                 withAnimation {
                                                     selectedPartner = nil
                                                 }
@@ -152,7 +158,7 @@ struct RewardsView: View {
                                             SwiftUI.Image(systemName: "building.2.crop.circle")
                                                 .font(.system(size: 40))
                                                 .foregroundColor(.secondary.opacity(0.5))
-                                            Text("More partners coming soon!")
+                                            Text("Altri partner in arrivo!")
                                                 .font(.system(size: 14, weight: .medium))
                                                 .foregroundColor(.secondary)
                                         }
@@ -190,7 +196,7 @@ struct RewardsView: View {
                                 VStack(alignment: .leading, spacing: 16) {
                                     // Header & Filter
                                     VStack(alignment: .leading, spacing: 12) {
-                                        Text("Rewards")
+                                        Text("Premi")
                                             .font(.system(size: 20, weight: .bold))
                                             .foregroundColor(.primary)
                                             .padding(.horizontal, 20)
@@ -222,7 +228,7 @@ struct RewardsView: View {
                                                 SwiftUI.Image(systemName: "gift")
                                                     .font(.system(size: 48))
                                                     .foregroundColor(.secondary.opacity(0.5))
-                                                Text("No rewards available")
+                                                Text("Nessun premio disponibile")
                                                     .font(.system(size: 16, weight: .medium))
                                                     .foregroundColor(.secondary)
                                             }
@@ -241,7 +247,18 @@ struct RewardsView: View {
                                 }
                             }
                         }
-                        .transition(.opacity)
+                        .refreshable {
+                            // Haptic feedback
+                            let generator = UIImpactFeedbackGenerator(style: .medium)
+                            generator.impactOccurred()
+                            
+                            // Reload data
+                            await refreshData()
+                        }
+                        .transition(.asymmetric(
+                            insertion: .opacity.combined(with: .move(edge: .leading)),
+                            removal: .opacity.combined(with: .move(edge: .trailing))
+                        ))
                     } else if selectedTab == 1 {
                         // History tab with sub-tabs
                         VStack(spacing: 0) {
@@ -291,11 +308,19 @@ struct RewardsView: View {
                                 PointsActivityView()
                             }
                         }
-                        .transition(.opacity)
+                        .transition(.asymmetric(
+                            insertion: .opacity.combined(with: .move(edge: selectedTab > 0 ? .trailing : .leading)),
+                            removal: .opacity.combined(with: .move(edge: selectedTab > 0 ? .leading : .trailing))
+                        ))
                     } else {
                         HowToGetPointsView()
-                            .transition(.opacity)
+                            .transition(.asymmetric(
+                                insertion: .opacity.combined(with: .move(edge: .trailing)),
+                                removal: .opacity.combined(with: .move(edge: .leading))
+                            ))
                     }
+                    }
+                    .animation(.spring(response: 0.4, dampingFraction: 0.8), value: selectedTab)
                 }
             }
             .navigationTitle("")
@@ -303,21 +328,21 @@ struct RewardsView: View {
             .onAppear {
                 loadData()
             }
-            .confirmationDialog("Confirm Redemption", isPresented: $showingRedeemConfirmation, presenting: rewardToRedeem) { reward in
-                Button("Redeem") {
+            .confirmationDialog("Conferma Riscatto", isPresented: $showingRedeemConfirmation, presenting: rewardToRedeem) { reward in
+                Button("Riscatta") {
                     redeemReward(reward)
                     rewardToRedeem = nil
                 }
-                Button("Cancel", role: .cancel) {
+                Button("Annulla", role: .cancel) {
                     rewardToRedeem = nil
                 }
             } message: { reward in
                 VStack(spacing: 8) {
-                    Text("Are you sure you want to redeem this reward?")
+                    Text("Sei sicuro di voler riscattare questo premio?")
                     Text("\n\(reward.name)")
                         .font(.headline)
-                    Text("\n\(reward.costPoints) points will be deducted from your balance.")
-                    Text("\nYour new balance will be: \(userPoints - reward.costPoints) points")
+                    Text("\n\(reward.costPoints) punti verranno detratti dal tuo saldo.")
+                    Text("\nIl tuo nuovo saldo sarà: \(userPoints - reward.costPoints) punti")
                 }
             }
         }
@@ -333,7 +358,7 @@ struct RewardsView: View {
             case .success(let rewards):
                 self.rewards = rewards
             case .failure(let error):
-                ToastManager.shared.showError("Error loading rewards: \(error.localizedDescription)")
+                ToastManager.shared.showError("Errore caricamento premi: \(error.localizedDescription)")
             }
             group.leave()
         }
@@ -344,7 +369,7 @@ struct RewardsView: View {
             case .success(let points):
                 self.userPoints = points.points
             case .failure(let error):
-                ToastManager.shared.showError("Error loading points: \(error.localizedDescription)")
+                ToastManager.shared.showError("Errore caricamento punti: \(error.localizedDescription)")
             }
             group.leave()
         }
@@ -356,7 +381,7 @@ struct RewardsView: View {
                 self.partners = partners
                 print("Loaded \(partners.count) partners")
             case .failure(let error):
-                ToastManager.shared.showError("Error loading partners: \(error.localizedDescription)")
+                ToastManager.shared.showError("Errore caricamento partner: \(error.localizedDescription)")
             }
             group.leave()
         }
@@ -372,9 +397,46 @@ struct RewardsView: View {
             case .success(_):
                 // Reload points
                 loadData()
-                ToastManager.shared.showSuccess("Reward redeemed successfully!")
+                ToastManager.shared.showSuccess("Premio riscattato con successo!")
             case .failure(let error):
-                ToastManager.shared.showError("Error redeeming reward: \(error.localizedDescription)")
+                ToastManager.shared.showError("Errore riscatto premio: \(error.localizedDescription)")
+            }
+        }
+    }
+    
+    /// Async version of loadData for pull-to-refresh
+    private func refreshData() async {
+        await withCheckedContinuation { continuation in
+            isLoading = true
+            let group = DispatchGroup()
+            
+            group.enter()
+            rewardsService.getAllActiveRewards { result in
+                if case .success(let rewards) = result {
+                    self.rewards = rewards
+                }
+                group.leave()
+            }
+            
+            group.enter()
+            rewardsService.getUserPoints { result in
+                if case .success(let points) = result {
+                    self.userPoints = points.points
+                }
+                group.leave()
+            }
+            
+            group.enter()
+            rewardsService.getAllPartners { result in
+                if case .success(let partners) = result {
+                    self.partners = partners
+                }
+                group.leave()
+            }
+            
+            group.notify(queue: .main) {
+                self.isLoading = false
+                continuation.resume()
             }
         }
     }
@@ -406,7 +468,7 @@ struct PointsCard: View {
             VStack(alignment: .leading, spacing: 16) {
                 HStack {
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("Available Balance")
+                        Text("Saldo Disponibile")
                             .font(.system(size: 14, weight: .medium))
                             .foregroundColor(.white.opacity(0.9))
                         
@@ -578,7 +640,7 @@ struct PremiumRewardCard: View {
                     .lineLimit(2)
                 
                 Button(action: canRedeem ? onRedeem : {}) {
-                    Text(canRedeem ? "Redeem Reward" : "Not Enough Points")
+                    Text(canRedeem ? "Riscatta Premio" : "Punti Insufficienti")
                         .font(.system(size: 14, weight: .bold))
                         .foregroundColor(.white)
                         .frame(maxWidth: .infinity)

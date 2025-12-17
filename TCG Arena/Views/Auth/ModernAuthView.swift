@@ -26,18 +26,18 @@ enum AuthMode {
     var title: String {
         switch self {
         case .login:
-            return "Welcome Back"
+            return "Bentornato"
         case .register:
-            return "Create Account"
+            return "Crea Account"
         }
     }
     
     var subtitle: String {
         switch self {
         case .login:
-            return "Sign in to continue your journey"
+            return "Accedi per continuare"
         case .register:
-            return "Join the TCG Arena community"
+            return "Unisciti alla community TCG Arena"
         }
     }
     
@@ -53,9 +53,9 @@ enum AuthMode {
     var buttonTitle: String {
         switch self {
         case .login:
-            return "Sign In"
+            return "Accedi"
         case .register:
-            return "Create Account"
+            return "Crea Account"
         }
     }
 }
@@ -152,7 +152,7 @@ struct ModernAuthView: View {
         HStack(spacing: 0) {
             // Login Tab
             Button(action: { withAnimation(.spring(response: 0.35, dampingFraction: 0.7)) { mode = .login } }) {
-                Text("Sign In")
+                Text("Accedi")
                     .font(.system(size: 16, weight: .semibold))
                     .foregroundColor(mode == .login ? .white : .primary)
                     .frame(maxWidth: .infinity)
@@ -170,7 +170,7 @@ struct ModernAuthView: View {
             
             // Register Tab
             Button(action: { withAnimation(.spring(response: 0.35, dampingFraction: 0.7)) { mode = .register } }) {
-                Text("Register")
+                Text("Registrati")
                     .font(.system(size: 16, weight: .semibold))
                     .foregroundColor(mode == .register ? .white : .primary)
                     .frame(maxWidth: .infinity)
@@ -226,7 +226,7 @@ struct ModernAuthView: View {
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundColor(mode.accentColor)
                 
-                TextField("Enter your username", text: $username)
+                TextField("Inserisci il tuo username", text: $username)
                     .autocapitalization(.none)
                     .disableAutocorrection(true)
                     .padding(16)
@@ -244,7 +244,7 @@ struct ModernAuthView: View {
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundColor(mode == .login ? .blue.opacity(0.8) : .green.opacity(0.8))
                 
-                SecureField("Enter password", text: $password)
+                SecureField("Inserisci la password", text: $password)
                     .padding(16)
                     .background(Color(.systemBackground))
                     .clipShape(RoundedRectangle(cornerRadius: 12))
@@ -257,11 +257,11 @@ struct ModernAuthView: View {
             if mode == .register {
                 // Confirm Password
                 VStack(alignment: .leading, spacing: 8) {
-                    Label("Confirm Password", systemImage: "lock.shield.fill")
+                    Label("Conferma Password", systemImage: "lock.shield.fill")
                         .font(.system(size: 14, weight: .semibold))
                         .foregroundColor(.cyan)
                     
-                    SecureField("Confirm password", text: $confirmPassword)
+                    SecureField("Conferma la password", text: $confirmPassword)
                         .padding(16)
                         .background(Color(.systemBackground))
                         .clipShape(RoundedRectangle(cornerRadius: 12))
@@ -290,11 +290,11 @@ struct ModernAuthView: View {
     // MARK: - TCG Selection
     private var tcgSelectionView: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Label("Favorite TCGs", systemImage: "gamecontroller.fill")
+            Label("Giochi Preferiti", systemImage: "gamecontroller.fill")
                 .font(.system(size: 14, weight: .semibold))
                 .foregroundColor(.indigo)
             
-            Text("Choose at least one")
+            Text("Scegli almeno uno")
                 .font(.system(size: 13))
                 .foregroundColor(.secondary)
             
@@ -363,7 +363,7 @@ struct ModernAuthView: View {
     // MARK: - Skip Button
     private var skipButton: some View {
         Button(action: onSkip) {
-            Text("Continue as Guest")
+            Text("Continua come Ospite")
                 .font(.system(size: 16, weight: .medium))
                 .foregroundColor(.secondary)
         }

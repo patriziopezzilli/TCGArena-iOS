@@ -51,11 +51,11 @@ struct ShopDetailView: View {
             NavigationView {
                 ShopInventoryView(shopId: String(shop.id))
                     .environmentObject(inventoryService)
-                    .navigationTitle("Inventory")
+                    .navigationTitle("Inventario")
                     .navigationBarTitleDisplayMode(.inline)
                     .toolbar {
                         ToolbarItem(placement: .navigationBarLeading) {
-                            Button("Close") { showingInventory = false }
+                            Button("Chiudi") { showingInventory = false }
                         }
                     }
             }
@@ -63,7 +63,7 @@ struct ShopDetailView: View {
         .sheet(isPresented: $showingSendRequest) {
             SendRequestToShopView(shop: shop, onRequestSent: {
                 showingSendRequest = false
-                toastMessage = "Request sent successfully!"
+                toastMessage = "Richiesta inviata con successo!"
                 withAnimation {
                     showToast = true
                 }
@@ -78,11 +78,11 @@ struct ShopDetailView: View {
         .sheet(isPresented: $showingMyRequests) {
             NavigationView {
                 ShopReservationsView(shopId: String(shop.id))
-                    .navigationTitle("My Reservations")
+                    .navigationTitle("Le Mie Prenotazioni")
                     .navigationBarTitleDisplayMode(.inline)
                     .toolbar {
                         ToolbarItem(placement: .navigationBarLeading) {
-                            Button("Close") { showingMyRequests = false }
+                            Button("Chiudi") { showingMyRequests = false }
                         }
                     }
             }
@@ -90,11 +90,11 @@ struct ShopDetailView: View {
         .sheet(isPresented: $showingMyShopRequests) {
             NavigationView {
                 ShopRequestsView(shopId: String(shop.id), shopName: shop.name)
-                    .navigationTitle("My Requests")
+                    .navigationTitle("Le Mie Richieste")
                     .navigationBarTitleDisplayMode(.inline)
                     .toolbar {
                         ToolbarItem(placement: .navigationBarLeading) {
-                            Button("Close") { showingMyShopRequests = false }
+                            Button("Chiudi") { showingMyShopRequests = false }
                         }
                     }
             }
@@ -244,21 +244,21 @@ struct ShopDetailView: View {
                                     
                                     if let hours = shop.openingHours {
                                         VStack(alignment: .leading, spacing: 2) {
-                                            Text("Open Today")
+                                            Text("Aperto Oggi")
                                                 .font(.system(size: 14, weight: .medium))
                                             Text(hours)
                                                 .font(.system(size: 13))
                                                 .foregroundColor(.secondary)
                                         }
                                     } else {
-                                        Text("Hours not available")
+                                        Text("Orari non disponibili")
                                             .font(.system(size: 13))
                                             .foregroundColor(.secondary)
                                     }
                                 }
                                 
                                 Button(action: openInMaps) {
-                                    Text("Get Directions")
+                                    Text("Indicazioni")
                                         .font(.system(size: 14, weight: .medium))
                                         .foregroundColor(.blue)
                                 }
@@ -351,11 +351,11 @@ struct ShopDetailView: View {
                             }
                             
                             VStack(alignment: .leading, spacing: 2) {
-                                Text("Browse Inventory")
+                                Text("Sfoglia Inventario")
                                     .font(.system(size: 16, weight: .semibold))
                                     .foregroundColor(.primary)
                                 
-                                Text("View available cards and prices")
+                                Text("Vedi carte e prezzi disponibili")
                                     .font(.system(size: 13))
                                     .foregroundColor(.secondary)
                             }
@@ -387,11 +387,11 @@ struct ShopDetailView: View {
                             }
                             
                             VStack(alignment: .leading, spacing: 2) {
-                                Text("My Reservations")
+                                Text("Le Mie Prenotazioni")
                                     .font(.system(size: 16, weight: .semibold))
                                     .foregroundColor(.primary)
                                 
-                                Text("View your reservations with this shop")
+                                Text("Vedi le tue prenotazioni con questo negozio")
                                     .font(.system(size: 13))
                                     .foregroundColor(.secondary)
                             }
@@ -426,11 +426,11 @@ struct ShopDetailView: View {
                             }
                             
                             VStack(alignment: .leading, spacing: 2) {
-                                Text("Send Request")
+                                Text("Invia Richiesta")
                                     .font(.system(size: 16, weight: .semibold))
                                     .foregroundColor(.primary)
                                 
-                                Text("Ask about availability, prices, or more")
+                                Text("Chiedi informazioni su disponibilità, prezzi o altro")
                                     .font(.system(size: 13))
                                     .foregroundColor(.secondary)
                             }
@@ -462,11 +462,11 @@ struct ShopDetailView: View {
                             }
                             
                             VStack(alignment: .leading, spacing: 2) {
-                                Text("My Requests")
+                                Text("Le Mie Richieste")
                                     .font(.system(size: 16, weight: .semibold))
                                     .foregroundColor(.primary)
                                 
-                                Text("View your requests to this shop")
+                                Text("Vedi le tue richieste a questo negozio")
                                     .font(.system(size: 13))
                                     .foregroundColor(.secondary)
                             }
@@ -491,11 +491,11 @@ struct ShopDetailView: View {
                         .font(.system(size: 48))
                         .foregroundColor(.secondary)
                     
-                    Text("Sign in to interact with this shop")
+                    Text("Accedi per interagire con questo negozio")
                         .font(.headline)
                         .foregroundColor(.primary)
                     
-                    Text("Create an account or log in to browse inventory, make reservations, and send requests.")
+                    Text("Crea un account o accedi per sfogliare l'inventario, fare prenotazioni e inviare richieste.")
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                         .multilineTextAlignment(.center)
@@ -504,7 +504,7 @@ struct ShopDetailView: View {
                     Button(action: {
                         // Navigate to login/register
                     }) {
-                        Text("Sign In")
+                        Text("Accedi")
                             .font(.system(size: 16, weight: .semibold))
                             .foregroundColor(.white)
                             .frame(maxWidth: .infinity)
@@ -576,7 +576,7 @@ struct ShopDetailView: View {
                             SwiftUI.Image(systemName: "newspaper.fill")
                                 .font(.system(size: 16))
                                 .foregroundColor(.purple)
-                            Text("Latest News")
+                            Text("Ultime Novità")
                                 .font(.system(size: 16, weight: .bold))
                                 .foregroundColor(.primary)
                             
@@ -624,7 +624,7 @@ struct ShopDetailView: View {
                         Spacer()
                         ProgressView()
                             .progressViewStyle(CircularProgressViewStyle())
-                        Text("Loading news...")
+                        Text("Caricamento novità...")
                             .font(.system(size: 14))
                             .foregroundColor(.secondary)
                         Spacer()
@@ -663,7 +663,7 @@ struct ShopDetailView: View {
                         }
                         
                         VStack(alignment: .leading, spacing: 2) {
-                            Text("Notifications Active")
+                            Text("Notifiche Attive")
                                 .font(.system(size: 15, weight: .semibold))
                                 .foregroundColor(.primary)
                             Text("You'll receive updates from this store")
@@ -679,7 +679,7 @@ struct ShopDetailView: View {
                                     switch result {
                                     case .success:
                                         // State is already updated by ShopService, only show toast
-                                        ToastManager.shared.showSuccess("You won't receive notifications from this shop anymore.")
+                                        ToastManager.shared.showSuccess("Non riceverai più notifiche da questo negozio.")
                                     case .failure(let error):
                                         print("Error unsubscribing: \(error.localizedDescription)")
                                     }
@@ -702,7 +702,7 @@ struct ShopDetailView: View {
                                 switch result {
                                 case .success:
                                     // State is already updated by ShopService, only show toast
-                                    ToastManager.shared.showSuccess("You'll receive notifications from this shop.")
+                                    ToastManager.shared.showSuccess("Riceverai notifiche da questo negozio.")
                                 case .failure(let error):
                                     print("Error subscribing: \(error.localizedDescription)")
                                 }
@@ -739,7 +739,7 @@ struct ShopDetailView: View {
                     }
                     
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("Get Notified")
+                        Text("Ricevi Notifiche")
                             .font(.system(size: 15, weight: .semibold))
                             .foregroundColor(.primary)
                         Text("Sign in to receive store updates")
@@ -749,7 +749,7 @@ struct ShopDetailView: View {
                     
                     Spacer()
                     
-                    Text("Login")
+                    Text("Accedi")
                         .font(.system(size: 13, weight: .semibold))
                         .foregroundColor(.orange)
                         .padding(.horizontal, 12)

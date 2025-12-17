@@ -47,7 +47,7 @@ struct CardDetailView: View {
     }
     
     private var cardDetailsCard: some View {
-        InfoCard(title: "Card Overview") {
+        InfoCard(title: "Panoramica Carta") {
             HStack(spacing: 20) {
                 cardImageView
                 cardInfoView
@@ -180,12 +180,12 @@ struct CardDetailView: View {
     }
     
     private var additionalInfoCard: some View {
-        InfoCard(title: "Additional Info") {
+        InfoCard(title: "Info Aggiuntive") {
             VStack(spacing: 12) {
                 // Graded status badge
                 HStack {
                     Spacer()
-                    Text(card.isGraded == true ? "Graded" : "Ungraded")
+                    Text(card.isGraded == true ? "Gradata" : "Non Gradata")
                         .font(.system(size: 12, weight: .semibold))
                         .foregroundColor(card.isGraded == true ? .white : .secondary)
                         .padding(.horizontal, 12)
@@ -217,7 +217,7 @@ struct CardDetailView: View {
     }
     
     private var marketValueCard: some View {
-        InfoCard(title: "Market Value") {
+        InfoCard(title: "Valore di Mercato") {
             if let price = cardPrice {
                 marketPriceContent(price: price)
             } else {
@@ -230,7 +230,7 @@ struct CardDetailView: View {
         VStack(spacing: 16) {
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("Current Price")
+                    Text("Prezzo Attuale")
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                     
@@ -266,7 +266,7 @@ struct CardDetailView: View {
     private func marketPriceDetails(price: CardPrice) -> some View {
         VStack(spacing: 8) {
             HStack {
-                Text("Previous Week")
+                Text("Settimana Precedente")
                     .font(.caption)
                     .foregroundColor(.secondary)
                 Spacer()
@@ -277,7 +277,7 @@ struct CardDetailView: View {
             }
             
             HStack {
-                Text("Price Change")
+                Text("Variazione Prezzo")
                     .font(.caption)
                     .foregroundColor(.secondary)
                 Spacer()
@@ -288,7 +288,7 @@ struct CardDetailView: View {
             }
             
             HStack {
-                Text("Last Updated")
+                Text("Ultimo Aggiornamento")
                     .font(.caption)
                     .foregroundColor(.secondary)
                 Spacer()
@@ -308,11 +308,11 @@ struct CardDetailView: View {
                     .foregroundColor(.secondary)
                 
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("Price Not Available")
+                    Text("Prezzo Non Disponibile")
                         .font(.headline)
                         .foregroundColor(.primary)
                     
-                    Text("Market data for this card is currently unavailable")
+                    Text("I dati di mercato per questa carta non sono disponibili")
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
@@ -320,7 +320,7 @@ struct CardDetailView: View {
                 Spacer()
             }
             
-            Button("Request Price Data") {
+            Button("Richiedi Dati Prezzo") {
                 // TODO: Richiedi dati di prezzo
             }
             .font(.caption)
@@ -348,7 +348,7 @@ struct CardDetailView: View {
             HStack {
                 SwiftUI.Image(systemName: "plus.circle")
                     .font(.system(size: 16, weight: .semibold))
-                Text("Add to My Deck")
+                Text("Aggiungi al Mazzo")
                     .font(.system(size: 16, weight: .semibold))
             }
             .foregroundColor(card.tcgType?.themeColor ?? Color.gray)
@@ -367,7 +367,7 @@ struct CardDetailView: View {
             HStack {
                 SwiftUI.Image(systemName: "pencil")
                     .font(.system(size: 16, weight: .semibold))
-                Text("Edit Card")
+                Text("Modifica Carta")
                     .font(.system(size: 16, weight: .semibold))
             }
             .foregroundColor(card.tcgType?.themeColor ?? Color.gray)
@@ -386,7 +386,7 @@ struct CardDetailView: View {
             HStack {
                 SwiftUI.Image(systemName: "trash")
                     .font(.system(size: 16, weight: .semibold))
-                Text("Delete Card")
+                Text("Elimina Carta")
                     .font(.system(size: 16, weight: .semibold))
             }
             .foregroundColor(.red)
@@ -401,7 +401,7 @@ struct CardDetailView: View {
     private var descriptionCard: AnyView {
         if let description = card.description, !description.isEmpty {
             AnyView(
-                InfoCard(title: "Card Description") {
+                InfoCard(title: "Descrizione Carta") {
                     Text(description)
                         .font(.system(size: 16, weight: .regular))
                         .foregroundColor(.secondary)
@@ -417,15 +417,36 @@ struct CardDetailView: View {
 
     var body: some View {
         ScrollView {
-            VStack(spacing: 24) {
-                headerSection
-                cardDetailsCard
-                additionalInfoCards
-                descriptionCard
-                actionButtons
+            VStack(spacing: 0) {
+                // MARK: - Hero Card Section
+                heroCardSection
+                    .padding(.bottom, 24)
+                
+                // MARK: - Main Content
+                VStack(spacing: 20) {
+                    // Card Info Row (Set, Rarity, Condition)
+                    cardInfoChipsSection
+                        .padding(.horizontal, 20)
+                    
+                    // Price Card (if available)
+                    if cardPrice != nil {
+                        marketValueCard
+                            .padding(.horizontal, 20)
+                    }
+                    
+                    // Additional Info
+                    additionalInfoCards
+                    
+                    // Description
+                    descriptionCard
+                    
+                    // Actions
+                    actionButtons
+                }
+                .padding(.bottom, 32)
             }
-            .padding(.bottom, 32)
         }
+        .background(Color(.systemGroupedBackground))
         .navigationTitle(card.name)
         .navigationBarTitleDisplayMode(.inline)
         .sheet(isPresented: $showingEditView) {
@@ -443,17 +464,183 @@ struct CardDetailView: View {
         .fullScreenCover(isPresented: $showingFullScreenImage) {
             FullScreenImageView(imageURL: card.fullImageURL, cardName: card.name)
         }
-        .confirmationDialog("Delete Card", isPresented: $showingDeleteConfirmation) {
-            Button("Delete", role: .destructive) {
+        .confirmationDialog("Elimina Carta", isPresented: $showingDeleteConfirmation) {
+            Button("Elimina", role: .destructive) {
                 deleteCard()
             }
-            Button("Cancel", role: .cancel) { }
+            Button("Annulla", role: .cancel) { }
         } message: {
-            Text("Are you sure you want to delete '\(card.name)'? This action cannot be undone.")
+            Text("Sei sicuro di voler eliminare '\(card.name)'? Questa azione non può essere annullata.")
         }
         .onAppear {
             marketService.loadMarketData()
-            // Debug logging for image loading - removed prints
+        }
+    }
+    
+    // MARK: - Hero Card Section
+    private var heroCardSection: some View {
+        VStack(spacing: 16) {
+            // Large Card Image with 3D effect
+            ZStack {
+                // Shadow layer for depth
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(Color.black.opacity(0.2))
+                    .frame(width: 180, height: 255)
+                    .offset(y: 8)
+                    .blur(radius: 12)
+                
+                // Card Image
+                Group {
+                    if let imageURL = card.fullImageURL, let url = URL(string: imageURL) {
+                        CachedAsyncImage(url: url) { phase in
+                            switch phase {
+                            case .empty:
+                                cardPlaceholder
+                            case .success(let image):
+                                image
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fit)
+                                    .frame(width: 180, height: 255)
+                                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                                    .shadow(color: (card.tcgType?.themeColor ?? .gray).opacity(0.4), radius: 20, x: 0, y: 10)
+                            case .failure(_):
+                                cardPlaceholder
+                            @unknown default:
+                                cardPlaceholder
+                            }
+                        }
+                    } else {
+                        cardPlaceholder
+                    }
+                }
+                .onTapGesture {
+                    withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
+                        showingFullScreenImage = true
+                    }
+                }
+                
+                // Expand indicator
+                VStack {
+                    HStack {
+                        Spacer()
+                        ZStack {
+                            Circle()
+                                .fill(Color.black.opacity(0.6))
+                                .frame(width: 32, height: 32)
+                            SwiftUI.Image(systemName: "arrow.up.left.and.arrow.down.right")
+                                .font(.system(size: 14, weight: .semibold))
+                                .foregroundColor(.white)
+                        }
+                    }
+                    Spacer()
+                }
+                .frame(width: 180, height: 255)
+                .padding(8)
+            }
+            .padding(.top, 20)
+            
+            // Card Name & TCG
+            VStack(spacing: 6) {
+                Text(card.name)
+                    .font(.system(size: 24, weight: .bold))
+                    .foregroundColor(.primary)
+                    .multilineTextAlignment(.center)
+                    .lineLimit(2)
+                
+                HStack(spacing: 8) {
+                    if let tcgType = card.tcgType {
+                        Circle()
+                            .fill(tcgType.themeColor)
+                            .frame(width: 8, height: 8)
+                        
+                        Text(tcgType.displayName)
+                            .font(.system(size: 15, weight: .medium))
+                            .foregroundColor(tcgType.themeColor)
+                    }
+                }
+            }
+            .padding(.horizontal, 20)
+        }
+    }
+    
+    private var cardPlaceholder: some View {
+        RoundedRectangle(cornerRadius: 12)
+            .fill(Color(.systemGray5))
+            .frame(width: 180, height: 255)
+            .overlay(
+                VStack(spacing: 12) {
+                    if let tcgType = card.tcgType {
+                        TCGIconView(tcgType: tcgType, size: 48)
+                            .opacity(0.5)
+                    } else {
+                        SwiftUI.Image(systemName: "photo")
+                            .font(.system(size: 48))
+                            .foregroundColor(.secondary.opacity(0.5))
+                    }
+                    Text("Immagine non disponibile")
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundColor(.secondary)
+                }
+            )
+    }
+    
+    // MARK: - Card Info Chips
+    private var cardInfoChipsSection: some View {
+        ZStack {
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 12) {
+                    // Set chip
+                    if let set = card.set {
+                        InfoChip(icon: "square.stack.3d.up", label: "Set", value: set.uppercased(), color: card.tcgType?.themeColor ?? .gray)
+                    }
+                    
+                    // Rarity chip
+                    InfoChip(icon: "sparkles", label: "Rarità", value: card.rarity.displayName, color: card.rarity.color)
+                    
+                    // Condition chip
+                    InfoChip(icon: "shield.checkered", label: "Condizione", value: card.condition.displayName, color: card.condition.color)
+                    
+                    // Card number chip
+                    if let cardNumber = card.cardNumber {
+                        InfoChip(icon: "number", label: "Numero", value: cardNumber, color: .secondary)
+                    }
+                    
+                    // Price chip (if available)
+                    if let price = cardPrice {
+                        InfoChip(icon: "eurosign.circle", label: "Prezzo", value: price.formattedPrice, color: .green)
+                    }
+                }
+                .padding(.horizontal, 24)
+                .padding(.vertical, 4)
+            }
+            
+            // Fade masks on edges
+            HStack {
+                // Left fade
+                Rectangle()
+                    .fill(
+                        LinearGradient(
+                            colors: [Color(.systemGroupedBackground), Color(.systemGroupedBackground).opacity(0)],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                    )
+                    .frame(width: 24)
+                
+                Spacer()
+                
+                // Right fade
+                Rectangle()
+                    .fill(
+                        LinearGradient(
+                            colors: [Color(.systemGroupedBackground).opacity(0), Color(.systemGroupedBackground)],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                    )
+                    .frame(width: 24)
+            }
+            .allowsHitTesting(false)
         }
     }
     
@@ -588,3 +775,47 @@ struct CardDetailView: View {
             .navigationBarHidden(true)
         }
     }
+
+// MARK: - Info Chip Component
+struct InfoChip: View {
+    let icon: String
+    let label: String
+    let value: String
+    let color: Color
+    
+    var body: some View {
+        HStack(spacing: 10) {
+            // Icon circle
+            ZStack {
+                Circle()
+                    .fill(color.opacity(0.12))
+                    .frame(width: 36, height: 36)
+                
+                SwiftUI.Image(systemName: icon)
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(color)
+            }
+            
+            // Text content
+            VStack(alignment: .leading, spacing: 2) {
+                Text(label)
+                    .font(.system(size: 10, weight: .medium))
+                    .foregroundColor(.secondary)
+                    .textCase(.uppercase)
+                    .tracking(0.5)
+                
+                Text(value)
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundColor(.primary)
+                    .lineLimit(1)
+            }
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 12)
+        .background(
+            RoundedRectangle(cornerRadius: 14)
+                .fill(Color(.systemBackground))
+                .shadow(color: Color.black.opacity(0.08), radius: 10, x: 0, y: 4)
+        )
+    }
+}

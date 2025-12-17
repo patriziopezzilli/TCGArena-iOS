@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import CoreLocation
 
 struct ContentView: View {
     @State private var selectedTab = 0
@@ -20,9 +21,12 @@ struct ContentView: View {
     @StateObject private var inventoryService = InventoryService()
     @StateObject private var reservationService = ReservationService()
     @StateObject private var marketService = MarketDataService()
+    @StateObject private var locationManager = LocationManager()
     @EnvironmentObject private var settingsService: SettingsService
     @EnvironmentObject private var authService: AuthService
-    // @StateObject private var toastManager = ToastManager.shared
+    
+    // Location update throttling
+    @State private var lastLocationUpdate: Date? = nil
     
     var body: some View {
         TabView(selection: $selectedTab) {
@@ -33,7 +37,7 @@ struct ContentView: View {
                 .environmentObject(authService)
                 .tabItem {
                     SwiftUI.Image(systemName: "rectangle.stack")
-                    Text("Cards")
+                    Text("Carte")
                 }
                 .tag(0)
             
@@ -43,9 +47,10 @@ struct ContentView: View {
                 .environmentObject(inventoryService)
                 .environmentObject(reservationService)
                 .environmentObject(authService)
+                .environmentObject(locationManager)
                 .tabItem {
                     SwiftUI.Image(systemName: "storefront")
-                    Text("Stores")
+                    Text("Negozi")
                 }
                 .tag(1)
             
@@ -53,7 +58,7 @@ struct ContentView: View {
                 .environmentObject(rewardsService)
                 .tabItem {
                     SwiftUI.Image(systemName: "gift.fill")
-                    Text("Rewards")
+                    Text("Premi")
                 }
                 .tag(2)
             
@@ -70,7 +75,7 @@ struct ContentView: View {
                 .environmentObject(reservationService)
                 .tabItem {
                     SwiftUI.Image(systemName: "person.crop.circle")
-                    Text("Profile")
+                    Text("Profilo")
                 }
                 .tag(4)
         }
@@ -80,6 +85,55 @@ struct ContentView: View {
             value: settingsService.isDarkMode
         )
         .padding(.top, 8) // Add spacing for modern look
+        .onAppear {
+            // Check permissions on start
+            if locationManager.authorizationStatus == .authorizedWhenInUse || locationManager.authorizationStatus == .authorizedAlways {
+                // This usually triggers startUpdatingLocation in LocationManager delegate
+            } else {
+                // If not determined, we don't ask here to avoid annoying user if they skipped onboarding
+                // Check if we should ask? No, keep it non-intrusive.
+            }
+        }
+        .onChange(of: locationManager.location) { newLocation in
+            guard let location = newLocation, 
+                  let currentUserId = authService.currentUserId else { return }
+            
+            // Update backend max once every 15 minutes
+            let now = Date()
+            if let lastUpdate = lastLocationUpdate, now.timeIntervalSince(lastUpdate) < 900 {
+                return
+            }
+            
+            // Perform update
+            Task {
+                print("📍 Detected significant location change, updating backend...")
+                // Reverse geocode
+                var city: String?
+                var country: String?
+                
+                let geocoder = CLGeocoder()
+                if let placemarks = try? await geocoder.reverseGeocodeLocation(location),
+                   let placemark = placemarks.first {
+                    city = placemark.locality
+                    country = placemark.country
+                }
+                
+                if let updatedUser = try? await UserService.shared.updateUserLocation(
+                    userId: Int64(currentUserId),
+                    city: city,
+                    country: country,
+                    latitude: location.coordinate.latitude,
+                    longitude: location.coordinate.longitude
+                ) {
+                    await MainActor.run {
+                        authService.currentUser = updatedUser
+                    }
+                }
+                
+                lastLocationUpdate = now
+                print("📍 Backend location updated successfully")
+            }
+        }
     }
 }
 

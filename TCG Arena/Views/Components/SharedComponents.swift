@@ -175,3 +175,40 @@ struct PremiumTabButton: View {
         }
     }
 }
+
+// MARK: - Compact Tab Button (for 3+ tabs)
+struct CompactTabButton: View {
+    let icon: String
+    let label: String
+    var count: Int? = nil
+    let isSelected: Bool
+    let action: () -> Void
+    
+    var body: some View {
+        Button(action: {
+            HapticManager.shared.lightImpact()
+            action()
+        }) {
+            HStack(spacing: 6) {
+                SwiftUI.Image(systemName: icon)
+                    .font(.system(size: 14, weight: .semibold))
+                
+                if let count = count {
+                    Text("\(count)")
+                        .font(.system(size: 13, weight: .bold))
+                } else {
+                    Text(label)
+                        .font(.system(size: 13, weight: .semibold))
+                }
+            }
+            .foregroundColor(isSelected ? .white : .secondary)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 10)
+            .background(
+                RoundedRectangle(cornerRadius: 10)
+                    .fill(isSelected ? Color.blue : Color.clear)
+            )
+        }
+        .buttonStyle(PlainButtonStyle())
+    }
+}

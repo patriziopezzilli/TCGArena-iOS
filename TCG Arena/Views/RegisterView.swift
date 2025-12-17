@@ -6,10 +6,12 @@
 //
 
 import SwiftUI
+import CoreLocation
 
 struct RegisterView: View {
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var authService: AuthService
+    @StateObject private var locationManager = LocationManager()
     @State private var email = ""
     @State private var username = ""
     @State private var password = ""
@@ -306,6 +308,9 @@ struct RegisterView: View {
                 }
             }
         }
+        .onAppear {
+            locationManager.requestLocationPermission()
+        }
     }
 
     // MARK: - Subviews
@@ -417,13 +422,37 @@ struct RegisterView: View {
         isLoading = true
 
         Task {
+            // Get location data if available (coordinate + reverse geocoding)
+            var city: String?
+            var country: String?
+            var lat: Double?
+            var lon: Double?
+            
+            if let location = locationManager.location {
+                lat = location.coordinate.latitude
+                lon = location.coordinate.longitude
+                
+                // Simple reverse geocoding to get city/country
+                let geocoder = CLGeocoder()
+                if let placemarks = try? await geocoder.reverseGeocodeLocation(location),
+                   let placemark = placemarks.first {
+                    city = placemark.locality
+                    country = placemark.country
+                }
+            }
+            
             await authService.signUp(
                 email: email,
                 password: password,
                 username: username,
                 displayName: username, // Per ora usa username come displayName
-                favoriteGames: Array(selectedTCGs)
+                favoriteGames: Array(selectedTCGs),
+                city: city,
+                country: country,
+                latitude: lat,
+                longitude: lon
             )
+            
             if authService.errorMessage == nil {
                 UserDefaults.standard.set(true, forKey: "hasCompletedOnboarding")
                 dismiss()

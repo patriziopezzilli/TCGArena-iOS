@@ -7,6 +7,7 @@
 
 import SwiftUI
 import MapKit
+import ActivityKit
 
 struct TournamentDetailView: View {
     let tournament: Tournament
@@ -21,6 +22,8 @@ struct TournamentDetailView: View {
     @State private var isLoadingParticipants = false
     @State private var showAllParticipants = false
     @State private var showLiveUpdates = false
+    @State private var isLiveActivityActive = false
+    @StateObject private var liveActivityManager = TournamentLiveActivityManager.shared
     
     /// Check if tournament is locked (no more changes allowed)
     private var isTournamentLocked: Bool {
@@ -297,13 +300,14 @@ struct TournamentDetailView: View {
                         }
                         
                         // Registration/Status Section (first item in body)
-                        if let userStatus = userRegistrationStatus {
+                        // Hide when tournament is completed or in progress
+                        if !isTournamentLocked, let userStatus = userRegistrationStatus {
                             // Compact Registration Status Badge
                             let isCheckedIn = userStatus.isCheckedIn
                             let statusIcon: String = isCheckedIn ? "checkmark.circle.fill" : (userStatus.status == .REGISTERED ? "checkmark.seal.fill" : "clock.fill")
                             let statusColor: Color = isCheckedIn ? .purple : (userStatus.status == .REGISTERED ? .green : .orange)
-                            let statusTitle: String = isCheckedIn ? "You're Checked In!" : (userStatus.status == .REGISTERED ? "You're Registered" : "⏳ On Waiting List")
-                            let statusSubtitle: String = isCheckedIn ? "Enjoy the tournament!" : (userStatus.status == .REGISTERED ? "You're all set for this tournament" : "We'll notify you if a spot opens")
+                            let statusTitle: String = isCheckedIn ? "Check-in Effettuato!" : (userStatus.status == .REGISTERED ? "Sei Iscritto" : "⏳ In Lista d'Attesa")
+                            let statusSubtitle: String = isCheckedIn ? "Buon torneo!" : (userStatus.status == .REGISTERED ? "Sei pronto per questo torneo" : "Ti avviseremo se si libera un posto")
                             
                             VStack(spacing: 12) {
                                 HStack(spacing: 12) {
@@ -332,7 +336,7 @@ struct TournamentDetailView: View {
                                                         .scaleEffect(0.8)
                                                 } else {
                                                     SwiftUI.Image(systemName: "xmark.circle.fill")
-                                                    Text("Cancel")
+                                                    Text("Annulla")
                                                         .font(.system(size: 14, weight: .semibold))
                                                 }
                                             }
@@ -359,7 +363,7 @@ struct TournamentDetailView: View {
                                             } else {
                                                 SwiftUI.Image(systemName: "person.fill.checkmark")
                                                     .font(.system(size: 18))
-                                                Text("Check In Now")
+                                                Text("Check-in")
                                                     .font(.system(size: 16, weight: .bold))
                                             }
                                         }
@@ -380,6 +384,55 @@ struct TournamentDetailView: View {
                                     }
                                     .buttonStyle(ScaleButtonStyle())
                                     .disabled(isCheckingIn)
+                                }
+                                
+                                // Live Activity button - shown for registered participants when tournament starts within 60 min
+                                if tournament.canEnableLiveActivity && liveActivityManager.areActivitiesSupported {
+                                    Button(action: toggleLiveActivity) {
+                                        HStack(spacing: 10) {
+                                            ZStack {
+                                                Circle()
+                                                    .fill(isLiveActivityActive ? Color.green : tournament.tcgType.themeColor)
+                                                    .frame(width: 36, height: 36)
+                                                
+                                                SwiftUI.Image(systemName: isLiveActivityActive ? "bell.badge.fill" : "bell.fill")
+                                                    .font(.system(size: 16, weight: .semibold))
+                                                    .foregroundColor(.white)
+                                            }
+                                            
+                                            VStack(alignment: .leading, spacing: 2) {
+                                                Text(isLiveActivityActive ? "Live Activity Attiva" : "Attiva Live Activity")
+                                                    .font(.system(size: 15, weight: .semibold))
+                                                    .foregroundColor(.primary)
+                                                
+                                                Text(isLiveActivityActive ? "Tocca per disattivare" : "Notifiche sulla Lock Screen")
+                                                    .font(.system(size: 12))
+                                                    .foregroundColor(.secondary)
+                                            }
+                                            
+                                            Spacer()
+                                            
+                                            if isLiveActivityActive {
+                                                SwiftUI.Image(systemName: "checkmark.circle.fill")
+                                                    .font(.system(size: 20))
+                                                    .foregroundColor(.green)
+                                            } else {
+                                                SwiftUI.Image(systemName: "chevron.right")
+                                                    .font(.system(size: 14, weight: .semibold))
+                                                    .foregroundColor(.secondary)
+                                            }
+                                        }
+                                        .padding(14)
+                                        .background(
+                                            RoundedRectangle(cornerRadius: 12)
+                                                .fill(isLiveActivityActive ? Color.green.opacity(0.1) : Color(.secondarySystemBackground))
+                                        )
+                                        .overlay(
+                                            RoundedRectangle(cornerRadius: 12)
+                                                .stroke(isLiveActivityActive ? Color.green.opacity(0.3) : Color.clear, lineWidth: 1)
+                                        )
+                                    }
+                                    .buttonStyle(ScaleButtonStyle())
                                 }
                             }
                             .padding(16)
@@ -425,7 +478,7 @@ struct TournamentDetailView: View {
                         } else if tournament.status == .registrationOpen && authService.isAuthenticated && authService.currentUserId != nil && !isTournamentLocked {
                             // Prominent Registration Button - only for authenticated users and tournament not locked
                             let buttonIcon: String = tournament.isFull ? "clock.badge.checkmark" : "checkmark.circle.fill"
-                            let buttonText: String = tournament.isFull ? "Join Waiting List" : "Register for Tournament"
+                            let buttonText: String = tournament.isFull ? "Entra in Lista d'Attesa" : "Iscriviti al Torneo"
                             let buttonColors: [Color] = tournament.isFull ? [Color.orange.opacity(0.8), Color.orange] : [Color.blue.opacity(0.8), Color.blue]
                             let shadowColor: Color = (tournament.isFull ? Color.orange : Color.blue).opacity(0.4)
                             
@@ -462,7 +515,7 @@ struct TournamentDetailView: View {
                         } else if tournament.status == .registrationOpen && !(authService.isAuthenticated && authService.currentUserId != nil) {
                             // Disabled registration button for non-authenticated users
                             let disabledIcon: String = tournament.isFull ? "clock.badge.checkmark" : "checkmark.circle.fill"
-                            let disabledText: String = tournament.isFull ? "Join Waiting List" : "Register for Tournament"
+                            let disabledText: String = tournament.isFull ? "Entra in Lista d'Attesa" : "Iscriviti al Torneo"
                             
                             ZStack {
                                 HStack(spacing: 10) {
@@ -485,7 +538,7 @@ struct TournamentDetailView: View {
                                     Spacer()
                                     HStack {
                                         Spacer()
-                                        Text("Registrati o fai login")
+                                        Text("Registrati o accedi")
                                             .font(.system(size: 11, weight: .semibold))
                                             .foregroundColor(.white)
                                             .padding(.horizontal, 8)
@@ -502,15 +555,15 @@ struct TournamentDetailView: View {
 
                         // Info Grid - Hide participants and entry fee for ranked tournaments
                         LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
-                            InfoCard(icon: "calendar", title: "Date", value: formatDate(tournament.startDate))
-                            InfoCard(icon: "clock", title: "Time", value: formatTime(tournament.startDate))
+                            InfoCard(icon: "calendar", title: "Data", value: formatDate(tournament.startDate))
+                            InfoCard(icon: "clock", title: "Orario", value: formatTime(tournament.startDate))
                             // Only show for local tournaments
                             if tournament.isRanked != true {
                                 if let maxParticipants = tournament.maxParticipants {
-                                    InfoCard(icon: "person.2", title: "Participants", value: "\(tournament.registeredParticipantsCount)/\(maxParticipants)")
+                                    InfoCard(icon: "person.2", title: "Partecipanti", value: "\(tournament.registeredParticipantsCount)/\(maxParticipants)")
                                 }
                                 if let entryFee = tournament.entryFee {
-                                    InfoCard(icon: "eurosign.circle", title: "Entry Fee", value: entryFee == 0 ? "Free" : "€\(String(format: "%.0f", entryFee))")
+                                    InfoCard(icon: "eurosign.circle", title: "Iscrizione", value: entryFee == 0 ? "Gratis" : "€\(String(format: "%.0f", entryFee))")
                                 }
                             }
                         }
@@ -519,7 +572,7 @@ struct TournamentDetailView: View {
                         // Location Section
                         if let location = tournament.location {
                             VStack(alignment: .leading, spacing: 16) {
-                                SectionHeader(title: "Location", icon: "mappin.circle.fill", color: .red)
+                                SectionHeader(title: "Luogo", icon: "mappin.circle.fill", color: .red)
 
                                 VStack(alignment: .leading, spacing: 12) {
                                     Text(location.venueName)
@@ -536,7 +589,7 @@ struct TournamentDetailView: View {
                                     Button(action: {
                                         openDirections(to: location)
                                     }) {
-                                        Text("Get Directions")
+                                        Text("Indicazioni")
                                             .font(.system(size: 14, weight: .medium))
                                             .foregroundColor(.blue)
                                     }
@@ -552,7 +605,7 @@ struct TournamentDetailView: View {
                         // Description - Only show for local tournaments
                         if tournament.isRanked != true, let description = tournament.description {
                             VStack(alignment: .leading, spacing: 16) {
-                                SectionHeader(title: "About", icon: "info.circle.fill", color: .blue)
+                                SectionHeader(title: "Descrizione", icon: "info.circle.fill", color: .blue)
 
                                 Text(description)
                                     .font(.system(size: 15))
@@ -602,6 +655,12 @@ struct TournamentDetailView: View {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
                 checkRegistrationStatus()
                 loadParticipants()
+            }
+            
+            // Check if Live Activity is already running for this tournament
+            if let currentActivity = liveActivityManager.currentActivity,
+               currentActivity.attributes.tournamentId == tournament.id {
+                isLiveActivityActive = true
             }
         }
         .sheet(isPresented: $showLiveUpdates) {
@@ -663,7 +722,7 @@ struct TournamentDetailView: View {
                             SwiftUI.Image(systemName: "person.slash")
                                 .font(.system(size: 24))
                                 .foregroundColor(.secondary)
-                            Text("No participants yet")
+                            Text("Nessun partecipante")
                                 .font(.system(size: 14))
                                 .foregroundColor(.secondary)
                         }
@@ -690,7 +749,7 @@ struct TournamentDetailView: View {
                         Button(action: { showAllParticipants = true }) {
                             HStack {
                                 Spacer()
-                                Text("Show all \(participants.count) participants")
+                                Text("Mostra tutti (\(participants.count))")
                                     .font(.system(size: 14, weight: .medium))
                                     .foregroundColor(.blue)
                                 SwiftUI.Image(systemName: "chevron.down")
@@ -706,7 +765,7 @@ struct TournamentDetailView: View {
                         Button(action: { showAllParticipants = false }) {
                             HStack {
                                 Spacer()
-                                Text("Show less")
+                                Text("Mostra meno")
                                     .font(.system(size: 14, weight: .medium))
                                     .foregroundColor(.blue)
                                 SwiftUI.Image(systemName: "chevron.up")
@@ -772,8 +831,8 @@ struct TournamentDetailView: View {
                 await MainActor.run {
                     userRegistrationStatus = participant
                     let message = participant.status == .REGISTERED
-                        ? "Successfully registered for the tournament!"
-                        : "Added to waiting list. You'll be notified if a spot opens up."
+                        ? "Iscrizione completata!"
+                        : "Aggiunto alla lista d'attesa. Ti avviseremo se si libera un posto."
                     
                     if participant.status == .REGISTERED {
                         // Haptic feedback for successful registration
@@ -796,7 +855,7 @@ struct TournamentDetailView: View {
                 loadTournamentDetails()
             } catch {
                 await MainActor.run {
-                    ToastManager.shared.showError("Registration failed: \(error.localizedDescription)")
+                    ToastManager.shared.showError("Iscrizione fallita: \(error.localizedDescription)")
                     isRegistering = false
                 }
             }
@@ -814,7 +873,7 @@ struct TournamentDetailView: View {
 
                 await MainActor.run {
                     userRegistrationStatus = nil
-                    ToastManager.shared.showSuccess("Successfully unregistered from the tournament.")
+                    ToastManager.shared.showSuccess("Iscrizione annullata.")
                     // Show points deduction toast after a short delay
                     DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
                         ToastManager.shared.showInfo("😢 -10 punti")
@@ -826,7 +885,7 @@ struct TournamentDetailView: View {
                 loadTournamentDetails()
             } catch {
                 await MainActor.run {
-                    ToastManager.shared.showError("Unregistration failed: \(error.localizedDescription)")
+                    ToastManager.shared.showError("Annullamento fallito: \(error.localizedDescription)")
                     isRegistering = false
                 }
             }
@@ -847,7 +906,7 @@ struct TournamentDetailView: View {
                     let generator = UINotificationFeedbackGenerator()
                     generator.notificationOccurred(.success)
                     
-                    ToastManager.shared.showSuccess("Successfully checked in! Enjoy the tournament! 🎉")
+                    ToastManager.shared.showSuccess("Check-in completato! Buon torneo! 🎉")
                     // Show points bonus toast after a short delay
                     DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
                         ToastManager.shared.showSuccess("🎉 +25 punti!")
@@ -860,7 +919,7 @@ struct TournamentDetailView: View {
                 }
             } catch {
                 await MainActor.run {
-                    ToastManager.shared.showError("Check-in failed: \(error.localizedDescription)")
+                    ToastManager.shared.showError("Check-in fallito: \(error.localizedDescription)")
                     isCheckingIn = false
                 }
             }
@@ -909,6 +968,34 @@ struct TournamentDetailView: View {
     private func loadTournamentDetails() {
         // In a real implementation, reload tournament data from service
         // For now, this is a placeholder
+    }
+    
+    private func toggleLiveActivity() {
+        if isLiveActivityActive {
+            // End activity
+            Task {
+                await liveActivityManager.endActivity()
+                await MainActor.run {
+                    isLiveActivityActive = false
+                    ToastManager.shared.showInfo("Live Activity disattivata")
+                }
+            }
+        } else {
+            // Start activity
+            let shopName = tournament.location?.venueName ?? "Negozio"
+            let success = tournament.startLiveActivity(shopName: shopName)
+            
+            if success {
+                isLiveActivityActive = true
+                ToastManager.shared.showSuccess("📍 Live Activity attivata!")
+                
+                // Haptic feedback
+                let generator = UINotificationFeedbackGenerator()
+                generator.notificationOccurred(.success)
+            } else {
+                ToastManager.shared.showError("Impossibile avviare Live Activity")
+            }
+        }
     }
 
     private func formatDate(_ dateString: String) -> String {

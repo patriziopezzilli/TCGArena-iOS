@@ -31,11 +31,11 @@ struct ImportFromDecksView: View {
             VStack(spacing: 0) {
                 // Header
                 VStack(spacing: 12) {
-                    Text("Import Cards to Collection")
+                    Text("Importa Carte nella Collezione")
                         .font(.system(size: 24, weight: .bold))
                         .foregroundColor(.primary)
 
-                    Text("Select cards from your decks to add to your personal collection")
+                    Text("Seleziona le carte dai tuoi mazzi da aggiungere alla collezione")
                         .font(.system(size: 16, weight: .medium))
                         .foregroundColor(.secondary)
                         .multilineTextAlignment(.center)
@@ -59,7 +59,7 @@ struct ImportFromDecksView: View {
                         }
 
                         VStack(spacing: 12) {
-                            Text("No Cards in Decks")
+                            Text("Nessuna Carta nei Mazzi")
                                 .font(.system(size: 24, weight: .bold))
                                 .foregroundColor(.primary)
 
@@ -123,7 +123,7 @@ struct ImportFromDecksView: View {
                                                 .font(.system(size: 16, weight: .semibold))
                                                 .foregroundColor(.primary)
 
-                                            Text("Quantity: \(deckCard.quantity)")
+                                            Text("Quantità: \(deckCard.quantity)")
                                                 .font(.system(size: 14, weight: .medium))
                                                 .foregroundColor(.secondary)
                                         }
@@ -153,7 +153,7 @@ struct ImportFromDecksView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Cancel") {
+                    Button("Annulla") {
                         dismiss()
                     }
                 }
@@ -165,7 +165,7 @@ struct ImportFromDecksView: View {
                                 ProgressView()
                                     .tint(.white)
                             } else {
-                                Text("Import (\(selectedCards.count))")
+                                Text("Importa (\(selectedCards.count))")
                                     .fontWeight(.semibold)
                             }
                         }
@@ -245,7 +245,7 @@ struct CollectionView: View {
     @State private var animatedCardIds: Set<String> = [] // Track cards that have animated in
 
     enum ViewMode {
-        case lists, allCards
+        case lists, allCards, rules
     }
     
     var filteredCards: [Card] {
@@ -459,29 +459,37 @@ struct CollectionView: View {
                     .opacity(hasAppeared ? 1 : 0)
                     .offset(y: hasAppeared ? 0 : -10)
                 
-                // Collapsible search bar
-                if !isHeaderCollapsed {
+                // Collapsible search bar - hide on rules tab
+                if !isHeaderCollapsed && viewMode != .rules {
                     searchBarView
                         .opacity(hasAppeared ? 1 : 0)
                         .offset(y: hasAppeared ? 0 : -8)
                         .transition(.opacity.combined(with: .move(edge: .top)))
                 }
                 
-                tcgFilterView
-                    .opacity(hasAppeared ? 1 : 0)
-                
-                // TCG Rules Info Banner
-                tcgRulesBannerView
-                
-                separatorView
-                
-                // Collapsible discover section
-                if !isHeaderCollapsed {
-                    discoverSectionView
-                        .transition(.opacity.combined(with: .move(edge: .top)))
+                // TCG filter - hide on rules tab
+                if viewMode != .rules {
+                    tcgFilterView
+                        .opacity(hasAppeared ? 1 : 0)
+                    
+                    // TCG Rules Info Banner
+                    tcgRulesBannerView
+                    
+                    separatorView
+                    
+                    // Collapsible discover section
+                    if !isHeaderCollapsed {
+                        discoverSectionView
+                            .transition(.opacity.combined(with: .move(edge: .top)))
+                    }
                 }
                 
-                contentView
+                // Content - different handling for rules tab
+                if viewMode == .rules {
+                    rulesGridView
+                } else {
+                    contentView
+                }
             }
             .animation(.spring(response: 0.5, dampingFraction: 0.8, blendDuration: 0.3), value: hasAppeared)
             .navigationTitle("")
@@ -496,10 +504,8 @@ struct CollectionView: View {
                     .environmentObject(cardService)
                     .environmentObject(deckService)
             }
-            .sheet(isPresented: $showingTCGRules) {
-                if let tcgType = selectedRulesTCG {
-                    TCGRulesView(tcgType: tcgType)
-                }
+            .sheet(item: $selectedRulesTCG) { tcgType in
+                TCGRulesView(tcgType: tcgType)
             }
             .onAppear {
                 onAppearAction()
@@ -553,12 +559,13 @@ struct CollectionView: View {
         }
         .padding(.horizontal, 20)
         .padding(.top, 20)
-        .padding(.bottom, 12)            // View Mode Selector
-            // View Mode Selector
-            HStack(spacing: 12) {
-                PremiumTabButton(
-                    title: "Lists (\(listsCount))",
+        .padding(.bottom, 12)
+            // View Mode Selector - Compact Design
+            HStack(spacing: 0) {
+                CompactTabButton(
                     icon: "rectangle.stack.fill",
+                    label: "Liste",
+                    count: listsCount,
                     isSelected: viewMode == .lists
                 ) {
                     withAnimation(.easeInOut(duration: 0.2)) {
@@ -566,16 +573,33 @@ struct CollectionView: View {
                     }
                 }
                 
-                PremiumTabButton(
-                    title: "All Cards (\(allCardsCount))",
+                CompactTabButton(
                     icon: "square.grid.2x2.fill",
+                    label: "Carte",
+                    count: allCardsCount,
                     isSelected: viewMode == .allCards
                 ) {
                     withAnimation(.easeInOut(duration: 0.2)) {
                         viewMode = .allCards
                     }
                 }
+                
+                CompactTabButton(
+                    icon: "book.fill",
+                    label: "Regole",
+                    count: nil,
+                    isSelected: viewMode == .rules
+                ) {
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        viewMode = .rules
+                    }
+                }
             }
+            .padding(4)
+            .background(
+                RoundedRectangle(cornerRadius: 14)
+                    .fill(Color(.systemGray6))
+            )
             .padding(.horizontal, 20)
             .padding(.bottom, 8)
         }
@@ -588,7 +612,7 @@ struct CollectionView: View {
                     .foregroundColor(.secondary)
                     .font(.system(size: 16, weight: .medium))
 
-                TextField(viewMode == .lists ? "Search your lists..." : viewMode == .allCards ? "Search all your cards..." : "Search your collection...", text: $searchText)
+                TextField(viewMode == .lists ? "Cerca nelle liste..." : viewMode == .allCards ? "Cerca le tue carte..." : "Cerca nella collezione...", text: $searchText)
                     .textFieldStyle(PlainTextFieldStyle())
                     .font(.system(size: 16, weight: .medium))
 
@@ -747,7 +771,7 @@ struct CollectionView: View {
     }
 
     private var contentView: some View {
-        Group {
+        ZStack {
             if viewMode == .lists {
                 if isLoadingDecks {
                     // Custom rectangular skeleton for decks
@@ -769,7 +793,7 @@ struct CollectionView: View {
                             removal: .opacity.combined(with: .move(edge: .trailing))
                         ))
                 }
-            } else {
+            } else if viewMode == .allCards {
                 if isLoadingCards {
                     // Custom rectangular skeleton for cards
                     ScrollView {
@@ -790,9 +814,46 @@ struct CollectionView: View {
                             removal: .opacity.combined(with: .move(edge: .leading))
                         ))
                 }
+            } else if viewMode == .rules {
+                rulesGridView
+                    .transition(.asymmetric(
+                        insertion: .opacity.combined(with: .move(edge: .trailing)),
+                        removal: .opacity.combined(with: .move(edge: .leading))
+                    ))
             }
         }
         .animation(.spring(response: 0.4, dampingFraction: 0.8), value: viewMode)
+    }
+    
+    // MARK: - Rules Grid View
+    private var rulesGridView: some View {
+        ScrollView(showsIndicators: false) {
+            LazyVStack(spacing: 12) {
+                // Header
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Regolamenti TCG")
+                        .font(.system(size: 22, weight: .bold))
+                        .foregroundColor(.primary)
+                    
+                    Text("Scopri le regole di ogni gioco di carte collezionabili")
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundColor(.secondary)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.top, 16)
+                .padding(.bottom, 8)
+                
+                // Rules cards
+                ForEach(TCGType.allCases, id: \.self) { tcgType in
+                    RulesListCard(tcgType: tcgType) {
+                        selectedRulesTCG = tcgType
+                    }
+                }
+            }
+            .padding(.horizontal, 20)
+            .padding(.bottom, 40)
+        }
+        .background(Color(.systemBackground))
     }
 
     private var emptyDecksView: some View {
@@ -810,11 +871,11 @@ struct CollectionView: View {
             .animation(.spring(response: 0.6, dampingFraction: 0.6).delay(0.1), value: isLoadingDecks)
 
             VStack(spacing: 12) {
-                Text("No Lists Yet")
+                Text("Nessuna Lista")
                     .font(.system(size: 24, weight: .bold))
                     .foregroundColor(.primary)
 
-                Text("Create your first list to start collecting cards!")
+                Text("Crea la tua prima lista per iniziare a collezionare!")
                     .font(.system(size: 16, weight: .medium))
                     .foregroundColor(.secondary)
                     .multilineTextAlignment(.center)
@@ -855,6 +916,7 @@ struct CollectionView: View {
             }
         }
         .listStyle(PlainListStyle())
+        .scrollIndicators(.hidden)
         .background(Color(.systemBackground))
         .onChange(of: filteredDecks.count) { _ in
             // Reset animations when deck list changes significantly (e.g., after refresh)
@@ -892,12 +954,12 @@ struct CollectionView: View {
                 .transition(.opacity.combined(with: .scale(scale: 0.8)))
 
                 VStack(spacing: 12) {
-                    Text(viewMode == .allCards ? "No Cards in Your Decks" : "No Cards in Collection")
+                    Text(viewMode == .allCards ? "Nessuna Carta nei Mazzi" : "Nessuna Carta nella Collezione")
                         .font(.system(size: 24, weight: .bold))
                         .foregroundColor(.primary)
 
                     Text(viewMode == .allCards ?
-                        "Your decks are empty.\nAdd cards to your decks to see them here." :
+                        "I tuoi mazzi sono vuoti.\nAggiungi carte ai mazzi per vederle qui." :
                         "Your personal collection is empty.\nAdd cards from the Discover section or import from your decks.")
                         .font(.system(size: 16, weight: .medium))
                         .foregroundColor(.secondary)
@@ -913,7 +975,7 @@ struct CollectionView: View {
                     }) {
                         HStack(spacing: 8) {
                             SwiftUI.Image(systemName: "arrow.down.circle")
-                            Text("Import from Decks")
+                            Text("Importa dai Mazzi")
                         }
                         .font(.system(size: 16, weight: .semibold))
                         .foregroundColor(.blue)
@@ -982,6 +1044,7 @@ struct CollectionView: View {
             }
         }
         .listStyle(PlainListStyle())
+        .scrollIndicators(.hidden)
         .background(Color(.systemGroupedBackground))
         .animation(.easeInOut(duration: 0.3), value: isLoadingCards)
         .simultaneousGesture(
@@ -1495,11 +1558,11 @@ struct DiscoverInfoBox: View {
                 
                 // Content
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("Discover New Cards")
+                    Text("Scopri Nuove Carte")
                         .font(.system(size: 16, weight: .semibold))
                         .foregroundColor(.primary)
                     
-                    Text("Explore the latest expansions and find new cards for your collection")
+                    Text("Esplora le ultime espansioni e trova nuove carte per la tua collezione")
                         .font(.system(size: 14, weight: .medium))
                         .foregroundColor(.secondary)
                         .multilineTextAlignment(.leading)
@@ -1570,11 +1633,11 @@ struct CardDiscoverView: View {
     
     private var headerView: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Discover")
+            Text("Scopri")
                 .font(.system(size: 34, weight: .bold))
                 .foregroundColor(.primary)
             
-            Text("Explore new cards and expansions")
+            Text("Esplora nuove carte ed espansioni")
                 .font(.system(size: 16, weight: .medium))
                 .foregroundColor(.secondary)
         }
@@ -1589,7 +1652,7 @@ struct CardDiscoverView: View {
                 .font(.system(size: 18, weight: .semibold))
                 .foregroundColor(.secondary)
             
-            TextField("Search cards, sets...", text: $searchText)
+            TextField("Cerca carte, set...", text: $searchText)
                 .font(.system(size: 16, weight: .medium))
             
             if !searchText.isEmpty {
@@ -1683,7 +1746,7 @@ struct CardDiscoverView: View {
                     }
                 }
             } else if filteredExpansions.isEmpty {
-                EmptyStateRow(message: "No expansions found")
+                EmptyStateRow(message: "Nessuna espansione trovata")
             } else {
                 VStack(spacing: 16) {
                     ForEach(filteredExpansions) { expansion in
@@ -1708,7 +1771,7 @@ struct CardDiscoverView: View {
             if searchText.isEmpty && selectedTCGType == nil && !filteredCards.isEmpty {
                 VStack(alignment: .leading, spacing: 16) {
                     HStack {
-                        Text("Featured Cards")
+                        Text("Carte in Evidenza")
                             .font(.system(size: 20, weight: .bold))
                             .foregroundColor(.primary)
                         
@@ -1782,7 +1845,7 @@ struct CardDiscoverView: View {
     private var searchResultsView: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
-                Text("Search Results")
+                Text("Risultati Ricerca")
                     .font(.system(size: 18, weight: .bold))
                     .foregroundColor(.primary)
                 
@@ -1800,7 +1863,7 @@ struct CardDiscoverView: View {
             .padding(.horizontal, 20)
             
             if searchResults.isEmpty && !isSearching {
-                EmptyStateRow(message: "No cards found")
+                EmptyStateRow(message: "Nessuna carta trovata")
                     .padding(.horizontal, 20)
             } else {
                 LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
@@ -1845,7 +1908,7 @@ struct CardDiscoverView: View {
                     case .success(let cards):
                         searchResults = cards
                     case .failure(let error):
-                        ToastManager.shared.showError("Search error: \(error.localizedDescription)")
+                        ToastManager.shared.showError("Errore ricerca: \(error.localizedDescription)")
                         searchResults = []
                     }
                 }
@@ -1928,7 +1991,7 @@ struct CardDiscoverView: View {
                     .lineLimit(1)
                 
                 HStack {
-                    Text(card.set ?? "Unknown Set")
+                    Text(card.set ?? "Set Sconosciuto")
                         .font(.system(size: 11))
                         .foregroundColor(.secondary)
                         .lineLimit(1)

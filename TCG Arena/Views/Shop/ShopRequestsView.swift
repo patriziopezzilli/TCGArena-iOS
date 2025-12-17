@@ -325,7 +325,7 @@ private struct RequestDetailView: View {
                             } else {
                                 LazyVStack(spacing: 16) {
                                     ForEach(messages) { message in
-                                        MessageBubble(message: message)
+                                        ShopMessageBubble(message: message)
                                     }
                                 }
                                 .padding(.horizontal, 20)
@@ -439,8 +439,8 @@ private struct RequestDetailView: View {
     }
 }
 
-// MARK: - Message Bubble
-private struct MessageBubble: View {
+// MARK: - Shop Message Bubble
+private struct ShopMessageBubble: View {
     let message: RequestMessage
     
     private var isFromCurrentUser: Bool {

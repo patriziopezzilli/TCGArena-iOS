@@ -114,7 +114,10 @@ struct DeckSelectionModal: View {
     
     private func selectDeck(_ deck: Deck) {
         if selectedDeck?.id == deck.id && !isConfirming {
-            // Second tap on same deck - confirm
+            // Second tap on same deck - confirm with haptic
+            let generator = UIImpactFeedbackGenerator(style: .medium)
+            generator.impactOccurred()
+            
             withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
                 isConfirming = true
             }
@@ -125,7 +128,10 @@ struct DeckSelectionModal: View {
                 dismiss()
             }
         } else {
-            // First tap - select deck
+            // First tap - select deck with light haptic
+            let generator = UIImpactFeedbackGenerator(style: .light)
+            generator.impactOccurred()
+            
             withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
                 selectedDeck = deck
                 isConfirming = false

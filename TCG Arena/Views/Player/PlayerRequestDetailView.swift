@@ -30,82 +30,80 @@ struct PlayerRequestDetailView: View {
     }
     
     var body: some View {
-        NavigationView {
-            VStack(spacing: 0) {
-                // Request Header
-                requestHeader
-                
-                Divider()
-                
-                // Messages
-                ScrollViewReader { proxy in
-                    ScrollView {
-                        LazyVStack(spacing: 12) {
-                            ForEach(messages.sorted(by: { $0.createdAt < $1.createdAt })) { message in
-                                MessageBubble(message: message)
-                                    .id(message.id)
-                            }
-                        }
-                        .padding()
-                    }
-                    .onChange(of: messages.count) { _ in
-                        if let lastMessage = messages.last {
-                            withAnimation {
-                                proxy.scrollTo(lastMessage.id, anchor: .bottom)
-                            }
+        VStack(spacing: 0) {
+            // Request Header
+            requestHeader
+            
+            Divider()
+            
+            // Messages
+            ScrollViewReader { proxy in
+                ScrollView {
+                    LazyVStack(spacing: 12) {
+                        ForEach(messages.sorted(by: { $0.createdAt < $1.createdAt })) { message in
+                            MessageBubble(message: message)
+                                .id(message.id)
                         }
                     }
+                    .padding()
                 }
-                
-                // Message Input
-                if canSendMessages {
-                    messageInputSection
-                }
-                
-                // Error Message
-                if let error = errorMessage {
-                    Text(error)
-                        .font(.subheadline)
-                        .foregroundColor(.white)
-                        .padding()
-                        .frame(maxWidth: .infinity)
-                        .background(Color.red)
-                }
-            }
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Close") {
-                        dismiss()
-                    }
-                }
-                
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    HStack(spacing: 16) {
-                        Button(action: loadMessages) {
-                            Image(systemName: "arrow.clockwise")
-                        }
-                        
-                        if canCancel {
-                            Button(action: { showingCancelConfirmation = true }) {
-                                Image(systemName: "xmark.circle")
-                                    .foregroundColor(.red)
-                            }
+                .onChange(of: messages.count) { _ in
+                    if let lastMessage = messages.last {
+                        withAnimation {
+                            proxy.scrollTo(lastMessage.id, anchor: .bottom)
                         }
                     }
                 }
             }
-            .confirmationDialog(
-                "Cancel Request",
-                isPresented: $showingCancelConfirmation,
-                titleVisibility: .visible
-            ) {
-                Button("Cancel Request", role: .destructive) {
-                    cancelRequest()
-                }
-            } message: {
-                Text("Are you sure you want to cancel this request?")
+            
+            // Message Input
+            if canSendMessages {
+                messageInputSection
             }
+            
+            // Error Message
+            if let error = errorMessage {
+                Text(error)
+                    .font(.subheadline)
+                    .foregroundColor(.white)
+                    .padding()
+                    .frame(maxWidth: .infinity)
+                    .background(Color.red)
+            }
+        }
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarLeading) {
+                Button("Chiudi") {
+                    dismiss()
+                }
+            }
+            
+            ToolbarItem(placement: .navigationBarTrailing) {
+                HStack(spacing: 16) {
+                    Button(action: loadMessages) {
+                        SwiftUI.Image(systemName: "arrow.clockwise")
+                    }
+                    
+                    if canCancel {
+                        Button(action: { showingCancelConfirmation = true }) {
+                            SwiftUI.Image(systemName: "xmark.circle")
+                                .foregroundColor(.red)
+                        }
+                    }
+                }
+            }
+        }
+        .confirmationDialog(
+            "Annulla Richiesta",
+            isPresented: $showingCancelConfirmation,
+            titleVisibility: .visible
+        ) {
+            Button("Annulla Richiesta", role: .destructive) {
+                cancelRequest()
+            }
+        } message: {
+            Text("Sei sicuro di voler annullare questa richiesta?")
         }
         .onAppear {
             loadMessages()
@@ -127,38 +125,56 @@ struct PlayerRequestDetailView: View {
                 
                 Spacer()
                 
-                RequestStatusBadge(status: request.status)
+                // Status Badge (inline)
+                Text(request.status.displayName)
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 5)
+                    .background(
+                        Capsule()
+                            .fill(statusColor)
+                    )
             }
             
-            if let shop = request.shop {
+            if let shopName = request.shopName {
                 HStack(spacing: 6) {
-                    Image(systemName: "storefront.fill")
+                    SwiftUI.Image(systemName: "storefront.fill")
                         .font(.caption)
                         .foregroundColor(.secondary)
                     
-                    Text(shop.name)
+                    Text(shopName)
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                 }
             }
             
-            if !request.description.isEmpty {
-                Text(request.description)
+            if let desc = request.description, !desc.isEmpty {
+                Text(desc)
                     .font(.subheadline)
                     .foregroundColor(.secondary)
             }
             
             HStack(spacing: 6) {
-                Image(systemName: "calendar")
+                SwiftUI.Image(systemName: "calendar")
                     .font(.caption)
                 
-                Text("Created \(request.createdAt, style: .date)")
+                Text("Creata \(request.createdAt, style: .date)")
                     .font(.caption)
             }
             .foregroundColor(.secondary)
         }
         .padding()
         .background(Color(.secondarySystemBackground))
+    }
+    
+    private var statusColor: Color {
+        switch request.status {
+        case .pending: return .orange
+        case .accepted: return .blue
+        case .completed: return .green
+        case .rejected, .cancelled: return .red
+        }
     }
     
     private var messageInputSection: some View {
@@ -174,7 +190,7 @@ struct PlayerRequestDetailView: View {
                     .cornerRadius(20)
                 
                 Button(action: sendMessage) {
-                    Image(systemName: "arrow.up.circle.fill")
+                    SwiftUI.Image(systemName: "arrow.up.circle.fill")
                         .font(.system(size: 28))
                         .foregroundColor(newMessage.isEmpty ? .gray : Color(AdaptiveColors.primary))
                 }
@@ -245,7 +261,7 @@ struct PlayerRequestDetailView: View {
     private func cancelRequest() {
         Task {
             do {
-                try await requestService.cancelRequest(requestId: request.id)
+                try await requestService.cancelRequest(id: request.id)
                 
                 await MainActor.run {
                     onUpdate()
@@ -281,21 +297,9 @@ struct MessageBubble: View {
                     .background(isFromUser ? Color.blue : Color(.systemGray5))
                     .cornerRadius(16)
                 
-                HStack(spacing: 4) {
-                    if let senderName = message.sender?.username {
-                        Text(senderName)
-                            .font(.caption2)
-                            .foregroundColor(.secondary)
-                        
-                        Text("•")
-                            .font(.caption2)
-                            .foregroundColor(.secondary)
-                    }
-                    
-                    Text(message.createdAt, style: .time)
-                        .font(.caption2)
-                        .foregroundColor(.secondary)
-                }
+                Text(message.createdAt, style: .time)
+                    .font(.caption2)
+                    .foregroundColor(.secondary)
             }
             
             if !isFromUser {
@@ -305,23 +309,4 @@ struct MessageBubble: View {
     }
 }
 
-#Preview {
-    PlayerRequestDetailView(
-        request: CustomerRequest(
-            id: "1",
-            shopId: "shop1",
-            userId: "user1",
-            type: .cardSearch,
-            title: "Looking for Charizard",
-            description: "Need a mint condition Charizard from Base Set",
-            status: .pending,
-            createdAt: Date(),
-            updatedAt: Date(),
-            hasUnreadMessages: false,
-            shop: nil,
-            user: nil
-        ),
-        onUpdate: {}
-    )
-    .environmentObject(RequestService(apiClient: APIClient.shared))
-}
+// Preview removed - CustomerRequest uses custom decoder init

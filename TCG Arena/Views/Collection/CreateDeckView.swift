@@ -105,7 +105,7 @@ struct CreateDeckView: View {
                     )
                 )
             
-            Text("Create your collection")
+            Text("Crea la tua collezione")
                 .font(.subheadline)
                 .foregroundColor(.secondary)
         }
@@ -133,7 +133,7 @@ struct CreateDeckView: View {
                     .fontWeight(.bold)
                     .foregroundColor(.secondary)
                 
-                TextField("Optional description...", text: $deckDescription)
+                TextField("Descrizione opzionale...", text: $deckDescription)
                     .font(.system(size: 16))
                     .padding()
                     .background(Color(.secondarySystemGroupedBackground))
@@ -146,7 +146,7 @@ struct CreateDeckView: View {
     private var deckTypeSection: some View {
         HStack(spacing: 12) {
             DeckTypeOption(
-                title: "Collection",
+                title: "Collezione",
                 icon: "list.bullet.rectangle.fill",
                 isSelected: selectedDeckType == .lista,
                 color: .green
@@ -155,7 +155,7 @@ struct CreateDeckView: View {
             }
             
             DeckTypeOption(
-                title: "Playable Deck",
+                title: "Mazzo Giocabile",
                 icon: "rectangle.stack.fill",
                 isSelected: selectedDeckType == .deck,
                 color: .blue
@@ -199,7 +199,7 @@ struct CreateDeckView: View {
                     ProgressView()
                         .tint(.white)
                 } else {
-                    Text(selectedDeckType == .lista ? "Create Collection" : "Create Deck")
+                    Text(selectedDeckType == .lista ? "Crea Collezione" : "Crea Mazzo")
                         .font(.headline)
                     SwiftUI.Image(systemName: "arrow.right")
                         .font(.headline)

@@ -10,55 +10,142 @@ import SwiftUI
 struct TCGRulesView: View {
     let tcgType: TCGType
     @Environment(\.dismiss) private var dismiss
+    @State private var hasAppeared = false
     
     var body: some View {
         NavigationView {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 24) {
-                    // Header with TCG branding
-                    HStack(spacing: 16) {
-                        ZStack {
-                            Circle()
-                                .fill(tcgType.themeColor.opacity(0.2))
-                                .frame(width: 80, height: 80)
-                            
-                            TCGIconView(tcgType: tcgType, size: 36, color: tcgType.themeColor)
-                        }
-                        
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text(tcgType.displayName)
-                                .font(.system(size: 28, weight: .bold))
-                                .foregroundColor(.primary)
-                            
-                            Text("Regolamento Ufficiale")
-                                .font(.subheadline)
-                                .foregroundColor(.secondary)
-                        }
-                        
-                        Spacer()
-                    }
-                    .padding(.horizontal, 20)
-                    .padding(.top, 20)
+            ScrollView(showsIndicators: false) {
+                VStack(alignment: .leading, spacing: 0) {
+                    // Hero Header
+                    heroHeaderView
+                    
+                    // Quick Stats
+                    quickStatsView
+                        .padding(.horizontal, 20)
+                        .padding(.top, 24)
                     
                     // Rules content
-                    rulesContent
-                        .padding(.horizontal, 20)
+                    VStack(alignment: .leading, spacing: 16) {
+                        Text("Come si gioca")
+                            .font(.system(size: 20, weight: .bold))
+                            .foregroundColor(.primary)
+                            .padding(.horizontal, 20)
+                            .padding(.top, 28)
+                        
+                        rulesContent
+                            .padding(.horizontal, 20)
+                    }
                     
                     // External links
-                    externalLinksSection
-                        .padding(.horizontal, 20)
-                        .padding(.bottom, 40)
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("Risorse Ufficiali")
+                            .font(.system(size: 20, weight: .bold))
+                            .foregroundColor(.primary)
+                            .padding(.horizontal, 20)
+                            .padding(.top, 28)
+                        
+                        externalLinksSection
+                            .padding(.horizontal, 20)
+                    }
+                    .padding(.bottom, 40)
                 }
             }
             .background(Color(.systemGroupedBackground))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Chiudi") {
-                        dismiss()
+                    Button(action: { dismiss() }) {
+                        SwiftUI.Image(systemName: "xmark.circle.fill")
+                            .font(.system(size: 28))
+                            .foregroundColor(.secondary.opacity(0.6))
                     }
                 }
             }
+            .onAppear {
+                withAnimation(.spring(response: 0.6, dampingFraction: 0.8)) {
+                    hasAppeared = true
+                }
+            }
+        }
+    }
+    
+    // MARK: - Hero Header
+    private var heroHeaderView: some View {
+        ZStack {
+            // Background
+            tcgType.themeColor
+            
+            // Pattern overlay
+            VStack(spacing: 8) {
+                ForEach(0..<6, id: \.self) { row in
+                    HStack(spacing: 8) {
+                        ForEach(0..<8, id: \.self) { _ in
+                            Circle()
+                                .fill(Color.white.opacity(0.08))
+                                .frame(width: 12, height: 12)
+                        }
+                    }
+                }
+            }
+            .offset(x: 20, y: -10)
+            
+            // Content
+            VStack(spacing: 16) {
+                // Icon
+                ZStack {
+                    Circle()
+                        .fill(Color.white.opacity(0.2))
+                        .frame(width: 90, height: 90)
+                    
+                    Circle()
+                        .fill(Color.white)
+                        .frame(width: 74, height: 74)
+                    
+                    TCGIconView(tcgType: tcgType, size: 38, color: tcgType.themeColor)
+                }
+                .scaleEffect(hasAppeared ? 1.0 : 0.5)
+                .opacity(hasAppeared ? 1.0 : 0)
+                
+                // Title
+                VStack(spacing: 4) {
+                    Text(tcgType.displayName)
+                        .font(.system(size: 28, weight: .bold))
+                        .foregroundColor(.white)
+                    
+                    Text("Regolamento Ufficiale")
+                        .font(.system(size: 15, weight: .medium))
+                        .foregroundColor(.white.opacity(0.8))
+                }
+                .offset(y: hasAppeared ? 0 : 20)
+                .opacity(hasAppeared ? 1.0 : 0)
+            }
+            .padding(.vertical, 36)
+        }
+        .frame(height: 220)
+    }
+    
+    // MARK: - Quick Stats
+    private var quickStatsView: some View {
+        HStack(spacing: 12) {
+            QuickStatCard(value: deckSize, label: "Carte", icon: "rectangle.stack.fill")
+            QuickStatCard(value: maxCopies, label: "Max Copie", icon: "doc.on.doc.fill")
+            QuickStatCard(value: "1v1", label: "Formato", icon: "person.2.fill")
+        }
+    }
+    
+    private var deckSize: String {
+        switch tcgType {
+        case .pokemon, .magic, .lorcana: return "60"
+        case .yugioh: return "40-60"
+        case .onePiece, .digimon, .dragonBallSuper, .dragonBallFusion: return "50"
+        case .fleshAndBlood: return "60+"
+        }
+    }
+    
+    private var maxCopies: String {
+        switch tcgType {
+        case .lorcana: return "4"
+        default: return "4"
         }
     }
     
@@ -291,28 +378,21 @@ struct TCGRulesView: View {
     }
     
     private var externalLinksSection: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text("🔗 Link Utili")
-                .font(.system(size: 18, weight: .bold))
-                .foregroundColor(.primary)
+        VStack(spacing: 12) {
+            ExternalLinkButton(
+                title: "Regolamento Ufficiale",
+                icon: "doc.text.fill",
+                url: officialRulesURL,
+                color: tcgType.themeColor
+            )
             
-            VStack(spacing: 12) {
-                ExternalLinkButton(
-                    title: "Regolamento Ufficiale Completo",
-                    icon: "doc.text.fill",
-                    url: officialRulesURL
-                )
-                
-                ExternalLinkButton(
-                    title: "Video Tutorial",
-                    icon: "play.circle.fill",
-                    url: tutorialURL
-                )
-            }
+            ExternalLinkButton(
+                title: "Video Tutorial",
+                icon: "play.circle.fill",
+                url: tutorialURL,
+                color: .red
+            )
         }
-        .padding(16)
-        .background(Color(.systemBackground))
-        .cornerRadius(16)
     }
     
     private var officialRulesURL: String {
@@ -360,25 +440,71 @@ struct TCGRulesView: View {
 
 // MARK: - Supporting Views
 
+struct QuickStatCard: View {
+    let value: String
+    let label: String
+    let icon: String
+    
+    var body: some View {
+        VStack(spacing: 8) {
+            SwiftUI.Image(systemName: icon)
+                .font(.system(size: 16, weight: .medium))
+                .foregroundColor(.secondary)
+            
+            Text(value)
+                .font(.system(size: 22, weight: .bold))
+                .foregroundColor(.primary)
+            
+            Text(label)
+                .font(.system(size: 12, weight: .medium))
+                .foregroundColor(.secondary)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 16)
+        .background(Color(.systemBackground))
+        .cornerRadius(16)
+        .shadow(color: Color.black.opacity(0.04), radius: 8, x: 0, y: 2)
+    }
+}
+
 struct RuleSection: View {
     let title: String
     let content: String
+    var number: Int? = nil
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(title)
-                .font(.system(size: 16, weight: .bold))
-                .foregroundColor(.primary)
+        HStack(alignment: .top, spacing: 14) {
+            // Number badge
+            if let num = number {
+                ZStack {
+                    Circle()
+                        .fill(Color.blue)
+                        .frame(width: 28, height: 28)
+                    
+                    Text("\(num)")
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundColor(.white)
+                }
+                .padding(.top, 2)
+            }
             
-            Text(content)
-                .font(.system(size: 14))
-                .foregroundColor(.secondary)
-                .fixedSize(horizontal: false, vertical: true)
+            VStack(alignment: .leading, spacing: 10) {
+                Text(title)
+                    .font(.system(size: 17, weight: .semibold))
+                    .foregroundColor(.primary)
+                
+                Text(content)
+                    .font(.system(size: 15))
+                    .foregroundColor(.secondary)
+                    .lineSpacing(4)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
         }
-        .padding(16)
+        .padding(18)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(Color(.systemBackground))
-        .cornerRadius(12)
+        .cornerRadius(16)
+        .shadow(color: Color.black.opacity(0.04), radius: 8, x: 0, y: 2)
     }
 }
 
@@ -386,27 +512,48 @@ struct ExternalLinkButton: View {
     let title: String
     let icon: String
     let url: String
+    let color: Color
+    
+    init(title: String, icon: String, url: String, color: Color = .blue) {
+        self.title = title
+        self.icon = icon
+        self.url = url
+        self.color = color
+    }
     
     var body: some View {
         Link(destination: URL(string: url)!) {
-            HStack {
-                SwiftUI.Image(systemName: icon)
-                    .font(.system(size: 18))
-                    .foregroundColor(.blue)
+            HStack(spacing: 14) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 10)
+                        .fill(color.opacity(0.15))
+                        .frame(width: 40, height: 40)
+                    
+                    SwiftUI.Image(systemName: icon)
+                        .font(.system(size: 18, weight: .medium))
+                        .foregroundColor(color)
+                }
                 
-                Text(title)
-                    .font(.system(size: 15, weight: .medium))
-                    .foregroundColor(.primary)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(title)
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundColor(.primary)
+                    
+                    Text("Apri link esterno")
+                        .font(.system(size: 12))
+                        .foregroundColor(.secondary)
+                }
                 
                 Spacer()
                 
                 SwiftUI.Image(systemName: "arrow.up.right")
-                    .font(.system(size: 12))
+                    .font(.system(size: 14, weight: .medium))
                     .foregroundColor(.secondary)
             }
-            .padding(12)
-            .background(Color(.secondarySystemGroupedBackground))
-            .cornerRadius(10)
+            .padding(14)
+            .background(Color(.systemBackground))
+            .cornerRadius(16)
+            .shadow(color: Color.black.opacity(0.04), radius: 8, x: 0, y: 2)
         }
     }
 }
@@ -519,5 +666,115 @@ struct TCGRulesRow: View {
         .sheet(item: $selectedTCGType) { type in
             TCGRulesView(tcgType: type)
         }
+    }
+}
+
+// MARK: - Rules List Card for Collection Tab
+
+struct RulesListCard: View {
+    let tcgType: TCGType
+    let action: () -> Void
+    @State private var isPressed = false
+    
+    private var rulesPreview: String {
+        switch tcgType {
+        case .pokemon:
+            return "Raccogli 6 carte Premio per vincere"
+        case .magic:
+            return "Riduci i punti vita dell'avversario a 0"
+        case .yugioh:
+            return "Riduci i Life Points avversari da 8000 a 0"
+        case .onePiece:
+            return "Sconfiggi il Leader avversario"
+        case .digimon:
+            return "Attacca il Security Stack per vincere"
+        case .dragonBallSuper, .dragonBallFusion:
+            return "Esaurisci le vite del Leader nemico"
+        case .fleshAndBlood:
+            return "Abbatti l'eroe avversario in combattimento"
+        case .lorcana:
+            return "Raccogli 20 Lore esplorando"
+        }
+    }
+    
+    var body: some View {
+        Button(action: {
+            let generator = UIImpactFeedbackGenerator(style: .light)
+            generator.impactOccurred()
+            action()
+        }) {
+            HStack(spacing: 16) {
+                // TCG Icon with themed background
+                ZStack {
+                    RoundedRectangle(cornerRadius: 14)
+                        .fill(
+                            LinearGradient(
+                                gradient: Gradient(colors: [
+                                    tcgType.themeColor,
+                                    tcgType.themeColor.opacity(0.7)
+                                ]),
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .frame(width: 56, height: 56)
+                    
+                    TCGIconView(tcgType: tcgType, size: 26, color: .white)
+                }
+                
+                // Text content
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(tcgType.displayName)
+                        .font(.system(size: 17, weight: .semibold))
+                        .foregroundColor(.primary)
+                    
+                    Text(rulesPreview)
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundColor(.secondary)
+                        .lineLimit(1)
+                }
+                
+                Spacer()
+                
+                // Arrow
+                SwiftUI.Image(systemName: "chevron.right")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(.secondary.opacity(0.5))
+            }
+            .padding(16)
+            .background(
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(Color(.systemBackground))
+                    .shadow(color: Color.black.opacity(0.06), radius: 8, x: 0, y: 2)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 16)
+                    .stroke(Color(.separator).opacity(0.3), lineWidth: 1)
+            )
+            .scaleEffect(isPressed ? 0.98 : 1.0)
+            .animation(.easeInOut(duration: 0.1), value: isPressed)
+        }
+        .buttonStyle(ScaleButtonStyle())
+    }
+}
+
+// Keep TCGRulesCard for backward compatibility if needed elsewhere
+struct TCGRulesCard: View {
+    let tcgType: TCGType
+    let action: () -> Void
+    
+    var body: some View {
+        RulesListCard(tcgType: tcgType, action: action)
+    }
+}
+
+// MARK: - Press Events Modifier
+extension View {
+    func pressEvents(onPress: @escaping () -> Void, onRelease: @escaping () -> Void) -> some View {
+        self.simultaneousGesture(
+            DragGesture(minimumDistance: 0)
+                .onChanged { _ in onPress() }
+                .onEnded { _ in onRelease() }
+        )
     }
 }

@@ -144,7 +144,7 @@ class AuthService: ObservableObject {
         isLoading = false
     }
     
-    func signUp(email: String, password: String, username: String, displayName: String, favoriteGames: [TCGType]? = nil) async {
+    func signUp(email: String, password: String, username: String, displayName: String, favoriteGames: [TCGType]? = nil, city: String? = nil, country: String? = nil, latitude: Double? = nil, longitude: Double? = nil) async {
         isLoading = true
         errorMessage = nil
         
@@ -154,7 +154,11 @@ class AuthService: ObservableObject {
                 username: username,
                 displayName: displayName,
                 password: password,
-                favoriteGames: favoriteGames
+                favoriteGames: favoriteGames,
+                city: city,
+                country: country,
+                latitude: latitude,
+                longitude: longitude
             )
             
             let response: AuthResponse = try await APIClient.shared.request(

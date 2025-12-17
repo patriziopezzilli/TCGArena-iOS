@@ -45,30 +45,50 @@ struct TCGArenaApp: App {
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     @StateObject private var settingsService = SettingsService()
     @StateObject private var authService = AuthService()
+    @StateObject private var networkMonitor = NetworkMonitor.shared
     
     // Shop/Merchant Services
     @StateObject private var inventoryService = InventoryService()
     @StateObject private var reservationService = ReservationService()
     @StateObject private var requestService = RequestService()
     
+    init() {
+        // Hide scroll indicators globally throughout the app
+        UIScrollView.appearance().showsVerticalScrollIndicator = false
+        UIScrollView.appearance().showsHorizontalScrollIndicator = false
+    }
+    
     var body: some Scene {
         WindowGroup {
-            if hasCompletedOnboarding() {
-                // User has completed onboarding - show main app
-                MainAppView()
-                    .environmentObject(settingsService)
-                    .environmentObject(authService)
-                    .environmentObject(inventoryService)
-                    .environmentObject(reservationService)
-                    .environmentObject(requestService)
-                    .preferredColorScheme(settingsService.isDarkMode ? .dark : .light)
-            } else {
-                // First time user - show welcome/onboarding
-                WelcomeView()
-                    .environmentObject(settingsService)
-                    .environmentObject(authService)
-                    .preferredColorScheme(settingsService.isDarkMode ? .dark : .light)
+            ZStack {
+                if hasCompletedOnboarding() {
+                    // User has completed onboarding - show main app
+                    MainAppView()
+                        .environmentObject(settingsService)
+                        .environmentObject(authService)
+                        .environmentObject(inventoryService)
+                        .environmentObject(reservationService)
+                        .environmentObject(requestService)
+                        .environmentObject(networkMonitor)
+                        .preferredColorScheme(settingsService.isDarkMode ? .dark : .light)
+                } else {
+                    // First time user - show welcome/onboarding
+                    WelcomeView()
+                        .environmentObject(settingsService)
+                        .environmentObject(authService)
+                        .environmentObject(networkMonitor)
+                        .preferredColorScheme(settingsService.isDarkMode ? .dark : .light)
+                }
+                
+                // Overlay NoNetworkView when offline (blocks all navigation)
+                if !networkMonitor.isConnected {
+                    NoNetworkView()
+                        .environmentObject(networkMonitor)
+                        .transition(.opacity)
+                        .zIndex(1000) // Ensure it's always on top
+                }
             }
+            .animation(.easeInOut(duration: 0.3), value: networkMonitor.isConnected)
         }
     }
     
@@ -76,3 +96,4 @@ struct TCGArenaApp: App {
         return UserDefaults.standard.bool(forKey: "hasCompletedOnboarding")
     }
 }
+

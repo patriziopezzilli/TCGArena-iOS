@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 56;
+	objectVersion = 70;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -18,6 +18,19 @@
 		78660E4F2EE6177900EA2BFE /* EmbeddedUserStats.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78660E4E2EE6177900EA2BFE /* EmbeddedUserStats.swift */; };
 		78660E522EE6E27800EA2BFE /* TCGIconView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78660E502EE6E27800EA2BFE /* TCGIconView.swift */; };
 		78660E542EE7795600EA2BFE /* HapticManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78660E532EE7795600EA2BFE /* HapticManager.swift */; };
+		786778C32EF20F7E000928C4 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 786778C22EF20F7E000928C4 /* WidgetKit.framework */; };
+		786778C52EF20F7E000928C4 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 786778C42EF20F7E000928C4 /* SwiftUI.framework */; };
+		786778D22EF20F7F000928C4 /* TournamentActivityExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 786778C02EF20F7E000928C4 /* TournamentActivityExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		786778DA2EF210FD000928C4 /* TournamentActivityAttributes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 786778D92EF210FD000928C4 /* TournamentActivityAttributes.swift */; };
+		786778DC2EF21120000928C4 /* TournamentLiveActivityManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 786778DB2EF21120000928C4 /* TournamentLiveActivityManager.swift */; };
+		786778E82EF29EB2000928C4 /* NetworkMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 786778E72EF29EB2000928C4 /* NetworkMonitor.swift */; };
+		786778EA2EF29EC5000928C4 /* NoNetworkView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 786778E92EF29EC5000928C4 /* NoNetworkView.swift */; };
+		786778EC2EF2A287000928C4 /* MyActivityView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 786778EB2EF2A287000928C4 /* MyActivityView.swift */; };
+		786778EE2EF2A57B000928C4 /* PlayerRequestDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 786778ED2EF2A57B000928C4 /* PlayerRequestDetailView.swift */; };
+		786778F02EF2A5CA000928C4 /* PlayerRequestListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 786778EF2EF2A5CA000928C4 /* PlayerRequestListView.swift */; };
+		786778F22EF2A5E9000928C4 /* CreateRequestView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 786778F12EF2A5E9000928C4 /* CreateRequestView.swift */; };
+		786778F92EF2ACAE000928C4 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 786778F82EF2ACAE000928C4 /* GoogleService-Info.plist */; };
+		786778FA2EF2ACAE000928C4 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 786778F82EF2ACAE000928C4 /* GoogleService-Info.plist */; };
 		786AC8602EE2CD68001A6714 /* PastTournamentCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 786AC85F2EE2CD68001A6714 /* PastTournamentCard.swift */; };
 		786AC8632EE2DC13001A6714 /* WelcomeSheet in Frameworks */ = {isa = PBXBuildFile; productRef = 786AC8622EE2DC13001A6714 /* WelcomeSheet */; };
 		786AC8652EE2DF8A001A6714 /* OnboardingPermissionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 786AC8642EE2DF8A001A6714 /* OnboardingPermissionsView.swift */; };
@@ -137,8 +150,31 @@
 		A1000016 /* TournamentCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000016 /* TournamentCardView.swift */; };
 		A1000017 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A2000017 /* Assets.xcassets */; };
 		A1000018 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A2000018 /* Preview Assets.xcassets */; };
-		A1000019 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = A2000019 /* GoogleService-Info.plist */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		786778D02EF20F7F000928C4 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = AA000001 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 786778BF2EF20F7E000928C4;
+			remoteInfo = TournamentActivityExtension;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		786778D32EF20F7F000928C4 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				786778D22EF20F7F000928C4 /* TournamentActivityExtension.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		784090472EDA2CD700CC6B9A /* SetDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SetDetailView.swift; sourceTree = "<group>"; };
@@ -151,6 +187,19 @@
 		78660E4E2EE6177900EA2BFE /* EmbeddedUserStats.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EmbeddedUserStats.swift; sourceTree = "<group>"; };
 		78660E502EE6E27800EA2BFE /* TCGIconView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TCGIconView.swift; sourceTree = "<group>"; };
 		78660E532EE7795600EA2BFE /* HapticManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HapticManager.swift; sourceTree = "<group>"; };
+		786778C02EF20F7E000928C4 /* TournamentActivityExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = TournamentActivityExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		786778C22EF20F7E000928C4 /* WidgetKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WidgetKit.framework; path = System/Library/Frameworks/WidgetKit.framework; sourceTree = SDKROOT; };
+		786778C42EF20F7E000928C4 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
+		786778D82EF20F9C000928C4 /* TournamentActivityExtension.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = TournamentActivityExtension.entitlements; sourceTree = "<group>"; };
+		786778D92EF210FD000928C4 /* TournamentActivityAttributes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TournamentActivityAttributes.swift; sourceTree = "<group>"; };
+		786778DB2EF21120000928C4 /* TournamentLiveActivityManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TournamentLiveActivityManager.swift; sourceTree = "<group>"; };
+		786778E72EF29EB2000928C4 /* NetworkMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkMonitor.swift; sourceTree = "<group>"; };
+		786778E92EF29EC5000928C4 /* NoNetworkView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoNetworkView.swift; sourceTree = "<group>"; };
+		786778EB2EF2A287000928C4 /* MyActivityView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MyActivityView.swift; sourceTree = "<group>"; };
+		786778ED2EF2A57B000928C4 /* PlayerRequestDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerRequestDetailView.swift; sourceTree = "<group>"; };
+		786778EF2EF2A5CA000928C4 /* PlayerRequestListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerRequestListView.swift; sourceTree = "<group>"; };
+		786778F12EF2A5E9000928C4 /* CreateRequestView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateRequestView.swift; sourceTree = "<group>"; };
+		786778F82EF2ACAE000928C4 /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		786AC85F2EE2CD68001A6714 /* PastTournamentCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PastTournamentCard.swift; sourceTree = "<group>"; };
 		786AC8642EE2DF8A001A6714 /* OnboardingPermissionsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingPermissionsView.swift; sourceTree = "<group>"; };
 		786AC8662EE2ECC6001A6714 /* AuthFlowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthFlowView.swift; sourceTree = "<group>"; };
@@ -267,12 +316,34 @@
 		A2000016 /* TournamentCardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TournamentCardView.swift; sourceTree = "<group>"; };
 		A2000017 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		A2000018 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
-		A2000019 /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		A2000020 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		A3000001 /* TCG Arena.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "TCG Arena.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		786778D62EF20F7F000928C4 /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 786778BF2EF20F7E000928C4 /* TournamentActivityExtension */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		786778C62EF20F7E000928C4 /* TournamentActivity */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (786778D62EF20F7F000928C4 /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = TournamentActivity; sourceTree = "<group>"; };
+/* End PBXFileSystemSynchronizedRootGroup section */
+
 /* Begin PBXFrameworksBuildPhase section */
+		786778BD2EF20F7E000928C4 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				786778C52EF20F7E000928C4 /* SwiftUI.framework in Frameworks */,
+				786778C32EF20F7E000928C4 /* WidgetKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		A4000001 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -296,6 +367,15 @@
 			path = Views/Common;
 			sourceTree = "<group>";
 		};
+		786778C12EF20F7E000928C4 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				786778C22EF20F7E000928C4 /* WidgetKit.framework */,
+				786778C42EF20F7E000928C4 /* SwiftUI.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		7883DF852EDE4C9B007D1C51 /* Auth */ = {
 			isa = PBXGroup;
 			children = (
@@ -310,6 +390,9 @@
 		78D54AB62EE1A335009A04C7 /* Player */ = {
 			isa = PBXGroup;
 			children = (
+				786778F12EF2A5E9000928C4 /* CreateRequestView.swift */,
+				786778EF2EF2A5CA000928C4 /* PlayerRequestListView.swift */,
+				786778ED2EF2A57B000928C4 /* PlayerRequestDetailView.swift */,
 				78D54AB02EE1A335009A04C7 /* MyReservationsView.swift */,
 			);
 			path = Player;
@@ -365,6 +448,7 @@
 		7A817B8E2EC7693C00500F32 /* Shop */ = {
 			isa = PBXGroup;
 			children = (
+				786778EB2EF2A287000928C4 /* MyActivityView.swift */,
 				786AC8792EE46D83001A6714 /* EventFiltersView.swift */,
 				786AC8772EE461D5001A6714 /* ShopRequestsView.swift */,
 				786AC8752EE45D04001A6714 /* ShopReservationsView.swift */,
@@ -400,7 +484,11 @@
 		A5000001 = {
 			isa = PBXGroup;
 			children = (
+				786778F82EF2ACAE000928C4 /* GoogleService-Info.plist */,
+				786778D82EF20F9C000928C4 /* TournamentActivityExtension.entitlements */,
 				A5000002 /* TCG Arena */,
+				786778C62EF20F7E000928C4 /* TournamentActivity */,
+				786778C12EF20F7E000928C4 /* Frameworks */,
 				A5000003 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -418,7 +506,6 @@
 				A5000005 /* Views */,
 				A5000006 /* Services */,
 				A2000017 /* Assets.xcassets */,
-				A2000019 /* GoogleService-Info.plist */,
 				A2000020 /* Info.plist */,
 				A5000007 /* Preview Content */,
 			);
@@ -429,6 +516,7 @@
 			isa = PBXGroup;
 			children = (
 				A3000001 /* TCG Arena.app */,
+				786778C02EF20F7E000928C4 /* TournamentActivityExtension.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -436,6 +524,7 @@
 		A5000004 /* Models */ = {
 			isa = PBXGroup;
 			children = (
+				786778D92EF210FD000928C4 /* TournamentActivityAttributes.swift */,
 				78BBCF302EEED18D00FCEA14 /* TournamentUpdate.swift */,
 				78660E4E2EE6177900EA2BFE /* EmbeddedUserStats.swift */,
 				78660E4C2EE60CA300EA2BFE /* ProductType.swift */,
@@ -472,6 +561,7 @@
 		A5000005 /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				786778E92EF29EC5000928C4 /* NoNetworkView.swift */,
 				786AC87B2EE4E3A4001A6714 /* TCGRulesView.swift */,
 				786AC8642EE2DF8A001A6714 /* OnboardingPermissionsView.swift */,
 				78D54ADA2EE1B894009A04C7 /* Deck */,
@@ -504,6 +594,8 @@
 		A5000006 /* Services */ = {
 			isa = PBXGroup;
 			children = (
+				786778E72EF29EB2000928C4 /* NetworkMonitor.swift */,
+				786778DB2EF21120000928C4 /* TournamentLiveActivityManager.swift */,
 				786AC8732EE4457A001A6714 /* ToastManager.swift */,
 				7AAAA2112EDD93980035F942 /* InventoryService.swift */,
 				7AAAA2122EDD93980035F942 /* RequestService.swift */,
@@ -586,6 +678,28 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		786778BF2EF20F7E000928C4 /* TournamentActivityExtension */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 786778D72EF20F7F000928C4 /* Build configuration list for PBXNativeTarget "TournamentActivityExtension" */;
+			buildPhases = (
+				786778BC2EF20F7E000928C4 /* Sources */,
+				786778BD2EF20F7E000928C4 /* Frameworks */,
+				786778BE2EF20F7E000928C4 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				786778C62EF20F7E000928C4 /* TournamentActivity */,
+			);
+			name = TournamentActivityExtension;
+			packageProductDependencies = (
+			);
+			productName = TournamentActivityExtension;
+			productReference = 786778C02EF20F7E000928C4 /* TournamentActivityExtension.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 		A6000001 /* TCG Arena */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = A7000001 /* Build configuration list for PBXNativeTarget "TCG Arena" */;
@@ -593,10 +707,12 @@
 				A8000001 /* Sources */,
 				A4000001 /* Frameworks */,
 				A9000001 /* Resources */,
+				786778D32EF20F7F000928C4 /* Embed Foundation Extensions */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				786778D12EF20F7F000928C4 /* PBXTargetDependency */,
 			);
 			name = "TCG Arena";
 			packageProductDependencies = (
@@ -616,9 +732,12 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
-				LastSwiftUpdateCheck = 1610;
+				LastSwiftUpdateCheck = 2610;
 				LastUpgradeCheck = 1610;
 				TargetAttributes = {
+					786778BF2EF20F7E000928C4 = {
+						CreatedOnToolsVersion = 26.1.1;
+					};
 					A6000001 = {
 						CreatedOnToolsVersion = 16.1;
 					};
@@ -644,24 +763,40 @@
 			projectRoot = "";
 			targets = (
 				A6000001 /* TCG Arena */,
+				786778BF2EF20F7E000928C4 /* TournamentActivityExtension */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		786778BE2EF20F7E000928C4 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				786778FA2EF2ACAE000928C4 /* GoogleService-Info.plist in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		A9000001 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 				A1000018 /* Preview Assets.xcassets in Resources */,
 				A1000017 /* Assets.xcassets in Resources */,
-				A1000019 /* GoogleService-Info.plist in Resources */,
+				786778F92EF2ACAE000928C4 /* GoogleService-Info.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		786778BC2EF20F7E000928C4 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		A8000001 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -671,12 +806,15 @@
 				7AAAA20F2EDD938A0035F942 /* Reservation.swift in Sources */,
 				7883DF9F2EE02C87007D1C51 /* UserRequestsView.swift in Sources */,
 				7AAAA2102EDD938A0035F942 /* TournamentExtensions.swift in Sources */,
+				786778E82EF29EB2000928C4 /* NetworkMonitor.swift in Sources */,
+				786778DC2EF21120000928C4 /* TournamentLiveActivityManager.swift in Sources */,
 				A1000001 /* TCGArenaApp.swift in Sources */,
 				78660E542EE7795600EA2BFE /* HapticManager.swift in Sources */,
 				7AE3FF992EC90409004EE982 /* Set.swift in Sources */,
 				786AC87C2EE4E3A4001A6714 /* TCGRulesView.swift in Sources */,
 				7AFBD61F2EBCF99F0023B5D2 /* EditCardView.swift in Sources */,
 				7A8B2EA02EC22FCC004F6826 /* Expansion.swift in Sources */,
+				786778EC2EF2A287000928C4 /* MyActivityView.swift in Sources */,
 				786AC8742EE4457A001A6714 /* ToastManager.swift in Sources */,
 				A1000002 /* ContentView.swift in Sources */,
 				786AC8762EE45D04001A6714 /* ShopReservationsView.swift in Sources */,
@@ -693,6 +831,7 @@
 				7A8B2E882EC1F2FA004F6826 /* SharedComponents.swift in Sources */,
 				A1000004 /* User.swift in Sources */,
 				A1000005 /* Tournament.swift in Sources */,
+				786778F22EF2A5E9000928C4 /* CreateRequestView.swift in Sources */,
 				7A817B922EC7694400500F32 /* ShopService.swift in Sources */,
 				A1000006 /* Deck.swift in Sources */,
 				A1000007 /* AuthService.swift in Sources */,
@@ -712,8 +851,10 @@
 				7A8B2E952EC1F32A004F6826 /* DiscoverComponents.swift in Sources */,
 				7A817B9A2EC76EDF00500F32 /* ShopNews.swift in Sources */,
 				7A8B2E962EC1F32A004F6826 /* DiscoverView.swift in Sources */,
+				786778EA2EF29EC5000928C4 /* NoNetworkView.swift in Sources */,
 				7AA785882EBCA2AD00A11D94 /* MarketModels.swift in Sources */,
 				7A8B2E792EC1E375004F6826 /* NewAddCardView.swift in Sources */,
+				786778EE2EF2A57B000928C4 /* PlayerRequestDetailView.swift in Sources */,
 				7A8B2E7A2EC1E375004F6826 /* CardScanView.swift in Sources */,
 				7A8B2E7B2EC1E375004F6826 /* ManualAddCardView.swift in Sources */,
 				7A8B2E7C2EC1E375004F6826 /* CardScanResultView.swift in Sources */,
@@ -754,6 +895,7 @@
 				A1000010 /* TournamentMapView.swift in Sources */,
 				784090482EDA2CD700CC6B9A /* SetDetailView.swift in Sources */,
 				7840904A2EDB96F800CC6B9A /* ImageCacheManager.swift in Sources */,
+				786778F02EF2A5CA000928C4 /* PlayerRequestListView.swift in Sources */,
 				78660E522EE6E27800EA2BFE /* TCGIconView.swift in Sources */,
 				7A7DF4172EBB943D00331A52 /* CommunityView.swift in Sources */,
 				7A7DF41B2EBB943D00331A52 /* ProfileView.swift in Sources */,
@@ -778,6 +920,7 @@
 				7A817B942EC76A1C00500F32 /* LocationInputView.swift in Sources */,
 				7A8B2EA22EC23DA1004F6826 /* SettingsService.swift in Sources */,
 				7AA785932EBCA4D300A11D94 /* PortfolioCard.swift in Sources */,
+				786778DA2EF210FD000928C4 /* TournamentActivityAttributes.swift in Sources */,
 				786AC8652EE2DF8A001A6714 /* OnboardingPermissionsView.swift in Sources */,
 				7AA7858A2EBCA42200A11D94 /* TCGCardView.swift in Sources */,
 				78D54AB92EE1A335009A04C7 /* MyReservationsView.swift in Sources */,
@@ -795,7 +938,79 @@
 		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		786778D12EF20F7F000928C4 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 786778BF2EF20F7E000928C4 /* TournamentActivityExtension */;
+			targetProxy = 786778D02EF20F7F000928C4 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin XCBuildConfiguration section */
+		786778D42EF20F7F000928C4 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_ENTITLEMENTS = TournamentActivityExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = RBKZN3272M;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = TournamentActivity/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = TournamentActivity;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.1;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.tcgarena.app.TournamentActivity;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		786778D52EF20F7F000928C4 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_WIDGET_BACKGROUND_COLOR_NAME = WidgetBackground;
+				CODE_SIGN_ENTITLEMENTS = TournamentActivityExtension.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = RBKZN3272M;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = TournamentActivity/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = TournamentActivity;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.1;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.tcgarena.app.TournamentActivity;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 		A7000002 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -994,6 +1209,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		786778D72EF20F7F000928C4 /* Build configuration list for PBXNativeTarget "TournamentActivityExtension" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				786778D42EF20F7F000928C4 /* Debug */,
+				786778D52EF20F7F000928C4 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		A7000001 /* Build configuration list for PBXNativeTarget "TCG Arena" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
