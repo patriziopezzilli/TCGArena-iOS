@@ -502,7 +502,7 @@ struct CardDetailView: View {
                                     .aspectRatio(contentMode: .fit)
                                     .frame(width: 180, height: 255)
                                     .clipShape(RoundedRectangle(cornerRadius: 12))
-                                    .shadow(color: (card.tcgType?.themeColor ?? .gray).opacity(0.4), radius: 20, x: 0, y: 10)
+                                    .shadow(color: (card.tcgType?.themeColor ?? .gray).opacity(0.15), radius: 15, x: 0, y: 8)
                             case .failure(_):
                                 cardPlaceholder
                             @unknown default:

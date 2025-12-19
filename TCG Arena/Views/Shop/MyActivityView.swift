@@ -91,10 +91,10 @@ struct MyActivityView: View {
                 .buttonStyle(PlainButtonStyle())
             }
         }
-        .padding(6)
+        .padding(4)
         .background(
-            RoundedRectangle(cornerRadius: 16)
-                .fill(Color(.systemGray6))
+            RoundedRectangle(cornerRadius: 14)
+                .fill(Color(.secondarySystemFill).opacity(0.5))
         )
         .padding(.horizontal, 20)
         .padding(.vertical, 16)
@@ -296,7 +296,11 @@ private struct ActivityReservationCard: View {
             .padding(16)
             .background(
                 RoundedRectangle(cornerRadius: 16)
-                    .fill(Color(.systemBackground))
+                    .fill(Color(.secondarySystemGroupedBackground))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 16)
+                    .stroke(Color(.separator).opacity(0.15), lineWidth: 1)
             )
         }
         .buttonStyle(PlainButtonStyle())
@@ -402,7 +406,11 @@ private struct ActivityRequestCard: View {
             .padding(16)
             .background(
                 RoundedRectangle(cornerRadius: 16)
-                    .fill(Color(.systemBackground))
+                    .fill(Color(.secondarySystemGroupedBackground))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 16)
+                    .stroke(Color(.separator).opacity(0.15), lineWidth: 1)
             )
         }
         .buttonStyle(PlainButtonStyle())

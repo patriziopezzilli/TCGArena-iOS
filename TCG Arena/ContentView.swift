@@ -30,6 +30,13 @@ struct ContentView: View {
     
     var body: some View {
         TabView(selection: $selectedTab) {
+            HomeView(selectedTab: $selectedTab)
+                .tabItem {
+                    SwiftUI.Image(systemName: "house.fill")
+                    Text("Home")
+                }
+                .tag(0)
+
             CollectionView()
                 .environmentObject(cardService)
                 .environmentObject(deckService)
@@ -39,7 +46,7 @@ struct ContentView: View {
                     SwiftUI.Image(systemName: "rectangle.stack")
                     Text("Carte")
                 }
-                .tag(0)
+                .tag(1)
             
             ShopView()
                 .environmentObject(shopService)
@@ -52,7 +59,7 @@ struct ContentView: View {
                     SwiftUI.Image(systemName: "storefront")
                     Text("Negozi")
                 }
-                .tag(1)
+                .tag(2)
             
             RewardsMainView()
                 .environmentObject(rewardsService)
@@ -60,7 +67,7 @@ struct ContentView: View {
                     SwiftUI.Image(systemName: "gift.fill")
                     Text("Premi")
                 }
-                .tag(2)
+                .tag(3)
             
             CommunityView()
                 .environmentObject(notificationService)
@@ -69,7 +76,7 @@ struct ContentView: View {
                     SwiftUI.Image(systemName: "person.2")
                     Text("Community")
                 }
-                .tag(3)
+                .tag(4)
             
             ProfileView()
                 .environmentObject(reservationService)
@@ -77,7 +84,7 @@ struct ContentView: View {
                     SwiftUI.Image(systemName: "person.crop.circle")
                     Text("Profilo")
                 }
-                .tag(4)
+                .tag(5)
         }
         .accentColor(AdaptiveColors.brandPrimary)
         .animation(

@@ -105,11 +105,10 @@ struct CardRowView: View {
         .background(
             RoundedRectangle(cornerRadius: 16)
                 .fill(Color(.secondarySystemGroupedBackground))
-                .shadow(color: Color.black.opacity(0.08), radius: 10, x: 0, y: 3)
         )
         .overlay(
             RoundedRectangle(cornerRadius: 16)
-                .stroke(Color(.separator).opacity(0.3), lineWidth: 1)
+                .stroke(Color(.separator).opacity(0.5), lineWidth: 1)
         )
     }
     

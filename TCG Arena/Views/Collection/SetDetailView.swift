@@ -130,11 +130,11 @@ struct SetDetailView: View {
             .frame(maxWidth: .infinity)
             .background(
                 RoundedRectangle(cornerRadius: 16)
-                    .fill(cardColor.opacity(0.1))
+                    .fill(Color(.secondarySystemGroupedBackground))
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 16)
-                    .stroke(cardColor.opacity(0.2), lineWidth: 1)
+                    .stroke(cardColor.opacity(0.15), lineWidth: 1)
             )
         }
     }
@@ -167,11 +167,11 @@ struct SetDetailView: View {
             .padding(.vertical, 14)
             .background(
                 RoundedRectangle(cornerRadius: 12)
-                    .fill(Color(.secondarySystemFill))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 12)
-                            .stroke(searchText.isEmpty ? Color.clear : Color.blue.opacity(0.5), lineWidth: 1.5)
-                    )
+                    .fill(Color(.secondarySystemGroupedBackground))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(Color(.separator).opacity(0.3), lineWidth: 1)
             )
         }
     }

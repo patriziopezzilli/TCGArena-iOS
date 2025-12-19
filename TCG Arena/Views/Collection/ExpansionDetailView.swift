@@ -67,11 +67,11 @@ struct ExpansionDetailView: View {
             .frame(maxWidth: .infinity)
             .background(
                 RoundedRectangle(cornerRadius: 16)
-                    .fill(currentExpansion.tcgType.themeColor.opacity(0.1))
+                    .fill(Color(.secondarySystemBackground))
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 16)
-                    .stroke(currentExpansion.tcgType.themeColor.opacity(0.2), lineWidth: 1)
+                    .stroke(currentExpansion.tcgType.themeColor.opacity(0.3), lineWidth: 1)
             )
         }
     }
@@ -124,8 +124,11 @@ struct ExpansionDetailView: View {
         .padding(.vertical, 16)
         .background(
             RoundedRectangle(cornerRadius: 12)
-                .fill(Color(.systemBackground))
-                .shadow(color: .black.opacity(0.08), radius: 4, x: 0, y: 2)
+                .fill(Color(.secondarySystemBackground))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(Color(.separator).opacity(0.5), lineWidth: 1)
         )
     }
     
@@ -237,13 +240,12 @@ struct SetDetailCard: View {
         }
         .padding(16)
         .background(
-            RoundedRectangle(cornerRadius: 12)
-                .fill(Color(.systemBackground))
-                .shadow(color: cardColor.opacity(0.2), radius: 6, x: 0, y: 3)
+            RoundedRectangle(cornerRadius: 16)
+                .fill(Color(.secondarySystemBackground))
         )
         .overlay(
-            RoundedRectangle(cornerRadius: 12)
-                .stroke(cardColor.opacity(0.2), lineWidth: 1)
+            RoundedRectangle(cornerRadius: 16)
+                .stroke(Color(.separator).opacity(0.5), lineWidth: 1)
         )
     }
 }

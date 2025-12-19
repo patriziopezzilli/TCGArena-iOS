@@ -89,12 +89,11 @@ struct ExpansionCard: View {
             .padding(12)
             .background(
                 RoundedRectangle(cornerRadius: 16)
-                    .fill(Color(.systemBackground))
-                    .shadow(color: expansion.tcgType.themeColor.opacity(0.2), radius: 6, x: 0, y: 3)
+                    .fill(Color(.secondarySystemGroupedBackground))
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 16)
-                    .stroke(expansion.tcgType.themeColor.opacity(0.3), lineWidth: 1)
+                    .stroke(expansion.tcgType.themeColor.opacity(0.15), lineWidth: 1)
             )
         }
         .buttonStyle(PlainButtonStyle())
@@ -176,9 +175,12 @@ struct ExpansionRow: View {
         }
         .padding(16)
         .background(
-            RoundedRectangle(cornerRadius: 12)
-                .fill(Color(.systemBackground))
-                .shadow(color: .black.opacity(0.08), radius: 4, x: 0, y: 2)
+            RoundedRectangle(cornerRadius: 16)
+                .fill(Color(.secondarySystemGroupedBackground))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 16)
+                .stroke(Color(.separator).opacity(0.3), lineWidth: 1)
         )
     }
 }
@@ -246,10 +248,10 @@ struct ExpansionBadge: View {
             .padding(.vertical, 4)
             .background(
                 Capsule()
-                    .fill(expansion.tcgType.themeColor.opacity(0.1))
+                    .fill(expansion.tcgType.themeColor.opacity(0.05))
                     .overlay(
                         Capsule()
-                            .stroke(expansion.tcgType.themeColor.opacity(0.3), lineWidth: 0.5)
+                            .stroke(expansion.tcgType.themeColor.opacity(0.2), lineWidth: 0.5)
                     )
             )
         }

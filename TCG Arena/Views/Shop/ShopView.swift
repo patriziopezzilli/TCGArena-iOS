@@ -50,25 +50,29 @@ struct ShopView: View {
                             // Location Pill
                             Button(action: { showingLocationInput = true }) {
                                 HStack(spacing: 6) {
-                                    SwiftUI.Image(systemName: "mappin.and.ellipse")
-                                        .font(.system(size: 14))
+                                    SwiftUI.Image(systemName: "location.fill")
+                                        .font(.system(size: 12))
                                         .foregroundColor(.blue)
 
                                     Text(userLocationText)
-                                        .font(.system(size: 14, weight: .medium))
+                                        .font(.system(size: 13, weight: .semibold))
                                         .foregroundColor(.primary)
                                         .lineLimit(1)
 
-                                    SwiftUI.Image(systemName: "chevron.down")
+                                    SwiftUI.Image(systemName: "chevron.right")
                                         .font(.system(size: 10, weight: .bold))
-                                        .foregroundColor(.secondary)
+                                        .foregroundColor(.secondary.opacity(0.8))
                                 }
                                 .padding(.horizontal, 12)
                                 .padding(.vertical, 8)
                                 .background(
                                     Capsule()
-                                        .fill(Color(.systemBackground))
-                                        .shadow(color: Color.black.opacity(0.05), radius: 4, x: 0, y: 2)
+                                        .fill(Color(.secondarySystemGroupedBackground))
+                                        .shadow(color: Color.black.opacity(0.04), radius: 10, x: 0, y: 4)
+                                )
+                                .overlay(
+                                    Capsule()
+                                        .stroke(Color(.separator).opacity(0.1), lineWidth: 1)
                                 )
                             }
                         }
@@ -110,15 +114,15 @@ struct ShopView: View {
                         .padding(4)
                         .background(
                             RoundedRectangle(cornerRadius: 14)
-                                .fill(Color(.systemGray6))
+                                .fill(Color(.secondarySystemFill).opacity(0.5))
                         )
                         .padding(.horizontal, 20)
-                        .padding(.bottom, 10)
+                        .padding(.bottom, 16)
                     }
                     .background(
                         Rectangle()
                             .fill(Color(.systemBackground))
-                            .shadow(color: Color.black.opacity(0.03), radius: 8, x: 0, y: 4)
+                            .shadow(color: Color.black.opacity(0.02), radius: 0, x: 0, y: 1)
                     )
                     .zIndex(1)
 
@@ -1372,9 +1376,12 @@ struct ShopCardView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
         }
         .frame(height: 140)
-        .background(Color(.systemBackground))
-        .clipShape(RoundedRectangle(cornerRadius: 12))
-        .shadow(color: Color.black.opacity(0.06), radius: 8, x: 0, y: 2)
+        .background(Color(.secondarySystemGroupedBackground))
+        .clipShape(RoundedRectangle(cornerRadius: 16))
+        .overlay(
+            RoundedRectangle(cornerRadius: 16)
+                .stroke(Color(.separator).opacity(0.2), lineWidth: 1)
+        )
     }
 }
 
@@ -1497,9 +1504,12 @@ struct CompactShopCardView: View {
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 12)
-        .background(Color(.systemBackground))
-        .cornerRadius(12)
-        .shadow(color: Color.black.opacity(0.04), radius: 4, x: 0, y: 2)
+        .background(Color(.secondarySystemGroupedBackground))
+        .cornerRadius(16)
+        .overlay(
+            RoundedRectangle(cornerRadius: 16)
+                .stroke(Color(.separator).opacity(0.2), lineWidth: 1)
+        )
     }
 }
 

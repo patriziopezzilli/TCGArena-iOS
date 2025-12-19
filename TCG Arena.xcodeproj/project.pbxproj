@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		78229A532EF5BD5700E2F700 /* HomeDashboardService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78229A522EF5BD5700E2F700 /* HomeDashboardService.swift */; };
+		78229A562EF5BD6000E2F700 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78229A542EF5BD6000E2F700 /* HomeView.swift */; };
 		784090482EDA2CD700CC6B9A /* SetDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 784090472EDA2CD700CC6B9A /* SetDetailView.swift */; };
 		7840904A2EDB96F800CC6B9A /* ImageCacheManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 784090492EDB96F800CC6B9A /* ImageCacheManager.swift */; };
 		7840904C2EDB98F000CC6B9A /* DeckSelectionModal.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7840904B2EDB98F000CC6B9A /* DeckSelectionModal.swift */; };
@@ -179,6 +181,8 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		78229A522EF5BD5700E2F700 /* HomeDashboardService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeDashboardService.swift; sourceTree = "<group>"; };
+		78229A542EF5BD6000E2F700 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
 		784090472EDA2CD700CC6B9A /* SetDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SetDetailView.swift; sourceTree = "<group>"; };
 		784090492EDB96F800CC6B9A /* ImageCacheManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageCacheManager.swift; sourceTree = "<group>"; };
 		7840904B2EDB98F000CC6B9A /* DeckSelectionModal.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeckSelectionModal.swift; sourceTree = "<group>"; };
@@ -362,6 +366,14 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		78229A552EF5BD6000E2F700 /* Home */ = {
+			isa = PBXGroup;
+			children = (
+				78229A542EF5BD6000E2F700 /* HomeView.swift */,
+			);
+			path = Home;
+			sourceTree = "<group>";
+		};
 		78660E512EE6E27800EA2BFE /* Common */ = {
 			isa = PBXGroup;
 			children = (
@@ -567,6 +579,7 @@
 		A5000005 /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				78229A552EF5BD6000E2F700 /* Home */,
 				786778E92EF29EC5000928C4 /* NoNetworkView.swift */,
 				786AC87B2EE4E3A4001A6714 /* TCGRulesView.swift */,
 				786AC8642EE2DF8A001A6714 /* OnboardingPermissionsView.swift */,
@@ -600,6 +613,7 @@
 		A5000006 /* Services */ = {
 			isa = PBXGroup;
 			children = (
+				78229A522EF5BD5700E2F700 /* HomeDashboardService.swift */,
 				786778E72EF29EB2000928C4 /* NetworkMonitor.swift */,
 				786778DB2EF21120000928C4 /* TournamentLiveActivityManager.swift */,
 				786AC8732EE4457A001A6714 /* ToastManager.swift */,
@@ -812,6 +826,7 @@
 				7AAAA20F2EDD938A0035F942 /* Reservation.swift in Sources */,
 				7883DF9F2EE02C87007D1C51 /* UserRequestsView.swift in Sources */,
 				7AAAA2102EDD938A0035F942 /* TournamentExtensions.swift in Sources */,
+				78229A562EF5BD6000E2F700 /* HomeView.swift in Sources */,
 				786778E82EF29EB2000928C4 /* NetworkMonitor.swift in Sources */,
 				786778DC2EF21120000928C4 /* TournamentLiveActivityManager.swift in Sources */,
 				A1000001 /* TCGArenaApp.swift in Sources */,
@@ -819,6 +834,7 @@
 				7AE3FF992EC90409004EE982 /* Set.swift in Sources */,
 				786AC87C2EE4E3A4001A6714 /* TCGRulesView.swift in Sources */,
 				7AFBD61F2EBCF99F0023B5D2 /* EditCardView.swift in Sources */,
+				78229A532EF5BD5700E2F700 /* HomeDashboardService.swift in Sources */,
 				7A8B2EA02EC22FCC004F6826 /* Expansion.swift in Sources */,
 				786778EC2EF2A287000928C4 /* MyActivityView.swift in Sources */,
 				786AC8742EE4457A001A6714 /* ToastManager.swift in Sources */,

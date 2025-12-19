@@ -198,17 +198,11 @@ struct InfoCard<Content: View>: View {
         .padding(20)
         .background(
             RoundedRectangle(cornerRadius: UIConstants.cornerRadius)
-                .fill(Color(.systemBackground))
-                .shadow(
-                    color: Color.black.opacity(UIConstants.shadowOpacity),
-                    radius: UIConstants.shadowRadius,
-                    x: 0,
-                    y: 2
-                )
+                .fill(Color(.secondarySystemGroupedBackground))
         )
         .overlay(
             RoundedRectangle(cornerRadius: UIConstants.cornerRadius)
-                .stroke(Color(.systemGray6), lineWidth: 1)
+                .stroke(Color(.separator).opacity(0.3), lineWidth: 1)
         )
     }
 }

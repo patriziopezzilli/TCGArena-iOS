@@ -243,6 +243,8 @@ struct CollectionView: View {
     @State private var isHeaderCollapsed = false // For collapsible header on scroll
     @State private var animatedDeckIds: Set<Int64> = [] // Track decks that have animated in
     @State private var animatedCardIds: Set<String> = [] // Track cards that have animated in
+    @State private var showAddMenu = false // For custom Flutter-style menu
+    @State private var showingSearch = false // NEW: Toggle search/filter bar
 
     enum ViewMode {
         case lists, allCards, rules
@@ -459,29 +461,34 @@ struct CollectionView: View {
                     .opacity(hasAppeared ? 1 : 0)
                     .offset(y: hasAppeared ? 0 : -10)
                 
-                // Collapsible search bar - hide on rules tab
-                if !isHeaderCollapsed && viewMode != .rules {
+                // Discover Section (Conditional part of Search)
+                if showingSearch && !isHeaderCollapsed && viewMode != .rules {
+                    discoverSectionView
+                        .transition(.opacity.combined(with: .move(edge: .top)))
+                }
+
+                // Search bar (Conditional)
+                if showingSearch && !isHeaderCollapsed && viewMode != .rules {
                     searchBarView
                         .opacity(hasAppeared ? 1 : 0)
                         .offset(y: hasAppeared ? 0 : -8)
                         .transition(.opacity.combined(with: .move(edge: .top)))
                 }
                 
-                // TCG filter - hide on rules tab
-                if viewMode != .rules {
+                // TCG filter (Conditional)
+                if showingSearch && viewMode != .rules {
                     tcgFilterView
                         .opacity(hasAppeared ? 1 : 0)
-                    
-                    // TCG Rules Info Banner
+                        .transition(.opacity.combined(with: .move(edge: .top)))
+                }
+
+                // Tab Selector - Below filters as in Flutter
+                tabSelectorView
+                    .padding(.bottom, 8)
+                
+                // TCG Rules Info Banner
+                if viewMode != .rules {
                     tcgRulesBannerView
-                    
-                    separatorView
-                    
-                    // Collapsible discover section
-                    if !isHeaderCollapsed {
-                        discoverSectionView
-                            .transition(.opacity.combined(with: .move(edge: .top)))
-                    }
                 }
                 
                 // Content - different handling for rules tab
@@ -495,6 +502,13 @@ struct CollectionView: View {
             .navigationTitle("")
             .navigationBarHidden(true)
             .background(cardNavigationLink)
+            .overlay(
+                ZStack {
+                    if showAddMenu {
+                        customAddMenuOverlay
+                    }
+                }
+            )
             .sheet(isPresented: $showingCreateDeck) {
                 CreateDeckView(userId: authService.currentUserId ?? 0)
                     .environmentObject(deckService)
@@ -519,90 +533,181 @@ struct CollectionView: View {
                 await performRefresh()
             }
         }
-        .background(Color(.systemBackground))
+        .background(Color(.systemGroupedBackground))
     }
 
     private var headerView: some View {
-        VStack(spacing: 0) {
-            HStack {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("TCG Arena")
-                        .font(.system(size: 28, weight: .bold))
-                        .foregroundColor(.primary)
-                }
+        HStack {
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Collezione")
+                    .font(.system(size: 28, weight: .bold))
+                    .foregroundColor(.primary)
+            }
 
-                Spacer()
+            Spacer()
 
-                HStack(spacing: 12) {
-                    // Unified Add Button with Menu
-                    Menu {
-                        Button(action: { showingAddCard = true }) {
-                            Label("Add Card", systemImage: "plus.circle.fill")
-                        }
-                        
-                        Button(action: { showingCreateDeck = true }) {
-                            Label("Create List", systemImage: "plus.square")
-                        }
-                    } label: {
-                        ZStack {
-                            Circle()
-                                .fill(Color.blue)
-                                .frame(width: 36, height: 36)
-                            
-                            SwiftUI.Image(systemName: "plus")
-                                .font(.system(size: 18, weight: .bold))
-                                .foregroundColor(.white)
-                        }
-                        .shadow(color: Color.blue.opacity(0.3), radius: 4, x: 0, y: 2)
-                    }
+            Button(action: {
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                    showingSearch.toggle()
                 }
+            }) {
+                ZStack {
+                    Circle()
+                        .fill(Color(.systemGray6))
+                        .frame(width: 40, height: 40)
+                    
+                    SwiftUI.Image(systemName: "magnifyingglass")
+                        .font(.system(size: 18, weight: .bold))
+                        .foregroundColor(showingSearch ? .blue : .primary)
+                }
+            }
+            .padding(.trailing, 8)
+
+            Button(action: {
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                    showAddMenu.toggle()
+                }
+            }) {
+                ZStack {
+                    Circle()
+                        .fill(Color.primary)
+                        .frame(width: 40, height: 40)
+                        .shadow(color: Color.primary.opacity(0.3), radius: 8, x: 0, y: 2)
+                    
+                    SwiftUI.Image(systemName: showAddMenu ? "xmark" : "plus")
+                        .font(.system(size: 20, weight: .bold))
+                        .foregroundColor(.white)
+                        .rotationEffect(.degrees(showAddMenu ? 90 : 0))
+                }
+            }
         }
         .padding(.horizontal, 20)
         .padding(.top, 20)
         .padding(.bottom, 12)
-            // View Mode Selector - Compact Design
-            HStack(spacing: 0) {
-                CompactTabButton(
-                    icon: "rectangle.stack.fill",
-                    label: "Liste",
-                    count: listsCount,
-                    isSelected: viewMode == .lists
-                ) {
-                    withAnimation(.easeInOut(duration: 0.2)) {
-                        viewMode = .lists
+    }
+
+    private var customAddMenuOverlay: some View {
+        ZStack {
+            // Background dim/tap area
+            Color.black.opacity(0.01)
+                .edgesIgnoringSafeArea(.all)
+                .onTapGesture {
+                    withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                        showAddMenu = false
                     }
                 }
-                
-                CompactTabButton(
-                    icon: "square.grid.2x2.fill",
-                    label: "Carte",
-                    count: allCardsCount,
-                    isSelected: viewMode == .allCards
-                ) {
-                    withAnimation(.easeInOut(duration: 0.2)) {
-                        viewMode = .allCards
+            
+            VStack {
+                HStack {
+                    Spacer()
+                    VStack(alignment: .leading, spacing: 0) {
+                        // Add Card Item
+                        Button(action: {
+                            showAddMenu = false
+                            showingAddCard = true
+                        }) {
+                            HStack(spacing: 12) {
+                                ZStack {
+                                    Circle()
+                                        .fill(Color.blue.opacity(0.1))
+                                        .frame(width: 32, height: 32)
+                                    SwiftUI.Image(systemName: "plus.circle.fill")
+                                        .foregroundColor(.blue)
+                                        .font(.system(size: 18))
+                                }
+                                Text("Aggiungi Carta")
+                                    .font(.system(size: 16, weight: .semibold))
+                                    .foregroundColor(.primary)
+                            }
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 12)
+                        }
+                        
+                        Divider()
+                            .padding(.horizontal, 12)
+                        
+                        // Create List Item
+                        Button(action: {
+                            showAddMenu = false
+                            showingCreateDeck = true
+                        }) {
+                            HStack(spacing: 12) {
+                                ZStack {
+                                    Circle()
+                                        .fill(Color.green.opacity(0.1))
+                                        .frame(width: 32, height: 32)
+                                    SwiftUI.Image(systemName: "plus.square.fill")
+                                        .foregroundColor(.green)
+                                        .font(.system(size: 18))
+                                }
+                                Text("Crea Lista")
+                                    .font(.system(size: 16, weight: .semibold))
+                                    .foregroundColor(.primary)
+                            }
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 12)
+                        }
                     }
+                    .background(
+                        RoundedRectangle(cornerRadius: 16)
+                            .fill(Color(.systemBackground))
+                            .shadow(color: Color.black.opacity(0.15), radius: 20, x: 0, y: 10)
+                    )
+                    .frame(width: 200)
+                    .padding(.top, 65) // Adjust based on header height
+                    .padding(.trailing, 20)
                 }
-                
-                CompactTabButton(
-                    icon: "book.fill",
-                    label: "Regole",
-                    count: nil,
-                    isSelected: viewMode == .rules
-                ) {
-                    withAnimation(.easeInOut(duration: 0.2)) {
-                        viewMode = .rules
-                    }
+                Spacer()
+            }
+        }
+        .transition(.asymmetric(
+            insertion: .opacity.combined(with: .scale(scale: 0.9, anchor: .topTrailing)),
+            removal: .opacity.combined(with: .scale(scale: 0.9, anchor: .topTrailing))
+        ))
+    }
+
+    private var tabSelectorView: some View {
+        // View Mode Selector - Compact Design
+        HStack(spacing: 0) {
+            CompactTabButton(
+                icon: "rectangle.stack.fill",
+                label: "Liste",
+                count: listsCount,
+                isSelected: viewMode == .lists
+            ) {
+                withAnimation(.easeInOut(duration: 0.2)) {
+                    viewMode = .lists
                 }
             }
-            .padding(4)
-            .background(
-                RoundedRectangle(cornerRadius: 14)
-                    .fill(Color(.systemGray6))
-            )
-            .padding(.horizontal, 20)
-            .padding(.bottom, 8)
+            
+            CompactTabButton(
+                icon: "square.grid.2x2.fill",
+                label: "Carte",
+                count: allCardsCount,
+                isSelected: viewMode == .allCards
+            ) {
+                withAnimation(.easeInOut(duration: 0.2)) {
+                    viewMode = .allCards
+                }
+            }
+            
+            CompactTabButton(
+                icon: "book.fill",
+                label: "Regole",
+                count: nil,
+                isSelected: viewMode == .rules
+            ) {
+                withAnimation(.easeInOut(duration: 0.2)) {
+                    viewMode = .rules
+                }
+            }
         }
+        .padding(4)
+        .background(
+            RoundedRectangle(cornerRadius: 14)
+                .fill(Color(.systemGray6))
+        )
+        .padding(.horizontal, 20)
     }
 
     private var searchBarView: some View {
@@ -632,15 +737,11 @@ struct CollectionView: View {
             .padding(.vertical, 14)
             .background(
                 RoundedRectangle(cornerRadius: 12)
-                    .fill(Color(.secondarySystemFill))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 12)
-                            .stroke(searchText.isEmpty ? Color.clear : Color.blue.opacity(0.5), lineWidth: 1.5)
-                    )
+                    .fill(Color(.systemGray6))
             )
         }
         .padding(.horizontal, 20)
-        .padding(.top, 12)
+        .padding(.top, 4)
     }
 
     private var portfolioCardView: some View {
@@ -694,7 +795,6 @@ struct CollectionView: View {
                         .background(
                             Capsule()
                                 .fill(backgroundColorFor(tcgType))
-                                .shadow(color: selectedTCGType == tcgType ? Color.black.opacity(0.1) : Color.clear, radius: 4, x: 0, y: 2)
                         )
                         .scaleEffect(selectedTCGType == tcgType ? 1.05 : 1.0)
                     }
@@ -702,7 +802,8 @@ struct CollectionView: View {
             }
             .padding(.horizontal, 20)
         }
-        .padding(.vertical, 20)
+        .padding(.top, 20)
+        .padding(.bottom, 12)
     }
     
     // MARK: - TCG Rules Banner
@@ -766,8 +867,7 @@ struct CollectionView: View {
 
     private var discoverSectionView: some View {
         DiscoverInfoBox()
-            .padding(.horizontal, 20)
-            .padding(.bottom, 20)
+            .padding(.bottom, 12)
     }
 
     private var contentView: some View {
@@ -1580,8 +1680,14 @@ struct DiscoverInfoBox: View {
         .buttonStyle(PlainButtonStyle())
         .background(
             RoundedRectangle(cornerRadius: 12)
-                .fill(Color(.secondarySystemBackground))
+                .fill(Color(.secondarySystemGroupedBackground))
         )
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(Color(.separator).opacity(0.5), lineWidth: 1.2)
+        )
+        .shadow(color: Color.black.opacity(0.02), radius: 8, x: 0, y: 4)
+        .padding(.horizontal, 20)
         .sheet(isPresented: $showingDiscoverSheet) {
             CardDiscoverView()
                 .environmentObject(authService)
@@ -1615,9 +1721,9 @@ struct CardDiscoverView: View {
     // Helper functions for TCG filters
     private func backgroundColorFor(_ tcgType: TCGType?) -> Color {
         guard let tcgType = tcgType else {
-            return selectedTCGType == nil ? Color.blue.opacity(0.8) : Color(UIColor.secondarySystemFill)
+            return selectedTCGType == nil ? Color.primary : Color(.systemGray6)
         }
-        return selectedTCGType == tcgType ? tcgType.themeColor.opacity(0.8) : Color(UIColor.secondarySystemFill)
+        return selectedTCGType == tcgType ? tcgType.themeColor : Color(.systemGray6)
     }
     
     private func textColorFor(_ tcgType: TCGType?) -> Color {

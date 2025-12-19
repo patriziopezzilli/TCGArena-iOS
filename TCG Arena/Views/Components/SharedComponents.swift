@@ -165,13 +165,12 @@ struct PremiumTabButton: View {
             .padding(.vertical, 10)
             .background(
                 Capsule()
-                    .fill(isSelected ? Color.blue : Color(.systemGray6))
+                    .fill(isSelected ? Color.primary : Color(.systemGray6))
             )
             .overlay(
                 Capsule()
-                    .stroke(Color.black.opacity(0.05), lineWidth: 1)
+                    .stroke(Color(.separator).opacity(0.1), lineWidth: 1)
             )
-            .shadow(color: isSelected ? Color.blue.opacity(0.3) : Color.clear, radius: 4, x: 0, y: 2)
         }
     }
 }
@@ -206,7 +205,7 @@ struct CompactTabButton: View {
             .padding(.vertical, 10)
             .background(
                 RoundedRectangle(cornerRadius: 10)
-                    .fill(isSelected ? Color.blue : Color.clear)
+                    .fill(isSelected ? Color.primary : Color.clear)
             )
         }
         .buttonStyle(PlainButtonStyle())

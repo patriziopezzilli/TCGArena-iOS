@@ -79,11 +79,11 @@ struct TournamentCardView: View {
                         .foregroundColor(.primary)
                         .padding(.vertical, 8)
                 }
-                .background(Color(.secondarySystemBackground))
-                .cornerRadius(8)
+                .background(Color(.secondarySystemGroupedBackground))
+                .cornerRadius(12)
                 .overlay(
-                    RoundedRectangle(cornerRadius: 8)
-                        .stroke(Color(.separator).opacity(0.5), lineWidth: 1)
+                    RoundedRectangle(cornerRadius: 12)
+                        .stroke(Color(.separator).opacity(0.15), lineWidth: 1)
                 )
                 .frame(width: 60)
 
@@ -155,32 +155,15 @@ struct TournamentCardView: View {
             .padding(.vertical, 16)
             .padding(.trailing, 16)
         }
-        .background(
-            Group {
-                if tournament.isRanked == true {
-                    // Premium gold gradient overlay for ranked tournaments
-                    ZStack {
-                        Color(.systemBackground)
-                        LinearGradient(
-                            gradient: Gradient(colors: [Color(red: 1.0, green: 0.9, blue: 0.6).opacity(0.15), Color.clear]),
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    }
-                } else {
-                    Color(.systemBackground)
-                }
-            }
-        )
+        .background(Color(.secondarySystemGroupedBackground))
         .cornerRadius(16)
         .overlay(
             RoundedRectangle(cornerRadius: 16)
                 .stroke(
-                    tournament.isRanked == true ? Color(red: 0.85, green: 0.65, blue: 0.2) : Color.clear,
-                    lineWidth: tournament.isRanked == true ? 2 : 0
+                    tournament.isRanked == true ? Color(red: 0.85, green: 0.65, blue: 0.2).opacity(0.5) : Color(.separator).opacity(0.2),
+                    lineWidth: tournament.isRanked == true ? 1.5 : 1
                 )
         )
-        .shadow(color: tournament.isRanked == true ? Color(red: 0.85, green: 0.65, blue: 0.2).opacity(0.3) : Color.black.opacity(0.05), radius: 8, x: 0, y: 2)
     }
     
     // MARK: - Badge Section
