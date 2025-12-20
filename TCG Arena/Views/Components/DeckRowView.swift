@@ -13,66 +13,51 @@ struct DeckRowView: View {
     var body: some View {
         HStack(spacing: 16) {
             deckIconView
-            deckInfoView
+            
+            VStack(alignment: .leading, spacing: 4) {
+                Text(deck.name)
+                    .font(.system(size: 17, weight: .semibold))
+                    .foregroundColor(.primary)
+                
+                HStack(spacing: 6) {
+                    Text("\(deck.totalCards) Carte")
+                    
+                    Text("•")
+                        .foregroundColor(.secondary.opacity(0.5))
+                    
+                    Text(deck.tcgType.displayName)
+                }
+                .font(.system(size: 13, weight: .medium))
+                .foregroundColor(.secondary)
+            }
             
             Spacer()
             
             SwiftUI.Image(systemName: "chevron.right")
-                .font(.system(size: 12, weight: .semibold))
-                .foregroundColor(.secondary)
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundColor(Color(.tertiaryLabel))
         }
-        .padding(16)
-        .background(
-            ZStack {
-                RoundedRectangle(cornerRadius: 16)
-                    .fill(Color(.secondarySystemGroupedBackground))
-                
-                RoundedRectangle(cornerRadius: 16)
-                    .fill(deck.tcgType.themeColor.opacity(0.02))
-            }
-        )
+        .padding(.vertical, 12)
+        .padding(.horizontal, 16)
+        .background(Color(.systemBackground))
+        .cornerRadius(12)
         .overlay(
-            RoundedRectangle(cornerRadius: 16)
-                .stroke(deck.tcgType.themeColor.opacity(0.2), lineWidth: 1.5)
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(Color(.separator).opacity(0.4), lineWidth: 0.5)
         )
+        // subtle shadow for depth in the list, consistent with ShopCardView if needed, or kept flat
+        .shadow(color: Color.black.opacity(0.03), radius: 2, x: 0, y: 1)
     }
     
     private var deckIconView: some View {
         ZStack {
-            RoundedRectangle(cornerRadius: 12)
-                .fill(deck.tcgType.themeColor.opacity(0.1))
-                .frame(width: 60, height: 60)
+            RoundedRectangle(cornerRadius: 10)
+                .fill(deck.tcgType.themeColor.opacity(0.08))
+                .frame(width: 48, height: 48)
             
-            SwiftUI.Image(systemName: deck.deckType == .deck ? "rectangle.stack.fill" : "folder.fill")
-                .font(.system(size: 24))
+            SwiftUI.Image(systemName: deck.deckType == .deck ? "rectangle.portrait.on.rectangle.portrait.fill" : "folder.fill")
+                .font(.system(size: 20))
                 .foregroundColor(deck.tcgType.themeColor)
-        }
-        .overlay(
-            RoundedRectangle(cornerRadius: 12)
-                .stroke(deck.tcgType.themeColor.opacity(0.2), lineWidth: 1)
-        )
-    }
-    
-    private var deckInfoView: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(deck.name)
-                .font(.system(size: 16, weight: .bold))
-                .foregroundColor(.primary)
-            
-            if let description = deck.description, !description.isEmpty {
-                Text(description)
-                    .font(.system(size: 13, weight: .medium))
-                    .foregroundColor(.secondary)
-                    .lineLimit(1)
-            }
-            
-            HStack(spacing: 8) {
-                TCGIconView(tcgType: deck.tcgType, size: 12, color: deck.tcgType.themeColor)
-                
-                Text("\(deck.totalCards) carte")
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundColor(.secondary)
-            }
         }
     }
 }

@@ -94,163 +94,113 @@ struct DeckDetailView: View {
     }
     
     var body: some View {
-        GeometryReader { geometry in
-            let safeAreaTop = geometry.safeAreaInsets.top
-            
-            ZStack(alignment: .top) {
-                // Fixed Header
-                ZStack(alignment: .bottomLeading) {
-                    // Abstract Gradient Background
-                    abstractHeaderBackground
-                        .frame(width: geometry.size.width, height: 180 + safeAreaTop)
-                    
-                    // Gradient Overlay
-                    LinearGradient(
-                        gradient: Gradient(colors: [
-                            Color.black.opacity(0.85),
-                            Color.black.opacity(0.5),
-                            Color.black.opacity(0.3)
-                        ]),
-                        startPoint: .bottom,
-                        endPoint: .top
-                    )
-                
-                // Header Content
-                VStack(alignment: .leading, spacing: 6) {
-                    // Badges
+        ScrollView {
+            VStack(alignment: .leading, spacing: 0) {
+                // MARK: - Header Section
+                VStack(alignment: .leading, spacing: 12) {
+                    // TCG Pill
                     HStack(spacing: 8) {
-                        // TCG Badge
-                        HStack(spacing: 4) {
-                            TCGIconView(tcgType: deck.tcgType, size: 10)
-                            Text(deck.tcgType.displayName)
-                                .font(.system(size: 11, weight: .bold))
-                        }
-                        .padding(.horizontal, 6)
-                        .padding(.vertical, 3)
-                        .background(Material.thinMaterial)
-                        .clipShape(Capsule())
-                        .foregroundColor(.white)
-                        
-                        // Card Count Badge
+                        TCGIconView(tcgType: deck.tcgType, size: 20)
+                        Text(deck.tcgType.displayName.uppercased())
+                            .font(.system(size: 14, weight: .bold))
+                            .foregroundColor(.secondary)
+                            .tracking(1)
+                    }
+                    
+                    // Title
+                    Text(deck.name)
+                        .font(.system(size: 34, weight: .heavy))
+                        .foregroundColor(.primary)
+                        .lineLimit(2)
+                    
+                    // Stats
+                    HStack(spacing: 16) {
                         HStack(spacing: 4) {
                             SwiftUI.Image(systemName: "rectangle.stack.fill")
-                                .font(.system(size: 10))
+                                .font(.system(size: 14))
                             Text("\(deck.totalCards) cards")
-                                .font(.system(size: 11, weight: .bold))
+                                .font(.system(size: 14, weight: .medium))
                         }
-                        .padding(.horizontal, 6)
-                        .padding(.vertical, 3)
-                        .background(Color.black.opacity(0.6))
-                        .clipShape(Capsule())
-                        .foregroundColor(.white)
-                    }
-                    
-                    Text(deck.name)
-                        .font(.system(size: 24, weight: .bold))
-                        .foregroundColor(.white)
-                        .shadow(radius: 2)
-                        .lineLimit(1)
-                }
-                .padding(.horizontal, 20)
-                .padding(.bottom, 16)
-                .padding(.top, safeAreaTop + 44) // Spazio dinamico per Dynamic Island + back button
-            }
-            .frame(height: 180 + safeAreaTop) // Altezza compatta
-            .frame(maxWidth: .infinity)
-            .ignoresSafeArea(edges: .top)
-            .overlay(
-                // Custom Back Button and Menu
-                HStack {
-                    Button(action: {
-                        presentationMode.wrappedValue.dismiss()
-                    }) {
-                        Circle()
-                            .fill(Color.black.opacity(0.5))
-                            .frame(width: 32, height: 32)
-                            .overlay(
-                                SwiftUI.Image(systemName: "chevron.left")
-                                    .font(.system(size: 16, weight: .bold))
-                                    .foregroundColor(.white)
-                            )
-                    }
-                    
-                    Spacer()
-                    
-                    Menu {
-                        Button(action: {
-                            editName = deck.name
-                            editDescription = deck.description ?? ""
-                            showingEditSheet = true
-                        }) {
-                            Label("Edit Deck", systemImage: "pencil")
-                        }
+                        .foregroundColor(.secondary)
                         
-                        Button(role: .destructive, action: {
-                            print("🗑️ Delete button tapped")
-                            showingDeleteAlert = true
-                        }) {
-                            Label("Delete Deck", systemImage: "trash")
+                        if let description = deck.description, !description.isEmpty {
+                            Text("•")
+                                .foregroundColor(.secondary)
+                            Text(description)
+                                .font(.system(size: 14, weight: .regular))
+                                .foregroundColor(.secondary)
+                                .lineLimit(1)
                         }
-                    } label: {
-                        Circle()
-                            .fill(Color.black.opacity(0.5))
-                            .frame(width: 32, height: 32)
-                            .overlay(
-                                SwiftUI.Image(systemName: "ellipsis")
-                                    .font(.system(size: 16, weight: .bold))
-                                    .foregroundColor(.white)
-                            )
                     }
                 }
-                .padding(.horizontal, 16)
-                .padding(.top, safeAreaTop + 8), // Padding dinamico per Dynamic Island
-                alignment: .topLeading
-            )
-            
-            // Scrollable Content
-            List {
+                .padding(.horizontal, 24)
+                .padding(.top, 24)
+                .padding(.bottom, 32)
+                
+                Divider()
+                    .padding(.leading, 24)
+                
+                // MARK: - Cards List
                 if isLoadingCards {
-                    ProgressView()
-                        .frame(maxWidth: .infinity, alignment: .center)
-                        .padding(.vertical, 40)
-                        .listRowSeparator(.hidden)
-                        .listRowInsets(EdgeInsets())
-                        .listRowBackground(Color.clear)
+                    VStack(spacing: 16) {
+                        ForEach(0..<6, id: \.self) { _ in
+                            CardRowSkeletonView()
+                        }
+                    }
+                    .padding(24)
                 } else if deckCards.isEmpty {
                     emptyStateView
-                        .listRowSeparator(.hidden)
-                        .listRowInsets(EdgeInsets())
-                        .listRowBackground(Color.clear)
-                        .frame(maxWidth: .infinity, alignment: .center)
+                        .padding(.top, 60)
                 } else {
-                    ForEach(deckCards) { card in
-                        ZStack {
+                    LazyVStack(spacing: 16) {
+                        ForEach(deckCards) { card in
+                            // Card Row in clean style
                             NavigationLink(destination: CardDetailView(card: card, isFromDiscover: false, deckId: deck.id) { updatedCard in
-                                // Update the card in the local deck cards array
+                                // Update local state
                                 if let index = deckCards.firstIndex(where: { $0.id == updatedCard.id }) {
                                     deckCards[index] = updatedCard
                                 }
-                                // Also refresh deck data from service
                                 loadDeckCards()
                             }) {
-                                EmptyView()
+                                CardRowView(card: card, deckService: deckService)
                             }
-                            .opacity(0)
-                            
-                            CardRowView(card: card, deckService: deckService)
+                            .buttonStyle(PlainButtonStyle())
                         }
-                        .listRowSeparator(.hidden)
-                        .listRowInsets(EdgeInsets(top: 6, leading: 16, bottom: 6, trailing: 16))
-                        .listRowBackground(Color.clear)
                     }
+                    .padding(24)
                 }
             }
-            .listStyle(PlainListStyle())
-            .background(Color(.systemGroupedBackground))
-            .padding(.top, 170 + safeAreaTop) // Match header height
         }
+        .background(Color(.systemBackground))
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarTrailing) {
+                Menu {
+                    Button(action: {
+                        editName = deck.name
+                        editDescription = deck.description ?? ""
+                        showingEditSheet = true
+                    }) {
+                        Label("Modifica", systemImage: "pencil")
+                    }
+                    
+                    Button(role: .destructive, action: {
+                        showingDeleteAlert = true
+                    }) {
+                        Label("Elimina", systemImage: "trash")
+                    }
+                } label: {
+                    Circle()
+                        .fill(Color(.secondarySystemBackground))
+                        .frame(width: 32, height: 32)
+                        .overlay(
+                            SwiftUI.Image(systemName: "ellipsis")
+                                .font(.system(size: 14, weight: .bold))
+                                .foregroundColor(.primary)
+                        )
+                }
+            }
         }
-        .navigationBarHidden(true)
         .confirmationDialog("Elimina Mazzo", isPresented: $showingDeleteAlert) {
             Button("Elimina", role: .destructive) {
                 deleteDeck()
@@ -273,112 +223,18 @@ struct DeckDetailView: View {
         }
     }
     
-    // MARK: - Abstract Header Background
-    private var abstractHeaderBackground: some View {
-        ZStack {
-            // Base gradient with TCG theme colors
-            LinearGradient(
-                gradient: Gradient(colors: [
-                    deck.tcgType.themeColor.opacity(0.8),
-                    deck.tcgType.themeColor.opacity(0.4),
-                    complementaryColor.opacity(0.3)
-                ]),
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-            
-            // Decorative geometric shapes
-            GeometryReader { geo in
-                // Large circle in top-right
-                Circle()
-                    .fill(
-                        RadialGradient(
-                            gradient: Gradient(colors: [
-                                deck.tcgType.themeColor.opacity(0.6),
-                                deck.tcgType.themeColor.opacity(0.1)
-                            ]),
-                            center: .center,
-                            startRadius: 0,
-                            endRadius: geo.size.width * 0.4
-                        )
-                    )
-                    .frame(width: geo.size.width * 0.7, height: geo.size.width * 0.7)
-                    .offset(x: geo.size.width * 0.5, y: -geo.size.height * 0.2)
-                
-                // Smaller circle in bottom-left
-                Circle()
-                    .fill(
-                        RadialGradient(
-                            gradient: Gradient(colors: [
-                                complementaryColor.opacity(0.4),
-                                complementaryColor.opacity(0.05)
-                            ]),
-                            center: .center,
-                            startRadius: 0,
-                            endRadius: geo.size.width * 0.3
-                        )
-                    )
-                    .frame(width: geo.size.width * 0.6, height: geo.size.width * 0.6)
-                    .offset(x: -geo.size.width * 0.2, y: geo.size.height * 0.5)
-                
-                // Stylized TCG icon in center-right
-                TCGIconView(tcgType: deck.tcgType, size: 80, color: .white.opacity(0.12))
-                    .offset(x: geo.size.width * 0.55, y: geo.size.height * 0.35)
-            }
-            
-            // Subtle overlay for depth
-            Rectangle()
-                .fill(
-                    LinearGradient(
-                        gradient: Gradient(colors: [
-                            Color.white.opacity(0.05),
-                            Color.clear,
-                            Color.black.opacity(0.1)
-                        ]),
-                        startPoint: .top,
-                        endPoint: .bottom
-                    )
-                )
-        }
-    }
-    
-    // Complementary color for visual interest
-    private var complementaryColor: Color {
-        switch deck.tcgType {
-        case .pokemon:
-            return Color.orange
-        case .magic:
-            return Color.purple
-        case .yugioh:
-            return Color.red
-        case .onePiece:
-            return Color.blue
-        case .digimon:
-            return Color.cyan
-        case .dragonBallSuper:
-            return Color.yellow
-        case .dragonBallFusion:
-            return Color.green
-        case .fleshAndBlood:
-            return Color.red.opacity(0.7)
-        case .lorcana:
-            return Color.gray
-        }
-    }
+    // Removed legacy abstractHeaderBackground and complementaryColor
     
     private var emptyStateView: some View {
         VStack(spacing: 24) {
-            Spacer()
-                .frame(height: 40)
-            
             ZStack {
                 Circle()
-                    .fill(deck.tcgType.themeColor.opacity(0.1))
+                    .fill(Color(.secondarySystemBackground))
                     .frame(width: 100, height: 100)
                 
                 SwiftUI.Image(systemName: "rectangle.portrait.on.rectangle.portrait.slash")
                     .font(.system(size: 40, weight: .medium))
-                    .foregroundColor(deck.tcgType.themeColor)
+                    .foregroundColor(.secondary)
             }
             
             VStack(spacing: 8) {
@@ -392,26 +248,6 @@ struct DeckDetailView: View {
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 40)
             }
-            
-            // Temporarily hide Add Cards button until functionality is implemented
-            /*
-            Button(action: {
-                // TODO: Navigate to add card view
-            }) {
-                HStack(spacing: 8) {
-                    SwiftUI.Image(systemName: "plus")
-                    Text("Aggiungi Carte")
-                }
-                .font(.system(size: 16, weight: .semibold))
-                .foregroundColor(.white)
-                .padding(.horizontal, 24)
-                .padding(.vertical, 12)
-                .background(deck.tcgType.themeColor)
-                .clipShape(RoundedRectangle(cornerRadius: 12))
-            }
-            */
-            
-            Spacer()
         }
         .frame(maxWidth: .infinity, alignment: .center)
     }
@@ -481,115 +317,106 @@ struct EditDeckView: View {
     var body: some View {
         NavigationView {
             ScrollView {
-                VStack(spacing: 24) {
-                    // Header
-                    VStack(spacing: 12) {
-                        ZStack {
-                            Circle()
-                                .fill(LinearGradient(
-                                    gradient: Gradient(colors: [deck.tcgType.themeColor, deck.tcgType.themeColor.opacity(0.7)]),
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                ))
-                                .frame(width: 60, height: 60)
-                            
-                            SwiftUI.Image(systemName: "pencil")
-                                .font(.system(size: 24, weight: .medium))
-                                .foregroundColor(.white)
-                        }
-                        
-                        VStack(spacing: 4) {
-                            Text("Modifica Mazzo")
-                                .font(.system(size: 24, weight: .bold))
-                                .foregroundColor(.primary)
-                            
-                            Text("Update your deck information")
-                                .font(.system(size: 14, weight: .medium))
-                                .foregroundColor(.secondary)
-                        }
-                    }
-                    .padding(.top, 16)
+                VStack(alignment: .leading, spacing: 24) {
+                    // Start of Content
                     
-                    // Deck Information Section
-                    VStack(spacing: 16) {
-                        SectionHeaderView(title: "Deck Information", subtitle: "Name and description")
+                    // Header
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Modifica Mazzo")
+                            .font(.system(size: 34, weight: .heavy))
+                            .foregroundColor(.primary)
                         
-                        VStack(spacing: 16) {
-                            // Deck Name
-                            VStack(alignment: .leading, spacing: 8) {
-                                Text("Nome Mazzo")
-                                    .font(.system(size: 14, weight: .semibold))
-                                    .foregroundColor(.primary)
-                                
-                                TextField("Inserisci nome mazzo", text: $name)
-                                    .padding(12)
-                                    .background(
-                                        RoundedRectangle(cornerRadius: 12)
-                                            .fill(Color(.systemGray6))
-                                    )
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: 12)
-                                            .stroke(Color(.systemGray4), lineWidth: 1)
-                                    )
-                            }
+                        Text("Aggiorna i dettagli della tua collezione")
+                            .font(.system(size: 16, weight: .medium))
+                            .foregroundColor(.secondary)
+                    }
+                    .padding(.horizontal, 24)
+                    .padding(.top, 24)
+                    
+                    Divider()
+                        .padding(.leading, 24)
+                    
+                    // Input Fields
+                    VStack(spacing: 24) {
+                        // Name
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("NOME")
+                                .font(.system(size: 11, weight: .bold))
+                                .foregroundColor(.secondary)
+                                .tracking(0.5)
                             
-                            // Description
-                            VStack(alignment: .leading, spacing: 8) {
-                                Text("Descrizione (Opzionale)")
-                                    .font(.system(size: 14, weight: .semibold))
-                                    .foregroundColor(.primary)
-                                
-                                ZStack(alignment: .topLeading) {
-                                    if description.isEmpty {
-                                        Text("Describe your deck strategy, playstyle, or key cards...")
-                                            .foregroundColor(.secondary)
-                                            .padding(.top, 12)
-                                            .padding(.leading, 16)
-                                            .font(.system(size: 15))
-                                    }
-                                    
-                                    TextEditor(text: $description)
-                                        .frame(minHeight: 100)
-                                        .padding(12)
-                                        .background(
-                                            RoundedRectangle(cornerRadius: 12)
-                                                .fill(Color(.systemGray6))
-                                        )
-                                        .overlay(
-                                            RoundedRectangle(cornerRadius: 12)
-                                                .stroke(Color(.systemGray4), lineWidth: 1)
-                                        )
+                            TextField("Nome del mazzo", text: $name)
+                                .font(.system(size: 18, weight: .medium))
+                                .padding(16)
+                                .background(Color(.secondarySystemBackground))
+                                .cornerRadius(12)
+                        }
+                        
+                        // Description
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("DESCRIZIONE")
+                                .font(.system(size: 11, weight: .bold))
+                                .foregroundColor(.secondary)
+                                .tracking(0.5)
+                            
+                            ZStack(alignment: .topLeading) {
+                                if description.isEmpty {
+                                    Text("Aggiungi una breve descrizione...")
+                                        .foregroundColor(Color(.tertiaryLabel))
+                                        .padding(.top, 16)
+                                        .padding(.leading, 16)
+                                        .font(.system(size: 16))
                                 }
+                                
+                                TextEditor(text: $description)
+                                    .font(.system(size: 16))
+                                    .frame(minHeight: 120)
+                                    .padding(12)
+                                    .scrollContentBackground(.hidden)
+                                    .background(Color(.secondarySystemBackground))
+                                    .cornerRadius(12)
                             }
                         }
                     }
-                    .padding(.horizontal, 20)
+                    .padding(.horizontal, 24)
+                    
+                    Spacer()
+                        .frame(height: 40)
                     
                     // Save Button
-                    LoadingButton(
-                        title: "Salva Modifiche",
-                        loadingTitle: "Aggiornamento...",
-                        isLoading: isUpdating,
-                        isDisabled: name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
-                        color: deck.tcgType.themeColor,
-                        action: onSave
-                    )
-                    .padding(.horizontal, 20)
-                    .padding(.bottom, 24)
+                    Button(action: onSave) {
+                        HStack {
+                            if isUpdating {
+                                ProgressView()
+                                    .tint(.white)
+                                    .padding(.trailing, 8)
+                            }
+                            Text("Salva Modifiche")
+                                .font(.system(size: 17, weight: .semibold))
+                        }
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 56)
+                        .background(deck.tcgType.themeColor)
+                        .cornerRadius(28)
+                    }
+                    .disabled(name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || isUpdating)
+                    .opacity(name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? 0.6 : 1.0)
+                    .padding(.horizontal, 24)
                 }
             }
-            .navigationTitle("Modifica Mazzo")
+            .background(Color(.systemBackground))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Annulla") {
-                        dismiss()
+                    Button(action: { dismiss() }) {
+                        SwiftUI.Image(systemName: "xmark")
+                            .font(.system(size: 14, weight: .bold))
+                            .foregroundColor(.primary)
+                            .padding(8)
+                            .background(Color(.secondarySystemBackground))
+                            .clipShape(Circle())
                     }
-                }
-            }
-            .overlay {
-                if isUpdating {
-                    LoadingOverlay(message: "Aggiornamento in corso...")
                 }
             }
             .withToastSupport()

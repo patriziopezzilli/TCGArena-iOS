@@ -49,13 +49,8 @@ struct TournamentUpdatesView: View {
                     VStack(spacing: 16) {
                         SwiftUI.Image(systemName: "megaphone")
                             .font(.system(size: 56))
-                            .foregroundStyle(
-                                LinearGradient(
-                                    colors: [.purple, .blue],
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                )
-                            )
+                            .foregroundColor(.secondary)
+                        
                         Text("Nessun aggiornamento")
                             .font(.title3)
                             .fontWeight(.semibold)
@@ -156,7 +151,7 @@ struct UpdateCard: View {
             HStack {
                 SwiftUI.Image(systemName: "megaphone.fill")
                     .font(.caption)
-                    .foregroundColor(.purple)
+                    .foregroundColor(.primary)
                 
                 Text(update.formattedDate)
                     .font(.caption)

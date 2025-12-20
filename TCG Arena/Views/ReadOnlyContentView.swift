@@ -16,6 +16,7 @@ struct ReadOnlyContentView: View {
     @StateObject private var deckService = DeckService()
     @StateObject private var inventoryService = InventoryService()
     @StateObject private var marketService = MarketDataService()
+    @StateObject private var locationManager = LocationManager()
     @EnvironmentObject private var settingsService: SettingsService
     @EnvironmentObject private var authService: AuthService
 
@@ -40,6 +41,7 @@ struct ReadOnlyContentView: View {
                     .environmentObject(tournamentService)
                     .environmentObject(inventoryService)
                     .environmentObject(authService)
+                    .environmentObject(locationManager)
                     .tabItem {
                         SwiftUI.Image(systemName: "storefront")
                         Text("Negozi")
@@ -68,29 +70,27 @@ struct ReadOnlyContentView: View {
                 LoginPromptView(isPresented: $showLoginPrompt)
             }
         }
-        .overlay(
-            // Guest mode indicator
-            VStack {
-                HStack {
-                    Spacer()
-                    VStack(spacing: 4) {
-                        SwiftUI.Image(systemName: "eye.fill")
-                            .font(.system(size: 12))
-                        Text("MODALITÀ OSPITE")
-                            .font(.system(size: 10, weight: .bold))
-                    }
-                    .foregroundColor(.secondary)
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 6)
-                    .background(Color(.systemBackground).opacity(0.8))
-                    .clipShape(Capsule())
-                    .shadow(color: Color.black.opacity(0.1), radius: 4, x: 0, y: 2)
-                }
-                Spacer()
+        .overlay(alignment: .topTrailing) {
+            // Guest mode indicator - Minimal style
+            HStack(spacing: 6) {
+                SwiftUI.Image(systemName: "eye.fill")
+                    .font(.system(size: 11))
+                Text("OSPITE")
+                    .font(.system(size: 10, weight: .bold))
+                    .tracking(1)
             }
+            .foregroundColor(.secondary)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 6)
+            .background(Color(.secondarySystemBackground))
+            .clipShape(Capsule())
+            .overlay(
+                Capsule()
+                    .stroke(Color(.separator).opacity(0.5), lineWidth: 0.5)
+            )
             .padding(.top, 50)
             .padding(.trailing, 16)
-        )
+        }
     }
 }
 
@@ -105,17 +105,6 @@ struct ReadOnlyCollectionView: View {
     @State private var selectedExpansion: Expansion?
     @State private var showAllExpansions = false
     @State private var selectedTCGFilter: TCGType? = nil
-    @State private var currentMarketingSlide = 0
-    @State private var marketingTimer: Timer?
-    
-    // Marketing slides data
-    private let marketingSlides: [(icon: String, title: String, subtitle: String, color: Color)] = [
-        ("rectangle.stack.fill.badge.plus", "Crea la Tua Collezione", "Organizza e traccia le tue carte TCG", .blue),
-        ("gamecontroller.fill", "Costruisci Mazzi Personalizzati", "Progetta strategie vincenti", .purple),
-        ("trophy.fill", "Partecipa ai Tornei", "Unisciti agli eventi competitivi", .orange),
-        ("cart.fill", "Compra e Scambia", "Acquista, vendi e scambia carte", .green),
-        ("person.2.fill", "Connettiti con la Community", "Condividi mazzi e strategie", .pink)
-    ]
     
     // Computed properties for filtered expansions
     private var filteredExpansions: [Expansion] {
@@ -137,167 +126,104 @@ struct ReadOnlyCollectionView: View {
     var body: some View {
         NavigationView {
             ScrollView {
-                VStack(spacing: 24) {
-                    // Welcome Header
-                    VStack(spacing: 8) {
-                        Text("Benvenuto in TCG Arena")
-                            .font(.system(size: 28, weight: .bold))
-                            .foregroundColor(.primary)
-                            .multilineTextAlignment(.center)
-
-                        Text("Dove collezionisti e negozi si incontrano")
-                            .font(.system(size: 16, weight: .medium))
-                            .foregroundColor(.secondary)
-                            .multilineTextAlignment(.center)
-                    }
-                    .padding(.top, 20)
-
-                    // Marketing Slider Card
-                    ZStack {
-                        // Background with gradient
-                        RoundedRectangle(cornerRadius: 16)
-                            .fill(
-                                LinearGradient(
-                                    gradient: Gradient(colors: [
-                                        marketingSlides[currentMarketingSlide].color.opacity(0.1),
-                                        marketingSlides[currentMarketingSlide].color.opacity(0.05)
-                                    ]),
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                )
-                            )
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 16)
-                                    .stroke(marketingSlides[currentMarketingSlide].color.opacity(0.2), lineWidth: 1)
-                            )
-                        
-                        VStack(spacing: 16) {
-                            // Marketing Content
-                            VStack(spacing: 12) {
-                                // Icon with background
-                                ZStack {
-                                    Circle()
-                                        .fill(marketingSlides[currentMarketingSlide].color.opacity(0.2))
-                                        .frame(width: 60, height: 60)
-                                    
-                                    SwiftUI.Image(systemName: marketingSlides[currentMarketingSlide].icon)
-                                        .font(.system(size: 24, weight: .bold))
-                                        .foregroundColor(marketingSlides[currentMarketingSlide].color)
-                                }
-                                
-                                // Title
-                                Text(marketingSlides[currentMarketingSlide].title)
-                                    .font(.system(size: 18, weight: .bold))
-                                    .foregroundColor(.primary)
-                                    .multilineTextAlignment(.center)
-                                
-                                // Subtitle
-                                Text(marketingSlides[currentMarketingSlide].subtitle)
-                                    .font(.system(size: 14, weight: .medium))
-                                    .foregroundColor(.secondary)
-                                    .multilineTextAlignment(.center)
-                            }
-                            
-                            // Slide Indicators
-                            HStack(spacing: 8) {
-                                ForEach(0..<marketingSlides.count, id: \.self) { index in
-                                    Circle()
-                                        .fill(index == currentMarketingSlide ? marketingSlides[index].color : Color.gray.opacity(0.3))
-                                        .frame(width: 8, height: 8)
-                                        .animation(.easeInOut(duration: 0.3), value: currentMarketingSlide)
-                                        .onTapGesture {
-                                            withAnimation(.easeInOut(duration: 0.3)) {
-                                                currentMarketingSlide = index
-                                                // Reset timer when manually changed
-                                                stopMarketingTimer()
-                                                startMarketingTimer()
-                                            }
-                                        }
-                                }
-                            }
-                            
-                            // CTA Button
-                            Button(action: {
-                                showLoginPrompt = true
-                            }) {
-                                Text("Accedi per Sbloccare")
-                                    .font(.system(size: 16, weight: .semibold))
-                                    .foregroundColor(.white)
-                                    .frame(maxWidth: .infinity)
-                                    .frame(height: 50)
-                                    .background(
-                                        LinearGradient(
-                                            gradient: Gradient(colors: [
-                                                marketingSlides[currentMarketingSlide].color,
-                                                marketingSlides[currentMarketingSlide].color.opacity(0.8)
-                                            ]),
-                                            startPoint: .leading,
-                                            endPoint: .trailing
-                                        )
-                                    )
-                                    .clipShape(RoundedRectangle(cornerRadius: 25))
-                                    .shadow(color: marketingSlides[currentMarketingSlide].color.opacity(0.3), radius: 8, x: 0, y: 4)
-                            }
-                        }
-                        .padding(24)
-                    }
-                    .frame(height: 260)
-                    .clipShape(RoundedRectangle(cornerRadius: 16))
-                    .onAppear {
-                        startMarketingTimer()
-                    }
-                    .onDisappear {
-                        stopMarketingTimer()
-                    }
-                    .padding(.horizontal, 20)
-
-                    // Expansions List
+                VStack(spacing: 32) {
+                    // MARK: - Header Section (Home Style)
                     VStack(alignment: .leading, spacing: 16) {
-                        // Header with filters
                         HStack {
-                            Text("Esplora le Espansioni")
-                                .font(.system(size: 20, weight: .bold))
-                                .foregroundColor(.primary)
+                            Text("TCG ARENA")
+                                .font(.system(size: 16, weight: .bold, design: .rounded))
+                                .foregroundColor(.secondary)
+                                .textCase(.uppercase)
+                                .tracking(2)
                             Spacer()
                         }
-                        .padding(.horizontal, 20)
                         
-                        // TCG Filters
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text("Benvenuto,")
+                                .font(.system(size: 32, weight: .heavy))
+                                .foregroundColor(.primary)
+                            Text("scopri il mondo TCG")
+                                .font(.system(size: 24, weight: .medium))
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                    .padding(.horizontal, 24)
+                    .padding(.top, 24)
+
+                    // MARK: - CTA Card (Minimal Home Style)
+                    Button(action: { showLoginPrompt = true }) {
+                        HStack(spacing: 16) {
+                            ZStack {
+                                Circle()
+                                    .fill(Color.white.opacity(0.2))
+                                    .frame(width: 56, height: 56)
+                                SwiftUI.Image(systemName: "person.badge.plus")
+                                    .font(.system(size: 24, weight: .semibold))
+                                    .foregroundColor(.white)
+                            }
+                            
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("Accedi per Iniziare")
+                                    .font(.system(size: 18, weight: .bold))
+                                    .foregroundColor(.white)
+                                Text("Crea collezioni, mazzi e partecipa ai tornei")
+                                    .font(.system(size: 13, weight: .medium))
+                                    .foregroundColor(.white.opacity(0.8))
+                                    .lineLimit(2)
+                            }
+                            
+                            Spacer()
+                            
+                            SwiftUI.Image(systemName: "arrow.right.circle.fill")
+                                .font(.system(size: 24))
+                                .foregroundColor(.white.opacity(0.8))
+                        }
+                        .padding(20)
+                        .background(Color.black)
+                        .cornerRadius(24)
+                    }
+                    .buttonStyle(PlainButtonStyle())
+                    .padding(.horizontal, 24)
+                    
+                    // MARK: - Features Grid (Home Style Stats)
+                    VStack(alignment: .leading, spacing: 16) {
+                        Text("Funzionalità")
+                            .font(.system(size: 20, weight: .bold))
+                            .padding(.horizontal, 24)
+                        
+                        LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
+                            FeatureTile(icon: "rectangle.stack.fill.badge.plus", title: "Collezione", subtitle: "Organizza carte")
+                            FeatureTile(icon: "gamecontroller.fill", title: "Mazzi", subtitle: "Costruisci strategie")
+                            FeatureTile(icon: "trophy.fill", title: "Tornei", subtitle: "Gareggia")
+                            FeatureTile(icon: "person.2.fill", title: "Community", subtitle: "Connettiti")
+                        }
+                        .padding(.horizontal, 24)
+                    }
+
+                    // MARK: - Expansions List
+                    VStack(alignment: .leading, spacing: 16) {
+                        Text("Esplora Espansioni")
+                            .font(.system(size: 20, weight: .bold))
+                            .padding(.horizontal, 24)
+                        
+                        // TCG Filters (Minimal)
                         ScrollView(.horizontal, showsIndicators: false) {
-                            HStack(spacing: 12) {
-                                // All TCGs button
-                                Button(action: {
+                            HStack(spacing: 10) {
+                                FilterPill(title: "Tutte", isSelected: selectedTCGFilter == nil) {
                                     selectedTCGFilter = nil
-                                }) {
-                                    Text("Tutte")
-                                        .font(.system(size: 14, weight: selectedTCGFilter == nil ? .semibold : .medium))
-                                        .foregroundColor(selectedTCGFilter == nil ? .white : .secondary)
-                                        .padding(.horizontal, 16)
-                                        .padding(.vertical, 8)
-                                        .background(selectedTCGFilter == nil ? Color.blue : Color(.secondarySystemBackground))
-                                        .clipShape(Capsule())
                                 }
                                 
                                 ForEach(TCGType.allCases, id: \.self) { tcgType in
-                                    Button(action: {
+                                    FilterPill(
+                                        title: tcgType.displayName,
+                                        isSelected: selectedTCGFilter == tcgType,
+                                        accentColor: tcgType.themeColor
+                                    ) {
                                         selectedTCGFilter = tcgType
-                                    }) {
-                                        HStack(spacing: 6) {
-                                            Circle()
-                                                .fill(tcgType.themeColor)
-                                                .frame(width: 8, height: 8)
-                                            Text(tcgType.displayName)
-                                                .font(.system(size: 14, weight: selectedTCGFilter == tcgType ? .semibold : .medium))
-                                                .foregroundColor(selectedTCGFilter == tcgType ? .white : .secondary)
-                                        }
-                                        .padding(.horizontal, 16)
-                                        .padding(.vertical, 8)
-                                        .background(selectedTCGFilter == tcgType ? tcgType.themeColor : Color(.secondarySystemBackground))
-                                        .clipShape(Capsule())
                                     }
                                 }
                             }
-                            .padding(.horizontal, 20)
+                            .padding(.horizontal, 24)
                         }
 
                         if expansionService.isLoading {
@@ -311,8 +237,8 @@ struct ReadOnlyCollectionView: View {
                             VStack(spacing: 12) {
                                 SwiftUI.Image(systemName: "square.stack.3d.up.slash")
                                     .font(.system(size: 40))
-                                    .foregroundColor(.secondary)
-                                Text(selectedTCGFilter != nil ? "Nessuna espansione per questo TCG" : "Nessuna espansione disponibile")
+                                    .foregroundColor(Color(.tertiaryLabel))
+                                Text(selectedTCGFilter != nil ? "Nessuna espansione per questo TCG" : "Nessuna espansione")
                                     .font(.system(size: 16))
                                     .foregroundColor(.secondary)
                             }
@@ -334,28 +260,30 @@ struct ReadOnlyCollectionView: View {
                                         showAllExpansions.toggle()
                                     }) {
                                         HStack {
-                                            Text(showAllExpansions ? "Mostra Meno" : "Vedi Tutte le Espansioni (\(filteredExpansions.count))")
-                                                .font(.system(size: 16, weight: .semibold))
-                                                .foregroundColor(.blue)
+                                            Text(showAllExpansions ? "Mostra Meno" : "Vedi Tutte (\(filteredExpansions.count))")
+                                                .font(.system(size: 15, weight: .semibold))
+                                                .foregroundColor(.primary)
                                             Spacer()
                                             SwiftUI.Image(systemName: showAllExpansions ? "chevron.up" : "chevron.down")
-                                                .font(.system(size: 14))
-                                                .foregroundColor(.blue)
+                                                .font(.system(size: 13, weight: .semibold))
+                                                .foregroundColor(.secondary)
                                         }
-                                        .padding(.vertical, 12)
-                                        .padding(.horizontal, 16)
-                                        .background(Color.blue.opacity(0.1))
-                                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                                        .padding(.vertical, 14)
+                                        .padding(.horizontal, 20)
+                                        .background(Color(.secondarySystemBackground))
+                                        .cornerRadius(12)
                                     }
-                                    .padding(.horizontal, 20)
+                                    .padding(.horizontal, 24)
                                 }
                             }
-                            .padding(.horizontal, 20)
+                            .padding(.horizontal, 24)
                         }
                     }
+                    
+                    Spacer(minLength: 50)
                 }
-                .padding(.bottom, 24)
             }
+            .background(Color(.systemBackground))
             .navigationBarHidden(true)
         }
         .sheet(isPresented: $showLoginPrompt) {
@@ -377,24 +305,66 @@ struct ReadOnlyCollectionView: View {
             await expansionService.loadExpansions()
         }
     }
+}
+
+// MARK: - Feature Tile (Home Style)
+struct FeatureTile: View {
+    let icon: String
+    let title: String
+    let subtitle: String
     
-    // MARK: - Marketing Timer Methods
-    
-    private func startMarketingTimer() {
-        marketingTimer = Timer.scheduledTimer(withTimeInterval: 3.0, repeats: true) { _ in
-            withAnimation(.easeInOut(duration: 0.5)) {
-                currentMarketingSlide = (currentMarketingSlide + 1) % marketingSlides.count
-            }
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            SwiftUI.Image(systemName: icon)
+                .font(.system(size: 22))
+                .foregroundColor(.primary.opacity(0.7))
+                .padding(.bottom, 16)
+            
+            Text(title)
+                .font(.system(size: 17, weight: .bold))
+                .foregroundColor(.primary)
+            
+            Text(subtitle)
+                .font(.system(size: 13, weight: .medium))
+                .foregroundColor(.secondary)
+                .padding(.top, 2)
         }
-    }
-    
-    private func stopMarketingTimer() {
-        marketingTimer?.invalidate()
-        marketingTimer = nil
+        .padding(20)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color(.secondarySystemBackground))
+        .cornerRadius(20)
+        .overlay(
+            RoundedRectangle(cornerRadius: 20)
+                .stroke(Color(.separator).opacity(0.4), lineWidth: 0.5)
+        )
     }
 }
 
-// MARK: - Public Expansion Card
+// MARK: - Filter Pill (Minimal)
+struct FilterPill: View {
+    let title: String
+    let isSelected: Bool
+    var accentColor: Color = .primary
+    let action: () -> Void
+    
+    var body: some View {
+        Button(action: action) {
+            Text(title)
+                .font(.system(size: 14, weight: isSelected ? .semibold : .medium))
+                .foregroundColor(isSelected ? .white : .secondary)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 10)
+                .background(isSelected ? accentColor : Color(.secondarySystemBackground))
+                .clipShape(Capsule())
+                .overlay(
+                    Capsule()
+                        .stroke(Color(.separator).opacity(isSelected ? 0 : 0.5), lineWidth: 0.5)
+                )
+        }
+    }
+}
+
+// MARK: - Public Expansion Card (Minimal)
 struct PublicExpansionCard: View {
     let expansion: Expansion
     
@@ -407,111 +377,123 @@ struct PublicExpansionCard: View {
                     .aspectRatio(contentMode: .fill)
             } placeholder: {
                 RoundedRectangle(cornerRadius: 12)
-                    .fill(expansion.tcgType.themeColor.opacity(0.2))
+                    .fill(Color(.tertiarySystemBackground))
                     .overlay(
                         SwiftUI.Image(systemName: expansion.tcgType.icon)
-                            .font(.system(size: 28, weight: .bold))
-                            .foregroundColor(expansion.tcgType.themeColor)
+                            .font(.system(size: 24))
+                            .foregroundColor(expansion.tcgType.themeColor.opacity(0.6))
                     )
             }
-            .frame(width: 80, height: 80)
+            .frame(width: 72, height: 72)
             .clipShape(RoundedRectangle(cornerRadius: 12))
             
             // Expansion Info
             VStack(alignment: .leading, spacing: 6) {
                 Text(expansion.title)
-                    .font(.system(size: 17, weight: .semibold))
+                    .font(.system(size: 16, weight: .semibold))
                     .foregroundColor(.primary)
                     .lineLimit(2)
                 
-                HStack(spacing: 8) {
+                HStack(spacing: 6) {
                     Circle()
                         .fill(expansion.tcgType.themeColor)
-                        .frame(width: 8, height: 8)
+                        .frame(width: 6, height: 6)
                     
                     Text(expansion.tcgType.displayName)
-                        .font(.system(size: 14, weight: .medium))
-                        .foregroundColor(expansion.tcgType.themeColor)
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundColor(.secondary)
                 }
                 
-                HStack(spacing: 12) {
-                    Label("\(expansion.sets.count) set", systemImage: "square.stack.3d.up.fill")
-                        .font(.system(size: 13))
-                        .foregroundColor(.secondary)
-                    
-                    Label("\(expansion.cardCount) carte", systemImage: "rectangle.stack")
-                        .font(.system(size: 13))
-                        .foregroundColor(.secondary)
-                }
+                Text("\(expansion.sets.count) set • \(expansion.cardCount) carte")
+                    .font(.system(size: 12))
+                    .foregroundColor(Color(.tertiaryLabel))
             }
             
             Spacer()
             
             SwiftUI.Image(systemName: "chevron.right")
-                .font(.system(size: 14, weight: .semibold))
-                .foregroundColor(.secondary)
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundColor(Color(.tertiaryLabel))
         }
         .padding(16)
-        .background(Color(.systemBackground))
-        .clipShape(RoundedRectangle(cornerRadius: 16))
-        .shadow(color: Color.black.opacity(0.05), radius: 8, x: 0, y: 2)
+        .background(Color(.secondarySystemBackground))
+        .cornerRadius(16)
+        .overlay(
+            RoundedRectangle(cornerRadius: 16)
+                .stroke(Color(.separator).opacity(0.4), lineWidth: 0.5)
+        )
     }
 }
 
-// MARK: - ReadOnly Rewards View
+// MARK: - ReadOnly Rewards View (Minimal)
 struct ReadOnlyRewardsView: View {
     @State private var showLoginPrompt = false
 
     var body: some View {
         NavigationView {
             ScrollView {
-                VStack(spacing: 24) {
-                    // Header
-                    VStack(spacing: 8) {
-                        Text("Premi")
-                            .font(.system(size: 28, weight: .bold))
-                            .foregroundColor(.primary)
-
-                        Text("Guadagna punti e sblocca premi")
-                            .font(.system(size: 16, weight: .medium))
+                VStack(spacing: 32) {
+                    // Header (Home Style)
+                    VStack(alignment: .leading, spacing: 16) {
+                        Text("PREMI")
+                            .font(.system(size: 16, weight: .bold, design: .rounded))
                             .foregroundColor(.secondary)
+                            .textCase(.uppercase)
+                            .tracking(2)
+                        
+                        Text("Guadagna Punti,\nSblocca Premi")
+                            .font(.system(size: 28, weight: .heavy))
+                            .foregroundColor(.primary)
                     }
-                    .padding(.top, 20)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, 24)
+                    .padding(.top, 24)
 
-                    // Login prompt
-                    VStack(spacing: 16) {
-                        SwiftUI.Image(systemName: "gift.fill")
-                            .font(.system(size: 40, weight: .bold))
-                            .foregroundColor(.purple)
+                    // CTA Card (Minimal)
+                    VStack(spacing: 20) {
+                        ZStack {
+                            Circle()
+                                .fill(Color(.tertiarySystemBackground))
+                                .frame(width: 80, height: 80)
+                            SwiftUI.Image(systemName: "gift.fill")
+                                .font(.system(size: 36))
+                                .foregroundColor(.primary)
+                        }
 
-                        Text("Crea un account per guadagnare premi")
-                            .font(.system(size: 18, weight: .semibold))
-                            .foregroundColor(.primary)
-                            .multilineTextAlignment(.center)
+                        VStack(spacing: 8) {
+                            Text("Sblocca il Sistema Premi")
+                                .font(.system(size: 18, weight: .bold))
+                                .foregroundColor(.primary)
 
-                        Text("Completa sfide, guadagna punti e sblocca contenuti esclusivi")
-                            .font(.system(size: 14, weight: .medium))
-                            .foregroundColor(.secondary)
-                            .multilineTextAlignment(.center)
+                            Text("Completa sfide, guadagna punti e ottieni ricompense esclusive")
+                                .font(.system(size: 14))
+                                .foregroundColor(.secondary)
+                                .multilineTextAlignment(.center)
+                        }
 
-                        Button(action: {
-                            showLoginPrompt = true
-                        }) {
-                            Text("Accedi per Guadagnare Premi")
-                                .font(.system(size: 16, weight: .semibold))
+                        Button(action: { showLoginPrompt = true }) {
+                            Text("Accedi per Iniziare")
+                                .font(.system(size: 16, weight: .bold))
                                 .foregroundColor(.white)
                                 .frame(maxWidth: .infinity)
-                                .frame(height: 50)
-                                .background(Color.purple)
-                                .clipShape(RoundedRectangle(cornerRadius: 25))
+                                .frame(height: 52)
+                                .background(Color.black)
+                                .cornerRadius(26)
                         }
                     }
                     .padding(24)
                     .background(Color(.secondarySystemBackground))
-                    .clipShape(RoundedRectangle(cornerRadius: 16))
-                    .padding(.horizontal, 20)
+                    .cornerRadius(24)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 24)
+                            .stroke(Color(.separator).opacity(0.4), lineWidth: 0.5)
+                    )
+                    .padding(.horizontal, 24)
+                    
+                    Spacer(minLength: 50)
                 }
             }
+            .background(Color(.systemBackground))
             .navigationBarHidden(true)
         }
         .sheet(isPresented: $showLoginPrompt) {
@@ -520,60 +502,75 @@ struct ReadOnlyRewardsView: View {
     }
 }
 
-// MARK: - ReadOnly Community View
+// MARK: - ReadOnly Community View (Minimal)
 struct ReadOnlyCommunityView: View {
     @State private var showLoginPrompt = false
 
     var body: some View {
         NavigationView {
             ScrollView {
-                VStack(spacing: 24) {
-                    // Header
-                    VStack(spacing: 8) {
-                        Text("Community")
-                            .font(.system(size: 28, weight: .bold))
-                            .foregroundColor(.primary)
-
-                        Text("Connettiti con altri collezionisti")
-                            .font(.system(size: 16, weight: .medium))
+                VStack(spacing: 32) {
+                    // Header (Home Style)
+                    VStack(alignment: .leading, spacing: 16) {
+                        Text("COMMUNITY")
+                            .font(.system(size: 16, weight: .bold, design: .rounded))
                             .foregroundColor(.secondary)
+                            .textCase(.uppercase)
+                            .tracking(2)
+                        
+                        Text("Connettiti con\nAltri Collezionisti")
+                            .font(.system(size: 28, weight: .heavy))
+                            .foregroundColor(.primary)
                     }
-                    .padding(.top, 20)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, 24)
+                    .padding(.top, 24)
 
-                    // Login prompt
-                    VStack(spacing: 16) {
-                        SwiftUI.Image(systemName: "person.2.fill")
-                            .font(.system(size: 40, weight: .bold))
-                            .foregroundColor(.blue)
+                    // CTA Card (Minimal)
+                    VStack(spacing: 20) {
+                        ZStack {
+                            Circle()
+                                .fill(Color(.tertiarySystemBackground))
+                                .frame(width: 80, height: 80)
+                            SwiftUI.Image(systemName: "person.2.fill")
+                                .font(.system(size: 36))
+                                .foregroundColor(.primary)
+                        }
 
-                        Text("Unisciti alla community di TCG Arena")
-                            .font(.system(size: 18, weight: .semibold))
-                            .foregroundColor(.primary)
-                            .multilineTextAlignment(.center)
+                        VStack(spacing: 8) {
+                            Text("Unisciti alla Community")
+                                .font(.system(size: 18, weight: .bold))
+                                .foregroundColor(.primary)
 
-                        Text("Segui giocatori, condividi mazzi e partecipa ai tornei")
-                            .font(.system(size: 14, weight: .medium))
-                            .foregroundColor(.secondary)
-                            .multilineTextAlignment(.center)
+                            Text("Segui giocatori, condividi mazzi e partecipa agli eventi")
+                                .font(.system(size: 14))
+                                .foregroundColor(.secondary)
+                                .multilineTextAlignment(.center)
+                        }
 
-                        Button(action: {
-                            showLoginPrompt = true
-                        }) {
+                        Button(action: { showLoginPrompt = true }) {
                             Text("Accedi per Connetterti")
-                                .font(.system(size: 16, weight: .semibold))
+                                .font(.system(size: 16, weight: .bold))
                                 .foregroundColor(.white)
                                 .frame(maxWidth: .infinity)
-                                .frame(height: 50)
-                                .background(Color.blue)
-                                .clipShape(RoundedRectangle(cornerRadius: 25))
+                                .frame(height: 52)
+                                .background(Color.black)
+                                .cornerRadius(26)
                         }
                     }
                     .padding(24)
                     .background(Color(.secondarySystemBackground))
-                    .clipShape(RoundedRectangle(cornerRadius: 16))
-                    .padding(.horizontal, 20)
+                    .cornerRadius(24)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 24)
+                            .stroke(Color(.separator).opacity(0.4), lineWidth: 0.5)
+                    )
+                    .padding(.horizontal, 24)
+                    
+                    Spacer(minLength: 50)
                 }
             }
+            .background(Color(.systemBackground))
             .navigationBarHidden(true)
         }
         .sheet(isPresented: $showLoginPrompt) {
@@ -582,7 +579,7 @@ struct ReadOnlyCommunityView: View {
     }
 }
 
-// MARK: - Login Prompt View
+// MARK: - Login Prompt View (Minimal)
 struct LoginPromptView: View {
     @Binding var isPresented: Bool
     @State private var showLogin = false
@@ -590,42 +587,48 @@ struct LoginPromptView: View {
 
     var body: some View {
         ZStack {
-            Color.black.opacity(0.5)
+            Color.black.opacity(0.4)
                 .ignoresSafeArea()
                 .onTapGesture {
                     isPresented = false
                 }
 
             VStack(spacing: 24) {
-                VStack(spacing: 16) {
+                // Icon
+                ZStack {
+                    Circle()
+                        .fill(Color(.tertiarySystemBackground))
+                        .frame(width: 72, height: 72)
                     SwiftUI.Image(systemName: "person.circle.fill")
-                        .font(.system(size: 50, weight: .bold))
-                        .foregroundColor(.blue)
-
-                    Text("Accedi per sbloccare questa funzione")
-                        .font(.system(size: 20, weight: .semibold))
+                        .font(.system(size: 40))
                         .foregroundColor(.primary)
-                        .multilineTextAlignment(.center)
+                }
+                
+                // Text
+                VStack(spacing: 8) {
+                    Text("Accedi per Continuare")
+                        .font(.system(size: 20, weight: .bold))
+                        .foregroundColor(.primary)
 
                     Text("Crea collezioni, partecipa a tornei e connettiti con la community")
-                        .font(.system(size: 16, weight: .medium))
+                        .font(.system(size: 14))
                         .foregroundColor(.secondary)
                         .multilineTextAlignment(.center)
-                        .padding(.horizontal, 32)
                 }
 
+                // Buttons
                 VStack(spacing: 12) {
                     Button(action: {
                         isPresented = false
                         showRegister = true
                     }) {
                         Text("Crea Account")
-                            .font(.system(size: 18, weight: .semibold))
+                            .font(.system(size: 16, weight: .bold))
                             .foregroundColor(.white)
                             .frame(maxWidth: .infinity)
-                            .frame(height: 50)
-                            .background(Color.green)
-                            .clipShape(RoundedRectangle(cornerRadius: 25))
+                            .frame(height: 52)
+                            .background(Color.black)
+                            .cornerRadius(26)
                     }
 
                     Button(action: {
@@ -633,32 +636,30 @@ struct LoginPromptView: View {
                         showLogin = true
                     }) {
                         Text("Accedi")
-                            .font(.system(size: 18, weight: .semibold))
-                            .foregroundColor(.blue)
+                            .font(.system(size: 16, weight: .bold))
+                            .foregroundColor(.primary)
                             .frame(maxWidth: .infinity)
-                            .frame(height: 50)
-                            .background(Color(.systemBackground))
-                            .clipShape(RoundedRectangle(cornerRadius: 25))
+                            .frame(height: 52)
+                            .background(Color(.secondarySystemBackground))
+                            .cornerRadius(26)
                             .overlay(
-                                RoundedRectangle(cornerRadius: 25)
-                                    .stroke(Color.blue, lineWidth: 2)
+                                RoundedRectangle(cornerRadius: 26)
+                                    .stroke(Color(.separator), lineWidth: 1)
                             )
                     }
                 }
-                .padding(.horizontal, 32)
 
                 Button(action: {
                     isPresented = false
                 }) {
                     Text("Continua come Ospite")
-                        .font(.system(size: 16, weight: .medium))
+                        .font(.system(size: 14, weight: .medium))
                         .foregroundColor(.secondary)
                 }
             }
             .padding(32)
             .background(Color(.systemBackground))
-            .clipShape(RoundedRectangle(cornerRadius: 20))
-            .shadow(color: Color.black.opacity(0.2), radius: 20, x: 0, y: 10)
+            .cornerRadius(24)
             .padding(.horizontal, 32)
         }
         .fullScreenCover(isPresented: $showLogin) {

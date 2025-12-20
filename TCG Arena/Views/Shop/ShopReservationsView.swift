@@ -19,7 +19,7 @@ struct ShopReservationsView: View {
     var body: some View {
         VStack(spacing: 0) {
             if isLoading {
-                ProgressView("Loading reservations...")
+                ProgressView("Caricamento prenotazioni...")
                     .padding()
             } else if let error = errorMessage {
                 VStack(spacing: 16) {
@@ -27,7 +27,7 @@ struct ShopReservationsView: View {
                         .font(.system(size: 48))
                         .foregroundColor(.orange)
                     
-                    Text("Error Loading Reservations")
+                    Text("Errore Caricamento Prenotazioni")
                         .font(.headline)
                     
                     Text(error)
@@ -36,10 +36,11 @@ struct ShopReservationsView: View {
                         .multilineTextAlignment(.center)
                         .padding(.horizontal)
                     
-                    Button("Try Again") {
+                    Button("Riprova") {
                         loadReservations()
                     }
                     .buttonStyle(.borderedProminent)
+                    .tint(.primary)
                 }
                 .padding()
             } else if reservations.isEmpty {
@@ -48,10 +49,10 @@ struct ShopReservationsView: View {
                         .font(.system(size: 48))
                         .foregroundColor(.secondary)
                     
-                    Text("No Reservations")
+                    Text("Nessuna Prenotazione")
                         .font(.headline)
                     
-                    Text("You haven't made any reservations with this shop yet.")
+                    Text("Non hai ancora fatto prenotazioni con questo negozio.")
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                         .multilineTextAlignment(.center)
@@ -151,7 +152,7 @@ struct ReservationCard: View {
                         .foregroundColor(.primary)
                         .lineLimit(1)
                     
-                    Text("Expires: \(reservation.expiresAt.formatted(date: .abbreviated, time: .shortened))")
+                    Text("Scade: \(reservation.expiresAt.formatted(date: .abbreviated, time: .shortened))")
                         .font(.system(size: 12))
                         .foregroundColor(.secondary)
                 }
@@ -211,7 +212,7 @@ struct QRCodeView: View {
     var body: some View {
         NavigationView {
             VStack(spacing: 20) {
-                Text("Reservation QR Code")
+                Text("QR Code Prenotazione")
                     .font(.title2)
                     .fontWeight(.bold)
                 
@@ -233,13 +234,13 @@ struct QRCodeView: View {
                             .font(.system(size: 80))
                             .foregroundColor(.gray)
                         
-                        Text("Unable to generate QR code")
+                        Text("Impossibile generare il QR code")
                             .foregroundColor(.secondary)
                     }
                 }
                 
                 VStack(spacing: 8) {
-                    Text("Show this QR code to the shop staff")
+                    Text("Mostra questo QR code al personale del negozio")
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                         .multilineTextAlignment(.center)
@@ -257,7 +258,7 @@ struct QRCodeView: View {
                 Spacer()
             }
             .padding()
-            .navigationBarItems(trailing: Button("Done") {
+            .navigationBarItems(trailing: Button("Fatto") {
                 dismiss()
             })
         }

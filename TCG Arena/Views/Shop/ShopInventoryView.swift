@@ -82,7 +82,7 @@ struct ShopInventoryView: View {
                         ZStack(alignment: .topTrailing) {
                             SwiftUI.Image(systemName: showFilters ? "line.3.horizontal.decrease.circle.fill" : "line.3.horizontal.decrease.circle")
                                 .font(.system(size: 24))
-                                .foregroundColor(activeFilterCount > 0 ? .indigo : .secondary)
+                                .foregroundColor(activeFilterCount > 0 ? .primary : .secondary)
                             
                             if activeFilterCount > 0 {
                                 Text("\(activeFilterCount)")
@@ -273,11 +273,11 @@ struct ShopInventoryView: View {
             }
             
             VStack(spacing: 8) {
-                Text("No Cards Available")
+                Text("Nessuna Carta Disponibile")
                     .font(.system(size: 20, weight: .bold))
                     .foregroundColor(.primary)
                 
-                Text(searchText.isEmpty ? "This shop doesn't have any cards in stock" : "No cards found matching '\(searchText)'")
+                Text(searchText.isEmpty ? "Questo negozio non ha carte in stock" : "Nessuna carta trovata per '\(searchText)'")
                     .font(.system(size: 15))
                     .foregroundColor(.secondary)
                     .multilineTextAlignment(.center)
@@ -304,7 +304,7 @@ struct ShopInventoryView: View {
             }
             
             VStack(spacing: 8) {
-                Text("Error Loading Inventory")
+                Text("Errore Caricamento Inventario")
                     .font(.system(size: 20, weight: .bold))
                     .foregroundColor(.primary)
                 
@@ -316,12 +316,12 @@ struct ShopInventoryView: View {
             }
             
             Button(action: loadInventory) {
-                Text("Try Again")
+                Text("Riprova")
                     .font(.system(size: 16, weight: .semibold))
                     .foregroundColor(.white)
                     .padding(.horizontal, 24)
                     .padding(.vertical, 12)
-                    .background(Color.indigo)
+                    .background(Color.primary)
                     .cornerRadius(12)
             }
             
@@ -361,12 +361,12 @@ private struct TCGFilterChip: View {
         }) {
             Text(title)
                 .font(.system(size: 13, weight: .semibold))
-                .foregroundColor(isSelected ? .white : .indigo)
+                .foregroundColor(isSelected ? .white : .primary)
                 .padding(.horizontal, 16)
                 .padding(.vertical, 8)
                 .background(
                     Capsule()
-                        .fill(isSelected ? Color.indigo : Color.indigo.opacity(0.1))
+                        .fill(isSelected ? Color.primary : Color.gray.opacity(0.1))
                 )
         }
         .buttonStyle(PlainButtonStyle())
@@ -439,9 +439,9 @@ private struct InventoryCardCell: View {
                         Spacer()
                         
                         VStack(alignment: .trailing, spacing: 2) {
-                            Text(card.formattedPrice)
+                        Text(card.formattedPrice)
                                 .font(.system(size: 15, weight: .bold))
-                                .foregroundColor(.indigo)
+                                .foregroundColor(.primary)
                             
                             HStack(spacing: 3) {
                                 SwiftUI.Image(systemName: "square.stack.3d.up.fill")
@@ -522,7 +522,7 @@ struct CardReservationView: View {
                                     .foregroundColor(.white)
                                     .padding(.horizontal, 10)
                                     .padding(.vertical, 5)
-                                    .background(Capsule().fill(Color.indigo))
+                                    .background(Capsule().fill(Color.primary))
                                 
                                 if let nationalityDisplayName = card.nationalityDisplayName {
                                     Text(nationalityDisplayName)
@@ -544,7 +544,7 @@ struct CardReservationView: View {
                         // Details
                         VStack(alignment: .leading, spacing: 16) {
                             HStack {
-                                Text("Condition")
+                                Text("Condizione")
                                     .font(.system(size: 14))
                                     .foregroundColor(.secondary)
                                 Spacer()
@@ -556,36 +556,36 @@ struct CardReservationView: View {
                             Divider()
                             
                             HStack {
-                                Text("Price")
+                                Text("Prezzo")
                                     .font(.system(size: 14))
                                     .foregroundColor(.secondary)
                                 Spacer()
                                 Text(card.formattedPrice)
                                     .font(.system(size: 18, weight: .bold))
-                                    .foregroundColor(.indigo)
+                                    .foregroundColor(.primary)
                             }
                             
                             Divider()
                             
                             HStack {
-                                Text("Availability")
+                                Text("Disponibilità")
                                     .font(.system(size: 14))
                                     .foregroundColor(.secondary)
                                 Spacer()
-                                Text("\(card.quantity) in stock")
+                                Text("\(card.quantity) disponibili")
                                     .font(.system(size: 14, weight: .semibold))
                                     .foregroundColor(.primary)
                             }
                             
-                            if let nationalityDisplayName = card.nationalityDisplayName {
-                                Divider()
-                                
-                                HStack {
-                                    Text("Country")
-                                        .font(.system(size: 14))
-                                        .foregroundColor(.secondary)
-                                    Spacer()
-                                    Text(nationalityDisplayName)
+                                if let nationalityDisplayName = card.nationalityDisplayName {
+                                    Divider()
+                                    
+                                    HStack {
+                                        Text("Paese")
+                                            .font(.system(size: 14))
+                                            .foregroundColor(.secondary)
+                                        Spacer()
+                                        Text(nationalityDisplayName)
                                         .font(.system(size: 14, weight: .semibold))
                                         .foregroundColor(.primary)
                                 }
@@ -595,7 +595,7 @@ struct CardReservationView: View {
                                 Divider()
                                 
                                 VStack(alignment: .leading, spacing: 8) {
-                                    Text("Notes")
+                                    Text("Note")
                                         .font(.system(size: 14))
                                         .foregroundColor(.secondary)
                                     
@@ -614,21 +614,21 @@ struct CardReservationView: View {
                         VStack(alignment: .leading, spacing: 12) {
                             HStack {
                                 SwiftUI.Image(systemName: "info.circle.fill")
-                                    .foregroundColor(.indigo)
+                                    .foregroundColor(.primary)
                                 
-                                Text("Reservation Details")
+                                Text("Dettagli Prenotazione")
                                     .font(.system(size: 16, weight: .semibold))
                             }
                             
                             VStack(alignment: .leading, spacing: 8) {
-                                ReservationInfoRow(icon: "clock.fill", text: "Reserved for 30 minutes")
-                                ReservationInfoRow(icon: "qrcode", text: "Show QR code at the shop to pick up")
-                                ReservationInfoRow(icon: "checkmark.circle.fill", text: "Free cancellation before validation")
+                                ReservationInfoRow(icon: "clock.fill", text: "Prenotazione valida 30 minuti")
+                                ReservationInfoRow(icon: "qrcode", text: "Mostra il QR code al negozio")
+                                ReservationInfoRow(icon: "checkmark.circle.fill", text: "Cancellazione gratuita")
                             }
                         }
                         .padding(16)
                         .frame(maxWidth: .infinity)
-                        .background(Color.indigo.opacity(0.1))
+                        .background(Color.gray.opacity(0.08))
                         .cornerRadius(16)
                         
                         // Reserve Button
@@ -640,7 +640,7 @@ struct CardReservationView: View {
                                 } else {
                                     SwiftUI.Image(systemName: "qrcode.viewfinder")
                                         .font(.system(size: 16))
-                                    Text("Reserve Card")
+                                    Text("Prenota Carta")
                                         .font(.system(size: 17, weight: .semibold))
                                 }
                             }
@@ -649,7 +649,7 @@ struct CardReservationView: View {
                             .padding(.vertical, 16)
                             .background(
                                 RoundedRectangle(cornerRadius: 14)
-                                    .fill(Color.indigo)
+                                    .fill(Color.primary)
                             )
                         }
                         .disabled(isReserving)
@@ -657,7 +657,7 @@ struct CardReservationView: View {
                     .padding(20)
                 }
             }
-            .navigationTitle("Reserve Card")
+            .navigationTitle("Prenota Carta")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {

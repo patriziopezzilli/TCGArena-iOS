@@ -11,155 +11,104 @@ struct PastTournamentCard: View {
     let tournament: Tournament
     
     var body: some View {
-        HStack(spacing: 0) {
-            // Left Side: Date & Time
-            VStack(spacing: 8) {
-                VStack(spacing: 0) {
-                    Text(monthString(from: tournament.startDate))
-                        .font(.system(size: 12, weight: .bold))
-                        .foregroundColor(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 4)
-                        .background(Color.gray.opacity(0.6)) // Dimmed color for past tournaments
-
-                    Text(dayString(from: tournament.startDate))
-                        .font(.system(size: 20, weight: .bold))
-                        .foregroundColor(.secondary) // Dimmed text
-                        .padding(.vertical, 8)
-                }
-                .background(Color(.secondarySystemBackground).opacity(0.5))
-                .cornerRadius(8)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 8)
-                        .stroke(Color(.separator).opacity(0.3), lineWidth: 1)
-                )
-                .frame(width: 60)
-
-                Text(timeString(from: tournament.startDate))
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundColor(.secondary.opacity(0.7))
+        HStack(alignment: .center, spacing: 16) {
+            // Left: Clean Date Box (Greyscale)
+            VStack(spacing: 0) {
+                Text(monthString(from: tournament.startDate).uppercased())
+                    .font(.system(size: 11, weight: .bold))
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 4)
+                    .background(Color.gray)
+                
+                Text(dayString(from: tournament.startDate))
+                    .font(.system(size: 20, weight: .heavy))
+                    .foregroundColor(.gray)
+                    .padding(.vertical, 8)
             }
-            .padding(16)
-
-            // Right Side: Info
-            VStack(alignment: .leading, spacing: 8) {
-                // Badges
-                HStack(spacing: 8) {
-                    Text(tournament.tcgType.displayName)
+            .background(Color(.secondarySystemBackground)) // Slightly processed look
+            .cornerRadius(10)
+            .frame(width: 54)
+            .opacity(0.8)
+            
+            // Middle: Info
+            VStack(alignment: .leading, spacing: 6) {
+                Text(tournament.title)
+                    .font(.system(size: 16, weight: .bold))
+                    .foregroundColor(.secondary) // Greyed out title
+                    .lineLimit(2)
+                
+                // Location & Time
+                HStack(spacing: 12) {
+                    if let location = tournament.location {
+                        HStack(spacing: 4) {
+                            SwiftUI.Image(systemName: "mappin.circle.fill")
+                                .font(.system(size: 10))
+                            Text(location.city)
+                                .font(.system(size: 12, weight: .medium))
+                        }
+                    }
+                    
+                    Text("Concluso")
                         .font(.system(size: 10, weight: .bold))
-                        .foregroundColor(Color.gray.opacity(0.7)) // Dimmed color
                         .padding(.horizontal, 6)
                         .padding(.vertical, 2)
                         .background(Color.gray.opacity(0.1))
                         .cornerRadius(4)
-
-                    if let type = tournament.type {
-                        Text(type.rawValue)
-                            .font(.system(size: 10, weight: .medium))
-                            .foregroundColor(.secondary.opacity(0.7))
-                            .padding(.horizontal, 6)
-                            .padding(.vertical, 2)
-                            .background(Color(.secondarySystemBackground).opacity(0.5))
-                            .cornerRadius(4)
-                    }
-
-                    Spacer()
-
-                    // Price
-                    if let entryFee = tournament.entryFee {
-                        if entryFee > 0 {
-                            Text("€\(entryFee, specifier: "%.0f")")
-                                .font(.system(size: 14, weight: .bold))
-                                .foregroundColor(.secondary.opacity(0.7))
-                        } else {
-                            Text("Free")
-                                .font(.system(size: 14, weight: .bold))
-                                .foregroundColor(.green.opacity(0.7))
-                        }
-                    }
                 }
-
-                // Title
-                Text(tournament.title)
-                    .font(.system(size: 16, weight: .bold))
-                    .foregroundColor(.secondary.opacity(0.8))
-                    .lineLimit(2)
-
-                // Location
-                if let location = tournament.location {
-                    HStack(spacing: 4) {
-                        SwiftUI.Image(systemName: "mappin.and.ellipse")
-                            .font(.system(size: 12))
-                            .foregroundColor(.secondary.opacity(0.7))
-                        
-                        Text(location.venueName)
-                            .font(.system(size: 13))
-                            .foregroundColor(.secondary.opacity(0.7))
-                            .lineLimit(1)
-                    }
-                }
-                
-                // Footer: Participants & Status
-                HStack {
-                    HStack(spacing: 4) {
-                        SwiftUI.Image(systemName: "person.2.fill")
-                            .font(.system(size: 12))
-                        if let maxParticipants = tournament.maxParticipants {
-                            Text("\(tournament.registeredParticipantsCount)/\(maxParticipants)")
-                                .font(.system(size: 12, weight: .medium))
-                        }
-                    }
-                    .foregroundColor(.secondary.opacity(0.7))
-                    
-                    Spacer()
-
-                    // Status badge for past tournaments
-                    Text("Completed")
-                        .font(.system(size: 10, weight: .semibold))
-                        .foregroundColor(.gray)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                        .background(Color.gray.opacity(0.1))
-                        .cornerRadius(8)
-                }
+                .foregroundColor(.secondary)
             }
-            .padding(.vertical, 16)
-            .padding(.trailing, 16)
+            
+            Spacer()
+            
+            // Right: Chevron
+            SwiftUI.Image(systemName: "chevron.right")
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundColor(Color(.tertiaryLabel))
         }
-        .background(Color(.systemBackground).opacity(0.8))
-        .cornerRadius(16)
-        .shadow(color: Color.black.opacity(0.03), radius: 4, x: 0, y: 1) // Lighter shadow
+        .padding(16)
+        .background(Color(.systemBackground))
         .overlay(
-            RoundedRectangle(cornerRadius: 16)
-                .stroke(Color.gray.opacity(0.1), lineWidth: 1)
+            Rectangle()
+                .frame(height: 1)
+                .foregroundColor(Color(.separator).opacity(0.5)),
+            alignment: .bottom
         )
     }
-
-    // MARK: - Helpers
+    
+    // MARK: - Date Formatting Helpers
     private func monthString(from dateString: String) -> String {
-        guard let date = parseDate(dateString) else { return "N/A" }
+        guard let date = parseDate(dateString) else { return "OCT" }
         let formatter = DateFormatter()
         formatter.dateFormat = "MMM"
-        return formatter.string(from: date).uppercased()
+        formatter.locale = Locale(identifier: "it_IT")
+        return formatter.string(from: date)
     }
-
+    
     private func dayString(from dateString: String) -> String {
-        guard let date = parseDate(dateString) else { return "N/A" }
+        guard let date = parseDate(dateString) else { return "01" }
         let formatter = DateFormatter()
         formatter.dateFormat = "d"
         return formatter.string(from: date)
     }
-
-    private func timeString(from dateString: String) -> String {
-        guard let date = parseDate(dateString) else { return "N/A" }
-        let formatter = DateFormatter()
-        formatter.timeStyle = .short
-        return formatter.string(from: date)
-    }
-
+    
     private func parseDate(_ dateString: String) -> Date? {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss"
-        return formatter.date(from: dateString)
+        // Try multiple formats
+        let formats = [
+            "yyyy-MM-dd'T'HH:mm:ss",
+            "yyyy-MM-dd'T'HH:mm:ss.SSS",
+            "dd MMM yyyy, HH:mm",
+            "yyyy-MM-dd HH:mm:ss"
+        ]
+        
+        for format in formats {
+            let formatter = DateFormatter()
+            formatter.dateFormat = format
+            formatter.locale = Locale(identifier: "en_US_POSIX")
+            if let date = formatter.date(from: dateString) {
+                return date
+            }
+        }
+        return nil
     }
 }

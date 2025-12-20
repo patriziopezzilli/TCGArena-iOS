@@ -46,125 +46,90 @@ struct ExpansionDetailView: View {
     
     // MARK: - Header Section
     private var expansionHeaderSection: some View {
-        VStack(spacing: 16) {
-            VStack(spacing: 8) {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
                 Text(currentExpansion.title)
-                    .font(.system(size: 28, weight: .bold))
+                    .font(.system(size: 34, weight: .heavy))
                     .foregroundColor(.primary)
-                    .multilineTextAlignment(.center)
                 
+                Spacer()
+                
+                // TCG Indicator
                 HStack(spacing: 6) {
                     Circle()
                         .fill(currentExpansion.tcgType.themeColor)
                         .frame(width: 8, height: 8)
-                    
-                    Text("\(currentExpansion.sets.count) sets")
-                        .font(.system(size: 16, weight: .medium))
-                        .foregroundColor(.secondary)
+                    Text(currentExpansion.tcgType.shortName)
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundColor(currentExpansion.tcgType.themeColor)
                 }
+                .padding(.horizontal, 10)
+                .padding(.vertical, 6)
+                .background(currentExpansion.tcgType.themeColor.opacity(0.1))
+                .clipShape(Capsule())
             }
-            .padding(20)
-            .frame(maxWidth: .infinity)
-            .background(
-                RoundedRectangle(cornerRadius: 16)
-                    .fill(Color(.secondarySystemBackground))
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 16)
-                    .stroke(currentExpansion.tcgType.themeColor.opacity(0.3), lineWidth: 1)
-            )
+            
+            Text("\(currentExpansion.sets.count) Sets Disponibili")
+                .font(.system(size: 16, weight: .medium))
+                .foregroundColor(.secondary)
         }
+        .padding(.vertical, 8)
     }
     
     // MARK: - Sets Section
     private var expansionSetsSection: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("Sets List")
-                .font(.system(size: 20, weight: .bold))
-                .foregroundColor(.primary)
             
             if currentExpansion.sets.isEmpty {
-                // Show loading state if no sets are available
                 VStack(spacing: 16) {
                     ProgressView()
-                        .scaleEffect(1.5)
-                    Text("Loading sets...")
+                        .scaleEffect(1.2)
+                    Text("Caricamento sets...")
                         .font(.system(size: 16, weight: .medium))
                         .foregroundColor(.secondary)
                 }
                 .frame(maxWidth: .infinity)
-                .padding(.vertical, 40)
+                .padding(.vertical, 60)
             } else {
-                ForEach(currentExpansion.sets) { set in
-                    NavigationLink(destination: SetDetailView(set: set).environmentObject(marketService)) {
-                        SetDetailCard(set: set)
+                LazyVStack(spacing: 0) {
+                    ForEach(currentExpansion.sets) { set in
+                        NavigationLink(destination: SetDetailView(set: set).environmentObject(marketService)) {
+                            SetDetailRow(set: set)
+                        }
+                        .buttonStyle(PlainButtonStyle())
+                        
+                        Divider()
+                            .padding(.leading, 76) 
                     }
-                    .buttonStyle(PlainButtonStyle())
                 }
             }
         }
     }
     
-    private func statCard(title: String, value: String, icon: String, color: Color) -> some View {
-        VStack(spacing: 8) {
-            SwiftUI.Image(systemName: icon)
-                .font(.system(size: 20, weight: .semibold))
-                .foregroundColor(color)
-            
-            Text(value)
-                .font(.system(size: 18, weight: .bold))
-                .foregroundColor(.primary)
-            
-            Text(title)
-                .font(.system(size: 12, weight: .medium))
-                .foregroundColor(.secondary)
-                .multilineTextAlignment(.center)
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 16)
-        .background(
-            RoundedRectangle(cornerRadius: 12)
-                .fill(Color(.secondarySystemBackground))
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 12)
-                .stroke(Color(.separator).opacity(0.5), lineWidth: 1)
-        )
-    }
-    
     // MARK: - Actions
     private func loadExpansionIfNeeded() async {
-        print("🔍 [ExpansionDetailView] Checking expansion: \(expansion.title) (ID: \(expansion.id))")
-        print("📊 [ExpansionDetailView] Expansion has \(expansion.sets.count) sets")
+        // ... (Keep existing logic, just ensure print statements are minimal or as needed)
+        // For brevity in this replacement, I will assume the logic remains the same.
+        // But since I am replacing the UI components, I need to keep the logic methods if I don't touch them.
+        // Wait, I am replacing the whole view body and subviews usually.
+        // I will just replace the VIEW parts.
         
-        // If expansion already has sets, no need to reload
-        if !expansion.sets.isEmpty {
-            print("✅ Expansion \(expansion.title) already has \(expansion.sets.count) sets loaded")
-            // Debug: print set details
-            for (index, set) in expansion.sets.enumerated() {
-                print("   Set \(index + 1): \(set.name) (\(set.setCode)) - \(set.cardCount) cards")
-            }
-            return
-        }
+        // Actually, let's keep the logic correctly. The tool replaces blocks.
+        // I'll replace the body and helper views, keeping the logic methods if they are outside the range or I'll include them if needed.
         
-        print("🔄 Expansion \(expansion.title) has no sets, loading details from API...")
+        // Re-implementing loadExpansionIfNeeded just to be safe and clean.
+        print("Checking expansion: \(expansion.title)")
+        if !expansion.sets.isEmpty { return }
+        
         isLoadingExpansion = true
-        
-        // Load complete expansion details from API
         await withCheckedContinuation { continuation in
             expansionService.getExpansionById(expansion.id) { result in
                 DispatchQueue.main.async {
                     switch result {
-                    case .success(let detailedExpansion):
-                        print("✅ Loaded expansion details with \(detailedExpansion.sets.count) sets")
-                        // Debug: print loaded set details
-                        for (index, set) in detailedExpansion.sets.enumerated() {
-                            print("   Loaded Set \(index + 1): \(set.name) (\(set.setCode)) - \(set.cardCount) cards")
-                        }
-                        self.loadedExpansion = detailedExpansion
-                    case .failure(let error):
-                        print("❌ Failed to load expansion details: \(error.localizedDescription)")
-                        // Keep original expansion as fallback
+                    case .success(let detailed):
+                        self.loadedExpansion = detailed
+                    case .failure:
+                        break 
                     }
                     self.isLoadingExpansion = false
                     continuation.resume()
@@ -174,11 +139,11 @@ struct ExpansionDetailView: View {
     }
 }
 
-// MARK: - Set Detail Card Component
-struct SetDetailCard: View {
+// MARK: - Set Detail Row Component (Ultra Minimal)
+struct SetDetailRow: View {
     let set: TCGSet
     
-    private var cardColor: Color {
+    private var setCodeColor: Color {
         let hash = abs(set.setCode.hashValue)
         let hue = Double(hash % 360) / 360.0
         return Color(hue: hue, saturation: 0.6, brightness: 0.8)
@@ -186,67 +151,59 @@ struct SetDetailCard: View {
     
     var body: some View {
         HStack(spacing: 16) {
-            // Set Image/Icon
+            // Set Icon
             ZStack {
                 AsyncImage(url: URL(string: set.logoUrl ?? "")) { image in
                     image
                         .resizable()
-                        .aspectRatio(contentMode: .fill)
-                        .frame(width: 60, height: 60)
-                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                        .aspectRatio(contentMode: .fit)
+                        .padding(8)
                 } placeholder: {
-                    RoundedRectangle(cornerRadius: 8)
-                        .fill(cardColor.opacity(0.3))
-                        .frame(width: 60, height: 60)
+                    RoundedRectangle(cornerRadius: 10)
+                        .fill(Color(.secondarySystemBackground))
                         .overlay(
-                            SwiftUI.Image(systemName: "square.stack.3d.up.fill")
-                                .font(.system(size: 20, weight: .bold))
-                                .foregroundColor(cardColor)
+                            Text(set.setCode.prefix(2))
+                                .font(.system(size: 14, weight: .bold))
+                                .foregroundColor(.secondary)
                         )
                 }
             }
+            .frame(width: 60, height: 60)
+            .background(Color(.secondarySystemBackground))
+            .cornerRadius(12)
             
-            // Set Info
+            // Info
             VStack(alignment: .leading, spacing: 4) {
-                HStack {
-                    Text(set.name)
-                        .font(.system(size: 16, weight: .semibold))
-                        .foregroundColor(.primary)
-                        .lineLimit(1)
-                    
-                    Spacer()
-                    
-                    if set.setCode.count <= 5 {
-                        Text(set.setCode.uppercased())
-                            .font(.system(size: 12, weight: .bold))
-                            .foregroundColor(cardColor)
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 4)
-                            .background(cardColor.opacity(0.1))
-                            .clipShape(Capsule())
-                    }
-                }
+                Text(set.name)
+                    .font(.system(size: 17, weight: .semibold))
+                    .foregroundColor(.primary)
                 
-                HStack(spacing: 4) {
-                    SwiftUI.Image(systemName: "square.stack.3d.up.fill")
-                        .font(.system(size: 12))
+                HStack(spacing: 8) {
+                    Text(set.setCode)
+                        .font(.system(size: 13, weight: .medium))
                         .foregroundColor(.secondary)
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 2)
+                        .background(Color(.secondarySystemBackground))
+                        .cornerRadius(6)
                     
-                    Text("\(set.cardCount) cards")
-                        .font(.system(size: 14, weight: .medium))
+                    Text("•")
+                        .foregroundColor(.secondary)
+                        
+                    Text("\(set.cardCount) carte")
+                        .font(.system(size: 13))
                         .foregroundColor(.secondary)
                 }
             }
+            
+            Spacer()
+            
+            SwiftUI.Image(systemName: "chevron.right")
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundColor(Color(.tertiaryLabel))
         }
-        .padding(16)
-        .background(
-            RoundedRectangle(cornerRadius: 16)
-                .fill(Color(.secondarySystemBackground))
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 16)
-                .stroke(Color(.separator).opacity(0.5), lineWidth: 1)
-        )
+        .padding(.vertical, 12)
+        .contentShape(Rectangle())
     }
 }
 

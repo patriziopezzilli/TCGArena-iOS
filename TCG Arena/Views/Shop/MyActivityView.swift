@@ -41,63 +41,55 @@ struct MyActivityView: View {
                 contentView
             }
         }
-        .background(Color(.systemGroupedBackground))
+        .background(Color(.systemBackground))
         .onAppear {
             loadData()
         }
     }
     
-    // MARK: - Segmented Control
+    // MARK: - Smart Navigation Bar
     private var segmentedControl: some View {
-        HStack(spacing: 12) {
-            ForEach(ActivitySegment.allCases, id: \.self) { segment in
-                Button {
-                    withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                        selectedSegment = segment
-                    }
-                } label: {
-                    HStack(spacing: 8) {
-                        SwiftUI.Image(systemName: segment.icon)
-                            .font(.system(size: 14, weight: .semibold))
-                        
-                        Text(segment.rawValue)
-                            .font(.system(size: 14, weight: .semibold))
-                        
-                        // Badge count
-                        if segment == .reservations && activeReservationsCount > 0 {
-                            Text("\(activeReservationsCount)")
-                                .font(.system(size: 11, weight: .bold))
-                                .foregroundColor(.white)
-                                .padding(.horizontal, 6)
-                                .padding(.vertical, 2)
-                                .background(Capsule().fill(Color.blue))
-                        } else if segment == .requests && activeRequestsCount > 0 {
-                            Text("\(activeRequestsCount)")
-                                .font(.system(size: 11, weight: .bold))
-                                .foregroundColor(.white)
-                                .padding(.horizontal, 6)
-                                .padding(.vertical, 2)
-                                .background(Capsule().fill(Color.orange))
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 12) {
+                ForEach(ActivitySegment.allCases, id: \.self) { segment in
+                    Button {
+                        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                            selectedSegment = segment
                         }
+                        HapticManager.shared.lightImpact()
+                    } label: {
+                        HStack(spacing: 6) {
+                            Text(segment.rawValue)
+                                .font(.system(size: 14, weight: .semibold))
+                            
+                            // Badge count
+                            if segment == .reservations && activeReservationsCount > 0 {
+                                Text("\(activeReservationsCount)")
+                                    .font(.system(size: 10, weight: .bold))
+                                    .foregroundColor(.white)
+                                    .frame(minWidth: 16, minHeight: 16)
+                                    .background(Circle().fill(Color.blue))
+                            } else if segment == .requests && activeRequestsCount > 0 {
+                                Text("\(activeRequestsCount)")
+                                    .font(.system(size: 10, weight: .bold))
+                                    .foregroundColor(.white)
+                                    .frame(minWidth: 16, minHeight: 16)
+                                    .background(Circle().fill(Color.orange))
+                            }
+                        }
+                        .foregroundColor(selectedSegment == segment ? .white : .primary)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 8)
+                        .background(
+                            Capsule()
+                                .fill(selectedSegment == segment ? Color.black : Color(.secondarySystemBackground))
+                        )
                     }
-                    .foregroundColor(selectedSegment == segment ? .white : .primary)
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 10)
-                    .background(
-                        RoundedRectangle(cornerRadius: 12)
-                            .fill(selectedSegment == segment ? Color.blue : Color.clear)
-                    )
                 }
-                .buttonStyle(PlainButtonStyle())
             }
+            .padding(.horizontal, 24)
+            .padding(.vertical, 12)
         }
-        .padding(4)
-        .background(
-            RoundedRectangle(cornerRadius: 14)
-                .fill(Color(.secondarySystemFill).opacity(0.5))
-        )
-        .padding(.horizontal, 20)
-        .padding(.vertical, 16)
     }
     
     // MARK: - Content View
@@ -122,12 +114,15 @@ struct MyActivityView: View {
                 )
             } else {
                 ScrollView {
-                    LazyVStack(spacing: 12) {
+                    LazyVStack(spacing: 0) { // Spacing 0 for dividers
                         ForEach(reservationService.reservations) { reservation in
                             ActivityReservationCard(reservation: reservation)
+                            Divider()
+                                .padding(.leading, 70) // Align with text (Icon width 44 + spacing 16 + padding ~10)
                         }
                     }
-                    .padding(20)
+                    .padding(.horizontal, 20)
+                    .padding(.bottom, 20)
                 }
                 .refreshable {
                     await refreshData()
@@ -147,12 +142,15 @@ struct MyActivityView: View {
                 )
             } else {
                 ScrollView {
-                    LazyVStack(spacing: 12) {
+                    LazyVStack(spacing: 0) {
                         ForEach(requestService.requests) { request in
                             ActivityRequestCard(request: request)
+                            Divider()
+                                .padding(.leading, 70)
                         }
                     }
-                    .padding(20)
+                    .padding(.horizontal, 20)
+                    .padding(.bottom, 20)
                 }
                 .refreshable {
                     await refreshData()
@@ -249,59 +247,56 @@ private struct ActivityReservationCard: View {
             showingQR = true
         } label: {
             HStack(spacing: 16) {
-                // Status indicator
+                // Status Icon (Left) - Cleaner, no heavy background
                 ZStack {
-                    RoundedRectangle(cornerRadius: 12)
-                        .fill(statusColor.opacity(0.15))
-                        .frame(width: 50, height: 50)
+                    Circle()
+                        .fill(statusColor.opacity(0.1))
+                        .frame(width: 44, height: 44)
                     
                     SwiftUI.Image(systemName: statusIcon)
-                        .font(.system(size: 20, weight: .semibold))
+                        .font(.system(size: 20))
                         .foregroundColor(statusColor)
                 }
                 
-                // Card Info
+                // Card Info (Middle)
                 VStack(alignment: .leading, spacing: 4) {
                     Text(reservation.card?.name ?? "Carta")
-                        .font(.system(size: 16, weight: .bold, design: .rounded))
+                        .font(.system(size: 16, weight: .semibold))
                         .foregroundColor(.primary)
                         .lineLimit(1)
                     
                     Text(reservation.shop?.name ?? "Negozio")
-                        .font(.system(size: 13))
+                        .font(.system(size: 14))
                         .foregroundColor(.secondary)
                         .lineLimit(1)
                     
                     HStack(spacing: 6) {
                         Text(reservation.status.displayName)
-                            .font(.system(size: 11, weight: .semibold))
+                            .font(.system(size: 12, weight: .medium))
                             .foregroundColor(statusColor)
                         
                         Text("•")
                             .foregroundColor(.secondary)
                         
                         Text(timeRemaining)
-                            .font(.system(size: 11))
+                            .font(.system(size: 12))
                             .foregroundColor(.secondary)
                     }
                 }
                 
                 Spacer()
                 
-                // QR Icon
+                // Action (Right)
                 SwiftUI.Image(systemName: "qrcode")
-                    .font(.system(size: 24))
-                    .foregroundColor(.secondary)
+                    .font(.system(size: 20))
+                    .foregroundColor(.primary)
+                    .padding(8)
+                    .background(Color(.secondarySystemBackground))
+                    .clipShape(Circle())
             }
-            .padding(16)
-            .background(
-                RoundedRectangle(cornerRadius: 16)
-                    .fill(Color(.secondarySystemGroupedBackground))
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 16)
-                    .stroke(Color(.separator).opacity(0.15), lineWidth: 1)
-            )
+            .padding(.vertical, 8)
+            .padding(.horizontal, 4) // Minimal horizontal padding
+            .contentShape(Rectangle()) // Ensure tap target covers the whole row
         }
         .buttonStyle(PlainButtonStyle())
         .sheet(isPresented: $showingQR) {
@@ -350,7 +345,7 @@ private struct ActivityReservationCard: View {
     }
 }
 
-// MARK: - Request Card
+// MARK: - Request Card (Redesigned)
 private struct ActivityRequestCard: View {
     let request: CustomerRequest
     @State private var showingDetail = false
@@ -360,58 +355,52 @@ private struct ActivityRequestCard: View {
             showingDetail = true
         } label: {
             HStack(spacing: 16) {
-                // Type indicator
+                // Type Icon (Left)
                 ZStack {
-                    RoundedRectangle(cornerRadius: 12)
-                        .fill(typeColor.opacity(0.15))
-                        .frame(width: 50, height: 50)
+                    Circle()
+                        .fill(typeColor.opacity(0.1))
+                        .frame(width: 44, height: 44)
                     
                     SwiftUI.Image(systemName: request.type.icon)
-                        .font(.system(size: 20, weight: .semibold))
+                        .font(.system(size: 20))
                         .foregroundColor(typeColor)
                 }
                 
-                // Request Info
+                // Request Info (Middle)
                 VStack(alignment: .leading, spacing: 4) {
                     Text(request.title)
-                        .font(.system(size: 16, weight: .bold, design: .rounded))
+                        .font(.system(size: 16, weight: .semibold))
                         .foregroundColor(.primary)
                         .lineLimit(1)
                     
                     Text(request.shopName ?? "Negozio")
-                        .font(.system(size: 13))
+                        .font(.system(size: 14))
                         .foregroundColor(.secondary)
                         .lineLimit(1)
                     
                     HStack(spacing: 6) {
                         Text(request.status.displayName)
-                            .font(.system(size: 11, weight: .semibold))
+                            .font(.system(size: 12, weight: .medium))
                             .foregroundColor(statusColor)
                         
                         if request.hasUnreadMessages {
                             Circle()
                                 .fill(Color.red)
-                                .frame(width: 8, height: 8)
+                                .frame(width: 6, height: 6)
                         }
                     }
                 }
                 
                 Spacer()
                 
-                // Chevron
+                // Chevron (Right)
                 SwiftUI.Image(systemName: "chevron.right")
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundColor(Color(.systemGray3))
             }
-            .padding(16)
-            .background(
-                RoundedRectangle(cornerRadius: 16)
-                    .fill(Color(.secondarySystemGroupedBackground))
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 16)
-                    .stroke(Color(.separator).opacity(0.15), lineWidth: 1)
-            )
+            .padding(.vertical, 8)
+            .padding(.horizontal, 4)
+            .contentShape(Rectangle())
         }
         .buttonStyle(PlainButtonStyle())
         .sheet(isPresented: $showingDetail) {

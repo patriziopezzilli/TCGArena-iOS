@@ -51,7 +51,7 @@ struct ShopRequestsView: View {
         VStack(spacing: 16) {
             ProgressView()
                 .scaleEffect(1.5)
-            Text("Loading requests...")
+            Text("Caricamento richieste...")
                 .foregroundColor(.secondary)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -65,10 +65,10 @@ struct ShopRequestsView: View {
                 .frame(width: 48, height: 48)
                 .foregroundColor(.secondary)
             
-            Text("No Requests")
+            Text("Nessuna Richiesta")
                 .font(.headline)
             
-            Text("You haven't sent any requests to \(shopName)")
+            Text("Non hai inviato richieste a \(shopName)")
                 .font(.subheadline)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
@@ -237,7 +237,7 @@ private struct RequestDetailView: View {
         NavigationView {
             VStack(spacing: 0) {
                 if isLoading {
-                    ProgressView("Loading messages...")
+                    ProgressView("Caricamento messaggi...")
                         .padding()
                 } else {
                     ScrollView {
@@ -308,15 +308,15 @@ private struct RequestDetailView: View {
                             // Messages Section
                             if messages.isEmpty {
                                 VStack(spacing: 16) {
-                                    SwiftUI.Image(systemName: "bubble.left.and.bubble.right")
+                                SwiftUI.Image(systemName: "bubble.left.and.bubble.right")
                                         .font(.system(size: 48))
                                         .foregroundColor(.secondary)
                                     
-                                    Text("No messages yet")
+                                    Text("Nessun messaggio")
                                         .font(.headline)
                                         .foregroundColor(.secondary)
                                     
-                                    Text("Start the conversation with the shop")
+                                    Text("Inizia la conversazione con il negozio")
                                         .font(.subheadline)
                                         .foregroundColor(.secondary)
                                         .multilineTextAlignment(.center)
@@ -364,33 +364,33 @@ private struct RequestDetailView: View {
                     }
                 }
             }
-            .navigationTitle("Request Details")
+            .navigationTitle("Dettagli Richiesta")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Close") {
+                    Button("Chiudi") {
                         dismiss()
                     }
                 }
                 
                 if request.isActive {
                     ToolbarItem(placement: .navigationBarTrailing) {
-                        Button("Cancel Request") {
+                        Button("Annulla Richiesta") {
                             showCancelAlert = true
                         }
                         .foregroundColor(.red)
                     }
                 }
             }
-            .alert("Cancel Request", isPresented: $showCancelAlert) {
-                Button("Cancel", role: .destructive) {
+            .alert("Annulla Richiesta", isPresented: $showCancelAlert) {
+                Button("Annulla", role: .destructive) {
                     Task {
                         await cancelRequest()
                     }
                 }
-                Button("Keep", role: .cancel) {}
+                Button("Mantieni", role: .cancel) {}
             } message: {
-                Text("Are you sure you want to cancel this request? This action cannot be undone.")
+                Text("Sei sicuro di voler annullare questa richiesta? L'azione non può essere annullata.")
             }
             .task {
                 await loadMessages()

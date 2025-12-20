@@ -82,28 +82,18 @@ struct SetDetailView: View {
     
     // MARK: - Header Section
     private var setHeaderSection: some View {
-        VStack(spacing: 16) {
-            // Set Image - Hide if loading fails
+        VStack(spacing: 24) {
+            // Set Icon (Centered and Clean)
             if let logoUrl = set.logoUrl, let url = URL(string: logoUrl) {
                 CachedAsyncImage(url: url) { phase in
                     switch phase {
-                    case .empty:
-                        RoundedRectangle(cornerRadius: 16)
-                            .fill(Color.blue.opacity(0.2))
-                            .frame(height: 180)
-                            .overlay(
-                                ProgressView()
-                            )
                     case .success(let image):
                         image
                             .resizable()
                             .aspectRatio(contentMode: .fit)
-                            .frame(height: 180)
-                            .clipShape(RoundedRectangle(cornerRadius: 16))
-                            .shadow(color: Color.blue.opacity(0.3), radius: 8, x: 0, y: 4)
-                    case .failure(_):
-                        EmptyView() // Hide image completely if it fails to load
-                    @unknown default:
+                            .frame(height: 120)
+                            .padding(.bottom, 8)
+                    default:
                         EmptyView()
                     }
                 }
@@ -112,68 +102,55 @@ struct SetDetailView: View {
             // Set Info
             VStack(spacing: 8) {
                 Text(set.name)
-                    .font(.system(size: 28, weight: .bold))
+                    .font(.system(size: 34, weight: .heavy))
                     .foregroundColor(.primary)
                     .multilineTextAlignment(.center)
                 
-                HStack(spacing: 6) {
-                    Circle()
-                        .fill(cardColor)
-                        .frame(width: 8, height: 8)
-                        
-                    Text("\(set.cardCount) Cards")
-                        .font(.system(size: 16, weight: .medium))
+                HStack(spacing: 8) {
+                    Text(set.setCode)
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundColor(.secondary)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(Color(.secondarySystemBackground))
+                        .cornerRadius(6)
+                    
+                    Text("•")
+                        .foregroundColor(.secondary)
+                    
+                    Text("\(set.cardCount) Carte")
+                        .font(.system(size: 15, weight: .medium))
                         .foregroundColor(.secondary)
                 }
             }
-            .padding(20)
-            .frame(maxWidth: .infinity)
-            .background(
-                RoundedRectangle(cornerRadius: 16)
-                    .fill(Color(.secondarySystemGroupedBackground))
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 16)
-                    .stroke(cardColor.opacity(0.15), lineWidth: 1)
-            )
         }
+        .padding(.vertical, 16)
+        .frame(maxWidth: .infinity)
     }
     
     // MARK: - Search Bar
     private var searchBarView: some View {
-        VStack(spacing: 0) {
-            HStack {
-                SwiftUI.Image(systemName: "magnifyingglass")
-                    .foregroundColor(.secondary)
-                    .font(.system(size: 16, weight: .medium))
-                
-                TextField("Search cards by name...", text: $searchText)
-                    .textFieldStyle(PlainTextFieldStyle())
-                    .font(.system(size: 16, weight: .medium))
-                
-                if !searchText.isEmpty {
-                    Button(action: { 
-                        withAnimation(.easeInOut(duration: 0.2)) {
-                            searchText = "" 
-                        }
-                    }) {
-                        SwiftUI.Image(systemName: "xmark.circle.fill")
-                            .foregroundColor(.secondary)
-                            .font(.system(size: 16, weight: .medium))
-                    }
+        HStack(spacing: 12) {
+            SwiftUI.Image(systemName: "magnifyingglass")
+                .font(.system(size: 18, weight: .medium))
+                .foregroundColor(.secondary)
+            
+            TextField("Cerca carta per nome...", text: $searchText)
+                .font(.system(size: 17, weight: .medium))
+            
+            if !searchText.isEmpty {
+                Button(action: { 
+                    withAnimation { searchText = "" }
+                }) {
+                    SwiftUI.Image(systemName: "xmark.circle.fill")
+                        .font(.system(size: 18))
+                        .foregroundColor(Color(.tertiaryLabel))
                 }
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 14)
-            .background(
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(Color(.secondarySystemGroupedBackground))
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 12)
-                    .stroke(Color(.separator).opacity(0.3), lineWidth: 1)
-            )
         }
+        .padding(16)
+        .background(Color(.secondarySystemBackground))
+        .cornerRadius(12)
     }
     
     // MARK: - Cards Section

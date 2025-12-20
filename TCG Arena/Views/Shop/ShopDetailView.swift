@@ -2,7 +2,8 @@
 //  ShopDetailView.swift
 //  TCG Arena
 //
-//  Created by TCG Arena Team on 11/14/25.
+//  Redesigned with Home-style minimal aesthetic
+//  Created by TCG Arena Team on 12/20/25.
 //
 
 import SwiftUI
@@ -14,7 +15,7 @@ struct ShopDetailView: View {
     @EnvironmentObject var inventoryService: InventoryService
     @EnvironmentObject var authService: AuthService
     @Environment(\.presentationMode) var presentationMode
-    @State private var scrollOffset: CGFloat = 0
+    
     @State private var showingInventory = false
     @State private var showingSendRequest = false
     @State private var showingMyRequests = false
@@ -26,25 +27,83 @@ struct ShopDetailView: View {
     
     var body: some View {
         GeometryReader { geometry in
-            mainContent(geometry: geometry)
-        }
-        .navigationBarHidden(true)
-        .edgesIgnoringSafeArea(.top)
-        .task {
-            // Load user subscriptions when view appears to check notification status
-            if authService.isAuthenticated {
-                shopService.loadUserSubscriptions { result in
-                    // Handle result if needed
-                    switch result {
-                    case .success:
-                        print("User subscriptions loaded successfully")
-                    case .failure(let error):
-                        print("Failed to load user subscriptions: \(error.localizedDescription)")
+            ZStack(alignment: .top) {
+                // Background
+                Color.white
+                    .ignoresSafeArea()
+                
+                ScrollView(showsIndicators: false) {
+                    VStack(alignment: .leading, spacing: 0) {
+                        
+                        // MARK: - Shop Image Header
+                        shopImageHeader(width: geometry.size.width)
+                        
+                        VStack(alignment: .leading, spacing: 32) {
+                            // MARK: - Header Section
+                            headerSection
+                            
+                            // MARK: - Quick Stats Grid
+                            quickStatsGrid
+                            
+                            // MARK: - News Carousel (if any)
+                            newsSection
+                            
+                            // MARK: - Quick Actions
+                            quickActionsSection
+                            
+                            // MARK: - Action Buttons
+                            actionButtonsSection
+                            
+                            // MARK: - TCG Types
+                            if let tcgTypes = shop.tcgTypes, !tcgTypes.isEmpty {
+                                tcgTypesSection
+                            }
+                            
+                            // MARK: - Services
+                            if let services = shop.services, !services.isEmpty {
+                                servicesSection
+                            }
+                            
+                            // MARK: - About
+                            if let description = shop.description, !description.isEmpty {
+                                aboutSection(description: description)
+                            }
+                            
+                            // MARK: - Location & Hours
+                            if shop.latitude != nil && shop.longitude != nil {
+                                locationSection
+                            }
+                            
+                            // MARK: - Social Links
+                            if shop.email != nil || shop.instagramUrl != nil || shop.facebookUrl != nil {
+                                socialSection
+                            }
+                            
+                            Spacer(minLength: 100)
+                        }
+                        .padding(.top, 24)
                     }
                 }
+                
+                // MARK: - Top Bar
+                topBar
+                
+                // Toast overlay
+                if showToast {
+                    VStack {
+                        Spacer()
+                        ToastView(message: toastMessage, icon: "checkmark.circle.fill", color: .green)
+                    }
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+                    .animation(.easeInOut, value: showToast)
+                }
             }
-            
-            // Load shop news from API
+        }
+        .navigationBarHidden(true)
+        .task {
+            if authService.isAuthenticated {
+                shopService.loadUserSubscriptions { _ in }
+            }
             await shopService.loadShopNewsFromAPI(shopId: shop.id.description)
             newsLoaded = true
         }
@@ -65,14 +124,9 @@ struct ShopDetailView: View {
             SendRequestToShopView(shop: shop, onRequestSent: {
                 showingSendRequest = false
                 toastMessage = "Richiesta inviata con successo!"
-                withAnimation {
-                    showToast = true
-                }
-                // Hide toast after 3 seconds
+                withAnimation { showToast = true }
                 DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
-                    withAnimation {
-                        showToast = false
-                    }
+                    withAnimation { showToast = false }
                 }
             })
         }
@@ -106,808 +160,467 @@ struct ShopDetailView: View {
         }
     }
     
-    private func mainContent(geometry: GeometryProxy) -> some View {
-        ZStack(alignment: .top) {
-            Color(.systemGroupedBackground)
-                .ignoresSafeArea()
+    // MARK: - Shop Image Header
+    @ViewBuilder
+    private func shopImageHeader(width: CGFloat) -> some View {
+        ZStack(alignment: .bottom) {
+            // Image or placeholder
+            if let photoBase64 = shop.photoBase64, let image = base64ToImage(photoBase64) {
+                image
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .frame(width: width, height: 220)
+                    .clipped()
+            } else {
+                // No photo - show minimal placeholder
+                Rectangle()
+                    .fill(Color.gray.opacity(0.1))
+                    .frame(width: width, height: 220)
+                    .overlay(
+                        SwiftUI.Image(systemName: "storefront.fill")
+                            .font(.system(size: 50))
+                            .foregroundColor(.gray.opacity(0.3))
+                    )
+            }
             
-            ScrollView {
-                VStack(spacing: 0) {
-                    // Header - Simplified for better performance
-                    ZStack(alignment: .topLeading) {
-                        // Background - Shop Photo or Gradient (Static, no parallax)
-                        ZStack {
-                            if let photoBase64 = shop.photoBase64, let image = base64ToImage(photoBase64) {
-                                image
-                                    .resizable()
-                                    .aspectRatio(contentMode: .fill)
-                                    .frame(width: geometry.size.width, height: 280)
-                                    .clipped()
-                                    .overlay(
-                                        LinearGradient(
-                                            gradient: Gradient(colors: [.clear, .black.opacity(0.5), .black]),
-                                            startPoint: .top,
-                                            endPoint: .bottom
-                                        )
-                                    )
-                            } else {
-                                // No photo - show default gradient
-                                LinearGradient(
-                                    gradient: Gradient(colors: [Color.indigo, Color.purple.opacity(0.8)]),
-                                    startPoint: .topLeading,
-                                    endPoint: .bottomTrailing
-                                )
-                                .frame(width: geometry.size.width, height: 280)
-                                .overlay(
-                                    SwiftUI.Image(systemName: "storefront.fill")
-                                        .font(.system(size: 80))
-                                        .foregroundColor(.white.opacity(0.2))
-                                        .offset(x: 30, y: -30)
-                                )
-                            }
-                        }
-                        
-                        // Back Button - Only one, positioned at top-left
-                        Button(action: { presentationMode.wrappedValue.dismiss() }) {
-                            SwiftUI.Image(systemName: "arrow.left")
-                                .font(.system(size: 16, weight: .semibold))
-                                .foregroundColor(.white)
-                                .padding(12)
-                                .background(Circle().fill(Color.black.opacity(0.6)))
-                                .shadow(radius: 4)
-                        }
-                        .padding(.top, 50) // Safe area adjustment
-                        .padding(.leading, 20)
-                        
-                        // Shop Info Overlay
-                        VStack(alignment: .leading, spacing: 8) {
-                            Spacer()
-                            
-                            HStack(spacing: 8) {
-                                Text(shop.name)
-                                    .font(.system(size: 28, weight: .bold))
-                                    .foregroundColor(.white)
-                                    .shadow(radius: 4)
-                                    .lineLimit(2)
-                                    .fixedSize(horizontal: false, vertical: true)
-                                
-                                if shop.isVerified {
-                                    SwiftUI.Image(systemName: "checkmark.seal.fill")
-                                        .font(.system(size: 20))
-                                        .foregroundColor(.blue)
-                                }
-                            }
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            
-                            HStack(spacing: 6) {
-                                SwiftUI.Image(systemName: "mappin.and.ellipse")
-                                    .font(.system(size: 13))
-                                Text(shop.address)
-                                    .font(.system(size: 13, weight: .medium))
-                                    .lineLimit(1)
-                            }
-                            .foregroundColor(.white.opacity(0.9))
-                            .shadow(radius: 2)
-                        }
-                        .padding(20)
-                        .padding(.bottom, 20)
-                    }
-                    .frame(width: geometry.size.width, height: 280)
+            // Subtle gradient at bottom for smooth transition
+            LinearGradient(
+                gradient: Gradient(colors: [
+                    Color.clear,
+                    Color.white.opacity(0.5),
+                    Color.white
+                ]),
+                startPoint: .top,
+                endPoint: .bottom
+            )
+            .frame(height: 80)
+        }
+        .frame(width: width, height: 220)
+    }
+    
+    // MARK: - Top Bar
+    private var topBar: some View {
+        HStack {
+            Button(action: { presentationMode.wrappedValue.dismiss() }) {
+                SwiftUI.Image(systemName: "arrow.left")
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundColor(.white)
+                    .padding(12)
+                    .background(Circle().fill(Color.black.opacity(0.4)))
+            }
+            
+            Spacer()
+            
+            // Notification bell
+            if authService.isAuthenticated {
+                Button(action: toggleSubscription) {
+                    SwiftUI.Image(systemName: shopService.isSubscribed(to: String(shop.id)) ? "bell.fill" : "bell")
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundColor(.white)
+                        .padding(12)
+                        .background(Circle().fill(Color.black.opacity(0.4)))
+                }
+            }
+        }
+        .padding(.horizontal, 20)
+        .padding(.top, 50)
+    }
+    
+    // MARK: - Header Section
+    private var headerSection: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            // Shop Name
+            HStack(spacing: 10) {
+                Text(shop.name)
+                    .font(.system(size: 32, weight: .heavy))
+                    .foregroundColor(.primary)
                 
-                VStack(spacing: 24) {
-                    // MARK: - Updates Section (News + Subscribe Combined)
-                    updatesSection
-                    
-                    // MARK: - Quick Actions (Phone, Navigate, Website) - Compact Row
-                    quickActionsRow
-                    
-                    // Action Buttons - Inventory & Request
-                    actionButtonsSection
-                    
-                    // TCG Types Section
-                    if let tcgTypes = shop.tcgTypes, !tcgTypes.isEmpty {
-                        tcgTypesSection
-                    }
-                    
-                    // Services Section (Enhanced)
-                    if let services = shop.services, !services.isEmpty {
-                        servicesSection
-                    }
-                    
-                    // About Section - Only show if description exists
-                    if let description = shop.description, !description.isEmpty {
-                        VStack(alignment: .leading, spacing: 16) {
-                            SectionHeader(title: "About", icon: "info.circle.fill", color: .blue)
-                            
-                            VStack(alignment: .leading, spacing: 12) {
-                                Text(description)
-                                    .font(.system(size: 15))
-                                    .foregroundColor(.secondary)
-                                    .lineSpacing(4)
-                            }
-                            .padding(16)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .background(Color(.systemBackground))
-                            .cornerRadius(12)
-                        }
-                        .padding(.horizontal, 20)
-                    }
-                    
-                    // Location Section
-                    if shop.latitude != nil && shop.longitude != nil {
-                        VStack(alignment: .leading, spacing: 16) {
-                            SectionHeader(title: "Location", icon: "mappin.circle.fill", color: .red)
-                            
-                            VStack(alignment: .leading, spacing: 12) {
-                                Text(shop.address)
-                                    .font(.system(size: 15, weight: .medium))
-                                
-                                // Opening Hours Section
-                                if let structured = shop.openingHoursStructured {
-                                    VStack(alignment: .leading, spacing: 12) {
-                                        HStack(spacing: 8) {
-                                            SwiftUI.Image(systemName: "clock.fill")
-                                                .foregroundColor(structured.isOpenNow ? .green : .orange)
-                                                .font(.system(size: 14))
-                                            
-                                            Text(structured.isOpenNow ? "Aperto ora" : "Chiuso ora")
-                                                .font(.system(size: 14, weight: .semibold))
-                                                .foregroundColor(structured.isOpenNow ? .green : .orange)
-                                            
-                                            Text("•")
-                                                .foregroundColor(.secondary)
-                                            
-                                            Text(structured.todaySchedule.displayString)
-                                                .font(.system(size: 13))
-                                                .foregroundColor(.secondary)
-                                        }
-                                        
-                                        // Show all week schedule
-                                        DisclosureGroup("Orari Settimanali") {
-                                            VStack(alignment: .leading, spacing: 8) {
-                                                ForEach(Array(structured.allDays.enumerated()), id: \.0) { _, day in
-                                                    HStack {
-                                                        Text(day.0)
-                                                            .font(.system(size: 13, weight: .medium))
-                                                            .frame(width: 80, alignment: .leading)
-                                                        
-                                                        Text(day.1.displayString)
-                                                            .font(.system(size: 13))
-                                                            .foregroundColor(.secondary)
-                                                    }
-                                                }
-                                            }
-                                            .padding(.top, 8)
-                                        }
-                                        .font(.system(size: 13, weight: .medium))
-                                        .foregroundColor(.primary)
-                                    }
-                                } else if let hours = shop.openingHours {
-                                    // Legacy display
-                                    HStack(alignment: .top, spacing: 8) {
-                                        SwiftUI.Image(systemName: "clock.fill")
-                                            .foregroundColor(.orange)
-                                            .font(.system(size: 14))
-                                        
-                                        VStack(alignment: .leading, spacing: 2) {
-                                            Text("Aperto Oggi")
-                                                .font(.system(size: 14, weight: .medium))
-                                            Text(hours)
-                                                .font(.system(size: 13))
-                                                .foregroundColor(.secondary)
-                                        }
-                                    }
-                                } else {
-                                    HStack(spacing: 8) {
-                                        SwiftUI.Image(systemName: "clock.fill")
-                                            .foregroundColor(.gray)
-                                            .font(.system(size: 14))
-                                        
-                                        Text("Orari non disponibili")
-                                            .font(.system(size: 13))
-                                            .foregroundColor(.secondary)
-                                    }
-                                }
-                                
-                                Button(action: openInMaps) {
-                                    Text("Indicazioni")
-                                        .font(.system(size: 14, weight: .medium))
-                                        .foregroundColor(.blue)
-                                }
-                            }
-                            .padding(16)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .background(Color(.systemBackground))
-                            .cornerRadius(12)
-                        }
-                        .padding(.horizontal, 20)
-                    }
-                    
-                    // Contact Section
-                    if shop.email != nil || shop.instagramUrl != nil || shop.facebookUrl != nil {
-                        VStack(alignment: .leading, spacing: 16) {
-                            SectionHeader(title: "Social", icon: "at.circle.fill", color: .pink)
-                            
-                            VStack(spacing: 12) {
-                                if let email = shop.email {
-                                    SocialButton(icon: "envelope.fill", title: "Email", color: .blue) {
-                                        if let url = URL(string: "mailto:\(email)") {
-                                            UIApplication.shared.open(url)
-                                        }
-                                    }
-                                }
-                                
-                                if let instagram = shop.instagramUrl {
-                                    SocialButton(icon: "camera.fill", title: "Instagram", color: .pink) {
-                                        if let url = URL(string: instagram.hasPrefix("http") ? instagram : "https://instagram.com/\(instagram)") {
-                                            UIApplication.shared.open(url)
-                                        }
-                                    }
-                                }
-                                
-                                if let facebook = shop.facebookUrl {
-                                    SocialButton(icon: "f.square.fill", title: "Facebook", color: .blue) {
-                                        if let url = URL(string: facebook.hasPrefix("http") ? facebook : "https://facebook.com/\(facebook)") {
-                                            UIApplication.shared.open(url)
-                                        }
-                                    }
-                                }
-                            }
-                            .padding(16)
-                            .background(Color(.systemBackground))
-                            .cornerRadius(12)
-                        }
-                        .padding(.horizontal, 20)
-                    }
-                    
-                    Spacer(minLength: 40)
+                if shop.isVerified {
+                    SwiftUI.Image(systemName: "checkmark.seal.fill")
+                        .font(.system(size: 22))
+                        .foregroundColor(.blue)
                 }
-                .padding(.top, 24)
-                .background(Color(.systemGroupedBackground))
-                .frame(width: geometry.size.width)
             }
             
+            // Address
+            HStack(spacing: 6) {
+                SwiftUI.Image(systemName: "mappin")
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundColor(.secondary)
+                Text(shop.address)
+                    .font(.system(size: 15, weight: .medium))
+                    .foregroundColor(.secondary)
+            }
             
-            // Toast overlay
-            if showToast {
-                VStack {
+            // Open/Closed status
+            if let structured = shop.openingHoursStructured {
+                HStack(spacing: 8) {
+                    Circle()
+                        .fill(structured.isOpenNow ? Color.green : Color.orange)
+                        .frame(width: 8, height: 8)
+                    Text(structured.isOpenNow ? "Aperto ora" : "Chiuso")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundColor(structured.isOpenNow ? .green : .orange)
+                    Text("•")
+                        .foregroundColor(.secondary)
+                    Text(structured.todaySchedule.displayString)
+                        .font(.system(size: 14))
+                        .foregroundColor(.secondary)
+                }
+            }
+        }
+        .padding(.horizontal, 24)
+        .padding(.top, 20)
+    }
+    
+    // MARK: - Quick Stats Grid
+    private var quickStatsGrid: some View {
+        LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
+            if let tcgTypes = shop.tcgTypes {
+                MinimalStatTile(value: "\(tcgTypes.count)", label: "TCG Supportati")
+            }
+            
+            let news = shopService.getNews(for: shop.id.description)
+            MinimalStatTile(value: "\(news.count)", label: "Novità")
+            
+            if let services = shop.services {
+                MinimalStatTile(value: "\(services.count)", label: "Servizi")
+            }
+            
+            if shopService.isSubscribed(to: String(shop.id)) {
+                MinimalStatTile(value: "Attivo", label: "Notifiche", isHighlighted: true)
+            }
+        }
+        .padding(.horizontal, 24)
+    }
+    
+    // MARK: - News Section
+    @ViewBuilder
+    private var newsSection: some View {
+        let news = shopService.getNews(for: shop.id.description)
+        
+        if !news.isEmpty {
+            VStack(alignment: .leading, spacing: 16) {
+                HStack {
+                    Text("Novità")
+                        .font(.system(size: 20, weight: .bold))
+                    
                     Spacer()
-                    ToastView(message: toastMessage, icon: "checkmark.circle.fill", color: .green)
+                    
+                    Text("\(news.count)")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundColor(.secondary)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 4)
+                        .background(Color.gray.opacity(0.1))
+                        .clipShape(Capsule())
                 }
-                .transition(.move(edge: .bottom).combined(with: .opacity))
-                .animation(.easeInOut, value: showToast)
+                .padding(.horizontal, 24)
+                
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 16) {
+                        ForEach(news.prefix(5)) { newsItem in
+                            MinimalNewsCard(news: newsItem)
+                                .frame(width: 280)
+                        }
+                    }
+                    .padding(.horizontal, 24)
+                }
             }
+        } else if !newsLoaded {
+            HStack {
+                Spacer()
+                ProgressView()
+                Text("Caricamento...")
+                    .font(.system(size: 14))
+                    .foregroundColor(.secondary)
+                Spacer()
+            }
+            .padding(.horizontal, 24)
+        }
+    }
+    
+    // MARK: - Quick Actions Section
+    @ViewBuilder
+    private var quickActionsSection: some View {
+        let hasPhone = shop.phoneNumber != nil
+        let hasLocation = shop.latitude != nil && shop.longitude != nil
+        let hasWebsite = shop.websiteUrl != nil
+        
+        if hasPhone || hasLocation || hasWebsite {
+            VStack(alignment: .leading, spacing: 16) {
+                Text("Contatta")
+                    .font(.system(size: 20, weight: .bold))
+                    .padding(.horizontal, 24)
+                
+                HStack(spacing: 12) {
+                    if let phone = shop.phoneNumber {
+                        MinimalQuickAction(icon: "phone.fill", label: "Chiama") {
+                            if let url = URL(string: "tel://\(phone.replacingOccurrences(of: " ", with: ""))") {
+                                UIApplication.shared.open(url)
+                            }
+                        }
+                    }
+                    
+                    if hasLocation {
+                        MinimalQuickAction(icon: "location.fill", label: "Naviga") {
+                            openInMaps()
+                        }
+                    }
+                    
+                    if let website = shop.websiteUrl {
+                        MinimalQuickAction(icon: "safari", label: "Sito Web") {
+                            if let url = URL(string: website.hasPrefix("http") ? website : "https://\(website)") {
+                                UIApplication.shared.open(url)
+                            }
+                        }
+                    }
+                }
+                .padding(.horizontal, 24)
             }
         }
     }
     
     // MARK: - Action Buttons Section
     private var actionButtonsSection: some View {
-        VStack(spacing: 16) {
+        VStack(alignment: .leading, spacing: 16) {
+            Text("Azioni")
+                .font(.system(size: 20, weight: .bold))
+                .padding(.horizontal, 24)
+            
             if authService.isAuthenticated && authService.currentUserId != nil {
-                // User is logged in - show active buttons
-                
-                // Card 1: Inventory & Reservations
-                VStack(spacing: 0) {
-                    // Browse Inventory Button
-                    Button(action: { showingInventory = true }) {
-                        HStack(spacing: 12) {
-                            ZStack {
-                                Circle()
-                                    .fill(Color.green.opacity(0.15))
-                                    .frame(width: 44, height: 44)
-                                
-                                SwiftUI.Image(systemName: "square.stack.3d.up.fill")
-                                    .font(.system(size: 18, weight: .semibold))
-                                    .foregroundColor(.green)
-                            }
-                            
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text("Sfoglia Inventario")
-                                    .font(.system(size: 16, weight: .semibold))
-                                    .foregroundColor(.primary)
-                                
-                                Text("Vedi carte e prezzi disponibili")
-                                    .font(.system(size: 13))
-                                    .foregroundColor(.secondary)
-                            }
-                            
-                            Spacer()
-                            
-                            SwiftUI.Image(systemName: "chevron.right")
-                                .font(.system(size: 14, weight: .semibold))
-                                .foregroundColor(.secondary)
-                        }
-                        .padding(16)
+                VStack(spacing: 12) {
+                    ShopActionRow(title: "Sfoglia Inventario", subtitle: "Carte e prezzi disponibili", icon: "square.stack.3d.up.fill") {
+                        showingInventory = true
                     }
-                    .buttonStyle(ScaleButtonStyle())
                     
-                    Divider()
-                        .padding(.leading, 72)
-                    
-                    // My Reservations Button
-                    Button(action: { showingMyRequests = true }) {
-                        HStack(spacing: 12) {
-                            ZStack {
-                                Circle()
-                                    .fill(Color.green.opacity(0.15))
-                                    .frame(width: 44, height: 44)
-                                
-                                SwiftUI.Image(systemName: "list.bullet.rectangle.fill")
-                                    .font(.system(size: 18, weight: .semibold))
-                                    .foregroundColor(.green)
-                            }
-                            
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text("Le Mie Prenotazioni")
-                                    .font(.system(size: 16, weight: .semibold))
-                                    .foregroundColor(.primary)
-                                
-                                Text("Vedi le tue prenotazioni con questo negozio")
-                                    .font(.system(size: 13))
-                                    .foregroundColor(.secondary)
-                            }
-                            
-                            Spacer()
-                            
-                            SwiftUI.Image(systemName: "chevron.right")
-                                .font(.system(size: 14, weight: .semibold))
-                                .foregroundColor(.secondary)
-                        }
-                        .padding(16)
+                    ShopActionRow(title: "Le Mie Prenotazioni", subtitle: "Gestisci le tue prenotazioni", icon: "list.bullet.rectangle") {
+                        showingMyRequests = true
                     }
-                    .buttonStyle(ScaleButtonStyle())
+                    
+                    ShopActionRow(title: "Invia Richiesta", subtitle: "Chiedi informazioni", icon: "envelope") {
+                        showingSendRequest = true
+                    }
+                    
+                    ShopActionRow(title: "Richiedi Torneo", subtitle: "Proponi un evento", icon: "trophy") {
+                        showingTournamentRequest = true
+                    }
+                    
+                    ShopActionRow(title: "Le Mie Richieste", subtitle: "Storico richieste inviate", icon: "envelope.open") {
+                        showingMyShopRequests = true
+                    }
                 }
-                .background(Color(.systemBackground))
-                .cornerRadius(16)
-                .shadow(color: Color.black.opacity(0.04), radius: 8, x: 0, y: 2)
-                
-                // Card 2: Requests
-                VStack(spacing: 0) {
-                    // Send Request Button
-                    Button(action: { showingSendRequest = true }) {
-                        HStack(spacing: 12) {
-                            ZStack {
-                                Circle()
-                                    .fill(Color.blue.opacity(0.15))
-                                    .frame(width: 44, height: 44)
-                                
-                                SwiftUI.Image(systemName: "envelope.fill")
-                                    .font(.system(size: 18, weight: .semibold))
-                                    .foregroundColor(.blue)
-                            }
-                            
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text("Invia Richiesta")
-                                    .font(.system(size: 16, weight: .semibold))
-                                    .foregroundColor(.primary)
-                                
-                                Text("Chiedi informazioni su disponibilità, prezzi o altro")
-                                    .font(.system(size: 13))
-                                    .foregroundColor(.secondary)
-                            }
-                            
-                            Spacer()
-                            
-                            SwiftUI.Image(systemName: "chevron.right")
-                                .font(.system(size: 14, weight: .semibold))
-                                .foregroundColor(.secondary)
-                        }
-                        .padding(16)
-                    }
-                    .buttonStyle(ScaleButtonStyle())
-                    
-                    Divider()
-                        .padding(.leading, 72)
-                    
-                    // Request Tournament Button
-                    Button(action: { showingTournamentRequest = true }) {
-                        HStack(spacing: 12) {
-                            ZStack {
-                                Circle()
-                                    .fill(Color.orange.opacity(0.15))
-                                    .frame(width: 44, height: 44)
-                                
-                                SwiftUI.Image(systemName: "trophy.fill")
-                                    .font(.system(size: 18, weight: .semibold))
-                                    .foregroundColor(.orange)
-                            }
-                            
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text("Richiedi Torneo")
-                                    .font(.system(size: 16, weight: .semibold))
-                                    .foregroundColor(.primary)
-                                
-                                Text("Proponi l'organizzazione di un torneo in questo negozio")
-                                    .font(.system(size: 13))
-                                    .foregroundColor(.secondary)
-                            }
-                            
-                            Spacer()
-                            
-                            SwiftUI.Image(systemName: "chevron.right")
-                                .font(.system(size: 14, weight: .semibold))
-                                .foregroundColor(.secondary)
-                        }
-                        .padding(16)
-                    }
-                    .buttonStyle(ScaleButtonStyle())
-                    
-                    Divider()
-                        .padding(.leading, 72)
-                    
-                    // My Requests Button
-                    Button(action: { showingMyShopRequests = true }) {
-                        HStack(spacing: 12) {
-                            ZStack {
-                                Circle()
-                                    .fill(Color.orange.opacity(0.15))
-                                    .frame(width: 44, height: 44)
-                                
-                                SwiftUI.Image(systemName: "envelope.open.fill")
-                                    .font(.system(size: 18, weight: .semibold))
-                                    .foregroundColor(.orange)
-                            }
-                            
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text("Le Mie Richieste")
-                                    .font(.system(size: 16, weight: .semibold))
-                                    .foregroundColor(.primary)
-                                
-                                Text("Vedi le tue richieste a questo negozio")
-                                    .font(.system(size: 13))
-                                    .foregroundColor(.secondary)
-                            }
-                            
-                            Spacer()
-                            
-                            SwiftUI.Image(systemName: "chevron.right")
-                                .font(.system(size: 14, weight: .semibold))
-                                .foregroundColor(.secondary)
-                        }
-                        .padding(16)
-                    }
-                    .buttonStyle(ScaleButtonStyle())
-                }
-                .background(Color(.systemBackground))
-                .cornerRadius(16)
-                .shadow(color: Color.black.opacity(0.04), radius: 8, x: 0, y: 2)
+                .padding(.horizontal, 24)
             } else {
-                // User is not logged in - show login prompt
+                // Login prompt
                 VStack(spacing: 16) {
-                    SwiftUI.Image(systemName: "person.crop.circle.badge.questionmark")
-                        .font(.system(size: 48))
+                    SwiftUI.Image(systemName: "person.crop.circle")
+                        .font(.system(size: 40))
                         .foregroundColor(.secondary)
                     
-                    Text("Accedi per interagire con questo negozio")
-                        .font(.headline)
-                        .foregroundColor(.primary)
+                    Text("Accedi per interagire")
+                        .font(.system(size: 16, weight: .semibold))
                     
-                    Text("Crea un account o accedi per sfogliare l'inventario, fare prenotazioni e inviare richieste.")
-                        .font(.subheadline)
+                    Text("Sfoglia l'inventario, fai prenotazioni e invia richieste.")
+                        .font(.system(size: 14))
                         .foregroundColor(.secondary)
                         .multilineTextAlignment(.center)
-                        .padding(.horizontal)
-                    
-                    Button(action: {
-                        // Navigate to login/register
-                    }) {
-                        Text("Accedi")
-                            .font(.system(size: 16, weight: .semibold))
-                            .foregroundColor(.white)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 14)
-                            .background(Color.blue)
-                            .cornerRadius(12)
-                    }
                 }
-                .padding(24)
-                .background(Color(.systemBackground))
-                .cornerRadius(16)
-                .shadow(color: Color.black.opacity(0.04), radius: 8, x: 0, y: 2)
+                .frame(maxWidth: .infinity)
+                .padding(32)
+                .background(Color.gray.opacity(0.05))
+                .cornerRadius(20)
+                .padding(.horizontal, 24)
             }
         }
-        .padding(.horizontal, 20)
     }
     
     // MARK: - TCG Types Section
     private var tcgTypesSection: some View {
         VStack(alignment: .leading, spacing: 16) {
-            SectionHeader(title: "Supported Games", icon: "gamecontroller.fill", color: .purple)
+            Text("Giochi Supportati")
+                .font(.system(size: 20, weight: .bold))
+                .padding(.horizontal, 24)
             
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 12) {
-                    ForEach(shop.tcgTypes ?? [], id: \.self) { tcgType in
-                        ShopTCGTypeBadge(tcgTypeString: tcgType)
+                    ForEach(shop.tcgTypes ?? [], id: \.self) { tcgTypeString in
+                        MinimalTCGBadge(tcgTypeString: tcgTypeString)
                     }
                 }
+                .padding(.horizontal, 24)
             }
         }
-        .padding(.horizontal, 20)
     }
     
     // MARK: - Services Section
     private var servicesSection: some View {
         VStack(alignment: .leading, spacing: 16) {
-            SectionHeader(title: "Services", icon: "star.fill", color: .orange)
+            Text("Servizi")
+                .font(.system(size: 20, weight: .bold))
+                .padding(.horizontal, 24)
             
             VStack(spacing: 0) {
-                ForEach(Array((shop.servicesList).enumerated()), id: \.offset) { index, service in
-                    ServiceRow(service: service)
+                ForEach(Array(shop.servicesList.enumerated()), id: \.offset) { index, service in
+                    MinimalServiceRow(service: service)
                     
-                    if index < (shop.servicesList.count) - 1 {
+                    if index < shop.servicesList.count - 1 {
                         Divider()
-                            .padding(.leading, 52)
+                            .padding(.horizontal, 24)
                     }
                 }
             }
-            .background(Color(.systemBackground))
-            .cornerRadius(12)
+            .background(Color.gray.opacity(0.05))
+            .cornerRadius(16)
+            .padding(.horizontal, 24)
         }
-        .padding(.horizontal, 20)
     }
     
-    // MARK: - Updates Section (News + Subscribe Combined)
-    @ViewBuilder
-    private var updatesSection: some View {
-        let news = shopService.getNews(for: shop.id.description)
-        let hasNews = !news.isEmpty
-        
-        VStack(spacing: 0) {
-            // Card container with rounded corners
-            VStack(spacing: 0) {
-                // News Section (if news exist)
-                if hasNews {
+    // MARK: - About Section
+    private func aboutSection(description: String) -> some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text("Info")
+                .font(.system(size: 20, weight: .bold))
+                .padding(.horizontal, 24)
+            
+            Text(description)
+                .font(.system(size: 15))
+                .foregroundColor(.secondary)
+                .lineSpacing(4)
+                .padding(20)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(Color.gray.opacity(0.05))
+                .cornerRadius(16)
+                .padding(.horizontal, 24)
+        }
+    }
+    
+    // MARK: - Location Section
+    private var locationSection: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text("Posizione")
+                .font(.system(size: 20, weight: .bold))
+                .padding(.horizontal, 24)
+            
+            VStack(alignment: .leading, spacing: 16) {
+                // Address
+                HStack(spacing: 12) {
+                    SwiftUI.Image(systemName: "mappin.circle.fill")
+                        .font(.system(size: 20))
+                        .foregroundColor(.red)
+                    Text(shop.address)
+                        .font(.system(size: 15, weight: .medium))
+                }
+                
+                // Opening Hours
+                if let structured = shop.openingHoursStructured {
                     VStack(alignment: .leading, spacing: 12) {
-                        // Header
-                        HStack {
-                            SwiftUI.Image(systemName: "newspaper.fill")
-                                .font(.system(size: 16))
-                                .foregroundColor(.purple)
-                            Text("Ultime Novità")
-                                .font(.system(size: 16, weight: .bold))
-                                .foregroundColor(.primary)
-                            
-                            Spacer()
-                            
-                            Text("\(news.count) \(news.count == 1 ? "update" : "updates")")
-                                .font(.system(size: 12, weight: .medium))
-                                .foregroundColor(.secondary)
+                        HStack(spacing: 8) {
+                            SwiftUI.Image(systemName: "clock.fill")
+                                .foregroundColor(structured.isOpenNow ? .green : .orange)
+                            Text(structured.isOpenNow ? "Aperto ora" : "Chiuso")
+                                .font(.system(size: 14, weight: .semibold))
+                                .foregroundColor(structured.isOpenNow ? .green : .orange)
                         }
-                        .padding(.horizontal, 16)
-                        .padding(.top, 16)
                         
-                        // Horizontal scroll with fade effect
-                        ZStack(alignment: .trailing) {
-                            ScrollView(.horizontal, showsIndicators: false) {
-                                HStack(spacing: 12) {
-                                    ForEach(news.prefix(5)) { newsItem in
-                                        CompactHorizontalNewsCard(news: newsItem)
-                                            .frame(width: 220)
+                        DisclosureGroup("Orari Settimanali") {
+                            VStack(alignment: .leading, spacing: 8) {
+                                ForEach(Array(structured.allDays.enumerated()), id: \.0) { _, day in
+                                    HStack {
+                                        Text(day.0)
+                                            .font(.system(size: 13, weight: .medium))
+                                            .frame(width: 80, alignment: .leading)
+                                        Text(day.1.displayString)
+                                            .font(.system(size: 13))
+                                            .foregroundColor(.secondary)
                                     }
                                 }
-                                .padding(.horizontal, 16)
-                                .padding(.bottom, 16)
                             }
-                            
-                            // Fade effect on the right side
-                            LinearGradient(
-                                gradient: Gradient(colors: [
-                                    Color(.systemBackground).opacity(0),
-                                    Color(.systemBackground)
-                                ]),
-                                startPoint: .leading,
-                                endPoint: .trailing
-                            )
-                            .frame(width: 30)
-                            .allowsHitTesting(false)
+                            .padding(.top, 8)
                         }
+                        .font(.system(size: 14, weight: .medium))
                     }
-                    
-                    Divider()
-                        .padding(.horizontal, 16)
-                } else if !newsLoaded {
-                    // Loading state
-                    HStack {
-                        Spacer()
-                        ProgressView()
-                            .progressViewStyle(CircularProgressViewStyle())
-                        Text("Caricamento novità...")
+                } else if let hours = shop.openingHours {
+                    HStack(spacing: 8) {
+                        SwiftUI.Image(systemName: "clock")
+                            .foregroundColor(.secondary)
+                        Text(hours)
                             .font(.system(size: 14))
                             .foregroundColor(.secondary)
-                        Spacer()
                     }
-                    .padding(.vertical, 16)
-                    
-                    Divider()
-                        .padding(.horizontal, 16)
                 }
                 
-                // Subscribe/Notification Section
-                subscriptionSection
-            }
-            .background(Color(.systemBackground))
-            .cornerRadius(20)
-            .shadow(color: Color.black.opacity(0.06), radius: 12, x: 0, y: 4)
-        }
-        .padding(.horizontal, 20)
-    }
-    
-    // MARK: - Subscription Section (inside updates card)
-    @ViewBuilder
-    private var subscriptionSection: some View {
-        VStack(spacing: 12) {
-            if authService.isAuthenticated && authService.currentUserId != nil {
-                if shopService.isSubscribed(to: String(shop.id)) {
-                    // Subscribed state - compact
-                    HStack(spacing: 12) {
-                        ZStack {
-                            Circle()
-                                .fill(Color.orange.opacity(0.15))
-                                .frame(width: 44, height: 44)
-                            SwiftUI.Image(systemName: "bell.badge.fill")
-                                .font(.system(size: 18))
-                                .foregroundColor(.orange)
-                        }
-                        
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("Notifiche Attive")
-                                .font(.system(size: 15, weight: .semibold))
-                                .foregroundColor(.primary)
-                            Text("You'll receive updates from this store")
-                                .font(.system(size: 12))
-                                .foregroundColor(.secondary)
-                        }
-                        
-                        Spacer()
-                        
-                        Button(action: {
-                            shopService.unsubscribeFromShop(shopId: String(shop.id)) { result in
-                                DispatchQueue.main.async {
-                                    switch result {
-                                    case .success:
-                                        // State is already updated by ShopService, only show toast
-                                        ToastManager.shared.showSuccess("Non riceverai più notifiche da questo negozio.")
-                                    case .failure(let error):
-                                        print("Error unsubscribing: \(error.localizedDescription)")
-                                    }
-                                }
-                            }
-                        }) {
-                            SwiftUI.Image(systemName: "bell.slash")
-                                .font(.system(size: 14, weight: .medium))
-                                .foregroundColor(.orange)
-                                .padding(8)
-                                .background(Circle().stroke(Color.orange, lineWidth: 1.5))
-                        }
+                // Navigate button
+                Button(action: openInMaps) {
+                    HStack {
+                        SwiftUI.Image(systemName: "arrow.triangle.turn.up.right.diamond.fill")
+                        Text("Ottieni indicazioni")
+                            .font(.system(size: 14, weight: .semibold))
                     }
-                    .padding(16)
-                } else {
-                    // Not subscribed - show subscribe button
-                    Button(action: {
-                        shopService.subscribeToShop(shopId: String(shop.id)) { result in
-                            DispatchQueue.main.async {
-                                switch result {
-                                case .success:
-                                    // State is already updated by ShopService, only show toast
-                                    ToastManager.shared.showSuccess("Riceverai notifiche da questo negozio.")
-                                case .failure(let error):
-                                    print("Error subscribing: \(error.localizedDescription)")
-                                }
-                            }
-                        }
-                    }) {
-                        HStack(spacing: 8) {
-                            SwiftUI.Image(systemName: "bell.fill")
-                                .font(.system(size: 14))
-                            Text("Subscribe for Updates")
-                                .font(.system(size: 15, weight: .semibold))
-                        }
-                        .foregroundColor(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 14)
-                        .background(
-                            RoundedRectangle(cornerRadius: 12)
-                                .fill(Color.orange)
-                        )
-                    }
-                    .buttonStyle(ScaleButtonStyle())
-                    .padding(16)
+                    .foregroundColor(.blue)
                 }
-            } else {
-                // Not authenticated
-                HStack(spacing: 12) {
-                    ZStack {
-                        Circle()
-                            .fill(Color.gray.opacity(0.15))
-                            .frame(width: 44, height: 44)
-                        SwiftUI.Image(systemName: "bell.fill")
-                            .font(.system(size: 18))
-                            .foregroundColor(.gray)
-                    }
-                    
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("Ricevi Notifiche")
-                            .font(.system(size: 15, weight: .semibold))
-                            .foregroundColor(.primary)
-                        Text("Sign in to receive store updates")
-                            .font(.system(size: 12))
-                            .foregroundColor(.secondary)
-                    }
-                    
-                    Spacer()
-                    
-                    Text("Accedi")
-                        .font(.system(size: 13, weight: .semibold))
-                        .foregroundColor(.orange)
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 6)
-                        .background(
-                            RoundedRectangle(cornerRadius: 8)
-                                .stroke(Color.orange, lineWidth: 1.5)
-                        )
-                }
-                .padding(16)
             }
+            .padding(20)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(Color.gray.opacity(0.05))
+            .cornerRadius(16)
+            .padding(.horizontal, 24)
         }
     }
     
-    // MARK: - Quick Actions Row (Phone, Navigate, Website)
-    @ViewBuilder
-    private var quickActionsRow: some View {
-        let hasPhone = shop.phoneNumber != nil
-        let hasLocation = shop.latitude != nil && shop.longitude != nil
-        let hasWebsite = shop.websiteUrl != nil
-        
-        if hasPhone || hasLocation || hasWebsite {
-            HStack(spacing: 12) {
-                if let phone = shop.phoneNumber {
-                    QuickActionButton(icon: "phone.fill", label: "Call", color: .green) {
-                        if let url = URL(string: "tel://\(phone.replacingOccurrences(of: " ", with: ""))") {
+    // MARK: - Social Section
+    private var socialSection: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text("Social")
+                .font(.system(size: 20, weight: .bold))
+                .padding(.horizontal, 24)
+            
+            VStack(spacing: 0) {
+                if let email = shop.email {
+                    MinimalSocialRow(icon: "envelope.fill", title: "Email", value: email) {
+                        if let url = URL(string: "mailto:\(email)") {
                             UIApplication.shared.open(url)
                         }
                     }
                 }
                 
-                if hasLocation {
-                    QuickActionButton(icon: "location.fill", label: "Navigate", color: .blue) {
-                        openInMaps()
+                if let instagram = shop.instagramUrl {
+                    MinimalSocialRow(icon: "camera.fill", title: "Instagram", value: "@instagram") {
+                        if let url = URL(string: instagram.hasPrefix("http") ? instagram : "https://instagram.com/\(instagram)") {
+                            UIApplication.shared.open(url)
+                        }
                     }
                 }
                 
-                if let website = shop.websiteUrl {
-                    QuickActionButton(icon: "safari", label: "Website", color: .purple) {
-                        if let url = URL(string: website.hasPrefix("http") ? website : "https://\(website)") {
+                if let facebook = shop.facebookUrl {
+                    MinimalSocialRow(icon: "hand.thumbsup.fill", title: "Facebook", value: "Facebook") {
+                        if let url = URL(string: facebook.hasPrefix("http") ? facebook : "https://facebook.com/\(facebook)") {
                             UIApplication.shared.open(url)
                         }
                     }
                 }
             }
-            .padding(.horizontal, 20)
+            .background(Color.gray.opacity(0.05))
+            .cornerRadius(16)
+            .padding(.horizontal, 24)
         }
     }
     
-    private func base64ToImage(_ base64String: String) -> SwiftUI.Image? {
-        // Simple cache to avoid repeated conversions
-        struct Cache {
-            static var images = [String: SwiftUI.Image]()
+    // MARK: - Helper Functions
+    private func toggleSubscription() {
+        if shopService.isSubscribed(to: String(shop.id)) {
+            shopService.unsubscribeFromShop(shopId: String(shop.id)) { result in
+                if case .success = result {
+                    ToastManager.shared.showSuccess("Notifiche disattivate")
+                }
+            }
+        } else {
+            shopService.subscribeToShop(shopId: String(shop.id)) { result in
+                if case .success = result {
+                    ToastManager.shared.showSuccess("Notifiche attivate")
+                }
+            }
         }
-        
-        if let cached = Cache.images[base64String] {
-            return cached
-        }
-        
-        // Remove data:image/jpeg;base64, prefix if present
-        let cleanBase64 = base64String.replacingOccurrences(of: "data:image/[^;]+;base64,", with: "", options: .regularExpression)
-        
-        guard let data = Data(base64Encoded: cleanBase64),
-              let uiImage = UIImage(data: data) else {
-            return nil
-        }
-        
-        let image = SwiftUI.Image(uiImage: uiImage)
-        Cache.images[base64String] = image
-        return image
     }
     
     private func openInMaps() {
@@ -923,450 +636,237 @@ struct ShopDetailView: View {
         ])
     }
     
-    // MARK: - Subviews
-    
-    struct QuickInfoCard: View {
-        let icon: String
-        let title: String
-        let value: String
-        let color: Color
-        let action: () -> Void
-        
-        var body: some View {
-            Button(action: action) {
-                VStack(alignment: .leading, spacing: 12) {
-                    HStack {
-                        SwiftUI.Image(systemName: icon)
-                            .font(.system(size: 16))
-                            .foregroundColor(color)
-                        Spacer()
-                    }
-                    
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(title)
-                            .font(.system(size: 12, weight: .medium))
-                            .foregroundColor(.secondary)
-                        
-                        Text(value)
-                            .font(.system(size: 14, weight: .semibold))
-                            .foregroundColor(.primary)
-                            .lineLimit(1)
-                    }
-                }
-                .padding(16)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .background(Color(.systemBackground))
-                .cornerRadius(12)
-                .shadow(color: Color.black.opacity(0.03), radius: 4, x: 0, y: 2)
-            }
+    private func base64ToImage(_ base64String: String) -> SwiftUI.Image? {
+        struct Cache {
+            static var images = [String: SwiftUI.Image]()
         }
+        
+        if let cached = Cache.images[base64String] {
+            return cached
+        }
+        
+        let cleanBase64 = base64String.replacingOccurrences(of: "data:image/[^;]+;base64,", with: "", options: .regularExpression)
+        
+        guard let data = Data(base64Encoded: cleanBase64),
+              let uiImage = UIImage(data: data) else {
+            return nil
+        }
+        
+        let image = SwiftUI.Image(uiImage: uiImage)
+        Cache.images[base64String] = image
+        return image
+    }
+}
+
+// MARK: - Minimal Components
+
+struct MinimalStatTile: View {
+    let value: String
+    let label: String
+    var isHighlighted: Bool = false
+    
+    var body: some View {
+        VStack(spacing: 6) {
+            Text(value)
+                .font(.system(size: 24, weight: .heavy))
+                .foregroundColor(isHighlighted ? .orange : .primary)
+            Text(label)
+                .font(.system(size: 12, weight: .medium))
+                .foregroundColor(.secondary)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 20)
+        .background(Color.gray.opacity(0.05))
+        .cornerRadius(16)
+    }
+}
+
+struct MinimalNewsCard: View {
+    let news: ShopNews
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text(news.newsType.displayName.uppercased())
+                .font(.system(size: 10, weight: .bold))
+                .foregroundColor(.secondary)
+                .tracking(1)
+            
+            Text(news.title)
+                .font(.system(size: 16, weight: .bold))
+                .foregroundColor(.primary)
+                .lineLimit(2)
+            
+            Text(news.content)
+                .font(.system(size: 13))
+                .foregroundColor(.secondary)
+                .lineLimit(3)
+            
+            Spacer()
+            
+            Text(formatDate(news.publishedDate))
+                .font(.system(size: 11))
+                .foregroundColor(.secondary.opacity(0.7))
+        }
+        .padding(16)
+        .frame(height: 150)
+        .background(Color.gray.opacity(0.05))
+        .cornerRadius(16)
     }
     
-    struct SectionHeader: View {
-        let title: String
-        let icon: String
-        let color: Color
-        
-        var body: some View {
-            HStack(spacing: 8) {
+    private func formatDate(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "d MMM"
+        return formatter.string(from: date)
+    }
+}
+
+struct MinimalQuickAction: View {
+    let icon: String
+    let label: String
+    let action: () -> Void
+    
+    var body: some View {
+        Button(action: action) {
+            VStack(spacing: 8) {
                 SwiftUI.Image(systemName: icon)
-                    .font(.system(size: 18))
-                    .foregroundColor(color)
-                
-                Text(title)
-                    .font(.system(size: 18, weight: .bold))
+                    .font(.system(size: 20, weight: .semibold))
                     .foregroundColor(.primary)
+                Text(label)
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundColor(.secondary)
             }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 16)
+            .background(Color.gray.opacity(0.05))
+            .cornerRadius(12)
         }
+        .buttonStyle(PlainButtonStyle())
     }
+}
+
+struct ShopActionRow: View {
+    let title: String
+    let subtitle: String
+    let icon: String
+    let action: () -> Void
     
-    struct SocialButton: View {
-        let icon: String
-        let title: String
-        let color: Color
-        let action: () -> Void
-        
-        var body: some View {
-            Button(action: action) {
-                HStack(spacing: 12) {
-                    SwiftUI.Image(systemName: icon)
-                        .font(.system(size: 18))
-                        .foregroundColor(color)
-                        .frame(width: 24)
-                    
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 16) {
+                SwiftUI.Image(systemName: icon)
+                    .font(.system(size: 18, weight: .semibold))
+                    .foregroundColor(.primary)
+                    .frame(width: 24)
+                
+                VStack(alignment: .leading, spacing: 2) {
                     Text(title)
-                        .font(.system(size: 15, weight: .medium))
+                        .font(.system(size: 15, weight: .semibold))
                         .foregroundColor(.primary)
-                    
-                    Spacer()
-                    
-                    SwiftUI.Image(systemName: "arrow.up.right")
+                    Text(subtitle)
                         .font(.system(size: 12))
                         .foregroundColor(.secondary)
                 }
-            }
-        }
-    }
-    
-    struct CompactNewsCard: View {
-        let news: ShopNews
-        
-        var body: some View {
-            HStack(alignment: .top, spacing: 12) {
-                SwiftUI.Image(systemName: news.newsType.icon)
-                    .font(.system(size: 14))
-                    .foregroundColor(.white)
-                    .padding(8)
-                    .background(Circle().fill(Color.purple))
-                
-                VStack(alignment: .leading, spacing: 4) {
-                    HStack {
-                        Text(news.newsType.rawValue)
-                            .font(.system(size: 11, weight: .semibold))
-                            .foregroundColor(.purple)
-                        
-                        Spacer()
-                        
-                        Text(timeAgo(from: news.publishedDate))
-                            .font(.system(size: 11))
-                            .foregroundColor(.secondary)
-                    }
-                    
-                    Text(news.title)
-                        .font(.system(size: 15, weight: .semibold))
-                        .foregroundColor(.primary)
-                        .lineLimit(2)
-                    
-                    Text(news.content)
-                        .font(.system(size: 13))
-                        .foregroundColor(.secondary)
-                        .lineLimit(2)
-                }
-            }
-            .padding(12)
-            .background(Color(.systemBackground))
-            .cornerRadius(12)
-            .shadow(color: Color.black.opacity(0.03), radius: 4, x: 0, y: 2)
-        }
-        
-        private func timeAgo(from date: Date) -> String {
-            let formatter = RelativeDateTimeFormatter()
-            formatter.unitsStyle = .abbreviated
-            return formatter.localizedString(for: date, relativeTo: Date())
-        }
-    }
-    
-    // Horizontal News Card for scrolling section
-    struct HorizontalNewsCard: View {
-        let news: ShopNews
-        
-        private var newsColor: Color {
-            switch news.newsType {
-            case .announcement: return .blue
-            case .newStock: return .green
-            case .tournament: return .orange
-            case .sale: return .red
-            case .event: return .purple
-            case .general: return .gray
-            }
-        }
-        
-        var body: some View {
-            VStack(alignment: .leading, spacing: 12) {
-                // Header with type badge and date
-                HStack {
-                    // Type badge
-                    HStack(spacing: 4) {
-                        SwiftUI.Image(systemName: news.newsType.icon)
-                            .font(.system(size: 10))
-                        Text(news.newsType.displayName)
-                            .font(.system(size: 10, weight: .semibold))
-                    }
-                    .foregroundColor(newsColor)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
-                    .background(newsColor.opacity(0.12))
-                    .cornerRadius(6)
-                    
-                    Spacer()
-                    
-                    // Pinned indicator
-                    if news.isPinned {
-                        SwiftUI.Image(systemName: "pin.fill")
-                            .font(.system(size: 10))
-                            .foregroundColor(.orange)
-                    }
-                    
-                    // Date
-                    Text(formatDate(news.publishedDate))
-                        .font(.system(size: 10))
-                        .foregroundColor(.secondary)
-                }
-                
-                // Title
-                Text(news.title)
-                    .font(.system(size: 15, weight: .bold))
-                    .foregroundColor(.primary)
-                    .lineLimit(2)
-                    .multilineTextAlignment(.leading)
-                
-                // Content preview
-                Text(news.content)
-                    .font(.system(size: 13))
-                    .foregroundColor(.secondary)
-                    .lineLimit(3)
-                    .multilineTextAlignment(.leading)
-                
-                Spacer(minLength: 0)
-                
-                // Expiry date if available
-                if let expiryDate = news.expiryDate {
-                    HStack(spacing: 4) {
-                        SwiftUI.Image(systemName: "clock")
-                            .font(.system(size: 10))
-                        Text("Expires \(formatDate(expiryDate))")
-                            .font(.system(size: 10))
-                    }
-                    .foregroundColor(.secondary)
-                }
-            }
-            .padding(16)
-            .frame(height: 180)
-            .background(Color(.systemBackground))
-            .cornerRadius(16)
-            .shadow(color: Color.black.opacity(0.06), radius: 8, x: 0, y: 2)
-        }
-        
-        private func formatDate(_ date: Date) -> String {
-            let formatter = DateFormatter()
-            formatter.dateFormat = "d MMM"
-            return formatter.string(from: date)
-        }
-    }
-    
-    // Compact Horizontal News Card for Updates section
-    struct CompactHorizontalNewsCard: View {
-        let news: ShopNews
-        
-        private var newsColor: Color {
-            switch news.newsType {
-            case .announcement: return .blue
-            case .newStock: return .green
-            case .tournament: return .orange
-            case .sale: return .red
-            case .event: return .purple
-            case .general: return .gray
-            }
-        }
-        
-        var body: some View {
-            VStack(alignment: .leading, spacing: 8) {
-                // Type badge + pinned
-                HStack {
-                    HStack(spacing: 4) {
-                        SwiftUI.Image(systemName: news.newsType.icon)
-                            .font(.system(size: 9))
-                        Text(news.newsType.displayName)
-                            .font(.system(size: 9, weight: .semibold))
-                    }
-                    .foregroundColor(newsColor)
-                    .padding(.horizontal, 6)
-                    .padding(.vertical, 3)
-                    .background(newsColor.opacity(0.12))
-                    .cornerRadius(4)
-                    
-                    if news.isPinned {
-                        SwiftUI.Image(systemName: "pin.fill")
-                            .font(.system(size: 8))
-                            .foregroundColor(.orange)
-                    }
-                    
-                    Spacer()
-                    
-                    Text(timeAgo(from: news.publishedDate))
-                        .font(.system(size: 9))
-                        .foregroundColor(.secondary)
-                }
-                
-                // Title
-                Text(news.title)
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundColor(.primary)
-                    .lineLimit(2)
-                    .multilineTextAlignment(.leading)
-                
-                // Content preview
-                Text(news.content)
-                    .font(.system(size: 11))
-                    .foregroundColor(.secondary)
-                    .lineLimit(2)
-                    .multilineTextAlignment(.leading)
-            }
-            .padding(12)
-            .frame(height: 110)
-            .background(Color(.systemGray6))
-            .cornerRadius(12)
-        }
-        
-        private func timeAgo(from date: Date) -> String {
-            let formatter = RelativeDateTimeFormatter()
-            formatter.unitsStyle = .abbreviated
-            return formatter.localizedString(for: date, relativeTo: Date())
-        }
-    }
-    
-    // Quick Action Button for compact contact row
-    struct QuickActionButton: View {
-        let icon: String
-        let label: String
-        let color: Color
-        let action: () -> Void
-        
-        var body: some View {
-            Button(action: action) {
-                VStack(spacing: 6) {
-                    ZStack {
-                        Circle()
-                            .fill(color.opacity(0.12))
-                            .frame(width: 48, height: 48)
-                        SwiftUI.Image(systemName: icon)
-                            .font(.system(size: 18))
-                            .foregroundColor(color)
-                    }
-                    
-                    Text(label)
-                        .font(.system(size: 11, weight: .medium))
-                        .foregroundColor(.primary)
-                }
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 12)
-                .background(Color(.systemBackground))
-                .cornerRadius(16)
-                .shadow(color: Color.black.opacity(0.04), radius: 6, x: 0, y: 2)
-            }
-            .buttonStyle(ScaleButtonStyle())
-        }
-    }
-    
-    // FlowLayout helper for services
-    struct FlowLayout: Layout {
-        var spacing: CGFloat = 8
-        
-        func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
-            let rows = computeRows(proposal: proposal, subviews: subviews)
-            let rowHeight = 20
-            let totalRowHeight = rows.count * rowHeight
-            let spacingHeight = max(0, rows.count - 1) * Int(spacing)
-            let height = totalRowHeight + spacingHeight
-            return CGSize(width: proposal.width ?? 0, height: CGFloat(height))
-        }
-        
-        func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
-            let rows = computeRows(proposal: proposal, subviews: subviews)
-            var y = bounds.minY
-            
-            for row in rows {
-                var x = bounds.minX
-                for index in row.indices {
-                    let size = subviews[index].sizeThatFits(.unspecified)
-                    subviews[index].place(at: CGPoint(x: x, y: y), proposal: .unspecified)
-                    x += size.width + spacing
-                }
-                y += 20 + spacing
-            }
-        }
-        
-        private func computeRows(proposal: ProposedViewSize, subviews: Subviews) -> [[Int]] {
-            var rows: [[Int]] = [[]]
-            var currentRowWidth: CGFloat = 0
-            let maxWidth = proposal.width ?? .infinity
-            
-            for (index, subview) in subviews.enumerated() {
-                let size = subview.sizeThatFits(.unspecified)
-                
-                if currentRowWidth + size.width > maxWidth && !rows[rows.count - 1].isEmpty {
-                    rows.append([index])
-                    currentRowWidth = size.width + spacing
-                } else {
-                    rows[rows.count - 1].append(index)
-                    currentRowWidth += size.width + spacing
-                }
-            }
-            
-            return rows
-        }
-    }
-    
-    // MARK: - Shop TCG Type Badge (local styled version)
-    struct ShopTCGTypeBadge: View {
-        let tcgTypeString: String
-        
-        private var tcgType: TCGType? {
-            TCGType(rawValue: tcgTypeString)
-        }
-        
-        var body: some View {
-            if let tcg = tcgType {
-                HStack(spacing: 8) {
-                    TCGIconView(tcgType: tcg, size: 16, color: .white)
-                    
-                    Text(tcg.displayName)
-                        .font(.system(size: 14, weight: .semibold))
-                }
-                .foregroundColor(.white)
-                .padding(.horizontal, 16)
-                .padding(.vertical, 10)
-                .background(
-                    RoundedRectangle(cornerRadius: 12)
-                        .fill(tcg.themeColor)
-                        .shadow(color: tcg.themeColor.opacity(0.3), radius: 4, x: 0, y: 2)
-                )
-            } else {
-                // Fallback for unknown TCG types
-                HStack(spacing: 8) {
-                    SwiftUI.Image(systemName: "rectangle.stack.fill")
-                        .font(.system(size: 16, weight: .semibold))
-                    
-                    Text(tcgTypeString)
-                        .font(.system(size: 14, weight: .semibold))
-                }
-                .foregroundColor(.white)
-                .padding(.horizontal, 16)
-                .padding(.vertical, 10)
-                .background(
-                    RoundedRectangle(cornerRadius: 12)
-                        .fill(Color.gray)
-                        .shadow(color: Color.gray.opacity(0.3), radius: 4, x: 0, y: 2)
-                )
-            }
-        }
-    }
-    
-    // MARK: - Service Row
-    struct ServiceRow: View {
-        let service: ShopServiceType
-        
-        var body: some View {
-            HStack(spacing: 12) {
-                ZStack {
-                    Circle()
-                        .fill(Color.gray.opacity(0.15))
-                        .frame(width: 40, height: 40)
-                    
-                    SwiftUI.Image(systemName: service.icon)
-                        .font(.system(size: 16, weight: .semibold))
-                        .foregroundColor(.gray)
-                }
-                
-                Text(service.displayName)
-                    .font(.system(size: 15, weight: .medium))
-                    .foregroundColor(.primary)
                 
                 Spacer()
+                
+                SwiftUI.Image(systemName: "chevron.right")
+                    .font(.system(size: 12, weight: .bold))
+                    .foregroundColor(.gray.opacity(0.5))
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 12)
+            .padding(16)
+            .background(Color.gray.opacity(0.05))
+            .cornerRadius(12)
         }
+        .buttonStyle(PlainButtonStyle())
+    }
+}
+
+struct MinimalTCGBadge: View {
+    let tcgTypeString: String
+    
+    private var tcgType: TCGType? {
+        TCGType(rawValue: tcgTypeString)
+    }
+    
+    var body: some View {
+        if let tcg = tcgType {
+            HStack(spacing: 8) {
+                TCGIconView(tcgType: tcg, size: 16)
+                Text(tcg.displayName)
+                    .font(.system(size: 14, weight: .semibold))
+            }
+            .foregroundColor(.primary)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 10)
+            .background(Color.gray.opacity(0.08))
+            .cornerRadius(20)
+        } else {
+            Text(tcgTypeString)
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundColor(.primary)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 10)
+                .background(Color.gray.opacity(0.08))
+                .cornerRadius(20)
+        }
+    }
+}
+
+struct MinimalServiceRow: View {
+    let service: ShopServiceType
+    
+    var body: some View {
+        HStack(spacing: 12) {
+            SwiftUI.Image(systemName: service.icon)
+                .font(.system(size: 16, weight: .medium))
+                .foregroundColor(.primary)
+                .frame(width: 24)
+            
+            Text(service.displayName)
+                .font(.system(size: 15, weight: .medium))
+                .foregroundColor(.primary)
+            
+            Spacer()
+        }
+        .padding(.horizontal, 20)
+        .padding(.vertical, 14)
+    }
+}
+
+struct MinimalSocialRow: View {
+    let icon: String
+    let title: String
+    let value: String
+    let action: () -> Void
+    
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 12) {
+                SwiftUI.Image(systemName: icon)
+                    .font(.system(size: 16, weight: .medium))
+                    .foregroundColor(.primary)
+                    .frame(width: 24)
+                
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(title)
+                        .font(.system(size: 15, weight: .medium))
+                        .foregroundColor(.primary)
+                    Text(value)
+                        .font(.system(size: 12))
+                        .foregroundColor(.secondary)
+                        .lineLimit(1)
+                }
+                
+                Spacer()
+                
+                SwiftUI.Image(systemName: "arrow.up.right")
+                    .font(.system(size: 12, weight: .bold))
+                    .foregroundColor(.gray.opacity(0.5))
+            }
+            .padding(.horizontal, 20)
+            .padding(.vertical, 14)
+        }
+        .buttonStyle(PlainButtonStyle())
     }
 }
 

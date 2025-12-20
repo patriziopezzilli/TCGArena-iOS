@@ -458,47 +458,19 @@ struct CollectionView: View {
         NavigationView {
             VStack(spacing: 0) {
                 headerView
-                    .opacity(hasAppeared ? 1 : 0)
-                    .offset(y: hasAppeared ? 0 : -10)
                 
-                // Discover Section (Conditional part of Search)
-                if showingSearch && !isHeaderCollapsed && viewMode != .rules {
-                    discoverSectionView
-                        .transition(.opacity.combined(with: .move(edge: .top)))
-                }
-
-                // Search bar (Conditional)
-                if showingSearch && !isHeaderCollapsed && viewMode != .rules {
-                    searchBarView
-                        .opacity(hasAppeared ? 1 : 0)
-                        .offset(y: hasAppeared ? 0 : -8)
-                        .transition(.opacity.combined(with: .move(edge: .top)))
-                }
+                // Persistent Search Bar
+                searchBarView
+                    .padding(.bottom, 12)
                 
-                // TCG filter (Conditional)
-                if showingSearch && viewMode != .rules {
-                    tcgFilterView
-                        .opacity(hasAppeared ? 1 : 0)
-                        .transition(.opacity.combined(with: .move(edge: .top)))
-                }
-
-                // Tab Selector - Below filters as in Flutter
+                // Tab Selector
                 tabSelectorView
                     .padding(.bottom, 8)
                 
-                // TCG Rules Info Banner
-                if viewMode != .rules {
-                    tcgRulesBannerView
-                }
-                
-                // Content - different handling for rules tab
-                if viewMode == .rules {
-                    rulesGridView
-                } else {
-                    contentView
-                }
+                // Content
+                contentView
+
             }
-            .animation(.spring(response: 0.5, dampingFraction: 0.8, blendDuration: 0.3), value: hasAppeared)
             .navigationTitle("")
             .navigationBarHidden(true)
             .background(cardNavigationLink)
@@ -523,7 +495,6 @@ struct CollectionView: View {
             }
             .onAppear {
                 onAppearAction()
-                // Trigger appearance animation
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
                     hasAppeared = true
                 }
@@ -533,35 +504,17 @@ struct CollectionView: View {
                 await performRefresh()
             }
         }
-        .background(Color(.systemGroupedBackground))
+        .background(Color(.systemBackground)) // Clean white background
     }
 
     private var headerView: some View {
-        HStack {
-            VStack(alignment: .leading, spacing: 4) {
-                Text("Collezione")
-                    .font(.system(size: 28, weight: .bold))
-                    .foregroundColor(.primary)
-            }
+        HStack(alignment: .bottom) {
+            Text("Il Tuo Caveau")
+                .font(.system(size: 32, weight: .heavy))
+                .foregroundColor(.primary)
+                .tracking(-0.5)
 
             Spacer()
-
-            Button(action: {
-                withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                    showingSearch.toggle()
-                }
-            }) {
-                ZStack {
-                    Circle()
-                        .fill(Color(.systemGray6))
-                        .frame(width: 40, height: 40)
-                    
-                    SwiftUI.Image(systemName: "magnifyingglass")
-                        .font(.system(size: 18, weight: .bold))
-                        .foregroundColor(showingSearch ? .blue : .primary)
-                }
-            }
-            .padding(.trailing, 8)
 
             Button(action: {
                 withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
@@ -571,19 +524,19 @@ struct CollectionView: View {
                 ZStack {
                     Circle()
                         .fill(Color.primary)
-                        .frame(width: 40, height: 40)
-                        .shadow(color: Color.primary.opacity(0.3), radius: 8, x: 0, y: 2)
+                        .frame(width: 44, height: 44)
+                        .shadow(color: Color.primary.opacity(0.2), radius: 8, x: 0, y: 4)
                     
                     SwiftUI.Image(systemName: showAddMenu ? "xmark" : "plus")
                         .font(.system(size: 20, weight: .bold))
-                        .foregroundColor(.white)
+                        .foregroundColor(Color(.systemBackground))
                         .rotationEffect(.degrees(showAddMenu ? 90 : 0))
                 }
             }
         }
         .padding(.horizontal, 20)
         .padding(.top, 20)
-        .padding(.bottom, 12)
+        .padding(.bottom, 8)
     }
 
     private var customAddMenuOverlay: some View {
@@ -667,12 +620,9 @@ struct CollectionView: View {
     }
 
     private var tabSelectorView: some View {
-        // View Mode Selector - Compact Design
-        HStack(spacing: 0) {
-            CompactTabButton(
-                icon: "rectangle.stack.fill",
-                label: "Liste",
-                count: listsCount,
+        HStack(spacing: 24) {
+            MinimalTabButton(
+                title: "Liste",
                 isSelected: viewMode == .lists
             ) {
                 withAnimation(.easeInOut(duration: 0.2)) {
@@ -680,10 +630,8 @@ struct CollectionView: View {
                 }
             }
             
-            CompactTabButton(
-                icon: "square.grid.2x2.fill",
-                label: "Carte",
-                count: allCardsCount,
+            MinimalTabButton(
+                title: "Carte",
                 isSelected: viewMode == .allCards
             ) {
                 withAnimation(.easeInOut(duration: 0.2)) {
@@ -691,57 +639,50 @@ struct CollectionView: View {
                 }
             }
             
-            CompactTabButton(
-                icon: "book.fill",
-                label: "Regole",
-                count: nil,
+            MinimalTabButton(
+                title: "Regole",
                 isSelected: viewMode == .rules
             ) {
                 withAnimation(.easeInOut(duration: 0.2)) {
                     viewMode = .rules
                 }
             }
+            
+            Spacer()
         }
-        .padding(4)
-        .background(
-            RoundedRectangle(cornerRadius: 14)
-                .fill(Color(.systemGray6))
-        )
-        .padding(.horizontal, 20)
+        .padding(.horizontal, 24)
+        .padding(.vertical, 8)
     }
 
     private var searchBarView: some View {
-        VStack(spacing: 0) {
-            HStack {
-                SwiftUI.Image(systemName: "magnifyingglass")
-                    .foregroundColor(.secondary)
-                    .font(.system(size: 16, weight: .medium))
+        HStack(spacing: 12) {
+            SwiftUI.Image(systemName: "magnifyingglass")
+                .foregroundColor(.secondary)
+                .font(.system(size: 16, weight: .medium))
 
-                TextField(viewMode == .lists ? "Cerca nelle liste..." : viewMode == .allCards ? "Cerca le tue carte..." : "Cerca nella collezione...", text: $searchText)
-                    .textFieldStyle(PlainTextFieldStyle())
-                    .font(.system(size: 16, weight: .medium))
+            TextField("Cerca nel tuo caveau...", text: $searchText)
+                .textFieldStyle(PlainTextFieldStyle())
+                .font(.system(size: 16, weight: .medium))
 
-                if !searchText.isEmpty {
-                    Button(action: {
-                        withAnimation(.easeInOut(duration: 0.2)) {
-                            searchText = ""
-                        }
-                    }) {
-                        SwiftUI.Image(systemName: "xmark.circle.fill")
-                            .foregroundColor(.secondary)
-                            .font(.system(size: 16, weight: .medium))
+            if !searchText.isEmpty {
+                Button(action: {
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        searchText = ""
                     }
+                }) {
+                    SwiftUI.Image(systemName: "xmark.circle.fill")
+                        .foregroundColor(.secondary)
+                        .font(.system(size: 16, weight: .medium))
                 }
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 14)
-            .background(
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(Color(.systemGray6))
-            )
         }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+        .background(
+            RoundedRectangle(cornerRadius: 12)
+                .fill(Color(.secondarySystemBackground))
+        )
         .padding(.horizontal, 20)
-        .padding(.top, 4)
     }
 
     private var portfolioCardView: some View {
@@ -989,52 +930,34 @@ struct CollectionView: View {
     }
 
     private var decksListView: some View {
-        List {
-            ForEach(Array(filteredDecks.enumerated()), id: \.element.id) { index, deck in
-                ZStack {
+        ScrollView {
+            LazyVStack(spacing: 12) {
+                ForEach(Array(filteredDecks.enumerated()), id: \.element.id) { index, deck in
                     NavigationLink(destination: DeckDetailView(deck: deck)) {
-                        EmptyView()
+                        DeckRowView(deck: deck)
                     }
-                    .opacity(0)
-
-                    DeckRowView(deck: deck)
-                        .opacity(animatedDeckIds.contains(deck.id ?? 0) ? 1.0 : 0.0)
-                        .offset(y: animatedDeckIds.contains(deck.id ?? 0) ? 0 : 30)
-                        .scaleEffect(animatedDeckIds.contains(deck.id ?? 0) ? 1.0 : 0.95)
-                        .transition(.move(edge: .bottom).combined(with: .opacity))
-                        .onAppear {
-                            withAnimation(.spring(response: 0.5, dampingFraction: 0.8).delay(Double(index) * 0.05)) {
-                                if let deckId = deck.id {
-                                    animatedDeckIds.insert(deckId)
-                                }
+                    .buttonStyle(PlainButtonStyle())
+                    .opacity(animatedDeckIds.contains(deck.id ?? 0) ? 1.0 : 0.0)
+                    .offset(y: animatedDeckIds.contains(deck.id ?? 0) ? 0 : 30)
+                    .scaleEffect(animatedDeckIds.contains(deck.id ?? 0) ? 1.0 : 0.95)
+                    .onAppear {
+                        withAnimation(.spring(response: 0.5, dampingFraction: 0.8).delay(Double(index) * 0.05)) {
+                            if let deckId = deck.id {
+                                animatedDeckIds.insert(deckId)
                             }
                         }
+                    }
                 }
-                .listRowSeparator(.hidden)
-                .listRowInsets(EdgeInsets(top: 4, leading: 20, bottom: 4, trailing: 20))
-                .listRowBackground(Color.clear)
+
             }
+            .padding(.horizontal, 20)
+            .padding(.bottom, 20)
         }
-        .listStyle(PlainListStyle())
         .scrollIndicators(.hidden)
         .background(Color(.systemBackground))
         .onChange(of: filteredDecks.count) { _ in
-            // Reset animations when deck list changes significantly (e.g., after refresh)
-            // to enable re-animation
+            // Reset animations
         }
-        .simultaneousGesture(
-            DragGesture().onChanged { value in
-                let verticalMovement = value.translation.height
-                withAnimation(.easeInOut(duration: 0.25)) {
-                    // Collapse header when scrolling down, expand when scrolling up
-                    if verticalMovement < -20 && !isHeaderCollapsed {
-                        isHeaderCollapsed = true
-                    } else if verticalMovement > 20 && isHeaderCollapsed {
-                        isHeaderCollapsed = false
-                    }
-                }
-            }
-        )
     }
 
     private var emptyCardsView: some View {
@@ -1102,64 +1025,48 @@ struct CollectionView: View {
 
 
     private var cardsListView: some View {
-        List {
-            if isLoadingCards {
-                // Show skeleton cards while loading
-                ForEach(0..<8, id: \.self) { index in
-                    CardRowSkeletonView()
-                        .listRowSeparator(.hidden)
-                        .listRowInsets(EdgeInsets(top: 4, leading: 20, bottom: 4, trailing: 20))
-                        .listRowBackground(Color.clear)
-                }
-            } else {
-                ForEach(Array(filteredCards.enumerated()), id: \.element.id) { index, card in
-                    let cardId = card.id.map { String($0) } ?? ""
-                    ZStack {
+        ScrollView {
+            // Discover Banner (placed before grid)
+            if !isLoadingCards && !filteredCards.isEmpty {
+                DiscoverInfoBox()
+                    .padding(.horizontal, 20)
+                    .padding(.bottom, 8)
+            }
+
+            LazyVStack(spacing: 12) {
+                if isLoadingCards {
+                    ForEach(0..<8, id: \.self) { index in
+                        CardRowSkeletonView()
+                            .frame(height: 80)
+                    }
+                } else {
+                    ForEach(Array(filteredCards.enumerated()), id: \.element.id) { index, card in
+                        let cardId = card.id.map { String($0) } ?? ""
+                        
                         NavigationLink(destination: CardDetailView(card: card, isFromDiscover: false) { updatedCard in
-                            // Update local state immediately for instant UI feedback
                             self.updateCardInLocalState(updatedCard)
-                            // Then reload from backend to ensure consistency
                             self.loadUserCards()
                         }) {
-                            EmptyView()
-                        }
-                        .opacity(0)
-
-                        CardRowView(card: card, deckService: deckService)
-                            .opacity(animatedCardIds.contains(cardId) ? 1.0 : 0.0)
-                            .offset(y: animatedCardIds.contains(cardId) ? 0 : 15)
-                            .scaleEffect(animatedCardIds.contains(cardId) ? 1.0 : 0.96)
-                            .onAppear {
-                                // Limit stagger delay to first 10 items for performance
-                                let delay = min(Double(index), 10.0) * 0.04
-                                withAnimation(.spring(response: 0.45, dampingFraction: 0.75).delay(delay)) {
-                                    animatedCardIds.insert(cardId)
+                            CompactCardView(card: card)
+                                .opacity(animatedCardIds.contains(cardId) ? 1.0 : 0.0)
+                                .scaleEffect(animatedCardIds.contains(cardId) ? 1.0 : 0.96)
+                                .onAppear {
+                                    let delay = min(Double(index), 10.0) * 0.04
+                                    withAnimation(.spring(response: 0.45, dampingFraction: 0.75).delay(delay)) {
+                                        animatedCardIds.insert(cardId)
+                                    }
                                 }
-                            }
+                        }
+                        .buttonStyle(PlainButtonStyle())
                     }
-                    .listRowSeparator(.hidden)
-                    .listRowInsets(EdgeInsets(top: 4, leading: 20, bottom: 4, trailing: 20))
-                    .listRowBackground(Color.clear)
                 }
             }
+            .padding(.horizontal, 20)
+            .padding(.bottom, 20)
         }
-        .listStyle(PlainListStyle())
         .scrollIndicators(.hidden)
-        .background(Color(.systemGroupedBackground))
+        .background(Color(.systemBackground))
         .animation(.easeInOut(duration: 0.3), value: isLoadingCards)
-        .simultaneousGesture(
-            DragGesture().onChanged { value in
-                let verticalMovement = value.translation.height
-                withAnimation(.easeInOut(duration: 0.25)) {
-                    // Collapse header when scrolling down, expand when scrolling up
-                    if verticalMovement < -20 && !isHeaderCollapsed {
-                        isHeaderCollapsed = true
-                    } else if verticalMovement > 20 && isHeaderCollapsed {
-                        isHeaderCollapsed = false
-                    }
-                }
-            }
-        )
     }
 
     private var cardNavigationLink: some View {
@@ -1687,7 +1594,7 @@ struct DiscoverInfoBox: View {
                 .stroke(Color(.separator).opacity(0.5), lineWidth: 1.2)
         )
         .shadow(color: Color.black.opacity(0.02), radius: 8, x: 0, y: 4)
-        .padding(.horizontal, 20)
+        .shadow(color: Color.black.opacity(0.02), radius: 8, x: 0, y: 4)
         .sheet(isPresented: $showingDiscoverSheet) {
             CardDiscoverView()
                 .environmentObject(authService)
@@ -2053,80 +1960,110 @@ struct CardDiscoverView: View {
         }
     }
     
-    struct CompactCardView: View {
-        let card: Card
-        
-        private var cardImageView: some View {
-            ZStack {
-                CachedAsyncImage(url: URL(string: card.fullImageURL ?? "")) { phase in
-                    switch phase {
-                    case .empty:
+}
+    
+struct CompactCardView: View {
+    let card: Card
+    
+    var body: some View {
+        HStack(spacing: 16) {
+            // 1. Thumbnail Image (Left, Smaller Focus)
+            CachedAsyncImage(url: URL(string: card.fullImageURL ?? "")) { phase in
+                switch phase {
+                case .success(let image):
+                    image
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                default:
+                    ZStack {
                         Color(.secondarySystemBackground)
-                            .overlay(ProgressView())
-                    case .success(let image):
-                        image
-                            .resizable()
-                            .aspectRatio(contentMode: .fill)
-                    case .failure:
-                        Color(.secondarySystemBackground)
-                            .overlay(
-                                Group {
-                                    if let tcgType = card.tcgType {
-                                        TCGIconView(tcgType: tcgType, size: 30, color: .secondary)
-                                    } else {
-                                        SwiftUI.Image(systemName: "questionmark.circle")
-                                            .font(.system(size: 30))
-                                            .foregroundColor(.secondary)
-                                    }
-                                }
-                            )
-                    @unknown default:
-                        Color(.secondarySystemBackground)
+                        if let tcgType = card.tcgType {
+                           TCGIconView(tcgType: tcgType, size: 20, color: .secondary.opacity(0.3))
+                        }
                     }
                 }
             }
-            .frame(height: 160)
-            .clipped()
-        }
-        
-        private var cardInfoView: some View {
-            VStack(alignment: .leading, spacing: 6) {
+            .frame(width: 60, height: 84)
+            .clipShape(RoundedRectangle(cornerRadius: 8))
+            .overlay(
+                RoundedRectangle(cornerRadius: 8)
+                    .stroke(Color(.separator).opacity(0.4), lineWidth: 0.5)
+            )
+            
+            // 2. Main Info (Center)
+            VStack(alignment: .leading, spacing: 4) {
                 Text(card.name)
-                    .font(.system(size: 14, weight: .semibold))
+                    .font(.system(size: 16, weight: .semibold))
                     .foregroundColor(.primary)
                     .lineLimit(1)
                 
-                HStack {
-                    Text(card.set ?? "Set Sconosciuto")
-                        .font(.system(size: 11))
-                        .foregroundColor(.secondary)
-                        .lineLimit(1)
+                Text(card.set ?? "Unknown Set")
+                    .font(.system(size: 13, weight: .regular))
+                    .foregroundColor(.secondary)
+                    .lineLimit(1)
+                
+                HStack(spacing: 8) {
+                    // Condition
+                    ContainerRelativeShape()
+                        .fill(Color(.secondarySystemBackground))
+                        .frame(height: 20)
+                        .overlay(
+                            Text(card.condition.displayName)
+                                .font(.system(size: 10, weight: .medium))
+                                .foregroundColor(.secondary)
+                                .padding(.horizontal, 6)
+                        )
+                        .frame(width: nil) // intrinsic
+                        .clipShape(RoundedRectangle(cornerRadius: 4))
                     
-                    Spacer()
-                    
-                    if let price = card.marketPrice {
-                        Text("€\(String(format: "%.2f", price))")
-                            .font(.system(size: 12, weight: .bold))
-                            .foregroundColor(.green)
+                    if let tcgType = card.tcgType {
+                        TCGIconView(tcgType: tcgType, size: 14, color: .secondary)
                     }
                 }
             }
-            .padding(12)
-            .background(Color(.systemBackground))
-        }
-        
-        var body: some View {
-            VStack(spacing: 0) {
-                cardImageView
-                cardInfoView
+            
+            Spacer()
+            
+            // 3. Price & Quantity (Right)
+            VStack(alignment: .trailing, spacing: 4) {
+                if let price = card.marketPrice {
+                    Text("€\(String(format: "%.2f", price))")
+                        .font(.system(size: 16, weight: .bold))
+                        .foregroundColor(.primary)
+                } else {
+                    Text("--")
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundColor(.secondary)
+                }
+                
+                if card.quantity > 0 {
+                    Text("x\(card.quantity)")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundColor(Color.blue)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 2)
+                        .background(Color.blue.opacity(0.1))
+                        .cornerRadius(6)
+                }
             }
-            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-            .shadow(color: Color.black.opacity(0.1), radius: 5, x: 0, y: 2)
         }
+        .padding(12)
+        .background(Color(.systemBackground))
+        .cornerRadius(12)
+        // Inventory Style Border
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(Color(.separator).opacity(0.4), lineWidth: 0.5)
+        )
+        // Very subtle shadow
+        .shadow(color: Color.black.opacity(0.03), radius: 2, x: 0, y: 1)
     }
+}
     
-    // MARK: - Set Card Component
-    struct SetCard: View {
+
+
+// MARK: - Set Card Component
+struct SetCard: View {
         let set: TCGSet
         let action: () -> Void
         
@@ -2257,4 +2194,3 @@ struct CardDiscoverView: View {
             .buttonStyle(PlainButtonStyle())
         }
     }
-}

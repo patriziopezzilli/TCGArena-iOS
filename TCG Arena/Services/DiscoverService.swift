@@ -91,7 +91,7 @@ class DiscoverService: ObservableObject {
     }
     // MARK: - User Interface Methods
     
-    func loadData() {
+    func loadData(completion: (() -> Void)? = nil) {
         isLoading = true
         errorMessage = nil
         
@@ -129,6 +129,7 @@ class DiscoverService: ObservableObject {
             self.loadLeaderboards() // Load real leaderboards
             self.loadRecentActivities() // Load real activities
             self.isLoading = false
+            completion?()
         }
     }
     
@@ -150,8 +151,8 @@ class DiscoverService: ObservableObject {
         self.activeUsers = Array(publicUsers.shuffled().prefix(10))
     }
     
-    func refreshData() {
-        loadData()
+    func refreshData(completion: (() -> Void)? = nil) {
+        loadData(completion: completion)
     }
     
     func getLeaderboard(type: LeaderboardType, completion: @escaping (Result<[UserStats], Error>) -> Void) {

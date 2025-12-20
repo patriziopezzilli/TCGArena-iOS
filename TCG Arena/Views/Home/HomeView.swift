@@ -33,7 +33,7 @@ struct HomeView: View {
                                     .tracking(2)
                                 Spacer()
                                 // Profile Icon Helper
-                                Button(action: { selectedTab = 5 }) {
+                                Button(action: { selectedTab = 4 }) {
                                     ZStack {
                                         Circle()
                                             .fill(Color(.secondarySystemBackground))
@@ -134,13 +134,16 @@ struct HomeView: View {
                                     ) { selectedTab = 1 }
                                     
                                     StatTile(
-                                        value: formatCurrency(data.totalCollectionValue),
-                                        label: "Valore",
-                                        icon: "chart.line.uptrend.xyaxis"
+                                        value: "\(data.deckCount)",
+                                        label: "Decks",
+                                        icon: "rectangle.stack.badge.plus"
                                     ) { selectedTab = 1 }
                                 }
                                 .padding(.horizontal, 24)
                             }
+                            
+                            // MARK: - News Carousel
+                            NewsCarouselSection()
                             
                             // MARK: - Actions (Reservations / Requests)
                             if data.pendingReservationsCount > 0 || data.activeRequestsCount > 0 {
@@ -156,7 +159,7 @@ struct HomeView: View {
                                                 count: data.pendingReservationsCount,
                                                 icon: "bag.fill",
                                                 color: .orange
-                                            ) { selectedTab = 5 }
+                                            ) { selectedTab = 4 }
                                         }
                                         
                                         if data.activeRequestsCount > 0 {
@@ -165,7 +168,7 @@ struct HomeView: View {
                                                 count: data.activeRequestsCount,
                                                 icon: "bubble.left.and.bubble.right.fill",
                                                 color: .blue
-                                            ) { selectedTab = 5 }
+                                            ) { selectedTab = 4 }
                                         }
                                     }
                                     .padding(.horizontal, 24)
@@ -173,12 +176,35 @@ struct HomeView: View {
                             }
                             
                         } else if viewModel.isLoading {
-                            HStack {
-                                Spacer()
-                                ProgressView()
-                                Spacer()
+                            // MARK: - Skeleton Loading State
+                            VStack(alignment: .leading, spacing: 16) {
+                                // Skeleton Header
+                                Text("Panoramica")
+                                    .font(.system(size: 20, weight: .bold))
+                                    .padding(.horizontal, 24)
+                                
+                                // Skeleton Grid
+                                LazyVGrid(columns: columns, spacing: 16) {
+                                    ForEach(0..<4) { _ in
+                                        SkeletonStatTile()
+                                    }
+                                }
+                                .padding(.horizontal, 24)
+                                
+                                // Skeleton News Section
+                                VStack(alignment: .leading, spacing: 12) {
+                                    Text("News")
+                                        .font(.system(size: 20, weight: .bold))
+                                        .padding(.horizontal, 24)
+                                    
+                                    RoundedRectangle(cornerRadius: 16)
+                                        .fill(Color(.secondarySystemBackground))
+                                        .frame(height: 120)
+                                        .padding(.horizontal, 24)
+                                        .shimmering()
+                                }
+                                .padding(.top, 16)
                             }
-                            .padding(.top, 40)
                         } else {
                             // Error State
                              VStack(spacing: 12) {
@@ -318,5 +344,77 @@ struct MinimalActionRow: View {
             )
         }
         .buttonStyle(PlainButtonStyle())
+    }
+}
+
+// MARK: - Skeleton Loading Components
+
+struct SkeletonStatTile: View {
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            HStack {
+                RoundedRectangle(cornerRadius: 6)
+                    .fill(Color(.tertiarySystemBackground))
+                    .frame(width: 24, height: 24)
+                Spacer()
+            }
+            .padding(.bottom, 16)
+            
+            RoundedRectangle(cornerRadius: 8)
+                .fill(Color(.tertiarySystemBackground))
+                .frame(width: 60, height: 28)
+            
+            RoundedRectangle(cornerRadius: 6)
+                .fill(Color(.tertiarySystemBackground))
+                .frame(width: 80, height: 14)
+                .padding(.top, 8)
+        }
+        .padding(20)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color(.secondarySystemBackground))
+        .cornerRadius(24)
+        .overlay(
+            RoundedRectangle(cornerRadius: 24)
+                .stroke(Color(.separator).opacity(0.4), lineWidth: 0.5)
+        )
+        .shimmering()
+    }
+}
+
+// MARK: - Shimmer Effect
+struct ShimmerModifier: ViewModifier {
+    @State private var isAnimating = false
+    
+    func body(content: Content) -> some View {
+        content
+            .overlay(
+                GeometryReader { geometry in
+                    Color.white.opacity(0.3)
+                        .mask(
+                            Rectangle()
+                                .fill(
+                                    LinearGradient(
+                                        gradient: Gradient(colors: [.clear, .white.opacity(0.5), .clear]),
+                                        startPoint: .leading,
+                                        endPoint: .trailing
+                                    )
+                                )
+                                .rotationEffect(.degrees(70))
+                                .offset(x: isAnimating ? geometry.size.width * 2 : -geometry.size.width * 2)
+                        )
+                }
+            )
+            .clipped()
+            .onAppear {
+                withAnimation(Animation.linear(duration: 1.5).repeatForever(autoreverses: false)) {
+                    isAnimating = true
+                }
+            }
+    }
+}
+
+extension View {
+    func shimmering() -> some View {
+        modifier(ShimmerModifier())
     }
 }

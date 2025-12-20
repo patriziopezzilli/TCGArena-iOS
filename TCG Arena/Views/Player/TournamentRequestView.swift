@@ -187,12 +187,12 @@ struct TournamentRequestView: View {
         HStack(spacing: 16) {
             ZStack {
                 Circle()
-                    .fill(Color.blue.opacity(0.1))
+                    .fill(Color.gray.opacity(0.1))
                     .frame(width: 50, height: 50)
                 
                 SwiftUI.Image(systemName: "storefront.fill")
                     .font(.system(size: 24))
-                    .foregroundColor(.blue)
+                    .foregroundColor(.primary)
             }
             
             VStack(alignment: .leading, spacing: 4) {
@@ -289,7 +289,7 @@ struct TournamentRequestView: View {
             }
             .frame(maxWidth: .infinity)
             .padding()
-            .background(isFormValid ? Color.blue : Color.gray.opacity(0.3))
+            .background(isFormValid ? Color.primary : Color.gray.opacity(0.3))
             .foregroundColor(.white)
             .cornerRadius(12)
         }

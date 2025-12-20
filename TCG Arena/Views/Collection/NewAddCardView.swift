@@ -17,192 +17,164 @@ struct NewAddCardView: View {
     
     var body: some View {
         NavigationView {
-            ZStack {
-                // Background
-                Color(.systemGroupedBackground)
-                    .ignoresSafeArea()
-                
-                VStack(spacing: 0) {
-                    // Custom Header
-                    HStack {
-                        Button(action: { dismiss() }) {
-                            SwiftUI.Image(systemName: "xmark")
-                                .font(.system(size: 14, weight: .bold))
-                                .foregroundColor(.primary)
-                                .padding(8)
-                                .background(.ultraThinMaterial)
-                                .clipShape(Circle())
-                        }
-                        Spacer()
+            ScrollView {
+                VStack(alignment: .leading, spacing: 32) {
+                    // MARK: - Header
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Nuova Carta")
+                            .font(.system(size: 34, weight: .heavy))
+                            .foregroundColor(.primary)
+                        
+                        Text("Scegli come vuoi aggiungere la tua prossima carta alla collezione")
+                            .font(.body)
+                            .foregroundColor(.secondary)
                     }
-                    .padding(.horizontal, 20)
-                    .padding(.top, 16)
-                    .padding(.bottom, 8)
+                    .padding(.horizontal, 24)
+                    .padding(.top, 24)
                     
-                    ScrollView(showsIndicators: false) {
-                        VStack(spacing: 30) {
-                            // Title Section
-                            VStack(spacing: 4) {
-                                Text("Nuova Carta")
-                                    .font(.system(size: 28, weight: .bold, design: .rounded))
-                                    .foregroundStyle(
-                                        LinearGradient(
-                                            colors: [.primary, .primary.opacity(0.8)],
-                                            startPoint: .leading,
-                                            endPoint: .trailing
-                                        )
-                                    )
-                                    .frame(maxWidth: .infinity, alignment: .leading)
-                                
-                                Text("Scegli come vuoi aggiungere la tua prossima carta alla collezione")
-                                    .font(.subheadline)
-                                    .foregroundColor(.secondary)
-                                    .frame(maxWidth: .infinity, alignment: .leading)
-                            }
-                            .padding(.horizontal, 24)
-                            .padding(.top, 10)
-                            
-                            // Options Grid
-                            VStack(spacing: 20) {
-                                // Manual Entry
-                                NavigationLink(destination: ManualAddCardView()
-                                    .environmentObject(cardService)
-                                    .environmentObject(deckService)
-                                ) {
-                                    NewAddCardOptionView(
-                                        icon: "keyboard.fill",
-                                        title: "Manuale",
-                                        subtitle: "Cerca per nome, set o numero",
-                                        accentColor: .blue,
-                                        badge: "Consigliato"
-                                    )
-                                }
-                                .buttonStyle(PlainButtonStyle())
-                                
-                                // Scan Entry (Disabled)
-                                NewAddCardOptionView(
-                                    icon: "camera.viewfinder",
-                                    title: "Scansiona",
-                                    subtitle: "Usa la fotocamera per identificare",
-                                    accentColor: .purple,
-                                    badge: "Presto disponibile",
-                                    isDisabled: true
-                                )
-                            }
-                            .padding(.horizontal, 24)
-                            
-                            // Pro Tips
-                            VStack(alignment: .leading, spacing: 16) {
-                                HStack {
-                                    SwiftUI.Image(systemName: "lightbulb.fill")
-                                        .foregroundColor(.yellow)
-                                    Text("Consigli Pro")
-                                        .font(.headline)
-                                }
-                                .padding(.bottom, 4)
-                                
-                                NewAddCardTipRow(icon: "magnifyingglass", text: "Usa il codice del set (es. OP01-001) per risultati precisi")
-                                NewAddCardTipRow(icon: "square.stack.3d.up.fill", text: "Puoi aggiungere più copie della stessa carta")
-                                NewAddCardTipRow(icon: "star.fill", text: "Specifica la condizione per tracciare il valore reale")
-                            }
-                            .padding(24)
-                            .background(
-                                RoundedRectangle(cornerRadius: 24)
-                                    .fill(Color(.secondarySystemGroupedBackground))
-                                    .shadow(color: Color.black.opacity(0.05), radius: 10, x: 0, y: 5)
+                    // MARK: - Options
+                    VStack(spacing: 0) {
+                        // Manual Entry
+                        NavigationLink(destination: ManualAddCardView()
+                            .environmentObject(cardService)
+                            .environmentObject(deckService)
+                        ) {
+                            AddOptionRow(
+                                icon: "keyboard",
+                                title: "Ricerca Manuale",
+                                subtitle: "Cerca per nome, set o numero",
+                                badge: "Consigliato"
                             )
-                            .padding(.horizontal, 24)
-                            
-                            Spacer(minLength: 40)
                         }
+                        .buttonStyle(PlainButtonStyle())
+                        
+                        Divider().padding(.leading, 64)
+                        
+                        // Scan Entry
+                        AddOptionRow(
+                            icon: "camera.viewfinder",
+                            title: "Scansiona Carta",
+                            subtitle: "Presto disponibile",
+                            isDisabled: true
+                        )
+                    }
+                    .background(Color(.systemBackground))
+                    
+                    // MARK: - Pro Tips
+                    VStack(alignment: .leading, spacing: 16) {
+                        Text("CONSIGLI PRO")
+                            .font(.system(size: 13, weight: .bold))
+                            .foregroundColor(.secondary)
+                            .padding(.horizontal, 24)
+                        
+                        VStack(alignment: .leading, spacing: 20) {
+                            TipRow(icon: "magnifyingglass", text: "Usa il codice set (es. OP01-001) per precisione")
+                            TipRow(icon: "square.stack.3d.up", text: "Aggiungi più copie della stessa carta")
+                            TipRow(icon: "star", text: "Specifica la condizione per il valore reale")
+                        }
+                        .padding(.horizontal, 24)
                     }
                 }
+                .padding(.bottom, 40)
             }
+            .background(Color(.systemBackground))
             .navigationBarHidden(true)
+            .overlay(alignment: .topTrailing) {
+                Button(action: { dismiss() }) {
+                    ZStack {
+                        Circle()
+                            .fill(Color(.secondarySystemBackground))
+                            .frame(width: 36, height: 36)
+                        
+                        SwiftUI.Image(systemName: "xmark")
+                            .font(.system(size: 14, weight: .bold))
+                            .foregroundColor(.secondary)
+                    }
+                }
+                .padding(24)
+            }
         }
     }
 }
 
-struct NewAddCardOptionView: View {
+// MARK: - Components
+struct AddOptionRow: View {
     let icon: String
     let title: String
     let subtitle: String
-    let accentColor: Color
-    let badge: String?
+    var badge: String? = nil
     var isDisabled: Bool = false
     
     var body: some View {
-        HStack(spacing: 20) {
+        HStack(spacing: 16) {
             ZStack {
-                Circle()
-                    .fill(accentColor.opacity(0.1))
-                    .frame(width: 60, height: 60)
-                
-                SwiftUI.Image(systemName: icon)
-                    .font(.system(size: 24, weight: .semibold))
-                    .foregroundColor(accentColor)
+                if isDisabled {
+                    Circle()
+                        .fill(Color(.secondarySystemBackground))
+                        .frame(width: 40, height: 40)
+                    SwiftUI.Image(systemName: icon)
+                        .font(.system(size: 18))
+                        .foregroundColor(Color(.tertiaryLabel))
+                } else {
+                    Circle()
+                        .fill(Color.blue)
+                        .frame(width: 40, height: 40)
+                    SwiftUI.Image(systemName: icon)
+                        .font(.system(size: 18, weight: .semibold))
+                        .foregroundColor(.white)
+                }
             }
             
             VStack(alignment: .leading, spacing: 4) {
                 HStack {
                     Text(title)
-                        .font(.title3)
-                        .fontWeight(.bold)
-                        .foregroundColor(.primary)
+                        .font(.system(size: 17, weight: .semibold))
+                        .foregroundColor(isDisabled ? .secondary : .primary)
                     
                     if let badge = badge {
-                        Text(badge)
+                        Text(badge.uppercased())
                             .font(.system(size: 10, weight: .bold))
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 4)
-                            .background(accentColor.opacity(0.1))
-                            .clipShape(Capsule())
-                            .foregroundColor(accentColor)
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background(Color.blue)
+                            .cornerRadius(4)
                     }
                 }
                 
                 Text(subtitle)
-                    .font(.subheadline)
+                    .font(.system(size: 15))
                     .foregroundColor(.secondary)
-                    .multilineTextAlignment(.leading)
             }
             
             Spacer()
             
             if !isDisabled {
                 SwiftUI.Image(systemName: "chevron.right")
-                    .font(.system(size: 20, weight: .bold))
+                    .font(.system(size: 14, weight: .bold))
                     .foregroundColor(Color(.tertiaryLabel))
             }
         }
-        .padding(24)
-        .background(
-            RoundedRectangle(cornerRadius: 24)
-                .fill(Color(.systemBackground))
-                .shadow(color: Color.black.opacity(0.05), radius: 8, x: 0, y: 4)
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 24)
-                .stroke(accentColor.opacity(0.3), lineWidth: 1.5)
-        )
-        .opacity(isDisabled ? 0.6 : 1.0)
-        .scaleEffect(isDisabled ? 0.98 : 1.0)
+        .padding(.horizontal, 24)
+        .padding(.vertical, 16)
+        .contentShape(Rectangle())
+        .opacity(isDisabled ? 0.6 : 1)
     }
 }
 
-struct NewAddCardTipRow: View {
+struct TipRow: View {
     let icon: String
     let text: String
     
     var body: some View {
         HStack(spacing: 12) {
             SwiftUI.Image(systemName: icon)
-                .font(.system(size: 14))
-                .foregroundColor(.secondary)
-                .frame(width: 20)
+                .font(.system(size: 16))
+                .foregroundColor(.blue)
+                .frame(width: 24)
             
             Text(text)
-                .font(.subheadline)
+                .font(.system(size: 15))
                 .foregroundColor(.secondary)
         }
     }

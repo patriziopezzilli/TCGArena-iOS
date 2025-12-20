@@ -28,7 +28,7 @@ struct TournamentCheckInView: View {
             VStack(spacing: 20) {
                 // Tournament Info
                 VStack(spacing: 16) {
-                    Text("Tournament Check-in")
+                    Text("Check-in Torneo")
                         .font(.system(size: 24, weight: .bold))
                         .foregroundColor(.primary)
                     
@@ -44,7 +44,7 @@ struct TournamentCheckInView: View {
                                 .foregroundColor(.white)
                                 .padding(.horizontal, 10)
                                 .padding(.vertical, 4)
-                                .background(Capsule().fill(AdaptiveColors.brandPrimary))
+                                .background(Capsule().fill(Color.primary))
                             
                             Text(tournament.date.formatted(date: .abbreviated, time: .shortened))
                                 .font(.system(size: 13))
@@ -56,34 +56,34 @@ struct TournamentCheckInView: View {
                 
                 // Check-in Info
                 VStack(alignment: .leading, spacing: 16) {
-                    Text("Check-in Information")
+                    Text("Informazioni Check-in")
                         .font(.system(size: 18, weight: .bold))
                         .foregroundColor(.primary)
                     
                     VStack(alignment: .leading, spacing: 12) {
                         CheckInInfoRow(
                             icon: "clock.fill",
-                            title: "Check-in opens",
-                            value: "1 hour before tournament start"
+                            title: "Apertura check-in",
+                            value: "1 ora prima dell'inizio del torneo"
                         )
                         
                         CheckInInfoRow(
                             icon: "qrcode.viewfinder",
-                            title: "How to check-in",
-                            value: "Scan the QR code provided by the organizer"
+                            title: "Come fare check-in",
+                            value: "Scansiona il QR code fornito dall'organizzatore"
                         )
                         
                         CheckInInfoRow(
                             icon: "checkmark.circle.fill",
-                            title: "What happens",
-                            value: "You'll be marked as present for the tournament"
+                            title: "Cosa succede",
+                            value: "Verrai segnato come presente al torneo"
                         )
                     }
                 }
                 .padding(16)
                 .background(
                     RoundedRectangle(cornerRadius: 16)
-                        .fill(AdaptiveColors.backgroundSecondary)
+                        .fill(Color.gray.opacity(0.05))
                 )
                 .padding(.horizontal, 20)
                 
@@ -101,11 +101,11 @@ struct TournamentCheckInView: View {
                                 ProgressView()
                                     .progressViewStyle(CircularProgressViewStyle(tint: .white))
                             } else {
-                                Image(systemName: "qrcode.viewfinder")
+                                SwiftUI.Image(systemName: "qrcode.viewfinder")
                                     .font(.system(size: 20))
                             }
                             
-                            Text(isProcessing ? "Processing..." : "Scan Check-in QR Code")
+                            Text(isProcessing ? "Elaborazione..." : "Scansiona QR Check-in")
                                 .font(.system(size: 17, weight: .semibold))
                         }
                         .foregroundColor(.white)
@@ -113,19 +113,19 @@ struct TournamentCheckInView: View {
                         .padding(.vertical, 16)
                         .background(
                             RoundedRectangle(cornerRadius: 14)
-                                .fill(isProcessing ? Color.gray : AdaptiveColors.brandPrimary)
+                                .fill(isProcessing ? Color.gray : Color.primary)
                         )
                     }
                     .disabled(isProcessing)
                     .padding(.horizontal, 20)
                 }
             }
-            .background(AdaptiveColors.backgroundPrimary)
+            .background(Color.white)
             .navigationTitle("")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Done") {
+                    Button("Fatto") {
                         dismiss()
                     }
                     .fontWeight(.semibold)
@@ -150,9 +150,9 @@ struct TournamentCheckInView: View {
                     isProcessing = false
                     
                     if participant.status == .checkedIn {
-                        checkInResult = .success(message: "Successfully checked in! You're ready for the tournament.")
+                        checkInResult = .success(message: "Check-in completato! Sei pronto per il torneo.")
                     } else {
-                        checkInResult = .alreadyCheckedIn(message: "You are already checked in for this tournament.")
+                        checkInResult = .alreadyCheckedIn(message: "Hai già fatto il check-in per questo torneo.")
                     }
                 }
             } catch {
@@ -174,9 +174,9 @@ struct CheckInInfoRow: View {
     
     var body: some View {
         HStack(spacing: 12) {
-            Image(systemName: icon)
+            SwiftUI.Image(systemName: icon)
                 .font(.system(size: 16))
-                .foregroundColor(AdaptiveColors.brandPrimary)
+                .foregroundColor(.primary)
                 .frame(width: 24)
             
             VStack(alignment: .leading, spacing: 2) {
@@ -219,9 +219,9 @@ struct CheckInResultView: View {
     
     private var resultColor: Color {
         switch result {
-        case .success: return AdaptiveColors.success
-        case .alreadyCheckedIn: return AdaptiveColors.warning
-        case .error: return AdaptiveColors.error
+        case .success: return .green
+        case .alreadyCheckedIn: return .orange
+        case .error: return .red
         }
     }
     

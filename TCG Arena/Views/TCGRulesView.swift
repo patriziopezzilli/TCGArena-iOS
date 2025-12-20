@@ -717,22 +717,13 @@ struct RulesListCard: View {
             action()
         }) {
             HStack(spacing: 16) {
-                // TCG Icon with themed background
+                // TCG Icon with minimal themed background (same as DeckRowView)
                 ZStack {
-                    RoundedRectangle(cornerRadius: 14)
-                        .fill(
-                            LinearGradient(
-                                gradient: Gradient(colors: [
-                                    tcgType.themeColor,
-                                    tcgType.themeColor.opacity(0.7)
-                                ]),
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
-                        )
-                        .frame(width: 56, height: 56)
+                    RoundedRectangle(cornerRadius: 10)
+                        .fill(tcgType.themeColor.opacity(0.1))
+                        .frame(width: 48, height: 48)
                     
-                    TCGIconView(tcgType: tcgType, size: 26, color: .white)
+                    TCGIconView(tcgType: tcgType, size: 24, color: tcgType.themeColor)
                 }
                 
                 // Text content
@@ -752,17 +743,17 @@ struct RulesListCard: View {
                 // Arrow
                 SwiftUI.Image(systemName: "chevron.right")
                     .font(.system(size: 14, weight: .semibold))
-                    .foregroundColor(.secondary.opacity(0.5))
+                    .foregroundColor(Color(.tertiaryLabel))
             }
-            .padding(16)
-            .background(
-                RoundedRectangle(cornerRadius: 16)
-                    .fill(Color(.secondarySystemGroupedBackground))
-            )
+            .padding(.vertical, 12)
+            .padding(.horizontal, 16)
+            .background(Color(.systemBackground))
+            .cornerRadius(12)
             .overlay(
-                RoundedRectangle(cornerRadius: 16)
-                    .stroke(Color(.separator).opacity(0.5), lineWidth: 1)
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(Color(.separator).opacity(0.4), lineWidth: 0.5)
             )
+            .shadow(color: Color.black.opacity(0.03), radius: 2, x: 0, y: 1)
             .scaleEffect(isPressed ? 0.98 : 1.0)
             .animation(.easeInOut(duration: 0.1), value: isPressed)
         }

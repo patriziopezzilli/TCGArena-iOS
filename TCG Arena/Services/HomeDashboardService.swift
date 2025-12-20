@@ -9,6 +9,7 @@ struct HomeDashboardData: Codable {
     let nearbyShopsCount: Int
     let upcomingTournamentsCount: Int
     let collectionCount: Int
+    let deckCount: Int
     let totalCollectionValue: Decimal
     let unreadNewsCount: Int
     let pendingReservationsCount: Int
@@ -18,6 +19,7 @@ struct HomeDashboardData: Codable {
         case nearbyShopsCount
         case upcomingTournamentsCount
         case collectionCount
+        case deckCount
         case totalCollectionValue
         case unreadNewsCount
         case pendingReservationsCount

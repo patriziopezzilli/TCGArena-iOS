@@ -73,7 +73,8 @@ struct TCGArenaApp: App {
                         .preferredColorScheme(settingsService.isDarkMode ? .dark : .light)
                 } else {
                     // First time user - show welcome/onboarding
-                    WelcomeView()
+                    // First time user - show welcome/onboarding
+                    WelcomeFlowView()
                         .environmentObject(settingsService)
                         .environmentObject(authService)
                         .environmentObject(networkMonitor)

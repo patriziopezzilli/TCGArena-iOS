@@ -22,6 +22,7 @@ struct ContentView: View {
     @StateObject private var reservationService = ReservationService()
     @StateObject private var marketService = MarketDataService()
     @StateObject private var locationManager = LocationManager()
+    @StateObject private var requestService = RequestService()
     @EnvironmentObject private var settingsService: SettingsService
     @EnvironmentObject private var authService: AuthService
     
@@ -29,7 +30,7 @@ struct ContentView: View {
     @State private var lastLocationUpdate: Date? = nil
     
     var body: some View {
-        TabView(selection: $selectedTab) {
+            TabView(selection: $selectedTab) {
             HomeView(selectedTab: $selectedTab)
                 .tabItem {
                     SwiftUI.Image(systemName: "house.fill")
@@ -61,14 +62,6 @@ struct ContentView: View {
                 }
                 .tag(2)
             
-            RewardsMainView()
-                .environmentObject(rewardsService)
-                .tabItem {
-                    SwiftUI.Image(systemName: "gift.fill")
-                    Text("Premi")
-                }
-                .tag(3)
-            
             CommunityView()
                 .environmentObject(notificationService)
                 .environmentObject(achievementService)
@@ -76,15 +69,19 @@ struct ContentView: View {
                     SwiftUI.Image(systemName: "person.2")
                     Text("Community")
                 }
-                .tag(4)
+                .tag(3)
             
-            ProfileView()
+            MoreView()
+                .environmentObject(authService)
+                .environmentObject(rewardsService)
                 .environmentObject(reservationService)
+                .environmentObject(requestService)
+                .environmentObject(settingsService)
                 .tabItem {
-                    SwiftUI.Image(systemName: "person.crop.circle")
-                    Text("Profilo")
+                    SwiftUI.Image(systemName: "line.3.horizontal")
+                    Text("Altro")
                 }
-                .tag(5)
+                .tag(4)
         }
         .accentColor(AdaptiveColors.brandPrimary)
         .animation(

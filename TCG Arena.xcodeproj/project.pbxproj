@@ -9,6 +9,14 @@
 /* Begin PBXBuildFile section */
 		78229A532EF5BD5700E2F700 /* HomeDashboardService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78229A522EF5BD5700E2F700 /* HomeDashboardService.swift */; };
 		78229A562EF5BD6000E2F700 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78229A542EF5BD6000E2F700 /* HomeView.swift */; };
+		78229A582EF5C5E000E2F700 /* MinimalTabButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78229A572EF5C5E000E2F700 /* MinimalTabButton.swift */; };
+		78229A652EF6CF0B00E2F700 /* WelcomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78229A642EF6CF0B00E2F700 /* WelcomeView.swift */; };
+		78229A662EF6CF0B00E2F700 /* OnboardingPermissionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78229A632EF6CF0B00E2F700 /* OnboardingPermissionsView.swift */; };
+		78229A682EF6E44F00E2F700 /* MoreView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78229A672EF6E44F00E2F700 /* MoreView.swift */; };
+		78229A6A2EF6E46A00E2F700 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78229A692EF6E46A00E2F700 /* SettingsView.swift */; };
+		78229A6C2EF6E64A00E2F700 /* HelpView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78229A6B2EF6E64A00E2F700 /* HelpView.swift */; };
+		78229A6E2EF6E71A00E2F700 /* EditProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78229A6D2EF6E71A00E2F700 /* EditProfileView.swift */; };
+		78229A702EF6E90000E2F700 /* NewsCarouselSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78229A6F2EF6E90000E2F700 /* NewsCarouselSection.swift */; };
 		784090482EDA2CD700CC6B9A /* SetDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 784090472EDA2CD700CC6B9A /* SetDetailView.swift */; };
 		7840904A2EDB96F800CC6B9A /* ImageCacheManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 784090492EDB96F800CC6B9A /* ImageCacheManager.swift */; };
 		7840904C2EDB98F000CC6B9A /* DeckSelectionModal.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7840904B2EDB98F000CC6B9A /* DeckSelectionModal.swift */; };
@@ -37,7 +45,6 @@
 		786778FE2EF2EB5C000928C4 /* TournamentRequestView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 786778FD2EF2EB5C000928C4 /* TournamentRequestView.swift */; };
 		786AC8602EE2CD68001A6714 /* PastTournamentCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 786AC85F2EE2CD68001A6714 /* PastTournamentCard.swift */; };
 		786AC8632EE2DC13001A6714 /* WelcomeSheet in Frameworks */ = {isa = PBXBuildFile; productRef = 786AC8622EE2DC13001A6714 /* WelcomeSheet */; };
-		786AC8652EE2DF8A001A6714 /* OnboardingPermissionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 786AC8642EE2DF8A001A6714 /* OnboardingPermissionsView.swift */; };
 		786AC8672EE2ECC6001A6714 /* AuthFlowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 786AC8662EE2ECC6001A6714 /* AuthFlowView.swift */; };
 		786AC86A2EE313F9001A6714 /* Toasts in Frameworks */ = {isa = PBXBuildFile; productRef = 786AC8692EE313F9001A6714 /* Toasts */; };
 		786AC86E2EE40EE4001A6714 /* Reward+Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 786AC86D2EE40EE4001A6714 /* Reward+Extensions.swift */; };
@@ -127,7 +134,6 @@
 		7AAAA2182EDD93A90035F942 /* ShopInventoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AAAA2172EDD93A90035F942 /* ShopInventoryView.swift */; };
 		7AAF9FDD2ECE12E0008221E9 /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AAF9FD82ECE12E0008221E9 /* LoginView.swift */; };
 		7AAF9FDE2ECE12E0008221E9 /* RegisterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AAF9FDB2ECE12E0008221E9 /* RegisterView.swift */; };
-		7AAF9FDF2ECE12E0008221E9 /* WelcomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AAF9FDC2ECE12E0008221E9 /* WelcomeView.swift */; };
 		7AAF9FE02ECE12E0008221E9 /* ForgotPasswordView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AAF9FD72ECE12E0008221E9 /* ForgotPasswordView.swift */; };
 		7AAF9FE12ECE12E0008221E9 /* MainAppView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AAF9FD92ECE12E0008221E9 /* MainAppView.swift */; };
 		7AAF9FE22ECE12E0008221E9 /* ReadOnlyContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AAF9FDA2ECE12E0008221E9 /* ReadOnlyContentView.swift */; };
@@ -183,6 +189,14 @@
 /* Begin PBXFileReference section */
 		78229A522EF5BD5700E2F700 /* HomeDashboardService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeDashboardService.swift; sourceTree = "<group>"; };
 		78229A542EF5BD6000E2F700 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
+		78229A572EF5C5E000E2F700 /* MinimalTabButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MinimalTabButton.swift; sourceTree = "<group>"; };
+		78229A632EF6CF0B00E2F700 /* OnboardingPermissionsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingPermissionsView.swift; sourceTree = "<group>"; };
+		78229A642EF6CF0B00E2F700 /* WelcomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeView.swift; sourceTree = "<group>"; };
+		78229A672EF6E44F00E2F700 /* MoreView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoreView.swift; sourceTree = "<group>"; };
+		78229A692EF6E46A00E2F700 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		78229A6B2EF6E64A00E2F700 /* HelpView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HelpView.swift; sourceTree = "<group>"; };
+		78229A6D2EF6E71A00E2F700 /* EditProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditProfileView.swift; sourceTree = "<group>"; };
+		78229A6F2EF6E90000E2F700 /* NewsCarouselSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewsCarouselSection.swift; sourceTree = "<group>"; };
 		784090472EDA2CD700CC6B9A /* SetDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SetDetailView.swift; sourceTree = "<group>"; };
 		784090492EDB96F800CC6B9A /* ImageCacheManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageCacheManager.swift; sourceTree = "<group>"; };
 		7840904B2EDB98F000CC6B9A /* DeckSelectionModal.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeckSelectionModal.swift; sourceTree = "<group>"; };
@@ -209,7 +223,6 @@
 		786778FB2EF2E643000928C4 /* OpeningHours.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpeningHours.swift; sourceTree = "<group>"; };
 		786778FD2EF2EB5C000928C4 /* TournamentRequestView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TournamentRequestView.swift; sourceTree = "<group>"; };
 		786AC85F2EE2CD68001A6714 /* PastTournamentCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PastTournamentCard.swift; sourceTree = "<group>"; };
-		786AC8642EE2DF8A001A6714 /* OnboardingPermissionsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingPermissionsView.swift; sourceTree = "<group>"; };
 		786AC8662EE2ECC6001A6714 /* AuthFlowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthFlowView.swift; sourceTree = "<group>"; };
 		786AC86B2EE40EE4001A6714 /* Partner+Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Partner+Extensions.swift"; sourceTree = "<group>"; };
 		786AC86C2EE40EE4001A6714 /* PartnerModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PartnerModels.swift; sourceTree = "<group>"; };
@@ -300,7 +313,6 @@
 		7AAF9FD92ECE12E0008221E9 /* MainAppView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainAppView.swift; sourceTree = "<group>"; };
 		7AAF9FDA2ECE12E0008221E9 /* ReadOnlyContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadOnlyContentView.swift; sourceTree = "<group>"; };
 		7AAF9FDB2ECE12E0008221E9 /* RegisterView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RegisterView.swift; sourceTree = "<group>"; };
-		7AAF9FDC2ECE12E0008221E9 /* WelcomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeView.swift; sourceTree = "<group>"; };
 		7AE3FF902EC89098004EE982 /* DeckRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeckRowView.swift; sourceTree = "<group>"; };
 		7AE3FF922EC8FFE6004EE982 /* RewardsMainView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RewardsMainView.swift; sourceTree = "<group>"; };
 		7AE3FF932EC8FFE6004EE982 /* RewardsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RewardsView.swift; sourceTree = "<group>"; };
@@ -369,6 +381,7 @@
 		78229A552EF5BD6000E2F700 /* Home */ = {
 			isa = PBXGroup;
 			children = (
+				78229A6F2EF6E90000E2F700 /* NewsCarouselSection.swift */,
 				78229A542EF5BD6000E2F700 /* HomeView.swift */,
 			);
 			path = Home;
@@ -395,6 +408,8 @@
 		7883DF852EDE4C9B007D1C51 /* Auth */ = {
 			isa = PBXGroup;
 			children = (
+				78229A632EF6CF0B00E2F700 /* OnboardingPermissionsView.swift */,
+				78229A642EF6CF0B00E2F700 /* WelcomeView.swift */,
 				786AC8662EE2ECC6001A6714 /* AuthFlowView.swift */,
 				7883DF822EDE4C9B007D1C51 /* ModernAuthView.swift */,
 				7883DF832EDE4C9B007D1C51 /* TCGArenaOnBoarding.swift */,
@@ -446,6 +461,8 @@
 		7A7DF40F2EBB943D00331A52 /* Profile */ = {
 			isa = PBXGroup;
 			children = (
+				78229A6D2EF6E71A00E2F700 /* EditProfileView.swift */,
+				78229A692EF6E46A00E2F700 /* SettingsView.swift */,
 				7A7DF40E2EBB943D00331A52 /* ProfileView.swift */,
 			);
 			path = Profile;
@@ -579,10 +596,11 @@
 		A5000005 /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				78229A6B2EF6E64A00E2F700 /* HelpView.swift */,
+				78229A672EF6E44F00E2F700 /* MoreView.swift */,
 				78229A552EF5BD6000E2F700 /* Home */,
 				786778E92EF29EC5000928C4 /* NoNetworkView.swift */,
 				786AC87B2EE4E3A4001A6714 /* TCGRulesView.swift */,
-				786AC8642EE2DF8A001A6714 /* OnboardingPermissionsView.swift */,
 				78D54ADA2EE1B894009A04C7 /* Deck */,
 				78D54AB62EE1A335009A04C7 /* Player */,
 				7883DF852EDE4C9B007D1C51 /* Auth */,
@@ -595,7 +613,6 @@
 				7AAF9FD92ECE12E0008221E9 /* MainAppView.swift */,
 				7AAF9FDA2ECE12E0008221E9 /* ReadOnlyContentView.swift */,
 				7AAF9FDB2ECE12E0008221E9 /* RegisterView.swift */,
-				7AAF9FDC2ECE12E0008221E9 /* WelcomeView.swift */,
 				7AE3FF962EC900A4004EE982 /* HowToGetPointsView.swift */,
 				7AE3FF922EC8FFE6004EE982 /* RewardsMainView.swift */,
 				7AE3FF932EC8FFE6004EE982 /* RewardsView.swift */,
@@ -677,6 +694,7 @@
 		A5000010 /* Components */ = {
 			isa = PBXGroup;
 			children = (
+				78229A572EF5C5E000E2F700 /* MinimalTabButton.swift */,
 				786AC85F2EE2CD68001A6714 /* PastTournamentCard.swift */,
 				7883DF892EDE53E8007D1C51 /* ButtonStyles.swift */,
 				7840904D2EDB9DCB00CC6B9A /* SearchCardResultView.swift */,
@@ -833,12 +851,14 @@
 				78660E542EE7795600EA2BFE /* HapticManager.swift in Sources */,
 				7AE3FF992EC90409004EE982 /* Set.swift in Sources */,
 				786AC87C2EE4E3A4001A6714 /* TCGRulesView.swift in Sources */,
+				78229A702EF6E90000E2F700 /* NewsCarouselSection.swift in Sources */,
 				7AFBD61F2EBCF99F0023B5D2 /* EditCardView.swift in Sources */,
 				78229A532EF5BD5700E2F700 /* HomeDashboardService.swift in Sources */,
 				7A8B2EA02EC22FCC004F6826 /* Expansion.swift in Sources */,
 				786778EC2EF2A287000928C4 /* MyActivityView.swift in Sources */,
 				786AC8742EE4457A001A6714 /* ToastManager.swift in Sources */,
 				A1000002 /* ContentView.swift in Sources */,
+				78229A6E2EF6E71A00E2F700 /* EditProfileView.swift in Sources */,
 				786AC8762EE45D04001A6714 /* ShopReservationsView.swift in Sources */,
 				7A817B962EC76B0800500F32 /* TCGTypeBadge.swift in Sources */,
 				A1000003 /* Card.swift in Sources */,
@@ -852,6 +872,7 @@
 				786AC8602EE2CD68001A6714 /* PastTournamentCard.swift in Sources */,
 				7A8B2E882EC1F2FA004F6826 /* SharedComponents.swift in Sources */,
 				A1000004 /* User.swift in Sources */,
+				78229A682EF6E44F00E2F700 /* MoreView.swift in Sources */,
 				A1000005 /* Tournament.swift in Sources */,
 				786778F22EF2A5E9000928C4 /* CreateRequestView.swift in Sources */,
 				7A817B922EC7694400500F32 /* ShopService.swift in Sources */,
@@ -859,7 +880,6 @@
 				A1000007 /* AuthService.swift in Sources */,
 				7AAF9FDD2ECE12E0008221E9 /* LoginView.swift in Sources */,
 				7AAF9FDE2ECE12E0008221E9 /* RegisterView.swift in Sources */,
-				7AAF9FDF2ECE12E0008221E9 /* WelcomeView.swift in Sources */,
 				7AAF9FE02ECE12E0008221E9 /* ForgotPasswordView.swift in Sources */,
 				7AAF9FE12ECE12E0008221E9 /* MainAppView.swift in Sources */,
 				786AC87A2EE46D83001A6714 /* EventFiltersView.swift in Sources */,
@@ -888,11 +908,13 @@
 				7883DF862EDE4C9B007D1C51 /* WelcomeFlowView.swift in Sources */,
 				7883DF872EDE4C9B007D1C51 /* TCGArenaOnBoarding.swift in Sources */,
 				7883DF882EDE4C9B007D1C51 /* ModernAuthView.swift in Sources */,
+				78229A582EF5C5E000E2F700 /* MinimalTabButton.swift in Sources */,
 				7A1CC92E2ED238D500A61395 /* AchievementModels.swift in Sources */,
 				7A1CC92F2ED238D500A61395 /* UserActivity.swift in Sources */,
 				7A1CC9302ED238D500A61395 /* NotificationModels.swift in Sources */,
 				7883DF9D2EE02C80007D1C51 /* SendRequestToShopView.swift in Sources */,
 				7A1CC9372ED238E800A61395 /* AchievementView.swift in Sources */,
+				78229A6C2EF6E64A00E2F700 /* HelpView.swift in Sources */,
 				7A1CC9382ED238E800A61395 /* NotificationView.swift in Sources */,
 				7840904E2EDB9DCB00CC6B9A /* SearchCardResultView.swift in Sources */,
 				786AC86E2EE40EE4001A6714 /* Reward+Extensions.swift in Sources */,
@@ -909,6 +931,7 @@
 				7A1CC94B2ED2756B00A61395 /* TournamentMapDetailView.swift in Sources */,
 				7A1CC9472ED2392C00A61395 /* NotificationService.swift in Sources */,
 				7A1CC9392ED238E800A61395 /* LeaderboardView.swift in Sources */,
+				78229A6A2EF6E46A00E2F700 /* SettingsView.swift in Sources */,
 				7A1CC9322ED238D500A61395 /* UserStats.swift in Sources */,
 				7A1CC9332ED238D500A61395 /* TournamentParticipant.swift in Sources */,
 				7A8B2E8A2EC1F308004F6826 /* DiscoverService.swift in Sources */,
@@ -937,6 +960,8 @@
 				A1000014 /* TCGButton.swift in Sources */,
 				78660E4D2EE60CA300EA2BFE /* ProductType.swift in Sources */,
 				7AAAA2182EDD93A90035F942 /* ShopInventoryView.swift in Sources */,
+				78229A652EF6CF0B00E2F700 /* WelcomeView.swift in Sources */,
+				78229A662EF6CF0B00E2F700 /* OnboardingPermissionsView.swift in Sources */,
 				7A7DF3DC2EBB938A00331A52 /* CollectionView.swift in Sources */,
 				7A1CC91D2ED1EC3B00A61395 /* OnboardingView.swift in Sources */,
 				785CF4BF2EDC8D3F00BA98AD /* CreateDeckView.swift in Sources */,
@@ -944,7 +969,6 @@
 				7A8B2EA22EC23DA1004F6826 /* SettingsService.swift in Sources */,
 				7AA785932EBCA4D300A11D94 /* PortfolioCard.swift in Sources */,
 				786778DA2EF210FD000928C4 /* TournamentActivityAttributes.swift in Sources */,
-				786AC8652EE2DF8A001A6714 /* OnboardingPermissionsView.swift in Sources */,
 				7AA7858A2EBCA42200A11D94 /* TCGCardView.swift in Sources */,
 				78D54AB92EE1A335009A04C7 /* MyReservationsView.swift in Sources */,
 				7A7DF3DD2EBB938A00331A52 /* CardDetailView.swift in Sources */,

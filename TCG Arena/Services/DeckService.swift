@@ -11,11 +11,12 @@ class DeckService: ObservableObject {
     static let shared = DeckService()
     private let apiClient = APIClient.shared
     
-    // Helper function to format dates as strings for backend (format: "dd MMM yyyy, HH:mm")
+    // Helper function to format dates as strings for backend (format: "yyyy-MM-dd'T'HH:mm:ss" - ISO format for Java LocalDateTime)
     private func formatDateForBackend(_ date: Date) -> String {
         let formatter = DateFormatter()
-        formatter.dateFormat = "dd MMM yyyy, HH:mm"
+        formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss"
         formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.timeZone = TimeZone(identifier: "Europe/Rome") // Use Italy timezone
         return formatter.string(from: date)
     }
 

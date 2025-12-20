@@ -52,7 +52,7 @@ struct SendRequestToShopView: View {
                     .padding(.vertical, 16)
                 }
             }
-            .navigationTitle("Send Request")
+            .navigationTitle("Invia Richiesta")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
@@ -71,18 +71,12 @@ struct SendRequestToShopView: View {
         HStack(spacing: 16) {
             ZStack {
                 Circle()
-                    .fill(
-                        LinearGradient(
-                            colors: [.indigo, .purple.opacity(0.8)],
-                            startPoint: .topLeading,
-                            endPoint: .bottomTrailing
-                        )
-                    )
+                    .fill(Color.gray.opacity(0.1))
                     .frame(width: 60, height: 60)
                 
                 SwiftUI.Image(systemName: "storefront.fill")
                     .font(.system(size: 26))
-                    .foregroundColor(.white)
+                    .foregroundColor(.primary)
             }
             
             VStack(alignment: .leading, spacing: 4) {
@@ -135,7 +129,7 @@ struct SendRequestToShopView: View {
         .padding(16)
         .background(Color(.systemBackground))
         .cornerRadius(16)
-        .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 2)
+        .shadow(color: .black.opacity(0.03), radius: 8, x: 0, y: 2)
     }
     
     // MARK: - Form Fields Section
@@ -159,7 +153,7 @@ struct SendRequestToShopView: View {
                     .cornerRadius(12)
                     .overlay(
                         RoundedRectangle(cornerRadius: 12)
-                            .stroke(!title.isEmpty ? Color.indigo.opacity(0.5) : Color.clear, lineWidth: 1.5)
+                            .stroke(!title.isEmpty ? Color.primary.opacity(0.3) : Color.clear, lineWidth: 1.5)
                     )
                 
                 HStack {
@@ -254,7 +248,7 @@ struct SendRequestToShopView: View {
             .padding(.vertical, 16)
             .background(
                 RoundedRectangle(cornerRadius: 14)
-                    .fill(isValid ? Color.indigo : Color.gray)
+                    .fill(isValid ? Color.primary : Color.gray)
             )
         }
         .disabled(!isValid || isSending)

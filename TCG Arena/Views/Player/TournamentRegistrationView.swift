@@ -43,35 +43,35 @@ struct TournamentRegistrationView: View {
                         .foregroundColor(.secondary)
                     }
                 } header: {
-                    Text("Tournament Details")
+                    Text("Dettagli Torneo")
                 }
                 
                 Section {
-                    TextField("Deck Name", text: $deckName)
+                    TextField("Nome Deck", text: $deckName)
                         .autocapitalization(.words)
                     
-                    TextField("Notes (optional)", text: $notes, axis: .vertical)
+                    TextField("Note (opzionale)", text: $notes, axis: .vertical)
                         .lineLimit(3...6)
                 } header: {
-                    Text("Registration Info")
+                    Text("Info Iscrizione")
                 } footer: {
-                    Text("Enter your deck name and any additional notes for the tournament organizer.")
+                    Text("Inserisci il nome del tuo deck e note aggiuntive per l'organizzatore.")
                 }
                 
                 if tournament.entryFee > 0 {
                     Section {
                         HStack {
-                            Text("Entry Fee")
+                            Text("Quota Iscrizione")
                                 .font(.headline)
                             
                             Spacer()
                             
                             Text("€\(tournament.entryFee, specifier: "%.2f")")
                                 .font(.headline)
-                                .foregroundColor(Color(AdaptiveColors.primary))
+                                .foregroundColor(.primary)
                         }
                     } footer: {
-                        Text("Entry fee must be paid at the shop before the tournament starts.")
+                        Text("La quota deve essere pagata al negozio prima dell'inizio del torneo.")
                     }
                 }
                 
@@ -83,18 +83,18 @@ struct TournamentRegistrationView: View {
                     }
                 }
             }
-            .navigationTitle("Register")
+            .navigationTitle("Iscrizione")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Cancel") {
+                    Button("Annulla") {
                         dismiss()
                     }
                     .disabled(isSubmitting)
                 }
                 
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Register") {
+                    Button("Iscriviti") {
                         submitRegistration()
                     }
                     .disabled(deckName.isEmpty || isSubmitting)
@@ -109,7 +109,7 @@ struct TournamentRegistrationView: View {
         errorMessage = nil
         
         guard let tournamentId = tournament.id else {
-            errorMessage = "Invalid tournament ID"
+            errorMessage = "ID torneo non valido"
             isSubmitting = false
             return
         }
@@ -124,7 +124,7 @@ struct TournamentRegistrationView: View {
                 }
             } catch {
                 await MainActor.run {
-                    errorMessage = "Failed to register: \(error.localizedDescription)"
+                    errorMessage = "Iscrizione fallita: \(error.localizedDescription)"
                     isSubmitting = false
                 }
             }
