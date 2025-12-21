@@ -111,8 +111,8 @@ struct TCGRulesView: View {
         switch tcgType {
         case .pokemon, .magic, .lorcana: return "60"
         case .yugioh: return "40-60"
-        case .onePiece, .digimon, .dragonBallSuper, .dragonBallFusion: return "50"
-        case .fleshAndBlood: return "60+"
+        case .onePiece, .digimon: return "50"
+        case .riftbound: return "60"
         }
     }
     
@@ -136,12 +136,10 @@ struct TCGRulesView: View {
             onePieceRules
         case .digimon:
             digimonRules
-        case .dragonBallSuper, .dragonBallFusion:
-            dragonBallRules
-        case .fleshAndBlood:
-            fleshAndBloodRules
         case .lorcana:
             lorcanaRules
+        case .riftbound:
+            riftboundRules
         }
     }
     
@@ -283,25 +281,6 @@ struct TCGRulesView: View {
         }
     }
     
-    private var dragonBallRules: some View {
-        VStack(alignment: .leading, spacing: 20) {
-            RuleSection(title: "🎮 Obiettivo del Gioco", content: """
-            Esaurire le vite del Leader avversario.
-            """)
-            
-            RuleSection(title: "🃏 Composizione del Mazzo", content: """
-            • 50 carte + 1 Leader
-            • Massimo 4 copie per carta
-            """)
-            
-            RuleSection(title: "🐉 Tipi di Carte", content: """
-            • Leader: Si evolve durante la battaglia
-            • Battle Cards: Personaggi che combattono
-            • Extra Cards: Abilità speciali
-            """)
-        }
-    }
-    
     private var lorcanaRules: some View {
         VStack(alignment: .leading, spacing: 20) {
             RuleSection(title: "🎮 Obiettivo del Gioco", content: """
@@ -330,23 +309,23 @@ struct TCGRulesView: View {
         }
     }
     
-    private var fleshAndBloodRules: some View {
+    private var riftboundRules: some View {
         VStack(alignment: .leading, spacing: 20) {
             RuleSection(title: "🎮 Obiettivo del Gioco", content: """
-            Ridurre la vita dell'avversario a 0 usando il tuo eroe e le sue abilità.
+            Sconfiggi il tuo avversario in battaglie ispirate al mondo di League of Legends.
             """)
             
             RuleSection(title: "🃏 Composizione del Mazzo", content: """
-            • 60+ carte nel mazzo
-            • 1 Eroe e equipaggiamenti
-            • Massimo 3 copie per carta
+            • 60 carte nel mazzo
+            • Massimo 4 copie per carta
+            • Costruisci attorno ai tuoi campioni preferiti
             """)
             
             RuleSection(title: "⚔️ Tipi di Carte", content: """
-            • Eroe: Il tuo personaggio principale
-            • Armi: Permettono di attaccare
-            • Equipaggiamenti: Armatura e accessori
-            • Azioni: Mosse offensive e difensive
+            • Campioni: I tuoi eroi principali
+            • Seguaci: Unità di supporto
+            • Incantesimi: Abilità e magie
+            • Landmark: Strutture permanenti
             """)
         }
     }
@@ -381,12 +360,10 @@ struct TCGRulesView: View {
             return "https://en.onepiece-cardgame.com/rule/"
         case .digimon:
             return "https://world.digimoncard.com/rule/"
-        case .dragonBallSuper, .dragonBallFusion:
-            return "https://www.dbs-cardgame.com/us-en/rule/"
-        case .fleshAndBlood:
-            return "https://fabtcg.com/resources/rules-and-policy/"
         case .lorcana:
             return "https://www.disneylorcana.com/en-US/resources"
+        case .riftbound:
+            return "https://leagueoflegends.fandom.com/wiki/Legends_of_Runeterra"
         }
     }
     
@@ -402,12 +379,10 @@ struct TCGRulesView: View {
             return "https://www.youtube.com/watch?v=t_Q6NV_o6qU"
         case .digimon:
             return "https://www.youtube.com/watch?v=IvXyVcvUJIY"
-        case .dragonBallSuper, .dragonBallFusion:
-            return "https://www.youtube.com/watch?v=8DqK2I6j0UE"
-        case .fleshAndBlood:
-            return "https://www.youtube.com/watch?v=N8tCxLvT0Hk"
         case .lorcana:
             return "https://www.youtube.com/watch?v=KeJ9jbhnN_U"
+        case .riftbound:
+            return "https://www.youtube.com/results?search_query=riftbound+lol+tcg"
         }
     }
 }
@@ -667,12 +642,10 @@ struct RulesListCard: View {
             return "Sconfiggi il Leader avversario"
         case .digimon:
             return "Attacca il Security Stack per vincere"
-        case .dragonBallSuper, .dragonBallFusion:
-            return "Esaurisci le vite del Leader nemico"
-        case .fleshAndBlood:
-            return "Abbatti l'eroe avversario in combattimento"
         case .lorcana:
             return "Raccogli 20 Lore esplorando"
+        case .riftbound:
+            return "Combatti nel mondo di League of Legends"
         }
     }
     
@@ -747,3 +720,4 @@ extension View {
         )
     }
 }
+

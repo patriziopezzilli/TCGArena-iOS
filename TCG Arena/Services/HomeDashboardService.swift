@@ -77,8 +77,6 @@ class HomeDashboardService: ObservableObject {
                 }
                 
                 let data: HomeDashboardData = try await APIClient.shared.request(endpoint)
-                print("✅ Dashboard data received")
-                print("📰 News count: \(data.news?.count ?? 0)")
                 if let news = data.news {
                     for (index, item) in news.enumerated() {
                         print("  [\(index)] \(item.title) - Source: \(item.source)")

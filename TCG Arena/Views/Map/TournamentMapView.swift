@@ -159,9 +159,8 @@ struct TournamentMapPin: View {
         case .yugioh: return "y.circle.fill"
         case .onePiece: return "o.circle.fill"
         case .digimon: return "d.circle.fill"
-        case .dragonBallSuper, .dragonBallFusion: return "d.circle.fill"
-        case .fleshAndBlood: return "f.circle.fill"
         case .lorcana: return "l.circle.fill"
+        case .riftbound: return "r.circle.fill"
         }
     }
 }
@@ -452,9 +451,8 @@ struct MinimalTournamentCard: View {
         case .magic: return Color(red: 1.0, green: 0.5, blue: 0.0) // Bright Orange
         case .yugioh: return Color(red: 0.8, green: 0.0, blue: 1.0) // Bright Purple
         case .digimon: return Color.cyan // Cyan
-        case .dragonBallSuper, .dragonBallFusion: return Color.orange // Orange
-        case .fleshAndBlood: return Color.red.opacity(0.7)
         case .lorcana: return Color.indigo // Indigo
+        case .riftbound: return Color.teal // Teal
         }
     }
 }

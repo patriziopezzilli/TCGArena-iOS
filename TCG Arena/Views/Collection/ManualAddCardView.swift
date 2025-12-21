@@ -15,6 +15,8 @@ struct ManualAddCardView: View {
     
     @State private var searchText = ""
     @State private var searchResults: [CardTemplate] = []
+    @State private var cachedResults: [CardTemplate] = [] // Cache dei risultati precedenti
+    @State private var lastBackendQuery = "" // Query che ha generato la cache
     @State private var isSearching = false
     @State private var searchTask: Task<Void, Never>?
     @State private var selectedDeckId: Int64?
@@ -22,6 +24,7 @@ struct ManualAddCardView: View {
     @State private var showSuccessToast = false
     @State private var addedCardName = ""
     @State private var isAddingCard = false
+    @State private var isFilteringLocally = false // Indica se stiamo filtrando localmente
     
     @AppStorage("hasSeenManualAddTip") private var hasSeenTip = false
     @State private var showTip = false
@@ -142,10 +145,21 @@ struct ManualAddCardView: View {
                     }
                     
                     if !searchText.isEmpty {
-                        Text("💡 Doppio tap per aggiungere veloce")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                            .padding(.leading, 4)
+                        HStack(spacing: 4) {
+                            if isFilteringLocally {
+                                SwiftUI.Image(systemName: "sparkles")
+                                    .font(.system(size: 10))
+                                    .foregroundColor(.green)
+                                Text("Filtraggio rapido")
+                                    .font(.caption)
+                                    .foregroundColor(.green)
+                            } else {
+                                Text("💡 Doppio tap per aggiungere veloce")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                        .padding(.leading, 4)
                     }
                 }
                 .padding(.horizontal, 24)
@@ -291,9 +305,36 @@ struct ManualAddCardView: View {
         searchTask?.cancel()
         guard query.count >= 2 else {
             searchResults = []
+            cachedResults = []
+            lastBackendQuery = ""
             isSearching = false
+            isFilteringLocally = false
             return
         }
+        
+        // Step 1: Decide if we can filter locally or need to call backend
+        let canFilterLocally = shouldFilterLocally(currentQuery: query, lastQuery: lastBackendQuery)
+        
+        if canFilterLocally && !cachedResults.isEmpty {
+            let filteredResults = filterLocally(query: query, in: cachedResults)
+            
+            if !filteredResults.isEmpty {
+                // Found results locally - use them immediately
+                isFilteringLocally = true
+                searchResults = filteredResults
+                isSearching = false
+                print("🔍 Smart Search: Found \(filteredResults.count) results locally (refinement of '\(lastBackendQuery)')")
+                return
+            } else {
+                // No local results found - call backend for new search
+                print("🔍 Smart Search: No local matches for refinement, calling backend")
+            }
+        } else if !lastBackendQuery.isEmpty {
+            print("🔍 Smart Search: New search context detected, calling backend")
+        }
+        
+        // Step 2: Call backend
+        isFilteringLocally = false
         isSearching = true
         searchTask = Task {
             try? await Task.sleep(nanoseconds: 500_000_000)
@@ -302,11 +343,68 @@ struct ManualAddCardView: View {
                 Task { @MainActor in
                     isSearching = false
                     switch result {
-                    case .success(let cards): searchResults = cards
-                    case .failure: searchResults = []
+                    case .success(let cards):
+                        searchResults = cards
+                        // Update cache with new results
+                        cachedResults = cards
+                        lastBackendQuery = query
+                        print("🔍 Smart Search: Fetched \(cards.count) results from backend for '\(query)'")
+                    case .failure:
+                        searchResults = []
+                        // Don't clear cache or lastQuery on failure
                     }
                 }
             }
+        }
+    }
+    
+    // Determine if current query is a refinement of the last backend query
+    private func shouldFilterLocally(currentQuery: String, lastQuery: String) -> Bool {
+        guard !lastQuery.isEmpty else { return false }
+        
+        let current = currentQuery.lowercased().trimmingCharacters(in: .whitespaces)
+        let last = lastQuery.lowercased().trimmingCharacters(in: .whitespaces)
+        
+        // Case 1: Current query contains the last query (refinement)
+        // Example: "charizard" -> "charizard ex"
+        if current.contains(last) {
+            return true
+        }
+        
+        // Case 2: Current query is contained in last query (backspace/removal)
+        // Example: "charizard ex" -> "charizard"
+        if last.contains(current) {
+            return true
+        }
+        
+        // Case 3: Check if they share a common prefix (typing continuation)
+        // Example: "char" -> "chari" -> "charizard"
+        let commonPrefixLength = zip(current, last).prefix(while: { $0 == $1 }).count
+        if commonPrefixLength >= 3 && commonPrefixLength >= Int(Double(min(current.count, last.count)) * 0.7) {
+            return true
+        }
+        
+        // Otherwise, it's a new search - call backend
+        return false
+    }
+    
+    // Filter results locally based on query
+    private func filterLocally(query: String, in results: [CardTemplate]) -> [CardTemplate] {
+        let lowercasedQuery = query.lowercased()
+        return results.filter { card in
+            // Search in name
+            if card.name.lowercased().contains(lowercasedQuery) {
+                return true
+            }
+            // Search in set code
+            if card.setCode.lowercased().contains(lowercasedQuery) {
+                return true
+            }
+            // Search in card number
+            if card.cardNumber.lowercased().contains(lowercasedQuery) {
+                return true
+            }
+            return false
         }
     }
     

@@ -79,6 +79,8 @@ struct ExpansionCard: View {
                         Text(expansion.tcgType.displayName)
                             .font(.system(size: 11, weight: .medium))
                             .foregroundColor(expansion.tcgType.themeColor)
+                            .lineLimit(1)
+                            .truncationMode(.tail)
                     }
                     
                     Text(expansion.formattedReleaseDate)
@@ -151,6 +153,8 @@ struct ExpansionRow: View {
                     Text(expansion.tcgType.displayName)
                         .font(.system(size: 14, weight: .medium))
                         .foregroundColor(expansion.tcgType.themeColor)
+                        .lineLimit(1)
+                        .truncationMode(.tail)
                 }
                 
                 HStack(spacing: 12) {

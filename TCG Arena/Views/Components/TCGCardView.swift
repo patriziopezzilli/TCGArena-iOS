@@ -69,9 +69,8 @@ struct TCGCardView: View {
         case .magic: return Color(red: 0.8, green: 0.4, blue: 0.1) // Orange
         case .yugioh: return Color(red: 0.6, green: 0.2, blue: 0.8) // Purple
         case .digimon: return Color.cyan // Cyan
-        case .dragonBallSuper, .dragonBallFusion: return Color.orange // Orange for Dragon Ball
-        case .fleshAndBlood: return Color.red.opacity(0.7)
         case .lorcana: return Color.indigo // Indigo for Lorcana
+        case .riftbound: return Color.teal // Teal for Riftbound
         case .none: return Color.gray
         }
     }
@@ -120,7 +119,7 @@ struct RarityBadge: View {
         case .ultraRare, .holographic: return 4
         case .secretRare, .superRare, .mythic: return 5
         case .promo: return 3
-        case .legendary: return 6
+        case .legendary, .hyperRare: return 6
         }
     }
     
@@ -131,7 +130,7 @@ struct RarityBadge: View {
         case .ultraRare, .holographic: return TCGTheme.Colors.accent
         case .secretRare, .superRare, .mythic: return TCGTheme.Colors.epicBorder
         case .promo: return TCGTheme.Colors.textMuted
-        case .legendary: return TCGTheme.Colors.legendaryBorder
+        case .legendary, .hyperRare: return TCGTheme.Colors.legendaryBorder
         }
     }
 }

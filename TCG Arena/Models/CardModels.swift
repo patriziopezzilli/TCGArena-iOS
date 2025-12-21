@@ -208,6 +208,7 @@ enum Rarity: String, Codable, CaseIterable {
     case ultraRare = "ULTRA_RARE"
     case superRare = "SUPER_RARE"
     case secretRare = "SECRET_RARE"
+    case hyperRare = "HYPER_RARE"
     case holographic = "HOLOGRAPHIC"
     case promo = "PROMO"
     case mythic = "MYTHIC"
@@ -223,6 +224,7 @@ enum Rarity: String, Codable, CaseIterable {
         case "ULTRA_RARE": self = .ultraRare
         case "SUPER_RARE": self = .superRare
         case "SECRET_RARE", "SECRET": self = .secretRare
+        case "HYPER_RARE": self = .hyperRare
         case "HOLOGRAPHIC": self = .holographic
         case "PROMO": self = .promo
         case "MYTHIC": self = .mythic
@@ -240,6 +242,7 @@ enum Rarity: String, Codable, CaseIterable {
         case .ultraRare: return "Ultra Rare"
         case .superRare: return "Super Rare"
         case .secretRare: return "Secret Rare"
+        case .hyperRare: return "Hyper Rare"
         case .holographic: return "Holographic"
         case .promo: return "Promo"
         case .mythic: return "Mythic"
@@ -261,6 +264,8 @@ enum Rarity: String, Codable, CaseIterable {
             return Color.red.opacity(0.8)
         case .secretRare:
             return Color.red
+        case .hyperRare:
+            return Color(red: 1.0, green: 0.84, blue: 0.0) // Gold
         case .holographic:
             return Color.cyan
         case .promo:
@@ -280,6 +285,7 @@ enum Rarity: String, Codable, CaseIterable {
         case .ultraRare: return "UR"
         case .superRare: return "SPR"
         case .secretRare: return "SR"
+        case .hyperRare: return "HR"
         case .holographic: return "H"
         case .promo: return "P"
         case .mythic: return "M"

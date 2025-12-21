@@ -47,8 +47,7 @@ struct DeckDetailView: View {
                     switch result {
                     case .success(let enrichedCard):
                         enrichedCards.append(enrichedCard)
-                    case .failure(let error):
-                        print("Failed to enrich card \(deckCard.cardName): \(error.localizedDescription)")
+                    case .failure:
                         // Use basic card if enrichment fails
                         enrichedCards.append(basicCard)
                     }

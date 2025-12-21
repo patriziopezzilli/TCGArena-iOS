@@ -16,7 +16,6 @@ struct ExpansionDetailView: View {
     
     init(expansion: Expansion) {
         self.expansion = expansion
-        print("🆕 [ExpansionDetailView] View initialized for expansion: \(expansion.title) (ID: \(expansion.id))")
     }
     
     private var currentExpansion: Expansion {

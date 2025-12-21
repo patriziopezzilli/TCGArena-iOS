@@ -158,10 +158,8 @@ enum TCGType: String, CaseIterable, Codable, Identifiable {
     case magic = "MAGIC"
     case yugioh = "YUGIOH"
     case digimon = "DIGIMON"
-    case dragonBallSuper = "DRAGON_BALL_SUPER"
-    case dragonBallFusion = "DRAGON_BALL_FUSION"
-    case fleshAndBlood = "FLESH_AND_BLOOD"
     case lorcana = "LORCANA"
+    case riftbound = "RIFTBOUND"
     
     var displayName: String {
         switch self {
@@ -175,14 +173,10 @@ enum TCGType: String, CaseIterable, Codable, Identifiable {
             return "Yu-Gi-Oh!"
         case .digimon:
             return "Digimon"
-        case .dragonBallSuper:
-            return "Dragon Ball Super"
-        case .dragonBallFusion:
-            return "Dragon Ball Fusion World"
-        case .fleshAndBlood:
-            return "Flesh and Blood"
         case .lorcana:
             return "Disney Lorcana"
+        case .riftbound:
+            return "Riftbound: League of Legends"
         }
     }
     
@@ -198,14 +192,10 @@ enum TCGType: String, CaseIterable, Codable, Identifiable {
             return Color.purple
         case .digimon:
             return Color.cyan
-        case .dragonBallSuper:
-            return Color.orange.opacity(0.8)
-        case .dragonBallFusion:
-            return Color.green
-        case .fleshAndBlood:
-            return Color.red.opacity(0.7)
         case .lorcana:
             return Color.indigo
+        case .riftbound:
+            return Color.teal
         }
     }
     
@@ -221,14 +211,10 @@ enum TCGType: String, CaseIterable, Codable, Identifiable {
             return "eye.fill"
         case .digimon:
             return "shield.fill"
-        case .dragonBallSuper:
-            return "flame.fill"
-        case .dragonBallFusion:
-            return "flame.circle.fill"
-        case .fleshAndBlood:
-            return "theatermasks.fill"
         case .lorcana:
             return "wand.and.stars"
+        case .riftbound:
+            return "gamecontroller.fill"
         }
     }
     
@@ -245,12 +231,10 @@ enum TCGType: String, CaseIterable, Codable, Identifiable {
             return "yugioh_icon"
         case .digimon:
             return "digimon_icon"
-        case .dragonBallSuper, .dragonBallFusion:
-            return "dragonball_icon"
-        case .fleshAndBlood:
-            return "fleshandblood_icon"
         case .lorcana:
             return "lorcana_icon"
+        case .riftbound:
+            return "riftbound_icon"
         }
     }
     
@@ -284,7 +268,7 @@ enum TCGType: String, CaseIterable, Codable, Identifiable {
     
     var usesBanlist: Bool {
         switch self {
-        case .fleshAndBlood, .lorcana: return false
+        case .lorcana: return false
         default: return true
         }
     }

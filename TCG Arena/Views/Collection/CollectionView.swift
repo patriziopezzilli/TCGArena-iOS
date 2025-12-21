@@ -410,9 +410,8 @@ struct CollectionView: View {
                                         enrichedCard.deckNames = existing.deckNames
                                         cardsByTemplateId[templateId] = (enrichedCard, existing.totalQuantity, existing.deckNames)
                                     }
-                                case .failure(let error):
-                                    print("Failed to enrich card \(deckCard.cardName): \(error.localizedDescription)")
-                                    // Mantieni la carta base già inserita
+                                case .failure(_):
+                                    print("> fail")
                                 }
                                 group.leave()
                             }
@@ -1618,11 +1617,65 @@ struct CardDiscoverView: View {
     @EnvironmentObject var authService: AuthService
     @StateObject private var expansionService = ExpansionService()
     @StateObject private var marketService = MarketDataService() // Needed for SetDetailView
-    @State private var selectedTCGType: TCGType? = nil
+    
+    // Persist filter choices in UserDefaults
+    @AppStorage("cardDiscover_selectedTCGType") private var selectedTCGTypeRaw: String = ""
+    @AppStorage("cardDiscover_selectedYears") private var selectedYearsJSON: String = "[]" // JSON array of years
+    
     @State private var searchText = ""
     @State private var searchResults: [CardTemplate] = []
     @State private var isSearching = false
     @State private var searchTask: Task<Void, Never>?
+    
+    // Computed property to convert stored TCG type
+    private var selectedTCGType: TCGType? {
+        get { TCGType(rawValue: selectedTCGTypeRaw) }
+        nonmutating set { selectedTCGTypeRaw = newValue?.rawValue ?? "" }
+    }
+    
+    // Computed property to convert stored years JSON to Set
+    private var selectedYears: Set<Int> {
+        get {
+            guard let data = selectedYearsJSON.data(using: .utf8),
+                  let years = try? JSONDecoder().decode([Int].self, from: data) else {
+                return []
+            }
+            return Set(years)
+        }
+        nonmutating set {
+            if let data = try? JSONEncoder().encode(Array(newValue)),
+               let json = String(data: data, encoding: .utf8) {
+                selectedYearsJSON = json
+            }
+        }
+    }
+    
+    // Helper to toggle year selection
+    private func toggleYear(_ year: Int) {
+        var years = selectedYears
+        if years.contains(year) {
+            years.remove(year)
+        } else {
+            years.insert(year)
+        }
+        // Update storage
+        if let data = try? JSONEncoder().encode(Array(years)),
+           let json = String(data: data, encoding: .utf8) {
+            selectedYearsJSON = json
+        }
+    }
+    
+    // Generate available years from current year back to 1991 (MTG Alpha release)
+    private var availableYears: [Int] {
+        let currentYear = Calendar.current.component(.year, from: Date())
+        return Array(stride(from: currentYear, through: 1991, by: -1))
+    }
+    
+    // Pre-filter years: current and previous year (used as default if nothing selected)
+    private var defaultYears: Set<Int> {
+        let currentYear = Calendar.current.component(.year, from: Date())
+        return Set([currentYear, currentYear - 1])
+    }
     
     private var filteredCards: [Card] {
         // CardDiscoverView should load cards from search, not from user collection
@@ -1705,49 +1758,113 @@ struct CardDiscoverView: View {
     
     private var mainContentView: some View {
         Group {
-            tcgFilterView
+            filterBarView
             featuredExpansionsView
             featuredCardsView
         }
     }
     
-    private var tcgFilterView: some View {
-        // Show only favorite TCGs if user has some, otherwise show all
-        let availableTCGs: [TCGType?] = {
-            let favorites = authService.favoriteTCGTypes
-            if favorites.isEmpty {
-                return [nil] + TCGType.allCases
-            } else {
-                return [nil] + favorites
-            }
-        }()
-        
-        return ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 12) {
-                ForEach(availableTCGs, id: \.self) { tcgType in
-                    Button(action: {
-                        selectedTCGType = tcgType
-                    }) {
-                        HStack(spacing: 6) {
-                            if let type = tcgType {
-                                TCGIconView(tcgType: type, size: 14, color: iconColorFor(tcgType, type: type))
-                            }
-                            
-                            Text(tcgType?.displayName ?? "All")
-                                .font(.system(size: 14, weight: .semibold))
-                                .foregroundColor(textColorFor(tcgType))
+    // MARK: - Unified Compact Filter Bar
+    private var filterBarView: some View {
+        HStack(spacing: 12) {
+            // TCG Filter Pills (scrollable)
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 8) {
+                    let availableTCGs: [TCGType?] = {
+                        let favorites = authService.favoriteTCGTypes
+                        if favorites.isEmpty {
+                            return [nil] + TCGType.allCases
+                        } else {
+                            return [nil] + favorites
                         }
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 10)
-                        .background(
-                            Capsule()
-                                .fill(backgroundColorFor(tcgType))
-                        )
+                    }()
+                    
+                    ForEach(availableTCGs, id: \.self) { tcgType in
+                        Button(action: {
+                            withAnimation(.spring(response: 0.25)) {
+                                selectedTCGTypeRaw = tcgType?.rawValue ?? ""
+                            }
+                        }) {
+                            HStack(spacing: 5) {
+                                if let type = tcgType {
+                                    TCGIconView(tcgType: type, size: 12, color: selectedTCGType == type ? .white : type.themeColor)
+                                }
+                                
+                                Text(tcgType?.shortName ?? "All")
+                                    .font(.system(size: 12, weight: .semibold))
+                                    .foregroundColor(selectedTCGType == tcgType ? .white : .primary)
+                            }
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 8)
+                            .background(
+                                Capsule()
+                                    .fill(selectedTCGType == tcgType ? (tcgType?.themeColor ?? Color.primary) : Color(.systemGray6))
+                            )
+                        }
                     }
                 }
             }
-            .padding(.horizontal, 20)
+            
+            // Year Dropdown Menu - Multi-select
+            Menu {
+                Button(action: { selectedYearsJSON = "[]" }) {
+                    HStack {
+                        Text("Tutti gli anni")
+                        if selectedYears.isEmpty {
+                            SwiftUI.Image(systemName: "checkmark")
+                        }
+                    }
+                }
+                
+                Divider()
+                
+                ForEach(availableYears, id: \.self) { year in
+                    Button(action: { toggleYear(year) }) {
+                        HStack {
+                            Text(String(year))
+                            if year == Calendar.current.component(.year, from: Date()) {
+                                Text("NEW").foregroundColor(.green)
+                            }
+                            if selectedYears.contains(year) {
+                                SwiftUI.Image(systemName: "checkmark")
+                            }
+                        }
+                    }
+                }
+            } label: {
+                HStack(spacing: 6) {
+                    SwiftUI.Image(systemName: "calendar")
+                        .font(.system(size: 12, weight: .semibold))
+                    
+                    // Show year count or specific year(s)
+                    if selectedYears.isEmpty {
+                        Text("Anno")
+                            .font(.system(size: 12, weight: .semibold))
+                    } else if selectedYears.count == 1 {
+                        Text(String(selectedYears.first!))
+                            .font(.system(size: 12, weight: .semibold))
+                    } else {
+                        Text("\(selectedYears.count) anni")
+                            .font(.system(size: 12, weight: .semibold))
+                    }
+                    
+                    SwiftUI.Image(systemName: "chevron.down")
+                        .font(.system(size: 10, weight: .bold))
+                }
+                .foregroundColor(!selectedYears.isEmpty ? .white : .primary)
+                .padding(.horizontal, 14)
+                .padding(.vertical, 8)
+                .background(
+                    Capsule()
+                        .fill(!selectedYears.isEmpty ? Color.blue : Color(.secondarySystemBackground))
+                )
+                .overlay(
+                    Capsule()
+                        .stroke(Color(.separator).opacity(0.3), lineWidth: 0.5)
+                )
+            }
         }
+        .padding(.horizontal, 20)
     }
     
     private var featuredExpansionsView: some View {
@@ -1860,7 +1977,20 @@ struct CardDiscoverView: View {
             }
         }
         
-        return expansions
+        // Filter by years (multi-select)
+        if !selectedYears.isEmpty {
+            expansions = expansions.filter { expansion in
+                selectedYears.contains(Calendar.current.component(.year, from: expansion.releaseDate))
+            }
+        } else if searchText.isEmpty {
+            // When no years selected and not searching, default to current + previous year
+            expansions = expansions.filter { expansion in
+                defaultYears.contains(Calendar.current.component(.year, from: expansion.releaseDate))
+            }
+        }
+        
+        // Sort by release date (newest first)
+        return expansions.sorted { $0.releaseDate > $1.releaseDate }
     }
     
     // MARK: - Search Results View
@@ -1957,11 +2087,20 @@ struct CardDiscoverView: View {
             }
             .navigationBarHidden(true)
             .task {
-                await expansionService.loadExpansions()
+                // Load expansions filtered by selected years (empty = current year default)
+                let years: [Int]? = selectedYears.isEmpty ? nil : Array(selectedYears)
+                await expansionService.loadExpansions(years: years)
             }
             .onAppear {
                 // Ensure favorites are loaded from currentUser on view appear
                 authService.loadFavoritesFromUser()
+            }
+            .onChange(of: selectedYearsJSON) { _ in
+                // Reload expansions when year filter changes
+                Task {
+                    let years: [Int]? = selectedYears.isEmpty ? nil : Array(selectedYears)
+                    await expansionService.loadExpansions(years: years)
+                }
             }
             .onChange(of: searchText) { newValue in
                 performSearch(query: newValue)

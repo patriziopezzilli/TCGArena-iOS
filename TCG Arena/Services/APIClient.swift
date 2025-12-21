@@ -178,7 +178,6 @@ class APIClient: NSObject {
         if let token = jwtToken, !publicEndpoints.contains(where: { endpoint.hasPrefix($0) }) {
             request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
             let tokenPrefix = String(token.prefix(20))
-            print("🔑 APIClient: Sending JWT token (prefix: \(tokenPrefix)...) for endpoint: \(endpoint)")
         } else {
             print("⚠️ APIClient: No JWT token available for endpoint: \(endpoint)")
             if jwtToken == nil {

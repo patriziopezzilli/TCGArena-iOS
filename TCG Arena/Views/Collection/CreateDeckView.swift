@@ -282,10 +282,8 @@ extension TCGType {
         case .yugioh: return "Yu-Gi-Oh!"
         case .onePiece: return "One Piece"
         case .digimon: return "Digimon"
-        case .dragonBallSuper: return "DBS"
-        case .dragonBallFusion: return "DBF World"
-        case .fleshAndBlood: return "FaB"
         case .lorcana: return "Lorcana"
+        case .riftbound: return "Riftbound"
         }
     }
 }

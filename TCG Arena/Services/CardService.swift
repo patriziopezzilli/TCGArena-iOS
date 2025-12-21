@@ -136,9 +136,9 @@ class CardService: ObservableObject {
                         switch result {
                         case .success(let enrichedCard):
                             enrichedCards.append(enrichedCard)
-                        case .failure(let error):
-                            print("Failed to enrich card \(card.name): \(error.localizedDescription)")
-                            enrichedCards.append(card) // Use original card if enrichment fails
+                        case .failure:
+                            // Silently use original card if enrichment fails (404 expected for missing templates)
+                            enrichedCards.append(card)
                         }
                         group.leave()
                     }
@@ -380,10 +380,12 @@ class CardService: ObservableObject {
             case .success(let data):
                 do {
                     let decoder = JSONDecoder()
-                    decoder.dateDecodingStrategy = .iso8601
+                    // CardTemplate has its own custom date decoder, don't set date strategy here
                     let cards = try decoder.decode([CardTemplate].self, from: data)
+                    print("✅ CardService: Successfully decoded \(cards.count) card templates")
                     completion(.success(cards))
                 } catch {
+                    print("🔴 CardService: Decoding error - \(error)")
                     completion(.failure(error))
                 }
             case .failure(let error):

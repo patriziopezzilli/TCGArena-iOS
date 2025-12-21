@@ -27,6 +27,10 @@ struct Expansion: Identifiable, Codable {
         sets.first?.formattedReleaseDate ?? "Unknown"
     }
     
+    var releaseDate: Date {
+        sets.first?.releaseDate ?? Date.distantPast
+    }
+    
     var cardCount: Int {
         sets.reduce(0) { $0 + $1.cardCount }
     }

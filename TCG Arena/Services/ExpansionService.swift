@@ -32,13 +32,25 @@ class ExpansionService: ObservableObject {
     
     // MARK: - API Methods
     
-    func getAllExpansions(completion: @escaping (Result<[Expansion], Error>) -> Void) {
-        apiClient.request(endpoint: "/api/expansions", method: .get) { result in
+    /// Fetch expansions filtered by year(s)
+    /// - Parameters:
+    ///   - years: Optional list of years to filter by. If nil or empty, backend defaults to current year
+    ///   - completion: Callback with expansions or error
+    func getAllExpansions(years: [Int]? = nil, completion: @escaping (Result<[Expansion], Error>) -> Void) {
+        var endpoint = "/api/expansions"
+        
+        // Add years query parameters if provided
+        if let years = years, !years.isEmpty {
+            let yearsParams = years.map { "years=\($0)" }.joined(separator: "&")
+            endpoint += "?\(yearsParams)"
+        }
+        // If years is nil, backend will default to current year
+        
+        apiClient.request(endpoint: endpoint, method: .get) { result in
             switch result {
             case .success(let data):
                 do {
                     let expansions = try self.decoder.decode([Expansion].self, from: data)
-                    // print("✅ Successfully decoded \(expansions.count) expansions")
                     completion(.success(expansions))
                 } catch {
                     print("❌ Failed to decode expansions: \(error)")
@@ -87,12 +99,14 @@ class ExpansionService: ObservableObject {
     
     // MARK: - User Interface Methods
     
-    func loadExpansions() async {
+    /// Load expansions filtered by optional years
+    /// - Parameter years: Optional list of years to filter by. If nil, backend defaults to current year
+    func loadExpansions(years: [Int]? = nil) async {
         isLoading = true
         errorMessage = nil
         
         await withCheckedContinuation { continuation in
-            getAllExpansions { result in
+            getAllExpansions(years: years) { result in
                 Task { @MainActor in
                     switch result {
                     case .success(let fetchedExpansions):

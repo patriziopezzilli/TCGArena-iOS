@@ -41,8 +41,21 @@ struct TCGSet: Identifiable, Codable {
             return date
         }
         
-        // Try alternative format: "yyyy-MM-dd"
+        // Try ISO8601 without fractional seconds
+        formatter.formatOptions = [.withInternetDateTime]
+        if let date = formatter.date(from: releaseDateString) {
+            return date
+        }
+        
+        // Try format without timezone: "yyyy-MM-dd'T'HH:mm:ss"
         let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss"
+        dateFormatter.locale = Locale(identifier: "en_US_POSIX")
+        if let date = dateFormatter.date(from: releaseDateString) {
+            return date
+        }
+        
+        // Try alternative format: "yyyy-MM-dd"
         dateFormatter.dateFormat = "yyyy-MM-dd"
         if let date = dateFormatter.date(from: releaseDateString) {
             return date
