@@ -5,6 +5,21 @@ import CoreLocation
 
 // MARK: - Models
 
+struct NewsItemData: Codable, Identifiable {
+    let id: Int64
+    let title: String
+    let content: String
+    let newsType: String
+    let startDate: String
+    let expiryDate: String?
+    let imageUrl: String?
+    let isPinned: Bool
+    let source: String // "SHOP" or "BROADCAST"
+    let shopId: Int64?
+    let shopName: String?
+    let createdAt: String
+}
+
 struct HomeDashboardData: Codable {
     let nearbyShopsCount: Int
     let upcomingTournamentsCount: Int
@@ -14,6 +29,7 @@ struct HomeDashboardData: Codable {
     let unreadNewsCount: Int
     let pendingReservationsCount: Int
     let activeRequestsCount: Int
+    let news: [NewsItemData]?
     
     enum CodingKeys: String, CodingKey {
         case nearbyShopsCount
@@ -24,6 +40,7 @@ struct HomeDashboardData: Codable {
         case unreadNewsCount
         case pendingReservationsCount
         case activeRequestsCount
+        case news
     }
 }
 
@@ -60,6 +77,13 @@ class HomeDashboardService: ObservableObject {
                 }
                 
                 let data: HomeDashboardData = try await APIClient.shared.request(endpoint)
+                print("✅ Dashboard data received")
+                print("📰 News count: \(data.news?.count ?? 0)")
+                if let news = data.news {
+                    for (index, item) in news.enumerated() {
+                        print("  [\(index)] \(item.title) - Source: \(item.source)")
+                    }
+                }
                 self.dashboardData = data
                 self.isLoading = false
             } catch {

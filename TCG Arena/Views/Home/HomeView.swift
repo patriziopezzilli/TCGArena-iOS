@@ -1,11 +1,13 @@
 
 import SwiftUI
+import MapKit
 
 struct HomeView: View {
     @Binding var selectedTab: Int
     @StateObject private var viewModel = HomeDashboardService()
     @StateObject private var locationManager = LocationManager()
     @State private var hasAppeared = false
+    @State private var showingExploreMap = false
     
     // Grid layout
     private let columns = [
@@ -127,11 +129,9 @@ struct HomeView: View {
                                         icon: "trophy.fill"
                                     ) { selectedTab = 2 }
                                     
-                                    StatTile(
-                                        value: "\(data.collectionCount)",
-                                        label: "Collezione",
-                                        icon: "rectangle.stack.fill"
-                                    ) { selectedTab = 1 }
+                                    MapTileView(locationManager: locationManager) {
+                                        showingExploreMap = true
+                                    }
                                     
                                     StatTile(
                                         value: "\(data.deckCount)",
@@ -140,10 +140,65 @@ struct HomeView: View {
                                     ) { selectedTab = 1 }
                                 }
                                 .padding(.horizontal, 24)
+                                
+                                // MARK: - Trade Radar Tile (New)
+                                NavigationLink(destination: TradeRadarView()) {
+                                    HStack {
+                                        VStack(alignment: .leading, spacing: 8) {
+                                            HStack {
+                                                Circle()
+                                                    .fill(Color.green)
+                                                    .frame(width: 8, height: 8)
+                                                    .shadow(color: .green, radius: 4)
+                                                Text("TRADE RADAR")
+                                                    .font(.system(size: 12, weight: .bold))
+                                                    .foregroundColor(.green)
+                                                    .tracking(1)
+                                            }
+                                            
+                                            Text("Trova scambi vicini")
+                                                .font(.system(size: 20, weight: .bold))
+                                                .foregroundColor(.white)
+                                            
+                                            Text("Segnale agganciato: Nuovi scambi disponibili")
+                                                .font(.system(size: 14))
+                                                .foregroundColor(.gray)
+                                                .multilineTextAlignment(.leading)
+                                                .fixedSize(horizontal: false, vertical: true)
+                                        }
+                                        
+                                        Spacer()
+                                        
+                                        ZStack {
+                                            Circle()
+                                                .stroke(Color.green.opacity(0.3), lineWidth: 1)
+                                                .frame(width: 60, height: 60)
+                                            Circle()
+                                                .stroke(Color.green.opacity(0.5), lineWidth: 1)
+                                                .frame(width: 40, height: 40)
+                                            SwiftUI.Image(systemName: "location.fill")
+                                                .font(.system(size: 20))
+                                                .foregroundColor(.green)
+                                        }
+                                    }
+                                    .padding(20)
+                                    .background(Color(red: 0.05, green: 0.05, blue: 0.07))
+                                    .cornerRadius(20)
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 20)
+                                            .stroke(Color.white.opacity(0.1), lineWidth: 1)
+                                    )
+                                }
+                                .padding(.horizontal, 24)
+                                
+                                NavigationLink(isActive: $showingExploreMap) {
+                                    ExploreMapView()
+                                } label: { EmptyView() }
                             }
                             
                             // MARK: - News Carousel
                             NewsCarouselSection()
+                                .environmentObject(viewModel)
                             
                             // MARK: - Actions (Reservations / Requests)
                             if data.pendingReservationsCount > 0 || data.activeRequestsCount > 0 {
@@ -175,8 +230,8 @@ struct HomeView: View {
                                 }
                             }
                             
-                        } else if viewModel.isLoading {
-                            // MARK: - Skeleton Loading State
+                        } else if viewModel.isLoading || !hasAppeared {
+                            // MARK: - Skeleton Loading State (also shown on first load)
                             VStack(alignment: .leading, spacing: 16) {
                                 // Skeleton Header
                                 Text("Panoramica")
@@ -205,14 +260,15 @@ struct HomeView: View {
                                 }
                                 .padding(.top, 16)
                             }
-                        } else {
-                            // Error State
+                        } else if let error = viewModel.errorMessage {
+                            // Error State - only shown if there's an actual error message
                              VStack(spacing: 12) {
                                 SwiftUI.Image(systemName: "exclamationmark.triangle")
                                     .font(.largeTitle)
                                     .foregroundColor(.secondary)
-                                Text("Nessun dato")
+                                Text(error)
                                     .font(.headline)
+                                    .multilineTextAlignment(.center)
                                 Button("Ricarica") {
                                     viewModel.fetchDashboardData(
                                         latitude: locationManager.location?.coordinate.latitude,
@@ -222,6 +278,20 @@ struct HomeView: View {
                             }
                             .frame(maxWidth: .infinity)
                             .padding(.top, 40)
+                        } else {
+                            // Fallback - show skeleton if no data and no error
+                            VStack(alignment: .leading, spacing: 16) {
+                                Text("Panoramica")
+                                    .font(.system(size: 20, weight: .bold))
+                                    .padding(.horizontal, 24)
+                                
+                                LazyVGrid(columns: columns, spacing: 16) {
+                                    ForEach(0..<4) { _ in
+                                        SkeletonStatTile()
+                                    }
+                                }
+                                .padding(.horizontal, 24)
+                            }
                         }
                         
                         Spacer(minLength: 50)
@@ -288,6 +358,7 @@ struct StatTile: View {
             }
             .padding(20)
             .frame(maxWidth: .infinity, alignment: .leading)
+            .frame(height: 140) // Fixed height for consistency
             .background(Color(.secondarySystemBackground))
             .cornerRadius(24) // Soft rounded corners
             // Very subtle border instead of heavy shadow
@@ -371,6 +442,7 @@ struct SkeletonStatTile: View {
         }
         .padding(20)
         .frame(maxWidth: .infinity, alignment: .leading)
+        .frame(height: 140) // Fixed height for consistency
         .background(Color(.secondarySystemBackground))
         .cornerRadius(24)
         .overlay(
@@ -416,5 +488,63 @@ struct ShimmerModifier: ViewModifier {
 extension View {
     func shimmering() -> some View {
         modifier(ShimmerModifier())
+    }
+}
+
+struct MapTileView: View {
+    @ObservedObject var locationManager: LocationManager
+    let action: () -> Void
+    
+    var body: some View {
+        Button(action: action) {
+            ZStack {
+                // Map Background
+                Map(coordinateRegion: .constant(MKCoordinateRegion(
+                    center: locationManager.location?.coordinate ?? CLLocationCoordinate2D(latitude: 41.9028, longitude: 12.4964),
+                    span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01)
+                )), showsUserLocation: true)
+                .disabled(true)
+                
+                // Icon Overlay
+                VStack {
+                    HStack {
+                        SwiftUI.Image(systemName: "map.fill")
+                            .font(.system(size: 20))
+                            .foregroundColor(.primary.opacity(0.7))
+                            .padding(8)
+                            .background(Color(.secondarySystemBackground).opacity(0.8))
+                            .clipShape(Circle())
+                        Spacer()
+                        SwiftUI.Image(systemName: "arrow.up.right")
+                            .font(.system(size: 12, weight: .bold))
+                            .foregroundColor(Color(.tertiaryLabel))
+                            .padding(8)
+                            .background(Color(.secondarySystemBackground).opacity(0.8))
+                            .clipShape(Circle())
+                    }
+                    Spacer()
+                    
+                    HStack {
+                        Text("Esplora")
+                            .font(.system(size: 16, weight: .bold, design: .rounded))
+                            .foregroundColor(.primary)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 6)
+                            .background(Color(.secondarySystemBackground).opacity(0.9))
+                            .cornerRadius(12)
+                        Spacer()
+                    }
+                }
+                .padding(12)
+            }
+            .frame(height: 140) // Fixed height for consistency
+            .frame(maxWidth: .infinity)
+            .cornerRadius(24)
+            .overlay(
+                RoundedRectangle(cornerRadius: 24)
+                    .stroke(Color(.separator).opacity(0.4), lineWidth: 0.5)
+            )
+        }
+        .buttonStyle(PlainButtonStyle())
     }
 }

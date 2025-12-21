@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		78158DE22EF800BD00787DC6 /* RadarService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78158DE12EF800BD00787DC6 /* RadarService.swift */; };
+		78158DE42EF806BC00787DC6 /* ScanResultView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78158DE32EF806BC00787DC6 /* ScanResultView.swift */; };
+		78158DE62EF81FFE00787DC6 /* SuggestionModalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78158DE52EF81FFE00787DC6 /* SuggestionModalView.swift */; };
 		78229A532EF5BD5700E2F700 /* HomeDashboardService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78229A522EF5BD5700E2F700 /* HomeDashboardService.swift */; };
 		78229A562EF5BD6000E2F700 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78229A542EF5BD6000E2F700 /* HomeView.swift */; };
 		78229A582EF5C5E000E2F700 /* MinimalTabButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78229A572EF5C5E000E2F700 /* MinimalTabButton.swift */; };
@@ -17,6 +20,12 @@
 		78229A6C2EF6E64A00E2F700 /* HelpView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78229A6B2EF6E64A00E2F700 /* HelpView.swift */; };
 		78229A6E2EF6E71A00E2F700 /* EditProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78229A6D2EF6E71A00E2F700 /* EditProfileView.swift */; };
 		78229A702EF6E90000E2F700 /* NewsCarouselSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78229A6F2EF6E90000E2F700 /* NewsCarouselSection.swift */; };
+		78229A7C2EF711B800E2F700 /* SuggestShopSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78229A7B2EF711B800E2F700 /* SuggestShopSheet.swift */; };
+		78229A7E2EF71A6F00E2F700 /* ExploreMapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78229A7D2EF71A6F00E2F700 /* ExploreMapView.swift */; };
+		78229A812EF72CA500E2F700 /* TradeRadarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78229A7F2EF72CA500E2F700 /* TradeRadarView.swift */; };
+		78229A832EF7307000E2F700 /* TradeChatView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78229A822EF7307000E2F700 /* TradeChatView.swift */; };
+		78229A852EF738CD00E2F700 /* TradeService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78229A842EF738CD00E2F700 /* TradeService.swift */; };
+		78229A872EF738DE00E2F700 /* TradeModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78229A862EF738DE00E2F700 /* TradeModels.swift */; };
 		784090482EDA2CD700CC6B9A /* SetDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 784090472EDA2CD700CC6B9A /* SetDetailView.swift */; };
 		7840904A2EDB96F800CC6B9A /* ImageCacheManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 784090492EDB96F800CC6B9A /* ImageCacheManager.swift */; };
 		7840904C2EDB98F000CC6B9A /* DeckSelectionModal.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7840904B2EDB98F000CC6B9A /* DeckSelectionModal.swift */; };
@@ -187,6 +196,9 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		78158DE12EF800BD00787DC6 /* RadarService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RadarService.swift; sourceTree = "<group>"; };
+		78158DE32EF806BC00787DC6 /* ScanResultView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScanResultView.swift; sourceTree = "<group>"; };
+		78158DE52EF81FFE00787DC6 /* SuggestionModalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SuggestionModalView.swift; sourceTree = "<group>"; };
 		78229A522EF5BD5700E2F700 /* HomeDashboardService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeDashboardService.swift; sourceTree = "<group>"; };
 		78229A542EF5BD6000E2F700 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
 		78229A572EF5C5E000E2F700 /* MinimalTabButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MinimalTabButton.swift; sourceTree = "<group>"; };
@@ -197,6 +209,12 @@
 		78229A6B2EF6E64A00E2F700 /* HelpView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HelpView.swift; sourceTree = "<group>"; };
 		78229A6D2EF6E71A00E2F700 /* EditProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditProfileView.swift; sourceTree = "<group>"; };
 		78229A6F2EF6E90000E2F700 /* NewsCarouselSection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewsCarouselSection.swift; sourceTree = "<group>"; };
+		78229A7B2EF711B800E2F700 /* SuggestShopSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SuggestShopSheet.swift; sourceTree = "<group>"; };
+		78229A7D2EF71A6F00E2F700 /* ExploreMapView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExploreMapView.swift; sourceTree = "<group>"; };
+		78229A7F2EF72CA500E2F700 /* TradeRadarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TradeRadarView.swift; sourceTree = "<group>"; };
+		78229A822EF7307000E2F700 /* TradeChatView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TradeChatView.swift; sourceTree = "<group>"; };
+		78229A842EF738CD00E2F700 /* TradeService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TradeService.swift; sourceTree = "<group>"; };
+		78229A862EF738DE00E2F700 /* TradeModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TradeModels.swift; sourceTree = "<group>"; };
 		784090472EDA2CD700CC6B9A /* SetDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SetDetailView.swift; sourceTree = "<group>"; };
 		784090492EDB96F800CC6B9A /* ImageCacheManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageCacheManager.swift; sourceTree = "<group>"; };
 		7840904B2EDB98F000CC6B9A /* DeckSelectionModal.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeckSelectionModal.swift; sourceTree = "<group>"; };
@@ -387,6 +405,15 @@
 			path = Home;
 			sourceTree = "<group>";
 		};
+		78229A802EF72CA500E2F700 /* Trade */ = {
+			isa = PBXGroup;
+			children = (
+				78229A822EF7307000E2F700 /* TradeChatView.swift */,
+				78229A7F2EF72CA500E2F700 /* TradeRadarView.swift */,
+			);
+			path = Trade;
+			sourceTree = "<group>";
+		};
 		78660E512EE6E27800EA2BFE /* Common */ = {
 			isa = PBXGroup;
 			children = (
@@ -482,6 +509,7 @@
 		7A817B8E2EC7693C00500F32 /* Shop */ = {
 			isa = PBXGroup;
 			children = (
+				78229A7B2EF711B800E2F700 /* SuggestShopSheet.swift */,
 				786778EB2EF2A287000928C4 /* MyActivityView.swift */,
 				786AC8792EE46D83001A6714 /* EventFiltersView.swift */,
 				786AC8772EE461D5001A6714 /* ShopRequestsView.swift */,
@@ -558,6 +586,7 @@
 		A5000004 /* Models */ = {
 			isa = PBXGroup;
 			children = (
+				78229A862EF738DE00E2F700 /* TradeModels.swift */,
 				786778FB2EF2E643000928C4 /* OpeningHours.swift */,
 				786778D92EF210FD000928C4 /* TournamentActivityAttributes.swift */,
 				78BBCF302EEED18D00FCEA14 /* TournamentUpdate.swift */,
@@ -596,6 +625,7 @@
 		A5000005 /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				78229A802EF72CA500E2F700 /* Trade */,
 				78229A6B2EF6E64A00E2F700 /* HelpView.swift */,
 				78229A672EF6E44F00E2F700 /* MoreView.swift */,
 				78229A552EF5BD6000E2F700 /* Home */,
@@ -630,6 +660,8 @@
 		A5000006 /* Services */ = {
 			isa = PBXGroup;
 			children = (
+				78158DE12EF800BD00787DC6 /* RadarService.swift */,
+				78229A842EF738CD00E2F700 /* TradeService.swift */,
 				78229A522EF5BD5700E2F700 /* HomeDashboardService.swift */,
 				786778E72EF29EB2000928C4 /* NetworkMonitor.swift */,
 				786778DB2EF21120000928C4 /* TournamentLiveActivityManager.swift */,
@@ -666,6 +698,7 @@
 		A5000008 /* Map */ = {
 			isa = PBXGroup;
 			children = (
+				78229A7D2EF71A6F00E2F700 /* ExploreMapView.swift */,
 				7A1CC94A2ED2756B00A61395 /* TournamentMapDetailView.swift */,
 				A2000010 /* TournamentMapView.swift */,
 			);
@@ -675,6 +708,7 @@
 		A5000009 /* Collection */ = {
 			isa = PBXGroup;
 			children = (
+				78158DE32EF806BC00787DC6 /* ScanResultView.swift */,
 				785CF4BE2EDC8D3F00BA98AD /* CreateDeckView.swift */,
 				784090472EDA2CD700CC6B9A /* SetDetailView.swift */,
 				7A8B2E9D2EC22EFD004F6826 /* ExpansionDetailView.swift */,
@@ -694,6 +728,7 @@
 		A5000010 /* Components */ = {
 			isa = PBXGroup;
 			children = (
+				78158DE52EF81FFE00787DC6 /* SuggestionModalView.swift */,
 				78229A572EF5C5E000E2F700 /* MinimalTabButton.swift */,
 				786AC85F2EE2CD68001A6714 /* PastTournamentCard.swift */,
 				7883DF892EDE53E8007D1C51 /* ButtonStyles.swift */,
@@ -880,13 +915,16 @@
 				A1000007 /* AuthService.swift in Sources */,
 				7AAF9FDD2ECE12E0008221E9 /* LoginView.swift in Sources */,
 				7AAF9FDE2ECE12E0008221E9 /* RegisterView.swift in Sources */,
+				78229A832EF7307000E2F700 /* TradeChatView.swift in Sources */,
 				7AAF9FE02ECE12E0008221E9 /* ForgotPasswordView.swift in Sources */,
+				78158DE62EF81FFE00787DC6 /* SuggestionModalView.swift in Sources */,
 				7AAF9FE12ECE12E0008221E9 /* MainAppView.swift in Sources */,
 				786AC87A2EE46D83001A6714 /* EventFiltersView.swift in Sources */,
 				7AAF9FE22ECE12E0008221E9 /* ReadOnlyContentView.swift in Sources */,
 				7A7DF4222EBBA1A100331A52 /* TCGTheme.swift in Sources */,
 				A1000008 /* CardService.swift in Sources */,
 				7A8B2E862EC1F2E8004F6826 /* DiscoverModels.swift in Sources */,
+				78158DE22EF800BD00787DC6 /* RadarService.swift in Sources */,
 				7A8B2E9E2EC22EFD004F6826 /* ExpansionDetailView.swift in Sources */,
 				A1000009 /* TournamentService.swift in Sources */,
 				7A8B2E942EC1F32A004F6826 /* UserProfileDetailView.swift in Sources */,
@@ -926,6 +964,7 @@
 				7A1CC9442ED2392C00A61395 /* AchievementService.swift in Sources */,
 				786778FE2EF2EB5C000928C4 /* TournamentRequestView.swift in Sources */,
 				7A1CC9452ED2392C00A61395 /* ImageService.swift in Sources */,
+				78229A7E2EF71A6F00E2F700 /* ExploreMapView.swift in Sources */,
 				786AC8782EE461D5001A6714 /* ShopRequestsView.swift in Sources */,
 				7A1CC9462ED2392C00A61395 /* APIClient.swift in Sources */,
 				7A1CC94B2ED2756B00A61395 /* TournamentMapDetailView.swift in Sources */,
@@ -945,8 +984,11 @@
 				78660E522EE6E27800EA2BFE /* TCGIconView.swift in Sources */,
 				7A7DF4172EBB943D00331A52 /* CommunityView.swift in Sources */,
 				7A7DF41B2EBB943D00331A52 /* ProfileView.swift in Sources */,
+				78229A872EF738DE00E2F700 /* TradeModels.swift in Sources */,
 				7883DF8A2EDE53E8007D1C51 /* ButtonStyles.swift in Sources */,
 				A1000012 /* CardScannerView.swift in Sources */,
+				78229A7C2EF711B800E2F700 /* SuggestShopSheet.swift in Sources */,
+				78229A852EF738CD00E2F700 /* TradeService.swift in Sources */,
 				78BBCF2F2EEED17A00FCEA14 /* TournamentUpdatesView.swift in Sources */,
 				7A7DF3DF2EBB940300331A52 /* DeckService.swift in Sources */,
 				7A8B2E982EC21F61004F6826 /* CreateTournamentView.swift in Sources */,
@@ -969,6 +1011,7 @@
 				7A8B2EA22EC23DA1004F6826 /* SettingsService.swift in Sources */,
 				7AA785932EBCA4D300A11D94 /* PortfolioCard.swift in Sources */,
 				786778DA2EF210FD000928C4 /* TournamentActivityAttributes.swift in Sources */,
+				78158DE42EF806BC00787DC6 /* ScanResultView.swift in Sources */,
 				7AA7858A2EBCA42200A11D94 /* TCGCardView.swift in Sources */,
 				78D54AB92EE1A335009A04C7 /* MyReservationsView.swift in Sources */,
 				7A7DF3DD2EBB938A00331A52 /* CardDetailView.swift in Sources */,
@@ -979,6 +1022,7 @@
 				786778FC2EF2E643000928C4 /* OpeningHours.swift in Sources */,
 				A1000016 /* TournamentCardView.swift in Sources */,
 				7AAAA2142EDD93980035F942 /* InventoryService.swift in Sources */,
+				78229A812EF72CA500E2F700 /* TradeRadarView.swift in Sources */,
 				7AAAA2152EDD93980035F942 /* ReservationService.swift in Sources */,
 				7AAAA2162EDD93980035F942 /* RequestService.swift in Sources */,
 			);

@@ -21,6 +21,7 @@ struct MoreView: View {
     @State private var showingRequests = false
     @State private var showingSettings = false
     @State private var showingHelp = false
+    @State private var showingSuggestionModal = false
     
     var body: some View {
         NavigationView {
@@ -109,6 +110,46 @@ struct MoreView: View {
                     }
                     .padding(.horizontal, 24)
                     
+                    // Suggestions Box (Full Width)
+                    Button(action: { showingSuggestionModal = true }) {
+                        HStack(spacing: 16) {
+                            ZStack {
+                                Circle()
+                                    .fill(Color.blue.opacity(0.1))
+                                    .frame(width: 50, height: 50)
+                                SwiftUI.Image(systemName: "lightbulb.fill")
+                                    .font(.system(size: 24, weight: .bold))
+                                    .foregroundColor(.blue)
+                            }
+                            
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("Hai un'idea?")
+                                    .font(.system(size: 18, weight: .bold))
+                                    .foregroundColor(.primary)
+                                Text("Inviaci un suggerimento per migliorare l'app!")
+                                    .font(.system(size: 14))
+                                    .foregroundColor(.secondary)
+                                    .multilineTextAlignment(.leading)
+                            }
+                            
+                            Spacer()
+                            
+                            SwiftUI.Image(systemName: "chevron.right")
+                                .font(.system(size: 14, weight: .bold))
+                                .foregroundColor(.gray.opacity(0.5))
+                        }
+                        .padding(20)
+                        .background(Color.white)
+                        .cornerRadius(20)
+                        .shadow(color: Color.black.opacity(0.05), radius: 10, y: 5)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 20)
+                                .stroke(Color.gray.opacity(0.1), lineWidth: 1)
+                        )
+                    }
+                    .padding(.horizontal, 24)
+                    .buttonStyle(ScaleButtonStyle())
+                    
                     // Footer / Version
                     VStack(spacing: 8) {
                         Text("TCG Arena v1.0.0")
@@ -168,6 +209,9 @@ struct MoreView: View {
             }
             .sheet(isPresented: $showingHelp) {
                 HelpView()
+            }
+            .sheet(isPresented: $showingSuggestionModal) {
+                SuggestionModalView()
             }
         }
     }

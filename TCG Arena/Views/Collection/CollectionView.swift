@@ -509,7 +509,7 @@ struct CollectionView: View {
 
     private var headerView: some View {
         HStack(alignment: .bottom) {
-            Text("Il Tuo Caveau")
+            Text("Le Tue Carte")
                 .font(.system(size: 32, weight: .heavy))
                 .foregroundColor(.primary)
                 .tracking(-0.5)
@@ -1009,6 +1009,24 @@ struct CollectionView: View {
                     }
                     .transition(.opacity.combined(with: .scale(scale: 0.9)))
                 }
+                
+                // Button to discover new cards
+                Button(action: {
+                    showingAddCard = true
+                }) {
+                    HStack(spacing: 8) {
+                        SwiftUI.Image(systemName: "magnifyingglass")
+                        Text("Scopri Nuove Carte")
+                    }
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 24)
+                    .padding(.vertical, 14)
+                    .background(Color.blue)
+                    .clipShape(Capsule())
+                    .shadow(color: Color.blue.opacity(0.3), radius: 8, x: 0, y: 4)
+                }
+                .transition(.opacity.combined(with: .scale(scale: 0.9)))
             }
             .animation(.spring(response: 0.5, dampingFraction: 0.7), value: viewMode)
 
@@ -1552,49 +1570,40 @@ struct DiscoverInfoBox: View {
             showingDiscoverSheet = true
         }) {
             HStack(spacing: 16) {
-                // Icon
-                ZStack {
-                    Circle()
-                        .fill(Color(red: 1.0, green: 0.6, blue: 0.0).opacity(0.1))
-                        .frame(width: 44, height: 44)
-                    
-                    SwiftUI.Image(systemName: "sparkles")
-                        .font(.system(size: 20, weight: .semibold))
-                        .foregroundColor(Color(red: 1.0, green: 0.6, blue: 0.0))
-                }
-                
-                // Content
-                VStack(alignment: .leading, spacing: 4) {
+                VStack(alignment: .leading, spacing: 6) {
                     Text("Scopri Nuove Carte")
-                        .font(.system(size: 16, weight: .semibold))
-                        .foregroundColor(.primary)
+                        .font(.system(size: 17, weight: .bold))
+                        .foregroundColor(.white)
                     
-                    Text("Esplora le ultime espansioni e trova nuove carte per la tua collezione")
+                    Text("Esplora le ultime espansioni")
                         .font(.system(size: 14, weight: .medium))
-                        .foregroundColor(.secondary)
-                        .multilineTextAlignment(.leading)
+                        .foregroundColor(.white.opacity(0.8))
+                        .lineLimit(1)
                 }
                 
                 Spacer()
                 
-                SwiftUI.Image(systemName: "chevron.right")
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundColor(.secondary)
+                // CTA Button
+                HStack(spacing: 6) {
+                    Text("Esplora")
+                        .font(.system(size: 13, weight: .bold))
+                        .foregroundColor(.black)
+                    SwiftUI.Image(systemName: "arrow.right")
+                        .font(.system(size: 11, weight: .bold))
+                        .foregroundColor(.black)
+                }
+                .padding(.horizontal, 14)
+                .padding(.vertical, 7)
+                .background(Color.white)
+                .cornerRadius(16)
             }
-            .padding(.horizontal, 16)
-            .padding(.vertical, 12)
+            .padding(.horizontal, 20)
+            .padding(.vertical, 16)
+            .background(Color.black)
+            .cornerRadius(20)
+            .shadow(color: Color.black.opacity(0.08), radius: 8, x: 0, y: 4)
         }
         .buttonStyle(PlainButtonStyle())
-        .background(
-            RoundedRectangle(cornerRadius: 12)
-                .fill(Color(.secondarySystemGroupedBackground))
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 12)
-                .stroke(Color(.separator).opacity(0.5), lineWidth: 1.2)
-        )
-        .shadow(color: Color.black.opacity(0.02), radius: 8, x: 0, y: 4)
-        .shadow(color: Color.black.opacity(0.02), radius: 8, x: 0, y: 4)
         .sheet(isPresented: $showingDiscoverSheet) {
             CardDiscoverView()
                 .environmentObject(authService)
@@ -1966,8 +1975,8 @@ struct CompactCardView: View {
     let card: Card
     
     var body: some View {
-        HStack(spacing: 16) {
-            // 1. Thumbnail Image (Left, Smaller Focus)
+        HStack(spacing: 14) {
+            // Card Image
             CachedAsyncImage(url: URL(string: card.fullImageURL ?? "")) { phase in
                 switch phase {
                 case .success(let image):
@@ -1978,85 +1987,51 @@ struct CompactCardView: View {
                     ZStack {
                         Color(.secondarySystemBackground)
                         if let tcgType = card.tcgType {
-                           TCGIconView(tcgType: tcgType, size: 20, color: .secondary.opacity(0.3))
+                           TCGIconView(tcgType: tcgType, size: 18, color: .secondary.opacity(0.3))
                         }
                     }
                 }
             }
-            .frame(width: 60, height: 84)
+            .frame(width: 52, height: 72)
             .clipShape(RoundedRectangle(cornerRadius: 8))
-            .overlay(
-                RoundedRectangle(cornerRadius: 8)
-                    .stroke(Color(.separator).opacity(0.4), lineWidth: 0.5)
-            )
             
-            // 2. Main Info (Center)
-            VStack(alignment: .leading, spacing: 4) {
+            // Card Info
+            VStack(alignment: .leading, spacing: 6) {
                 Text(card.name)
                     .font(.system(size: 16, weight: .semibold))
                     .foregroundColor(.primary)
                     .lineLimit(1)
                 
-                Text(card.set ?? "Unknown Set")
-                    .font(.system(size: 13, weight: .regular))
-                    .foregroundColor(.secondary)
-                    .lineLimit(1)
-                
                 HStack(spacing: 8) {
-                    // Condition
-                    ContainerRelativeShape()
-                        .fill(Color(.secondarySystemBackground))
-                        .frame(height: 20)
-                        .overlay(
-                            Text(card.condition.displayName)
-                                .font(.system(size: 10, weight: .medium))
-                                .foregroundColor(.secondary)
-                                .padding(.horizontal, 6)
-                        )
-                        .frame(width: nil) // intrinsic
-                        .clipShape(RoundedRectangle(cornerRadius: 4))
-                    
+                    // TCG Badge
                     if let tcgType = card.tcgType {
-                        TCGIconView(tcgType: tcgType, size: 14, color: .secondary)
+                        HStack(spacing: 4) {
+                            TCGIconView(tcgType: tcgType, size: 12, color: tcgType.themeColor)
+                            Text(tcgType.shortName)
+                                .font(.system(size: 11, weight: .semibold))
+                                .foregroundColor(tcgType.themeColor)
+                        }
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(tcgType.themeColor.opacity(0.12))
+                        .clipShape(Capsule())
+                    }
+                    
+                    // Card Number
+                    if let number = card.cardNumber?.uppercased() {
+                        Text("#\(number)")
+                            .font(.system(size: 13, weight: .medium))
+                            .foregroundColor(.secondary)
                     }
                 }
             }
             
             Spacer()
-            
-            // 3. Price & Quantity (Right)
-            VStack(alignment: .trailing, spacing: 4) {
-                if let price = card.marketPrice {
-                    Text("€\(String(format: "%.2f", price))")
-                        .font(.system(size: 16, weight: .bold))
-                        .foregroundColor(.primary)
-                } else {
-                    Text("--")
-                        .font(.system(size: 14, weight: .medium))
-                        .foregroundColor(.secondary)
-                }
-                
-                if card.quantity > 0 {
-                    Text("x\(card.quantity)")
-                        .font(.system(size: 12, weight: .semibold))
-                        .foregroundColor(Color.blue)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 2)
-                        .background(Color.blue.opacity(0.1))
-                        .cornerRadius(6)
-                }
-            }
         }
-        .padding(12)
-        .background(Color(.systemBackground))
-        .cornerRadius(12)
-        // Inventory Style Border
-        .overlay(
-            RoundedRectangle(cornerRadius: 12)
-                .stroke(Color(.separator).opacity(0.4), lineWidth: 0.5)
-        )
-        // Very subtle shadow
-        .shadow(color: Color.black.opacity(0.03), radius: 2, x: 0, y: 1)
+        .padding(.horizontal, 14)
+        .padding(.vertical, 10)
+        .background(Color(.secondarySystemBackground))
+        .cornerRadius(14)
     }
 }
     

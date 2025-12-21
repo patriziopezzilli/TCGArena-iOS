@@ -392,6 +392,31 @@ class CardService: ObservableObject {
         }
     }
 
+    func smartScan(rawTexts: [String], completion: @escaping (Result<[CardTemplate], Error>) -> Void) {
+        let endpoint = "/api/cards/templates/smart-scan"
+        
+        do {
+            let body = try JSONSerialization.data(withJSONObject: rawTexts, options: [])
+            apiClient.request(endpoint: endpoint, method: .post, body: body) { result in
+                switch result {
+                case .success(let data):
+                    do {
+                        let decoder = JSONDecoder()
+                        decoder.dateDecodingStrategy = .iso8601
+                        let cards = try decoder.decode([CardTemplate].self, from: data)
+                        completion(.success(cards))
+                    } catch {
+                        completion(.failure(error))
+                    }
+                case .failure(let error):
+                    completion(.failure(error))
+                }
+            }
+        } catch {
+            completion(.failure(error))
+        }
+    }
+
     @MainActor
     func removeCardFromCollection(userCardId: Int64, deckId: Int64? = nil, completion: @escaping (Result<Void, Error>) -> Void) {
         // Direct delete using card ID only

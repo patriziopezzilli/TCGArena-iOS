@@ -271,15 +271,12 @@ struct TournamentListView: View {
     // Show nearby tournaments if available, otherwise show all tournaments
     private var tournamentsToShow: [Tournament] {
         let result = !nearbyTournaments.isEmpty ? nearbyTournaments : tournaments
-        print("TournamentListView: tournamentsToShow returning \(result.count) tournaments (nearby: \(nearbyTournaments.count), all: \(tournaments.count))")
         return result
     }
     
     var body: some View {
         let tournamentsCount = tournamentsToShow.count
         let isLoadingState = isLoading
-        
-        print("TournamentListView body: tournamentsToShow.count = \(tournamentsCount), isLoading = \(isLoadingState)")
         
         return ScrollView {
             if !isLoadingState && tournamentsCount == 0 {

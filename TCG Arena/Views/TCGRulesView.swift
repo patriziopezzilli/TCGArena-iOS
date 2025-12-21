@@ -19,45 +19,42 @@ struct TCGRulesView: View {
                     // Hero Header
                     heroHeaderView
                     
-                    // Quick Stats
-                    quickStatsView
-                        .padding(.horizontal, 20)
-                        .padding(.top, 24)
-                    
-                    // Rules content
-                    VStack(alignment: .leading, spacing: 16) {
-                        Text("Come si gioca")
-                            .font(.system(size: 20, weight: .bold))
-                            .foregroundColor(.primary)
-                            .padding(.horizontal, 20)
-                            .padding(.top, 28)
+                    // Main content
+                    VStack(alignment: .leading, spacing: 32) {
+                        // Quick Stats
+                        quickStatsView
                         
-                        rulesContent
-                            .padding(.horizontal, 20)
-                    }
-                    
-                    // External links
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text("Risorse Ufficiali")
-                            .font(.system(size: 20, weight: .bold))
-                            .foregroundColor(.primary)
-                            .padding(.horizontal, 20)
-                            .padding(.top, 28)
+                        // Rules content
+                        VStack(alignment: .leading, spacing: 16) {
+                            Text("Come si gioca")
+                                .font(.system(size: 22, weight: .bold))
+                                .foregroundColor(.primary)
+                            
+                            rulesContent
+                        }
                         
-                        externalLinksSection
-                            .padding(.horizontal, 20)
+                        // External links
+                        VStack(alignment: .leading, spacing: 16) {
+                            Text("Risorse Ufficiali")
+                                .font(.system(size: 22, weight: .bold))
+                                .foregroundColor(.primary)
+                            
+                            externalLinksSection
+                        }
                     }
+                    .padding(.horizontal, 24)
+                    .padding(.top, 32)
                     .padding(.bottom, 40)
                 }
             }
-            .background(Color(.systemGroupedBackground))
+            .background(Color(.systemBackground))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button(action: { dismiss() }) {
                         SwiftUI.Image(systemName: "xmark.circle.fill")
-                            .font(.system(size: 28))
-                            .foregroundColor(.secondary.opacity(0.6))
+                            .font(.system(size: 24))
+                            .foregroundColor(.secondary)
                     }
                 }
             }
@@ -71,65 +68,42 @@ struct TCGRulesView: View {
     
     // MARK: - Hero Header
     private var heroHeaderView: some View {
-        ZStack {
-            // Background
-            tcgType.themeColor
-            
-            // Pattern overlay
-            VStack(spacing: 8) {
-                ForEach(0..<6, id: \.self) { row in
-                    HStack(spacing: 8) {
-                        ForEach(0..<8, id: \.self) { _ in
-                            Circle()
-                                .fill(Color.white.opacity(0.08))
-                                .frame(width: 12, height: 12)
-                        }
-                    }
-                }
-            }
-            .offset(x: 20, y: -10)
-            
-            // Content
-            VStack(spacing: 16) {
-                // Icon
-                ZStack {
-                    Circle()
-                        .fill(Color.white.opacity(0.2))
-                        .frame(width: 90, height: 90)
-                    
-                    Circle()
-                        .fill(Color.white)
-                        .frame(width: 74, height: 74)
-                    
-                    TCGIconView(tcgType: tcgType, size: 38, color: tcgType.themeColor)
-                }
-                .scaleEffect(hasAppeared ? 1.0 : 0.5)
-                .opacity(hasAppeared ? 1.0 : 0)
+        VStack(spacing: 20) {
+            // TCG Icon
+            ZStack {
+                Circle()
+                    .fill(tcgType.themeColor.opacity(0.12))
+                    .frame(width: 80, height: 80)
                 
-                // Title
-                VStack(spacing: 4) {
-                    Text(tcgType.displayName)
-                        .font(.system(size: 28, weight: .bold))
-                        .foregroundColor(.white)
-                    
-                    Text("Regolamento Ufficiale")
-                        .font(.system(size: 15, weight: .medium))
-                        .foregroundColor(.white.opacity(0.8))
-                }
-                .offset(y: hasAppeared ? 0 : 20)
-                .opacity(hasAppeared ? 1.0 : 0)
+                TCGIconView(tcgType: tcgType, size: 38, color: tcgType.themeColor)
             }
-            .padding(.vertical, 36)
+            .scaleEffect(hasAppeared ? 1.0 : 0.8)
+            .opacity(hasAppeared ? 1.0 : 0)
+            
+            // Title
+            VStack(spacing: 8) {
+                Text(tcgType.displayName)
+                    .font(.system(size: 32, weight: .heavy))
+                    .foregroundColor(.primary)
+                
+                Text("Regolamento Ufficiale")
+                    .font(.system(size: 16, weight: .medium))
+                    .foregroundColor(.secondary)
+            }
+            .offset(y: hasAppeared ? 0 : 10)
+            .opacity(hasAppeared ? 1.0 : 0)
         }
-        .frame(height: 220)
+        .padding(.top, 40)
+        .padding(.bottom, 20)
+        .frame(maxWidth: .infinity)
     }
     
     // MARK: - Quick Stats
     private var quickStatsView: some View {
         HStack(spacing: 12) {
-            QuickStatCard(value: deckSize, label: "Carte", icon: "rectangle.stack.fill")
-            QuickStatCard(value: maxCopies, label: "Max Copie", icon: "doc.on.doc.fill")
-            QuickStatCard(value: "1v1", label: "Formato", icon: "person.2.fill")
+            QuickStatCard(value: deckSize, label: "Carte", icon: "rectangle.stack.fill", color: tcgType.themeColor)
+            QuickStatCard(value: maxCopies, label: "Max Copie", icon: "doc.on.doc.fill", color: tcgType.themeColor)
+            QuickStatCard(value: "1v1", label: "Formato", icon: "person.2.fill", color: tcgType.themeColor)
         }
     }
     
@@ -444,31 +418,34 @@ struct QuickStatCard: View {
     let value: String
     let label: String
     let icon: String
+    var color: Color = .blue
     
     var body: some View {
-        VStack(spacing: 8) {
-            SwiftUI.Image(systemName: icon)
-                .font(.system(size: 16, weight: .medium))
-                .foregroundColor(.secondary)
+        VStack(spacing: 10) {
+            ZStack {
+                Circle()
+                    .fill(color.opacity(0.12))
+                    .frame(width: 44, height: 44)
+                
+                SwiftUI.Image(systemName: icon)
+                    .font(.system(size: 18, weight: .semibold))
+                    .foregroundColor(color)
+            }
             
-            Text(value)
-                .font(.system(size: 22, weight: .bold))
-                .foregroundColor(.primary)
-            
-            Text(label)
-                .font(.system(size: 12, weight: .medium))
-                .foregroundColor(.secondary)
+            VStack(spacing: 4) {
+                Text(value)
+                    .font(.system(size: 20, weight: .bold))
+                    .foregroundColor(.primary)
+                
+                Text(label)
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundColor(.secondary)
+            }
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 16)
-        .background(
-            RoundedRectangle(cornerRadius: 16)
-                .fill(Color(.secondarySystemGroupedBackground))
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 16)
-                .stroke(Color(.separator).opacity(0.5), lineWidth: 1)
-        )
+        .padding(.vertical, 18)
+        .background(Color(.secondarySystemBackground))
+        .cornerRadius(16)
     }
 }
 
@@ -479,42 +456,36 @@ struct RuleSection: View {
     
     var body: some View {
         HStack(alignment: .top, spacing: 14) {
-            // Number badge
+            // Number badge (opzionale)
             if let num = number {
                 ZStack {
                     Circle()
-                        .fill(Color.blue)
-                        .frame(width: 28, height: 28)
+                        .fill(Color.blue.opacity(0.12))
+                        .frame(width: 32, height: 32)
                     
                     Text("\(num)")
-                        .font(.system(size: 14, weight: .bold))
-                        .foregroundColor(.white)
+                        .font(.system(size: 15, weight: .bold))
+                        .foregroundColor(.blue)
                 }
                 .padding(.top, 2)
             }
             
-            VStack(alignment: .leading, spacing: 10) {
+            VStack(alignment: .leading, spacing: 12) {
                 Text(title)
-                    .font(.system(size: 17, weight: .semibold))
+                    .font(.system(size: 18, weight: .bold))
                     .foregroundColor(.primary)
                 
                 Text(content)
-                    .font(.system(size: 15))
+                    .font(.system(size: 15, weight: .regular))
                     .foregroundColor(.secondary)
-                    .lineSpacing(4)
+                    .lineSpacing(6)
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
-        .padding(18)
+        .padding(20)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(
-            RoundedRectangle(cornerRadius: 16)
-                .fill(Color(.secondarySystemGroupedBackground))
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 16)
-                .stroke(Color(.separator).opacity(0.5), lineWidth: 1)
-        )
+        .background(Color(.secondarySystemBackground))
+        .cornerRadius(16)
     }
 }
 
@@ -533,41 +504,36 @@ struct ExternalLinkButton: View {
     
     var body: some View {
         Link(destination: URL(string: url)!) {
-            HStack(spacing: 14) {
+            HStack(spacing: 16) {
                 ZStack {
-                    RoundedRectangle(cornerRadius: 10)
-                        .fill(color.opacity(0.15))
-                        .frame(width: 40, height: 40)
+                    Circle()
+                        .fill(color.opacity(0.12))
+                        .frame(width: 48, height: 48)
                     
                     SwiftUI.Image(systemName: icon)
-                        .font(.system(size: 18, weight: .medium))
+                        .font(.system(size: 20, weight: .semibold))
                         .foregroundColor(color)
                 }
                 
-                VStack(alignment: .leading, spacing: 2) {
+                VStack(alignment: .leading, spacing: 4) {
                     Text(title)
-                        .font(.system(size: 16, weight: .semibold))
+                        .font(.system(size: 17, weight: .semibold))
                         .foregroundColor(.primary)
                     
                     Text("Apri link esterno")
-                        .font(.system(size: 12))
+                        .font(.system(size: 13, weight: .medium))
                         .foregroundColor(.secondary)
                 }
                 
                 Spacer()
                 
                 SwiftUI.Image(systemName: "arrow.up.right")
-                    .font(.system(size: 14, weight: .medium))
+                    .font(.system(size: 16, weight: .semibold))
                     .foregroundColor(.secondary)
             }
-            .padding(14)
-            .padding(14)
-            .background(Color(.secondarySystemGroupedBackground))
+            .padding(16)
+            .background(Color(.secondarySystemBackground))
             .cornerRadius(16)
-            .overlay(
-                RoundedRectangle(cornerRadius: 16)
-                    .stroke(Color(.separator).opacity(0.5), lineWidth: 1)
-            )
         }
     }
 }

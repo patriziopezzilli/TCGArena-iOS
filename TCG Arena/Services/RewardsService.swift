@@ -38,8 +38,18 @@ class RewardsService: ObservableObject {
                 completion(.failure(error))
             }
         }
+    }    
+    func getWalletPass(completion: @escaping (Result<Data, Error>) -> Void) {
+        guard AuthService.shared.isAuthenticated else {
+            completion(.failure(APIError.unauthorized))
+            return
+        }
+        
+        // Endpoint placeholder - Backend needs to implement this
+        apiClient.request(endpoint: "/api/wallet/pass", method: .get) { result in
+            completion(result)
+        }
     }
-
     func getAllPartners(completion: @escaping (Result<[Partner], Error>) -> Void) {
         guard AuthService.shared.isAuthenticated else {
             completion(.failure(APIError.unauthorized))

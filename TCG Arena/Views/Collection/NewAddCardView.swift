@@ -15,6 +15,8 @@ struct NewAddCardView: View {
     @EnvironmentObject var cardService: CardService
     @EnvironmentObject var deckService: DeckService
     
+    @State private var showingScanner = false
+    
     var body: some View {
         NavigationView {
             ScrollView {
@@ -51,12 +53,18 @@ struct NewAddCardView: View {
                         Divider().padding(.leading, 64)
                         
                         // Scan Entry
-                        AddOptionRow(
-                            icon: "camera.viewfinder",
-                            title: "Scansiona Carta",
-                            subtitle: "Presto disponibile",
-                            isDisabled: true
-                        )
+                        Button(action: { showingScanner = true }) {
+                            AddOptionRow(
+                                icon: "camera.viewfinder",
+                                title: "Scansiona Carta",
+                                subtitle: "Scansiona con fotocamera",
+                                isDisabled: false
+                            )
+                        }
+                        .buttonStyle(PlainButtonStyle())
+                        .sheet(isPresented: $showingScanner) {
+                            CardScannerView(isPresented: $showingScanner)
+                        }
                     }
                     .background(Color(.systemBackground))
                     

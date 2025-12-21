@@ -7,6 +7,7 @@
 
 import SwiftUI
 import UIKit
+import PassKit
 
 struct RewardsView: View {
     @EnvironmentObject var rewardsService: RewardsService
@@ -89,6 +90,23 @@ struct RewardsView: View {
                         PremiumPointsCard(points: userPoints)
                             .padding(.horizontal, 24)
                             .shadow(color: Color.black.opacity(0.15), radius: 20, x: 0, y: 10)
+                        
+                        // MARK: - Wallet Button
+                        if PKAddPassesViewController.canAddPasses() {
+                            HStack {
+                                Spacer()
+                                Button(action: {
+                                    addPassToWallet()
+                                }) {
+                                    SwiftUI.Image("AddToAppleWallet")
+                                        .resizable()
+                                        .aspectRatio(contentMode: .fit)
+                                        .frame(height: 44)
+                                }
+                                Spacer()
+                            }
+                            .padding(.top, 8)
+                        }
                         
                         // MARK: - Custom Tabs
                         HStack(spacing: 0) {
@@ -320,6 +338,38 @@ struct RewardsView: View {
             group.notify(queue: .main) { self.isLoading = false; continuation.resume() }
         }
     }
+    
+    private func addPassToWallet() {
+        ToastManager.shared.showInfo("Richiesta pass in corso...")
+        rewardsService.getWalletPass { result in
+            DispatchQueue.main.async {
+                switch result {
+                case .success(let data):
+                    do {
+                        let pass = try PKPass(data: data)
+                        if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+                           let rootVC = windowScene.windows.first?.rootViewController {
+                            if let existingVC = rootVC.presentedViewController {
+                                existingVC.dismiss(animated: false) {
+                                    let vc = PKAddPassesViewController(pass: pass)
+                                    rootVC.present(vc!, animated: true)
+                                }
+                            } else {
+                                let vc = PKAddPassesViewController(pass: pass)
+                                rootVC.present(vc!, animated: true)
+                            }
+                        }
+                    } catch {
+                        ToastManager.shared.showError("Errore creazione pass: \(error.localizedDescription)")
+                    }
+                case .failure(let error):
+                    // Since backend is not ready, we show a friendly message
+                    print("Wallet Error: \(error)")
+                    ToastManager.shared.showInfo("Funzionalità in arrivo! Il backend deve essere aggiornato per generare il pass.")
+                }
+            }
+        }
+    }
 }
 
 // MARK: - Premium Components
@@ -348,8 +398,6 @@ struct PremiumPointsCard: View {
                         .foregroundColor(Color(red: 0.85, green: 0.65, blue: 0.2))
                         .tracking(1)
                     Spacer()
-                    SwiftUI.Image(systemName: "wave.3.right")
-                        .foregroundColor(.white.opacity(0.3))
                 }
                 
                 Spacer()
@@ -566,7 +614,11 @@ struct RedeemedTransactionRow: View {
                 }
                 
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(transaction.description)
+                    Text(transaction.description
+                            .replacingOccurrences(of: "Redeemed reward: ", with: "")
+                            .replacingOccurrences(of: "Redeemed: ", with: "")
+                            .replacingOccurrences(of: "Redeemed", with: "")
+                            .trimmingCharacters(in: .whitespacesAndNewlines))
                         .font(.system(size: 15, weight: .semibold))
                         .lineLimit(1)
                         .foregroundColor(.primary)
@@ -631,6 +683,23 @@ struct RedeemedTransactionRow: View {
                         .foregroundColor(.blue)
                 }
                 .padding(12)
+            } else {
+                Divider().padding(.horizontal, 12)
+                HStack {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("STATO ORDINE")
+                            .font(.system(size: 10, weight: .bold))
+                            .foregroundColor(.secondary)
+                        Text("In lavorazione")
+                            .font(.system(size: 14, weight: .bold))
+                            .foregroundColor(.orange)
+                    }
+                    Spacer()
+                    SwiftUI.Image(systemName: "clock.fill")
+                        .font(.system(size: 16))
+                        .foregroundColor(.orange)
+                }
+                .padding(12)
             }
         }
         .background(Color.gray.opacity(0.1))
@@ -685,7 +754,11 @@ struct SimpleActivityRow: View {
             }
             
             VStack(alignment: .leading, spacing: 2) {
-                Text(transaction.description)
+                Text(transaction.description
+                        .replacingOccurrences(of: "Redeemed reward: ", with: "")
+                        .replacingOccurrences(of: "Redeemed: ", with: "")
+                        .replacingOccurrences(of: "Redeemed", with: "")
+                        .trimmingCharacters(in: .whitespacesAndNewlines))
                     .font(.system(size: 15, weight: .semibold))
                     .lineLimit(1)
                 
@@ -709,6 +782,28 @@ struct SimpleActivityRow: View {
 
 // MARK: - Helpers
 func formatTimestamp(_ dateString: String) -> String {
+    let formatters: [DateFormatter] = [
+        "yyyy-MM-dd'T'HH:mm:ss.SSS",
+        "yyyy-MM-dd'T'HH:mm:ss",
+        "yyyy-MM-dd HH:mm:ss"
+    ].map { format in
+        let formatter = DateFormatter()
+        formatter.dateFormat = format
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        return formatter
+    }
+    
+    for formatter in formatters {
+        if let date = formatter.date(from: dateString) {
+            let outputFormatter = DateFormatter()
+            outputFormatter.dateStyle = .medium
+            outputFormatter.timeStyle = .short
+            outputFormatter.locale = Locale(identifier: "it_IT")
+            return outputFormatter.string(from: date)
+        }
+    }
+    
+    // Fallback for ISO8601 with fractional seconds
     let isoFormatter = ISO8601DateFormatter()
     isoFormatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
     
@@ -720,7 +815,7 @@ func formatTimestamp(_ dateString: String) -> String {
         return formatter.string(from: date)
     }
     
-    // Fallback for non-fractional seconds
+    // Fallback for standard ISO8601
     isoFormatter.formatOptions = [.withInternetDateTime]
     if let date = isoFormatter.date(from: dateString) {
         let formatter = DateFormatter()
@@ -731,4 +826,14 @@ func formatTimestamp(_ dateString: String) -> String {
     }
     
     return "Data sconosciuta"
+}
+
+struct AddPassToWalletButton: UIViewRepresentable {
+    func makeUIView(context: Context) -> PKAddPassButton {
+        return PKAddPassButton(addPassButtonStyle: .black)
+    }
+
+    func updateUIView(_ uiView: PKAddPassButton, context: Context) {
+        // No updates needed
+    }
 }

@@ -193,7 +193,8 @@ struct ManualAddCardView: View {
                                     card: card,
                                     isTapped: tappedCardId == card.id,
                                     isAdding: isAddingCard && tappedCardId == card.id,
-                                    accentColor: accentColor
+                                    accentColor: accentColor,
+                                    onAdd: { addCardToDeck(card) }
                                 )
                                 .onTapGesture(count: 2) {
                                     HapticManager.shared.mediumImpact()
@@ -383,6 +384,7 @@ struct CardResultRow: View {
     let isTapped: Bool
     let isAdding: Bool
     let accentColor: Color
+    let onAdd: () -> Void
     
     var body: some View {
         HStack(spacing: 16) {
@@ -430,7 +432,7 @@ struct CardResultRow: View {
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundColor(accentColor)
             } else if isTapped {
-                Button(action: {}) {
+                Button(action: onAdd) {
                     HStack(spacing: 6) {
                         SwiftUI.Image(systemName: "plus")
                             .font(.system(size: 14, weight: .bold))

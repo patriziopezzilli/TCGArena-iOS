@@ -27,6 +27,7 @@ TCG Arena è un'app iOS nativa sviluppata in SwiftUI che offre agli appassionati
 - **Statistiche e analisi** del mazzo
 
 ### 👥 Community Features
+- **Trade Radar**: Trova collezionisti vicini per scambiare carte (GPS Matching).
 - **Chat e forum** per discussioni
 - **Classifiche e sfide** online
 - **Eventi della community**

@@ -9,22 +9,25 @@
 import SwiftUI
 import MapKit
 import ActivityKit
+import CoreLocation
 
 struct TournamentDetailView: View {
     let tournament: Tournament
     @EnvironmentObject var tournamentService: TournamentService
     @EnvironmentObject var authService: AuthService
     @Environment(\.presentationMode) var presentationMode
+    @StateObject private var locationManager = LocationManager()
     
     @State private var isRegistering = false
     @State private var isCheckingIn = false
     @State private var userRegistrationStatus: TournamentParticipant?
-    @State private var isLoadingStatus = false
+    @State private var isLoadingStatus = true
     @State private var participants: [TournamentParticipantWithUser] = []
     @State private var isLoadingParticipants = false
     @State private var showAllParticipants = false
     @State private var showLiveUpdates = false
     @State private var isLiveActivityActive = false
+    @State private var showDistanceWarning = false
     @StateObject private var liveActivityManager = TournamentLiveActivityManager.shared
     
     // MARK: - Computed Properties
@@ -474,27 +477,50 @@ struct TournamentDetailView: View {
             
         } else if (tournament.status == .registrationOpen || tournament.status == .upcoming) && authService.isAuthenticated && authService.currentUserId != nil && !isTournamentLocked {
             // Registration button
-            let buttonText = tournament.isFull ? "Entra in Lista d'Attesa" : "Iscriviti al Torneo"
-            
-            Button(action: registerForTournament) {
-                HStack(spacing: 10) {
-                    if isRegistering {
-                        ProgressView()
-                            .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                    } else {
-                        SwiftUI.Image(systemName: tournament.isFull ? "clock.badge.checkmark" : "checkmark.circle.fill")
-                        Text(buttonText)
-                            .font(.system(size: 16, weight: .bold))
+            if isLoadingStatus {
+                HStack {
+                    Spacer()
+                    ProgressView()
+                        .progressViewStyle(CircularProgressViewStyle(tint: .primary))
+                    Spacer()
+                }
+                .frame(height: 56)
+                .background(Color.gray.opacity(0.1))
+                .cornerRadius(14)
+                .padding(.horizontal, 24)
+            } else {
+                let buttonText = tournament.isFull ? "Entra in Lista d'Attesa" : "Iscriviti al Torneo"
+                
+                Button(action: { checkDistanceAndRegister() }) {
+                    HStack(spacing: 10) {
+                        if isRegistering {
+                            ProgressView()
+                                .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                        } else {
+                            SwiftUI.Image(systemName: tournament.isFull ? "clock.badge.checkmark" : "checkmark.circle.fill")
+                            Text(buttonText)
+                                .font(.system(size: 16, weight: .bold))
+                        }
+                    }
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 16)
+                    .background(Color.primary)
+                    .cornerRadius(14)
+                }
+                .disabled(isRegistering)
+                .padding(.horizontal, 24)
+                .alert("Torneo distante", isPresented: $showDistanceWarning) {
+                    Button("Annulla", role: .cancel) { }
+                    Button("Iscriviti comunque") {
+                        proceedWithRegistration()
+                    }
+                } message: {
+                    if let distance = calculateDistanceToTournament() {
+                        Text("Questo torneo si trova a \(String(format: "%.1f", distance)) km di distanza. Sei sicuro di voler partecipare?")
                     }
                 }
-                .foregroundColor(.white)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 16)
-                .background(Color.primary)
-                .cornerRadius(14)
             }
-            .disabled(isRegistering)
-            .padding(.horizontal, 24)
             
         } else if (tournament.status == .registrationOpen || tournament.status == .upcoming) && !(authService.isAuthenticated && authService.currentUserId != nil) {
             // Login required
@@ -772,6 +798,35 @@ struct TournamentDetailView: View {
                 }
             }
         }
+    }
+    
+    // MARK: - Distance Check Functions
+    
+    private func calculateDistanceToTournament() -> Double? {
+        guard let userLocation = locationManager.location,
+              let tournamentLat = tournament.location?.latitude,
+              let tournamentLon = tournament.location?.longitude else {
+            return nil
+        }
+        
+        let userCLLocation = CLLocation(latitude: userLocation.coordinate.latitude, longitude: userLocation.coordinate.longitude)
+        let tournamentCLLocation = CLLocation(latitude: tournamentLat, longitude: tournamentLon)
+        let distanceInMeters = userCLLocation.distance(from: tournamentCLLocation)
+        return distanceInMeters / 1000.0 // Convert to kilometers
+    }
+    
+    private func checkDistanceAndRegister() {
+        if let distance = calculateDistanceToTournament(), distance > 50.0 {
+            // Show warning if tournament is more than 50km away
+            showDistanceWarning = true
+        } else {
+            // Proceed directly if within 50km or location unavailable
+            proceedWithRegistration()
+        }
+    }
+    
+    private func proceedWithRegistration() {
+        registerForTournament()
     }
     
     private func unregisterFromTournament() {

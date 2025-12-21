@@ -85,6 +85,47 @@ struct CardDetailView: View {
                 heroSection
                     .padding(.horizontal, 24)
                 
+                // MARK: - 2.5 Trade Status
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("Gestione Scambi")
+                        .font(.system(size: 18, weight: .bold))
+                        .foregroundColor(.primary)
+                        .padding(.horizontal, 24)
+                    
+                    HStack(spacing: 12) {
+                        TradeActionButton(
+                            title: "CERCO",
+                            icon: "magnifyingglass",
+                            color: .blue,
+                            action: {
+                                TradeService.shared.addCardToList(cardId: Int(card.templateId), type: .want) { success in
+                                    if success {
+                                        ToastManager.shared.showSuccess("Aggiunto alla lista CERCO")
+                                    } else {
+                                        ToastManager.shared.showError("Errore durante l'aggiunta")
+                                    }
+                                }
+                            }
+                        )
+                        
+                        TradeActionButton(
+                            title: "OFFRO",
+                            icon: "tray.full.fill",
+                            color: .green,
+                            action: {
+                                TradeService.shared.addCardToList(cardId: Int(card.templateId), type: .have) { success in
+                                    if success {
+                                        ToastManager.shared.showSuccess("Aggiunto alla lista OFFRO")
+                                    } else {
+                                        ToastManager.shared.showError("Errore durante l'aggiunta")
+                                    }
+                                }
+                            }
+                        )
+                    }
+                    .padding(.horizontal, 24)
+                }
+                
                 // MARK: - 3. Info Grid
                 VStack(alignment: .leading, spacing: 24) {
                     Text("Dettagli Carta")
@@ -102,29 +143,7 @@ struct CardDetailView: View {
                 }
                 
                 // MARK: - 4. Market Data
-                if let price = cardPrice {
-                    VStack(alignment: .leading, spacing: 16) {
-                        Text("Mercato")
-                            .font(.system(size: 20, weight: .bold))
-                            .foregroundColor(.primary)
-                            .padding(.horizontal, 24)
-                        
-                        HStack(spacing: 16) {
-                            MarketStatCard(
-                                title: "Prezzo Attuale",
-                                value: price.formattedPrice,
-                                color: .primary
-                            )
-                            
-                            MarketStatCard(
-                                title: "Trend 7gg",
-                                value: price.formattedChange,
-                                color: price.priceChangeColor
-                            )
-                        }
-                        .padding(.horizontal, 24)
-                    }
-                }
+                // MARK: - 4. Market Data (Removed)
                 
                 // MARK: - 5. Grading Info (if graded)
                 if card.isGraded == true, let company = card.gradingCompany {
@@ -224,43 +243,45 @@ struct CardDetailView: View {
     // MARK: - New Components
     
     private var actionControls: some View {
-        HStack(spacing: 16) {
-            if isFromDiscover {
-                Button(action: { isShowingDeckModal = true }) {
-                    Text("Aggiungi al Mazzo")
-                        .font(.system(size: 17, weight: .bold))
-                        .foregroundColor(.white)
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 56)
-                        .background(card.tcgType?.themeColor ?? .blue)
-                        .cornerRadius(28)
-                        .shadow(color: (card.tcgType?.themeColor ?? .blue).opacity(0.3), radius: 10, y: 5)
-                }
-            } else {
-                Button(action: { showingEditView = true }) {
-                    ZStack {
-                         Circle()
-                           .fill(Color(.secondarySystemBackground))
-                           .frame(width: 56, height: 56)
-                         SwiftUI.Image(systemName: "pencil")
-                            .font(.system(size: 20, weight: .bold))
-                            .foregroundColor(.primary)
+        VStack(spacing: 16) {
+            HStack(spacing: 16) {
+                if isFromDiscover {
+                    Button(action: { isShowingDeckModal = true }) {
+                        Text("Aggiungi al Mazzo")
+                            .font(.system(size: 17, weight: .bold))
+                            .foregroundColor(.white)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 56)
+                            .background(card.tcgType?.themeColor ?? .blue)
+                            .cornerRadius(28)
+                            .shadow(color: (card.tcgType?.themeColor ?? .blue).opacity(0.3), radius: 10, y: 5)
                     }
-                }
-                
-                Button(action: { showingDeleteConfirmation = true }) {
-                    ZStack {
-                         Circle()
-                           .fill(Color.red.opacity(0.1))
-                           .frame(width: 56, height: 56)
-                         SwiftUI.Image(systemName: "trash")
-                            .font(.system(size: 20, weight: .bold))
-                            .foregroundColor(.red)
+                } else {
+                    Button(action: { showingEditView = true }) {
+                        ZStack {
+                             Circle()
+                               .fill(Color(.secondarySystemBackground))
+                               .frame(width: 56, height: 56)
+                             SwiftUI.Image(systemName: "pencil")
+                                .font(.system(size: 20, weight: .bold))
+                                .foregroundColor(.primary)
+                        }
+                    }
+                    
+                    Button(action: { showingDeleteConfirmation = true }) {
+                        ZStack {
+                             Circle()
+                               .fill(Color.red.opacity(0.1))
+                               .frame(width: 56, height: 56)
+                             SwiftUI.Image(systemName: "trash")
+                                .font(.system(size: 20, weight: .bold))
+                                .foregroundColor(.red)
+                        }
                     }
                 }
             }
+            .padding(.horizontal, 24)
         }
-        .padding(.horizontal, 24)
     }
 
     private struct MarketStatCard: View {
@@ -434,6 +455,38 @@ struct CardDetailView: View {
         formatter.dateStyle = .medium
         formatter.locale = Locale(identifier: "it_IT")
         return formatter.string(from: date)
+    }
+}
+
+struct TradeActionButton: View {
+    let title: String
+    let icon: String
+    let color: Color
+    @State private var isSelected: Bool = false
+    let action: () -> Void
+    
+    var body: some View {
+        Button(action: {
+            withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                isSelected.toggle()
+            }
+            action()
+        }) {
+            HStack(spacing: 6) {
+                SwiftUI.Image(systemName: isSelected ? "checkmark" : icon)
+                    .font(.system(size: 14, weight: .semibold))
+                Text(title)
+                    .font(.system(size: 14, weight: .semibold))
+            }
+            .foregroundColor(isSelected ? .white : .primary)
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 10)
+            .background(
+                Capsule()
+                    .fill(isSelected ? color : Color(.secondarySystemBackground))
+            )
+            .scaleEffect(isSelected ? 0.98 : 1.0)
+        }
     }
 }
     

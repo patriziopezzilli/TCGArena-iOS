@@ -124,9 +124,8 @@ class APIClient: NSObject {
         }
 
         do {
-            let decoder = JSONDecoder()
-            // Dates are now formatted as strings by the backend, so no custom decoding needed
-            let decoded = try decoder.decode(T.self, from: data)
+            // Use the configured jsonDecoder which handles date strategies
+            let decoded = try self.jsonDecoder.decode(T.self, from: data)
             return decoded
         } catch let decodingError as DecodingError {
             print("🔴 APIClient: JSON Decoding error - \(decodingError.localizedDescription)")
@@ -178,20 +177,14 @@ class APIClient: NSObject {
         let publicEndpoints = ["/api/auth/register", "/api/auth/login", "/api/auth/refresh-token"]
         if let token = jwtToken, !publicEndpoints.contains(where: { endpoint.hasPrefix($0) }) {
             request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
-            // let tokenPrefix = token.prefix(20)
-            // print("🔑 APIClient: Using JWT token (prefix: \(tokenPrefix)...)")
+            let tokenPrefix = String(token.prefix(20))
+            print("🔑 APIClient: Sending JWT token (prefix: \(tokenPrefix)...) for endpoint: \(endpoint)")
         } else {
-            print("⚠️ APIClient: No JWT token available or endpoint is public")
-            // Debug: Check if token exists in UserDefaults
-            if let savedToken = UserDefaults.standard.string(forKey: "jwtToken"), !publicEndpoints.contains(where: { endpoint.hasPrefix($0) }) {
-                print("⚠️ APIClient: Token found in UserDefaults but _jwtToken is nil!")
-                print("⚠️ APIClient: Forcing reload from UserDefaults")
-                _jwtToken = savedToken
-                request.setValue("Bearer \(savedToken)", forHTTPHeaderField: "Authorization")
-                let tokenPrefix = savedToken.prefix(20)
-                print("🔑 APIClient: Recovered JWT token (prefix: \(tokenPrefix)...)")
+            print("⚠️ APIClient: No JWT token available for endpoint: \(endpoint)")
+            if jwtToken == nil {
+                print("   - JWT token is nil")
             } else {
-                // print("⚠️ APIClient: No token in UserDefaults either or endpoint is public")
+                print("   - Endpoint might be considered public")
             }
         }
         
@@ -346,6 +339,7 @@ class APIClient: NSObject {
         }
     }
 }
+
 
 enum HTTPMethod: String {
     case get = "GET"

@@ -76,6 +76,18 @@ struct HowToGetPointsView: View {
                 }
                 .padding(.horizontal, 24)
                 
+                // Trade
+                VStack(alignment: .leading, spacing: 16) {
+                    PremiumSectionHeader(title: "Scambi", icon: "arrow.triangle.2.circlepath")
+                    
+                    VStack(spacing: 1) {
+                        MinimalPointRow(title: "Scambio Concluso", points: "+50", type: .bonus, isLast: true)
+                    }
+                    .background(Color(.secondarySystemBackground))
+                    .cornerRadius(16)
+                }
+                .padding(.horizontal, 24)
+                
                 // Info Box
                 VStack(alignment: .leading, spacing: 12) {
                     HStack(alignment: .top, spacing: 12) {

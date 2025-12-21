@@ -16,6 +16,8 @@ struct ShopView: View {
     @StateObject private var locationManager = LocationManager()
     @State private var selectedSection = 0
     @State private var showingLocationInput = false
+    @State private var showSuggestShop = false
+    @State private var showingExploreMap = false
     @AppStorage("userLocationText") private var userLocationText = "Milano, Italy"
     @AppStorage("savedLocationLatitude") private var savedLatitude: Double = 45.4642
     @AppStorage("savedLocationLongitude") private var savedLongitude: Double = 9.1900
@@ -32,6 +34,10 @@ struct ShopView: View {
     var body: some View {
         NavigationView {
             ZStack(alignment: .top) {
+                NavigationLink(isActive: $showingExploreMap) {
+                    ExploreMapView()
+                } label: { EmptyView() }
+                
                 // Background - Clean White
                 Color(.systemBackground)
                     .ignoresSafeArea()
@@ -63,6 +69,19 @@ struct ShopView: View {
                                     .background(Color(.secondarySystemBackground))
                                     .cornerRadius(20)
                                 }
+                                
+                                // Map Toggle Button
+                                Button(action: { showingExploreMap = true }) {
+                                    ZStack {
+                                        Circle()
+                                            .fill(Color.black)
+                                            .frame(width: 36, height: 36)
+                                        SwiftUI.Image(systemName: "map.fill")
+                                            .font(.system(size: 14))
+                                            .foregroundColor(.white)
+                                    }
+                                }
+                                .padding(.leading, 4)
                             }
                         .padding(.horizontal, 24)
                         .padding(.top, 10)
@@ -148,6 +167,9 @@ struct ShopView: View {
                     }
                 }
             }
+            .sheet(isPresented: $showSuggestShop) {
+                SuggestShopSheet()
+            }
         }
     }
 }
@@ -169,6 +191,8 @@ struct ShopListView: View {
     // MARK: - Filter State
     @State private var shopFilters = ShopFilters()
     @State private var showingFilters = false
+    @State private var showSuggestShop = false
+    @State private var showingExploreMap = false
     
     // MARK: - Filtered Shops
     private var filteredShops: [Shop] {
@@ -281,6 +305,26 @@ struct ShopListView: View {
                                 )
                             }
                             
+                            // 3. Map View Toggle (New!)
+                            Button(action: {
+                                showingExploreMap = true
+                                HapticManager.shared.lightImpact()
+                            }) {
+                                HStack(spacing: 6) {
+                                    SwiftUI.Image(systemName: "map")
+                                    Text("Mappa")
+                                }
+                                .font(.system(size: 14, weight: .medium))
+                                .foregroundColor(.primary)
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 8)
+                                .background(Color(.secondarySystemBackground))
+                                .overlay(
+                                    Capsule().stroke(Color(.separator), lineWidth: 0.5)
+                                )
+                                .clipShape(Capsule())
+                            }
+                            
                             // 3. Quick TCG Filters
                             ForEach([TCGType.pokemon, .magic, .onePiece], id: \.self) { tcg in
                                 let isSelected = shopFilters.selectedTCGTypes.contains(tcg)
@@ -344,7 +388,25 @@ struct ShopListView: View {
                             // Action buttons
                             VStack(spacing: 16) {
                                 if shopFilters.onlyNearby {
-                                    // Primary CTA - Show all stores
+                                    // Primary CTA - Suggest Shop
+                                    Button(action: {
+                                        HapticManager.shared.selectionChanged()
+                                        showSuggestShop = true
+                                    }) {
+                                        HStack(spacing: 8) {
+                                            SwiftUI.Image(systemName: "mappin.and.ellipse")
+                                                .font(.system(size: 16, weight: .bold))
+                                            Text("Suggerisci un negozio")
+                                                .font(.system(size: 16, weight: .bold))
+                                        }
+                                        .foregroundColor(Color(.systemBackground))
+                                        .padding(.horizontal, 32)
+                                        .padding(.vertical, 16)
+                                        .background(Color.primary)
+                                        .cornerRadius(32)
+                                    }
+                                    
+                                    // Secondary CTA - Show all stores
                                     Button(action: {
                                         withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
                                             shopFilters.onlyNearby = false
@@ -352,29 +414,25 @@ struct ShopListView: View {
                                         HapticManager.shared.selectionChanged()
                                     }) {
                                         Text("Mostra tutti")
-                                            .font(.system(size: 16, weight: .bold))
-                                            .foregroundColor(Color(.systemBackground))
-                                            .padding(.horizontal, 32)
-                                            .padding(.vertical, 16)
-                                            .background(Color.primary)
-                                            .cornerRadius(32)
-                                    }
-                                }
-                                
-                                // Secondary CTA - Reload
-                                Button(action: {
-                                    HapticManager.shared.selectionChanged()
-                                    Task {
-                                        await shopService.loadAllShops(forceRefresh: true)
-                                    }
-                                }) {
-                                    HStack(spacing: 6) {
-                                        SwiftUI.Image(systemName: "arrow.clockwise")
                                             .font(.system(size: 14, weight: .medium))
-                                        Text("Aggiorna")
-                                            .font(.system(size: 14, weight: .medium))
+                                            .foregroundColor(.secondary)
                                     }
-                                    .foregroundColor(.secondary)
+                                } else {
+                                    // Reload button when showing all
+                                    Button(action: {
+                                        HapticManager.shared.selectionChanged()
+                                        Task {
+                                            await shopService.loadAllShops(forceRefresh: true)
+                                        }
+                                    }) {
+                                        HStack(spacing: 6) {
+                                            SwiftUI.Image(systemName: "arrow.clockwise")
+                                                .font(.system(size: 14, weight: .medium))
+                                            Text("Aggiorna")
+                                                .font(.system(size: 14, weight: .medium))
+                                        }
+                                        .foregroundColor(.secondary)
+                                    }
                                 }
                             }
                             .padding(.top, 16)
@@ -445,6 +503,13 @@ struct ShopListView: View {
             .presentationDetents([.medium, .large])
             .presentationDragIndicator(.visible)
         }
+        .sheet(isPresented: $showSuggestShop) {
+            SuggestShopSheet()
+        }
+        
+        NavigationLink(isActive: $showingExploreMap) {
+            ExploreMapView()
+        } label: { EmptyView() }
     }
 }
 
