@@ -30,8 +30,6 @@ final class BackgroundTaskManager {
         BGTaskScheduler.shared.register(forTaskWithIdentifier: collectionSyncTaskId, using: nil) { task in
             self.handleCollectionSync(task: task as! BGProcessingTask)
         }
-        
-        print("✅ BackgroundTaskManager: Tasks registered")
     }
     
     // MARK: - Scheduling

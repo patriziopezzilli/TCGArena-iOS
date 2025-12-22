@@ -24,8 +24,12 @@ class VisualSearchService: ObservableObject {
         let boundary = UUID().uuidString
         request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
         
-        // Resize image to max 1000px to speed up upload, if needed
-        let resizedImage = resizeImage(image: image, targetSize: CGSize(width: 800, height: 800))
+        // 1. Digital Zoom (Crop to Center) - Simulate 2x Zoom
+        // This removes background noise and focuses on the card
+        let zoomedImage = cropToCenter(image: image, scale: 0.5) // 0.5 = 2x Zoom (keeping 50% of center)
+        
+        // 2. Resize image to max 800px to speed up upload
+        let resizedImage = resizeImage(image: zoomedImage, targetSize: CGSize(width: 800, height: 800))
         
         guard let imageData = resizedImage.jpegData(compressionQuality: 0.7) else {
             throw URLError(.cannotDecodeContentData)
@@ -41,15 +45,51 @@ class VisualSearchService: ObservableObject {
         
         request.httpBody = body
         
-        let (data, response) = try await URLSession.shared.data(for: request)
+        print("🔵 VisualSearchService: Sending request to \(url.absoluteString)")
         
-        guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
-            print("Server Error: \(String(data: data, encoding: .utf8) ?? "Unknown")")
-            throw URLError(.badServerResponse)
+        do {
+            let (data, response) = try await URLSession.shared.data(for: request)
+            
+            guard let httpResponse = response as? HTTPURLResponse else {
+                print("🔴 VisualSearchService: Invalid response type")
+                throw URLError(.badServerResponse)
+            }
+            
+            print("🔵 VisualSearchService: Response Status Code: \(httpResponse.statusCode)")
+            if let responseString = String(data: data, encoding: .utf8) {
+                print("🔵 VisualSearchService: Raw Response Body: \(responseString)")
+            }
+            
+            guard httpResponse.statusCode == 200 else {
+                print("🔴 VisualSearchService: Server Error (Status: \(httpResponse.statusCode))")
+                throw URLError(.badServerResponse)
+            }
+            
+            let results = try JSONDecoder().decode([SearchResult].self, from: data)
+            print("🟢 VisualSearchService: Successfully decoded \(results.count) results")
+            return results
+        } catch {
+            print("🔴 VisualSearchService: Network/Decoding Error: \(error)")
+            throw error
+        }
+    }
+    
+    private func cropToCenter(image: UIImage, scale: CGFloat) -> UIImage {
+        let size = image.size
+        let targetWidth = size.width * scale
+        let targetHeight = size.height * scale
+        let originX = (size.width - targetWidth) / 2
+        let originY = (size.height - targetHeight) / 2
+        
+        let rect = CGRect(x: originX, y: originY, width: targetWidth, height: targetHeight)
+        
+        // Use CGImage for cropping to ensure correct orientation handling
+        guard let cgImage = image.cgImage?.cropping(to: rect) else {
+            return image
         }
         
-        let results = try JSONDecoder().decode([SearchResult].self, from: data)
-        return results
+        // Return new image preserving the original orientation
+        return UIImage(cgImage: cgImage, scale: image.scale, orientation: image.imageOrientation)
     }
     
     private func resizeImage(image: UIImage, targetSize: CGSize) -> UIImage {

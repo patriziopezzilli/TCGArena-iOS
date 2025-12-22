@@ -20,7 +20,6 @@ class APIClient: NSObject {
         // In modalità debug, disabilita completamente la cache per vedere sempre i dati più recenti
         configuration.requestCachePolicy = .reloadIgnoringLocalCacheData
         configuration.urlCache = nil
-        // print("🔧 APIClient: Cache disabilitata per modalità debug")
         #endif
         
         return URLSession(configuration: configuration)
@@ -73,12 +72,10 @@ class APIClient: NSObject {
         get {
             if _jwtToken == nil {
                 _jwtToken = UserDefaults.standard.string(forKey: "jwtToken")
-                print("🔐 APIClient: Loaded token from UserDefaults: \(_jwtToken != nil ? "✅ Found" : "❌ Not found")")
             }
             return _jwtToken
         }
         set {
-            print("🔐 APIClient: Setting new JWT token: \(newValue != nil ? "✅ Token provided" : "❌ Clearing token")")
             _jwtToken = newValue
             if let token = newValue {
                 UserDefaults.standard.set(token, forKey: "jwtToken")
@@ -130,11 +127,9 @@ class APIClient: NSObject {
             let decoded = try self.jsonDecoder.decode(T.self, from: data)
             return decoded
         } catch let decodingError as DecodingError {
-            print("🔴 APIClient: JSON Decoding error - \(decodingError.localizedDescription)")
             // print("🔴 APIClient: Error details: \(decodingError)")
             throw decodingError
         } catch {
-            print("🔴 APIClient: Unexpected decoding error - \(error.localizedDescription)")
             throw error
         }
     }
@@ -180,9 +175,7 @@ class APIClient: NSObject {
         if let token = jwtToken, !publicEndpoints.contains(where: { endpoint.hasPrefix($0) }) {
             request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
             let tokenPrefix = String(token.prefix(20))
-            print("🔑 APIClient: Using token for \(endpoint): \(tokenPrefix)... (retry=\(retryCount))")
         } else {
-            print("⚠️ APIClient: No JWT token available for endpoint: \(endpoint)")
             if jwtToken == nil {
                 print("   - JWT token is nil")
             } else {
@@ -214,30 +207,23 @@ class APIClient: NSObject {
         
         // Log per debug - sempre attivo per endpoint di check-in
         if endpoint.contains("checkin") || endpoint.contains("check-in") {
-            print("🌐 [APIClient] Check-in request to: \(url.absoluteString)")
-            print("🌐 [APIClient] Response status: \(httpResponse.statusCode)")
             if let responseString = String(data: data, encoding: .utf8) {
-                print("🌐 [APIClient] Response body: \(responseString)")
             }
         }
 
         guard (200...299).contains(httpResponse.statusCode) else {
             // Log error responses for debugging
             if let responseString = String(data: data, encoding: .utf8) {
-                print("🔴 APIClient: Error response (\(httpResponse.statusCode)): \(responseString)")
             }
             
             if httpResponse.statusCode == 401 {
                 // Prova a refreshare il token se non è già un tentativo di retry
                 if retryCount == 0 {
-                    print("🔄 APIClient: Token expired, attempting refresh...")
                     do {
                         if try await refreshToken() {
-                            print("✅ APIClient: Token refreshed, retrying request...")
                             return try await rawRequestWithResponse(endpoint, method: method, body: body, headers: headers, retryCount: 1)
                         }
                     } catch {
-                        print("🔴 APIClient: Token refresh failed with error: \(error.localizedDescription)")
                     }
                 }
                 // Token scaduto e refresh fallito, logout
@@ -269,23 +255,18 @@ class APIClient: NSObject {
     private func refreshToken() async throws -> Bool {
         // Se c'è già un refresh in corso, attendi il suo risultato
         if let existingTask = refreshTask {
-            print("🔄 APIClient: Waiting for existing refresh task...")
             return try await existingTask.value
         }
         
         // Avvia un nuovo task di refresh
         let task = Task<Bool, Error> {
             guard let currentRefreshToken = refreshToken else {
-                print("🔴 APIClient: No refresh token available")
                 return false
             }
 
             guard let url = URL(string: baseURL + "/api/auth/refresh-token") else {
-                print("🔴 APIClient: Invalid refresh URL")
                 return false
             }
-
-            print("🔄 APIClient: Attempting to refresh token")
 
             var request = URLRequest(url: url)
             request.httpMethod = "POST"
@@ -298,14 +279,11 @@ class APIClient: NSObject {
                 let (data, response) = try await urlSession.data(for: request)
 
                 guard let httpResponse = response as? HTTPURLResponse else {
-                    print("🔴 APIClient: Invalid refresh response type")
                     return false
                 }
 
                 guard (200...299).contains(httpResponse.statusCode) else {
-                    print("🔴 APIClient: Refresh failed with status code: \(httpResponse.statusCode)")
                     if let responseString = String(data: data, encoding: .utf8) {
-                        print("🔴 APIClient: Refresh error response: \(responseString)")
                     }
                     return false
                 }
@@ -316,14 +294,11 @@ class APIClient: NSObject {
                 if let newToken = refreshResponse["accessToken"], let newRefreshToken = refreshResponse["refreshToken"] {
                     jwtToken = newToken
                     refreshToken = newRefreshToken
-                    print("✅ APIClient: Tokens refreshed successfully")
                     return true
                 } else {
-                    print("🔴 APIClient: Refresh response missing accessToken or refreshToken")
                     return false
                 }
             } catch {
-                print("🔴 APIClient: Refresh request failed - \(error.localizedDescription)")
                 return false
             }
         }

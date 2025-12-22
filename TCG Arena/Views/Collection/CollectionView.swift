@@ -418,7 +418,7 @@ struct CollectionView: View {
                                         cardsByTemplateId[templateId] = (enrichedCard, existing.totalQuantity, existing.deckNames)
                                     }
                                 case .failure(_):
-                                    print("> fail")
+                                    let test = ""
                                 }
                                 group.leave()
                             }

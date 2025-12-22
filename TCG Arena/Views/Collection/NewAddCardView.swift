@@ -83,6 +83,19 @@ struct NewAddCardView: View {
                              AIScannerView(isPresented: $showingAIScanner)
                                  .environmentObject(cardService)
                         }
+                        
+                        Divider().padding(.leading, 64)
+                        
+                        Text("⚠️ Beta: Supporta attualmente solo carte Pokémon")
+                            .font(.system(size: 13, weight: .medium, design: .rounded))
+                            .foregroundColor(.secondary)
+                            .padding(.vertical, 8)
+                            .padding(.horizontal, 16)
+                            .background(Color(.secondarySystemBackground))
+                            .cornerRadius(20)
+                            .frame(maxWidth: .infinity)
+                            .padding(.top, 8)
+                            .padding(.bottom, 12)
                     }
                     .background(Color(.systemBackground))
                     

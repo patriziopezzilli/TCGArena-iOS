@@ -76,7 +76,6 @@ class ImageCacheManager {
         
         // Controlla prima la cache in memoria
         if let cachedImage = memoryCache.object(forKey: cacheKey) {
-            print("🖼️ ImageCache: Loaded from memory cache - \(url.lastPathComponent)")
             return cachedImage
         }
         
@@ -84,12 +83,10 @@ class ImageCacheManager {
         if let diskImage = loadFromDisk(for: cacheKey) {
             // Salva anche in memoria per accessi futuri più veloci
             memoryCache.setObject(diskImage, forKey: cacheKey)
-            print("🖼️ ImageCache: Loaded from disk cache - \(url.lastPathComponent)")
             return diskImage
         }
         
         // Scarica dall'URL
-        print("🌐 ImageCache: Downloading from network - \(url.lastPathComponent)")
         let (data, response) = try await URLSession.shared.data(from: url)
         
         guard let httpResponse = response as? HTTPURLResponse,
@@ -102,7 +99,6 @@ class ImageCacheManager {
         memoryCache.setObject(image, forKey: cacheKey)
         saveToDisk(image, for: cacheKey)
         
-        print("💾 ImageCache: Saved to cache - \(url.lastPathComponent)")
         return image
     }
     
@@ -136,9 +132,7 @@ class ImageCacheManager {
             for fileURL in contents {
                 try fileManager.removeItem(at: fileURL)
             }
-            print("🗑️ ImageCache: Cache cleared")
         } catch {
-            print("❌ ImageCache: Error clearing cache - \(error.localizedDescription)")
         }
     }
     
@@ -154,7 +148,6 @@ class ImageCacheManager {
                 diskSize += attributes[.size] as? Int ?? 0
             }
         } catch {
-            print("❌ ImageCache: Error calculating disk size - \(error.localizedDescription)")
         }
         
         return (memorySize, diskSize)

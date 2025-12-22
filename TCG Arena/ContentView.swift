@@ -110,7 +110,6 @@ struct ContentView: View {
             
             // Perform update
             Task {
-                print("📍 Detected significant location change, updating backend...")
                 // Reverse geocode
                 var city: String?
                 var country: String?
@@ -135,7 +134,6 @@ struct ContentView: View {
                 }
                 
                 lastLocationUpdate = now
-                print("📍 Backend location updated successfully")
             }
         }
     }

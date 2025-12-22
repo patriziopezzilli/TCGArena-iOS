@@ -83,10 +83,8 @@ final class NetworkMonitor: ObservableObject {
                 if let httpResponse = response as? HTTPURLResponse, (200...299).contains(httpResponse.statusCode) {
                     // Actual connection confirmed
                     self?.isConnected = true
-                    print("✅ Manual connectivity check: Connection verified")
                 } else if let error = error {
                     // Still failing
-                    print("❌ Manual connectivity check failed: \(error.localizedDescription)")
                 }
             }
         }

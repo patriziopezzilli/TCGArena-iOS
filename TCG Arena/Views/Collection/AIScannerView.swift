@@ -12,102 +12,116 @@ struct AIScannerView: View {
     @State private var searchResults: [SearchResult] = []
     @State private var errorMessage: String?
     @State private var matchedCards: [CardTemplate] = []
-    @State private var selectedTemplateId: Int64?
+    @State private var selectedCard: Card?
     @State private var showingDetail = false
     
     var body: some View {
         NavigationView {
-            VStack {
-                if isLoading {
-                    CyberneticScanningView(image: image)
-                } else if let errorMessage = errorMessage {
-                    VStack(spacing: 20) {
-                        SwiftUI.Image(systemName: "exclamationmark.triangle.fill")
-                            .font(.system(size: 60))
-                            .foregroundColor(.orange)
-                            .shadow(color: .orange.opacity(0.5), radius: 10)
-                        
-                        Text("ERRORE SISTEMA")
-                            .font(.system(size: 20, weight: .black, design: .monospaced))
-                            .foregroundColor(.red)
-                        
-                        Text(errorMessage)
-                            .multilineTextAlignment(.center)
-                            .padding()
-                            .font(.body)
-                        
-                        Button(action: {
-                            self.errorMessage = nil
-                            self.showingImagePicker = true
-                        }) {
-                            Text("RIAVVIA SCANSIONE")
-                                .font(.headline)
-                                .foregroundColor(.black)
+            ZStack {
+                // Hidden Navigation Link for programmatic navigation
+                NavigationLink(isActive: $showingDetail, destination: {
+                    if let card = selectedCard {
+                        CardDetailView(card: card, isFromDiscover: true) // Using true to hide edit controls if appropriate, or false if owner
+                    }
+                }) { EmptyView() }
+
+                VStack {
+                    if isLoading {
+                        CyberneticScanningView(image: image)
+                    } else if let errorMessage = errorMessage {
+                        VStack(spacing: 20) {
+                            SwiftUI.Image(systemName: "exclamationmark.triangle.fill")
+                                .font(.system(size: 60))
+                                .foregroundColor(.orange)
+                                .shadow(color: .orange.opacity(0.5), radius: 10)
+                            
+                            Text("ERRORE SISTEMA")
+                                .font(.system(size: 20, weight: .black, design: .monospaced))
+                                .foregroundColor(.red)
+                            
+                            Text(errorMessage)
+                                .multilineTextAlignment(.center)
                                 .padding()
-                                .background(Color.orange)
-                                .cornerRadius(10)
-                        }
-                    }
-                    .padding()
-                } else if !matchedCards.isEmpty {
-                    // ... (keep existing results list)
-                    List {
-                        Section(header: Text("MATCH TROVATI")
-                                    .font(.caption)
-                                    .foregroundColor(.blue)) {
-                            ForEach(matchedCards) { card in
-                                CardRow(card: card)
-                                    .contentShape(Rectangle())
-                                    .onTapGesture {
-                                        print("Selected card: \(card.name)")
-                                    }
-                            }
-                        }
-                    }
-                    .listStyle(InsetGroupedListStyle())
-                } else {
-                    // Initial State
-                    ZStack {
-                        Color.black.edgesIgnoringSafeArea(.all)
-                        
-                        VStack(spacing: 30) {
-                            Spacer()
-                            
-                            SwiftUI.Image(systemName: "viewfinder")
-                                .font(.system(size: 100, weight: .thin))
-                                .foregroundColor(.blue)
-                                .opacity(0.8)
-                            
-                            VStack(spacing: 8) {
-                                Text("AI VISION SYSTEM")
-                                    .font(.system(size: 24, weight: .black, design: .monospaced))
-                                    .foregroundColor(.white)
-                                
-                                Text("Inquadra la carta per l'analisi vettoriale")
-                                    .font(.subheadline)
-                                    .foregroundColor(.gray)
-                            }
-                            
-                            Spacer()
+                                .font(.body)
                             
                             Button(action: {
-                                showingImagePicker = true
+                                self.errorMessage = nil
+                                self.showingImagePicker = true
                             }) {
-                                HStack {
-                                    SwiftUI.Image(systemName: "camera.fill")
-                                    Text("ATTIVA SENSORI")
-                                }
-                                .font(.system(size: 18, weight: .bold, design: .rounded))
-                                .foregroundColor(.black)
-                                .padding(.horizontal, 30)
-                                .padding(.vertical, 16)
-                                .background(
-                                    LinearGradient(colors: [.blue, .cyan], startPoint: .leading, endPoint: .trailing)
-                                )
-                                .clipShape(Capsule())
-                                .shadow(color: .blue.opacity(0.6), radius: 20, x: 0, y: 0)
+                                Text("RIAVVIA SCANSIONE")
+                                    .font(.headline)
+                                    .foregroundColor(.black)
+                                    .padding()
+                                    .background(Color.orange)
+                                    .cornerRadius(10)
                             }
-                            .padding(.bottom, 50)
+                        }
+                        .padding()
+                    } else if !matchedCards.isEmpty {
+                        ScrollView {
+                            VStack(spacing: 16) {
+                                Text("RISULTATI ANALISI")
+                                    .font(.system(size: 14, weight: .black, design: .monospaced))
+                                    .foregroundColor(.gray)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                    .padding(.horizontal)
+                                    .padding(.top)
+
+                                ForEach(matchedCards) { card in
+                                    ResultCardView(card: card) {
+                                        self.selectedCard = Card(from: card)
+                                        self.showingDetail = true
+                                    }
+                                    .padding(.horizontal)
+                                }
+                            }
+                            .padding(.bottom, 20)
+                        }
+                        .background(Color(.systemGroupedBackground).edgesIgnoringSafeArea(.all))
+                    } else {
+                        // Initial State
+                        ZStack {
+                            Color.black.edgesIgnoringSafeArea(.all)
+                            
+                            VStack(spacing: 30) {
+                                Spacer()
+                                
+                                SwiftUI.Image(systemName: "viewfinder")
+                                    .font(.system(size: 100, weight: .thin))
+                                    .foregroundColor(.blue)
+                                    .opacity(0.8)
+                                
+                                VStack(spacing: 8) {
+                                    Text("TCG ARENA AI SCANNER")
+                                        .font(.system(size: 24, weight: .black, design: .monospaced))
+                                        .foregroundColor(.white)
+                                    
+                                    Text("Inquadra la carta per l'analisi vettoriale")
+                                        .font(.subheadline)
+                                        .foregroundColor(.gray)
+                                }
+                                
+                                Spacer()
+                                
+                                Button(action: {
+                                    showingImagePicker = true
+                                }) {
+                                    HStack {
+                                        SwiftUI.Image(systemName: "camera.fill")
+                                        Text("ATTIVA SENSORI")
+                                    }
+                                    .font(.system(size: 18, weight: .bold, design: .rounded))
+                                    .foregroundColor(.black)
+                                    .padding(.horizontal, 30)
+                                    .padding(.vertical, 16)
+                                    .background(
+                                        LinearGradient(colors: [.blue, .cyan], startPoint: .leading, endPoint: .trailing)
+                                    )
+                                    .clipShape(Capsule())
+                                    .shadow(color: .blue.opacity(0.6), radius: 20, x: 0, y: 0)
+                                }
+                                .padding(.bottom, 50)
+                            }
                         }
                     }
                 }
@@ -121,10 +135,177 @@ struct AIScannerView: View {
                 ImagePicker(image: $image, sourceType: .camera)
                     .ignoresSafeArea()
             }
-            // ... (keep onChange)
+            .onChange(of: image) { newImage in
+                if let img = newImage {
+                    performSearch(image: img)
+                }
+            }
         }
     }
-    // ... (keep performSearch)
+    @State private var searchId = UUID()
+    
+    private func performSearch(image: UIImage) {
+        // Generate new ID for this search attempt
+        let currentId = UUID()
+        self.searchId = currentId
+        
+        print("🔍 AIScannerView: Starting search (ID: \(currentId))")
+        
+        isLoading = true
+        errorMessage = nil
+        matchedCards = []
+        
+        Task {
+            do {
+                var results = try await searchService.searchCard(image: image)
+                
+                // USER REQUEST: Filter results with confidence >= 8.8
+                // NOTE: If 'confidence' is distance, this filters FOR larger distances (potentially worse matches).
+                results = results.filter { $0.confidence >= 8.8 }
+                
+                guard self.searchId == currentId else {
+                    print("⚠️ AIScannerView: Search cancelled (stale ID)")
+                    return
+                }
+                
+                if results.isEmpty {
+                    errorMessage = "Nessun risultato trovato. Prova con una luce migliore o uno sfondo neutro."
+                } else {
+                    // Fetch full card details for each result
+                    var cards: [CardTemplate] = []
+                    
+                    for res in results {
+                        // Check cancellation inside loop
+                        guard self.searchId == currentId else { return }
+                        
+                         // Use continuation to bridge completion block to async/await
+                         let card: CardTemplate? = await withCheckedContinuation { continuation in
+                             cardService.getCardTemplateById(Int(res.card_id)) { result in
+                                 switch result {
+                                 case .success(let template):
+                                     continuation.resume(returning: template)
+                                 case .failure:
+                                     // Create a placeholder template if fetch fails
+                                     // taking advantage of the ID we have
+                                     let placeholder = CardTemplate(
+                                         id: Int64(res.card_id),
+                                         name: "Carta #\(res.card_id)",
+                                         tcgType: .pokemon, // Default/Unknown
+                                         setCode: "???",
+                                         expansion: nil,
+                                         rarity: .common,
+                                         cardNumber: "???",
+                                         description: "Dettagli non disponibili (DB Mismatch)",
+                                         imageUrl: nil,
+                                         marketPrice: nil,
+                                         manaCost: nil,
+                                         dateCreated: Date()
+                                     )
+                                     continuation.resume(returning: placeholder)
+                                 }
+                             }
+                         }
+                         
+                         if let card = card {
+                             cards.append(card)
+                         }
+                    }
+                    
+                    guard self.searchId == currentId else { return }
+                    
+                    DispatchQueue.main.async {
+                        print("✅ AIScannerView: Updating UI with \(cards.count) cards")
+                        self.matchedCards = cards
+                        
+                        // Auto-navigate if single result
+                        if self.matchedCards.count == 1, let singleCard = self.matchedCards.first {
+                            self.selectedCard = Card(from: singleCard)
+                            self.showingDetail = true
+                        }
+                        
+                        // If we have cards (even placeholders), show them.
+                        // Only show error if list is strictly empty
+                        if self.matchedCards.isEmpty {
+                            self.errorMessage = "Trovati risultati ma impossibile scaricare i dettagli. Riprova."
+                        }
+                    }
+                }
+            } catch {
+                guard self.searchId == currentId else { return }
+                DispatchQueue.main.async {
+                    print("🔴 AIScannerView: Error - \(error.localizedDescription)")
+                    self.errorMessage = "Errore: \(error.localizedDescription)"
+                }
+            }
+            
+            // Only turn off loading if this is the active search
+            if self.searchId == currentId {
+                DispatchQueue.main.async {
+                    self.isLoading = false
+                }
+            }
+        }
+    }
+}
+
+// MARK: - New UI Components
+
+struct ResultCardView: View {
+    let card: CardTemplate
+    let action: () -> Void
+    
+    var body: some View {
+        HStack(spacing: 16) {
+            // Card Image
+            AsyncImage(url: URL(string: card.fullImageUrl ?? "")) { image in
+                 image.resizable().aspectRatio(contentMode: .fit)
+            } placeholder: {
+                 Color.gray.opacity(0.2)
+            }
+            .frame(width: 80, height: 110)
+            .cornerRadius(8)
+            .shadow(color: .black.opacity(0.1), radius: 4, x: 0, y: 2)
+            
+            VStack(alignment: .leading, spacing: 6) {
+                Text(card.name)
+                    .font(.headline)
+                    .foregroundColor(.primary)
+                    .lineLimit(2)
+                
+                if !card.setCode.isEmpty {
+                    Text(card.setCode)
+                        .font(.caption)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(Color.blue.opacity(0.1))
+                        .foregroundColor(.blue)
+                        .cornerRadius(4)
+                }
+                
+                Spacer()
+                
+                Button(action: action) {
+                    HStack {
+                        Text("Vedi Dettagli")
+                        SwiftUI.Image(systemName: "chevron.right")
+                    }
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 8)
+                    .background(Color.blue)
+                    .cornerRadius(20)
+                }
+            }
+            .padding(.vertical, 10)
+            
+            Spacer()
+        }
+        .padding(12)
+        .background(Color.white)
+        .cornerRadius(12)
+        .shadow(color: .black.opacity(0.05), radius: 5, x: 0, y: 2)
+    }
 }
 
 // MARK: - Futuristic UI Components
@@ -256,58 +437,6 @@ struct CornerShape: Shape {
         path.addLine(to: CGPoint(x: 0, y: 0))
         path.addLine(to: CGPoint(x: rect.width, y: 0))
         return path
-    }
-}
-    
-    private func performSearch(image: UIImage) {
-        isLoading = true
-        errorMessage = nil
-        matchedCards = []
-        
-        Task {
-            do {
-                let results = try await searchService.searchCard(image: image)
-                
-                if results.isEmpty {
-                    errorMessage = "Nessun risultato trovato. Prova con una luce migliore o uno sfondo neutro."
-                } else {
-                    // Fetch full card details for each result
-                    var cards: [CardTemplate] = []
-                    
-                    for res in results {
-                         // Use continuation to bridge completion block to async/await
-                         let card: CardTemplate? = await withCheckedContinuation { continuation in
-                             cardService.getCardTemplateById(Int(res.card_id)) { result in
-                                 switch result {
-                                 case .success(let template):
-                                     continuation.resume(returning: template)
-                                 case .failure:
-                                     continuation.resume(returning: nil)
-                                 }
-                             }
-                         }
-                         
-                         if let card = card {
-                             cards.append(card)
-                         }
-                    }
-                    
-                    DispatchQueue.main.async {
-                        self.matchedCards = cards
-                        if self.matchedCards.isEmpty {
-                            self.errorMessage = "Trovati risultati ma impossibile scaricare i dettagli. Riprova."
-                        }
-                    }
-                }
-            } catch {
-                DispatchQueue.main.async {
-                    self.errorMessage = "Errore: \(error.localizedDescription)"
-                }
-            }
-            DispatchQueue.main.async {
-                 self.isLoading = false
-            }
-        }
     }
 }
 
