@@ -16,6 +16,7 @@ struct NewAddCardView: View {
     @EnvironmentObject var deckService: DeckService
     
     @State private var showingScanner = false
+    @State private var showingAIScanner = false
     
     var body: some View {
         NavigationView {
@@ -56,14 +57,31 @@ struct NewAddCardView: View {
                         Button(action: { showingScanner = true }) {
                             AddOptionRow(
                                 icon: "camera.viewfinder",
-                                title: "Scansiona Carta",
-                                subtitle: "Scansiona con fotocamera",
+                                title: "Scanner Codici",
+                                subtitle: "Scanner classico (OCR)",
                                 isDisabled: false
                             )
                         }
                         .buttonStyle(PlainButtonStyle())
                         .sheet(isPresented: $showingScanner) {
                             CardScannerView(isPresented: $showingScanner)
+                        }
+                        
+                        Divider().padding(.leading, 64)
+                        
+                        // AI Scanner Entry (Direct to Python)
+                        Button(action: { showingAIScanner = true }) {
+                             AddOptionRow(
+                                 icon: "sparkles.rectangle.stack.fill", // AI-ish icon
+                                 title: "Scanner AI",
+                                 subtitle: "Riconoscimento Visuale",
+                                 badge: "BETA"
+                             )
+                        }
+                        .buttonStyle(PlainButtonStyle())
+                        .sheet(isPresented: $showingAIScanner) {
+                             AIScannerView(isPresented: $showingAIScanner)
+                                 .environmentObject(cardService)
                         }
                     }
                     .background(Color(.systemBackground))

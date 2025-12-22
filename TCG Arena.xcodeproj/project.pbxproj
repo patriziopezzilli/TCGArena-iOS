@@ -11,6 +11,8 @@
 		78158DE42EF806BC00787DC6 /* ScanResultView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78158DE32EF806BC00787DC6 /* ScanResultView.swift */; };
 		78158DE62EF81FFE00787DC6 /* SuggestionModalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78158DE52EF81FFE00787DC6 /* SuggestionModalView.swift */; };
 		78158E062EF9856600787DC6 /* BackgroundTaskManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78158E052EF9856600787DC6 /* BackgroundTaskManager.swift */; };
+		78158E122EF9A86900787DC6 /* VisualSearchService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78158E112EF9A86900787DC6 /* VisualSearchService.swift */; };
+		78158E142EF9A87500787DC6 /* AIScannerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78158E132EF9A87500787DC6 /* AIScannerView.swift */; };
 		78229A532EF5BD5700E2F700 /* HomeDashboardService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78229A522EF5BD5700E2F700 /* HomeDashboardService.swift */; };
 		78229A562EF5BD6000E2F700 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78229A542EF5BD6000E2F700 /* HomeView.swift */; };
 		78229A582EF5C5E000E2F700 /* MinimalTabButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78229A572EF5C5E000E2F700 /* MinimalTabButton.swift */; };
@@ -201,6 +203,8 @@
 		78158DE32EF806BC00787DC6 /* ScanResultView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScanResultView.swift; sourceTree = "<group>"; };
 		78158DE52EF81FFE00787DC6 /* SuggestionModalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SuggestionModalView.swift; sourceTree = "<group>"; };
 		78158E052EF9856600787DC6 /* BackgroundTaskManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundTaskManager.swift; sourceTree = "<group>"; };
+		78158E112EF9A86900787DC6 /* VisualSearchService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VisualSearchService.swift; sourceTree = "<group>"; };
+		78158E132EF9A87500787DC6 /* AIScannerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIScannerView.swift; sourceTree = "<group>"; };
 		78229A522EF5BD5700E2F700 /* HomeDashboardService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeDashboardService.swift; sourceTree = "<group>"; };
 		78229A542EF5BD6000E2F700 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
 		78229A572EF5C5E000E2F700 /* MinimalTabButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MinimalTabButton.swift; sourceTree = "<group>"; };
@@ -663,6 +667,7 @@
 		A5000006 /* Services */ = {
 			isa = PBXGroup;
 			children = (
+				78158E112EF9A86900787DC6 /* VisualSearchService.swift */,
 				78158DE12EF800BD00787DC6 /* RadarService.swift */,
 				78229A842EF738CD00E2F700 /* TradeService.swift */,
 				78229A522EF5BD5700E2F700 /* HomeDashboardService.swift */,
@@ -711,6 +716,7 @@
 		A5000009 /* Collection */ = {
 			isa = PBXGroup;
 			children = (
+				78158E132EF9A87500787DC6 /* AIScannerView.swift */,
 				78158DE32EF806BC00787DC6 /* ScanResultView.swift */,
 				785CF4BE2EDC8D3F00BA98AD /* CreateDeckView.swift */,
 				784090472EDA2CD700CC6B9A /* SetDetailView.swift */,
@@ -980,6 +986,7 @@
 				7A8B2E8A2EC1F308004F6826 /* DiscoverService.swift in Sources */,
 				786AC8672EE2ECC6001A6714 /* AuthFlowView.swift in Sources */,
 				7A1CC9492ED2753B00A61395 /* TournamentDetailView.swift in Sources */,
+				78158E122EF9A86900787DC6 /* VisualSearchService.swift in Sources */,
 				78660E4F2EE6177900EA2BFE /* EmbeddedUserStats.swift in Sources */,
 				A1000010 /* TournamentMapView.swift in Sources */,
 				784090482EDA2CD700CC6B9A /* SetDetailView.swift in Sources */,
@@ -1021,6 +1028,7 @@
 				7A7DF3DD2EBB938A00331A52 /* CardDetailView.swift in Sources */,
 				7A8B2E9C2EC22EE0004F6826 /* ExpansionService.swift in Sources */,
 				7A817B8B2EC7692500500F32 /* Shop.swift in Sources */,
+				78158E142EF9A87500787DC6 /* AIScannerView.swift in Sources */,
 				78D54ADB2EE1B894009A04C7 /* DeckDetailView.swift in Sources */,
 				A1000015 /* CardRowView.swift in Sources */,
 				786778FC2EF2E643000928C4 /* OpeningHours.swift in Sources */,
