@@ -82,7 +82,7 @@ struct ProfileView: View {
                     GridItem(.flexible())
                 ], spacing: 16) {
                     MinimalProfileStat(value: "\(userStats?.totalCards ?? 0)", label: "Carte")
-                    MinimalProfileStat(value: "\(userStats?.totalDecks ?? 0)", label: "Decks")
+                    MinimalProfileStat(value: "\(userStats?.totalDecks ?? 0)", label: "Mazzi")
                     MinimalProfileStat(value: "\(userStats?.totalTournaments ?? 0)", label: "Tornei")
                 }
                 .padding(.horizontal, 24)
@@ -90,9 +90,9 @@ struct ProfileView: View {
                 // MARK: - Content Tabs
                 VStack(spacing: 0) {
                     HStack(spacing: 0) {
-                        ProfileTabButton(title: "Overview", isSelected: selectedTab == 0) { selectedTab = 0 }
-                        ProfileTabButton(title: "Decks", isSelected: selectedTab == 1) { selectedTab = 1 }
-                        ProfileTabButton(title: "Collection", isSelected: selectedTab == 2) { selectedTab = 2 }
+                        ProfileTabButton(title: "Panoramica", isSelected: selectedTab == 0) { selectedTab = 0 }
+                        ProfileTabButton(title: "Mazzi", isSelected: selectedTab == 1) { selectedTab = 1 }
+                        ProfileTabButton(title: "Collezione", isSelected: selectedTab == 2) { selectedTab = 2 }
                     }
                     .padding(.horizontal, 24)
                     .padding(.bottom, 24)
@@ -112,7 +112,7 @@ struct ProfileView: View {
         .onAppear { loadData() }
         .sheet(isPresented: $showingEditProfile) {
             // Edit Profile Sheet (Placeholder or actual view if exists)
-            Text("Edit Profile View")
+            Text("Modifica Profilo")
         }
     }
     
@@ -183,7 +183,7 @@ struct ProfileView: View {
     // MARK: - Collection Content
     var collectionContent: some View {
         VStack {
-            Text("Coming Soon")
+            Text("In Arrivo")
                 .foregroundColor(.secondary)
                 .padding(.top, 40)
         }

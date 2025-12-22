@@ -101,8 +101,13 @@ struct ShopDetailView: View {
         }
         .navigationBarHidden(true)
         .task {
+            // Load subscriptions first, awaiting completion so isSubscribed() works correctly
             if authService.isAuthenticated {
-                shopService.loadUserSubscriptions { _ in }
+                await withCheckedContinuation { continuation in
+                    shopService.loadUserSubscriptions { _ in
+                        continuation.resume()
+                    }
+                }
             }
             await shopService.loadShopNewsFromAPI(shopId: shop.id.description)
             newsLoaded = true

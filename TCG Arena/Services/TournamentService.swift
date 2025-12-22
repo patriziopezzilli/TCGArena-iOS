@@ -229,8 +229,7 @@ class TournamentService: ObservableObject {
     /// This prevents multiple UI updates and potential cancellation issues
     @MainActor
     func refreshAllData() async {
-        guard !isLoading else { return }
-        
+        // Allow refresh even if already loading - important for pull-to-refresh
         isLoading = true
         errorMessage = nil
         

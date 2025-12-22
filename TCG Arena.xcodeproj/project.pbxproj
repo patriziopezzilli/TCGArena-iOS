@@ -10,6 +10,7 @@
 		78158DE22EF800BD00787DC6 /* RadarService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78158DE12EF800BD00787DC6 /* RadarService.swift */; };
 		78158DE42EF806BC00787DC6 /* ScanResultView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78158DE32EF806BC00787DC6 /* ScanResultView.swift */; };
 		78158DE62EF81FFE00787DC6 /* SuggestionModalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78158DE52EF81FFE00787DC6 /* SuggestionModalView.swift */; };
+		78158E062EF9856600787DC6 /* BackgroundTaskManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78158E052EF9856600787DC6 /* BackgroundTaskManager.swift */; };
 		78229A532EF5BD5700E2F700 /* HomeDashboardService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78229A522EF5BD5700E2F700 /* HomeDashboardService.swift */; };
 		78229A562EF5BD6000E2F700 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78229A542EF5BD6000E2F700 /* HomeView.swift */; };
 		78229A582EF5C5E000E2F700 /* MinimalTabButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78229A572EF5C5E000E2F700 /* MinimalTabButton.swift */; };
@@ -199,6 +200,7 @@
 		78158DE12EF800BD00787DC6 /* RadarService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RadarService.swift; sourceTree = "<group>"; };
 		78158DE32EF806BC00787DC6 /* ScanResultView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScanResultView.swift; sourceTree = "<group>"; };
 		78158DE52EF81FFE00787DC6 /* SuggestionModalView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SuggestionModalView.swift; sourceTree = "<group>"; };
+		78158E052EF9856600787DC6 /* BackgroundTaskManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundTaskManager.swift; sourceTree = "<group>"; };
 		78229A522EF5BD5700E2F700 /* HomeDashboardService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeDashboardService.swift; sourceTree = "<group>"; };
 		78229A542EF5BD6000E2F700 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
 		78229A572EF5C5E000E2F700 /* MinimalTabButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MinimalTabButton.swift; sourceTree = "<group>"; };
@@ -498,6 +500,7 @@
 		7A7DF41F2EBBA0DE00331A52 /* Utils */ = {
 			isa = PBXGroup;
 			children = (
+				78158E052EF9856600787DC6 /* BackgroundTaskManager.swift */,
 				78660E532EE7795600EA2BFE /* HapticManager.swift */,
 				784090492EDB96F800CC6B9A /* ImageCacheManager.swift */,
 				7A7DF4232EBBAD5000331A52 /* ViewHelpers.swift */,
@@ -958,6 +961,7 @@
 				786AC86E2EE40EE4001A6714 /* Reward+Extensions.swift in Sources */,
 				786AC86F2EE40EE4001A6714 /* Partner+Extensions.swift in Sources */,
 				786AC8702EE40EE4001A6714 /* PartnerModels.swift in Sources */,
+				78158E062EF9856600787DC6 /* BackgroundTaskManager.swift in Sources */,
 				78D54AAE2EE0EEE6009A04C7 /* LocationManager.swift in Sources */,
 				7A1CC9422ED2392C00A61395 /* RewardsService.swift in Sources */,
 				7A1CC9432ED2392C00A61395 /* UserService.swift in Sources */,

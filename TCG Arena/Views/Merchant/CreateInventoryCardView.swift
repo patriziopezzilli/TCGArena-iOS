@@ -44,7 +44,7 @@ struct CreateInventoryCardView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Cancel") {
+                    Button("Annulla") {
                         dismiss()
                     }
                 }
@@ -75,7 +75,7 @@ struct CreateInventoryCardView: View {
                 Image(systemName: "magnifyingglass")
                     .foregroundColor(.secondary)
                 
-                TextField("Search for a card...", text: $searchText)
+                TextField("Cerca una carta...", text: $searchText)
                     .textFieldStyle(PlainTextFieldStyle())
                     .autocapitalization(.none)
                     .onChange(of: searchText) { _, newValue in

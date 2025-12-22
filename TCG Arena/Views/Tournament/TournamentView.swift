@@ -198,7 +198,7 @@ struct TournamentView: View {
                                 .padding(.bottom, 20)
                             }
                         } else {
-                            Text("No past tournaments")
+                            Text("Nessun torneo passato")
                                 .foregroundColor(.secondary)
                                 .padding()
                         }
@@ -242,14 +242,8 @@ struct TournamentView: View {
                 let generator = UIImpactFeedbackGenerator(style: .medium)
                 generator.impactOccurred()
                 
-                await tournamentService.loadTournaments()
-                
-                if let userLocation = locationManager.location {
-                    await tournamentService.loadNearbyTournaments(userLocation: userLocation)
-                } else {
-                    let milanCenter = CLLocation(latitude: 45.4642, longitude: 9.1900)
-                    await tournamentService.loadNearbyTournaments(userLocation: milanCenter)
-                }
+                // Use unified refresh that fetches all data in parallel
+                await tournamentService.refreshAllData()
             }
             .sheet(item: $selectedTournament) { tournament in
                 TournamentDetailView(tournament: tournament)
@@ -453,7 +447,7 @@ struct EmptyTournamentsView: View {
             }
             
             VStack(spacing: 12) {
-                Text("No Tournaments Found")
+                Text("Nessun Torneo Trovato")
                     .font(.system(size: 24, weight: .bold))
                     .foregroundColor(.primary)
                 

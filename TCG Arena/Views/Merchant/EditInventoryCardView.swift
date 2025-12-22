@@ -180,7 +180,7 @@ struct EditInventoryCardView: View {
                     
                     // Notes
                     VStack(alignment: .leading, spacing: 12) {
-                        Text("Notes (Optional)")
+                        Text("Note (Opzionale)")
                             .font(.system(size: 15, weight: .semibold))
                             .foregroundColor(.primary)
                         
@@ -197,7 +197,7 @@ struct EditInventoryCardView: View {
                     Button(action: { showDeleteConfirmation = true }) {
                         HStack {
                             Image(systemName: "trash.fill")
-                            Text("Delete from Inventory")
+                            Text("Elimina dall'Inventario")
                         }
                         .font(.system(size: 16, weight: .semibold))
                         .foregroundColor(.white)
@@ -217,7 +217,7 @@ struct EditInventoryCardView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Cancel") {
+                    Button("Annulla") {
                         dismiss()
                     }
                 }
@@ -235,7 +235,7 @@ struct EditInventoryCardView: View {
                 }
             }
             .confirmationDialog(
-                "Delete Card",
+                "Elimina Carta",
                 isPresented: $showDeleteConfirmation,
                 titleVisibility: .visible
             ) {
@@ -244,7 +244,7 @@ struct EditInventoryCardView: View {
                 }
                 Button("Cancel", role: .cancel) {}
             } message: {
-                Text("Are you sure you want to delete this card from your inventory? This action cannot be undone.")
+                Text("Sei sicuro di voler eliminare questa carta dal tuo inventario? Questa azione non può essere annullata.")
             }
         }
     }

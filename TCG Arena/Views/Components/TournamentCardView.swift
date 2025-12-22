@@ -76,6 +76,22 @@ struct TournamentCardView: View {
                 
                 // Badges Row
                 HStack(spacing: 6) {
+                    // LIVE Badge for in-progress tournaments
+                    if tournament.status == .inProgress {
+                        HStack(spacing: 4) {
+                            Circle()
+                                .fill(Color.red)
+                                .frame(width: 6, height: 6)
+                            Text("LIVE")
+                                .font(.system(size: 9, weight: .black))
+                        }
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 3)
+                        .background(Color.red.opacity(0.12))
+                        .foregroundColor(.red)
+                        .cornerRadius(4)
+                    }
+                    
                     // Type Badge
                     Text(tournament.type?.displayName ?? "Torneo")
                         .font(.system(size: 10, weight: .bold))

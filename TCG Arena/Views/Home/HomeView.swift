@@ -70,7 +70,7 @@ struct HomeView: View {
                                         .font(.system(size: 20, weight: .bold))
                                         .foregroundColor(.white)
                                     
-                                    Text("Esplora le ultime espansioni e trova le carte perfette per il tuo mazzo.")
+                                    Text("Esplora le ultime serie e trova le carte perfette per il tuo mazzo.")
                                         .font(.system(size: 15, weight: .medium))
                                         .foregroundColor(.white.opacity(0.9))
                                         .lineLimit(2)

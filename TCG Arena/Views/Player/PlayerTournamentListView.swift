@@ -144,7 +144,7 @@ struct PlayerTournamentListView: View {
                 .font(.system(size: 60))
                 .foregroundColor(.gray)
             
-            Text("No Tournaments Found")
+            Text("Nessun Torneo Trovato")
                 .font(.headline)
             
             Text("Check back later for upcoming tournaments")
@@ -173,7 +173,7 @@ struct PlayerTournamentListView: View {
                 }
             } catch {
                 await MainActor.run {
-                    ToastManager.shared.showError("Error loading tournaments: \(error.localizedDescription)")
+                    ToastManager.shared.showError("Errore caricamento tornei: \(error.localizedDescription)")
                     isLoading = false
                 }
             }

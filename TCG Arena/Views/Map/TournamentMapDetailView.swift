@@ -312,7 +312,7 @@ struct TournamentMapDetailView: View {
                 
                 await MainActor.run {
                     let message = participant.status == .REGISTERED 
-                        ? "Successfully registered!" 
+                        ? "Registrazione completata!" 
                         : "Added to waiting list. You'll be notified if a spot opens up."
                     ToastManager.shared.showSuccess(message)
                 }
@@ -333,7 +333,7 @@ struct TournamentMapDetailView: View {
                 await tournamentService.loadTournaments()
                 
                 await MainActor.run {
-                    ToastManager.shared.showSuccess("Successfully unregistered.")
+                    ToastManager.shared.showSuccess("Disiscrizione completata.")
                 }
             } catch {
                 await MainActor.run {

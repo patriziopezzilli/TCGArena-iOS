@@ -73,5 +73,15 @@
 			</dict>
 		</dict>
 	</dict>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>fetch</string>
+		<string>processing</string>
+	</array>
+	<key>BGTaskSchedulerPermittedIdentifiers</key>
+	<array>
+		<string>com.tcgarena.shopnews.refresh</string>
+		<string>com.tcgarena.collection.sync</string>
+	</array>
 </dict>
 </plist>

@@ -130,7 +130,7 @@ struct PlayerTournamentDetailView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Close") {
+                    Button("Chiudi") {
                         dismiss()
                     }
                 }
@@ -145,7 +145,7 @@ struct PlayerTournamentDetailView: View {
                 TournamentRegistrationView(tournament: tournament) { participant in
                     if let participant = participant {
                         successMessage = participant.status == .REGISTERED
-                            ? "Successfully registered for tournament!"
+                            ? "Registrazione al torneo completata con successo!"
                             : "Added to waiting list. You'll be notified if a spot opens up."
                         loadData()
                     }
@@ -350,7 +350,7 @@ struct PlayerTournamentDetailView: View {
         ScrollView {
             VStack(spacing: 16) {
                 if pairings.isEmpty {
-                    Text("No pairings yet")
+                    Text("Nessun abbinamento")
                         .foregroundColor(.secondary)
                         .padding()
                 } else {
@@ -367,7 +367,7 @@ struct PlayerTournamentDetailView: View {
         ScrollView {
             VStack(spacing: 8) {
                 if standings.isEmpty {
-                    Text("No standings yet")
+                    Text("Nessuna classifica")
                         .foregroundColor(.secondary)
                         .padding()
                 } else {

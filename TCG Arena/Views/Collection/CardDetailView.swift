@@ -413,7 +413,7 @@ struct CardDetailView: View {
                         self.dismiss()
                     case .failure(let error):
                         // Handle error - show toast
-                        ToastManager.shared.showError("Error adding card template to deck: \(error.localizedDescription)")
+                        ToastManager.shared.showError("Errore aggiunta carta al template: \(error.localizedDescription)")
                     }
                 }
             }
@@ -430,7 +430,7 @@ struct CardDetailView: View {
                         self.dismiss()
                     case .failure(let error):
                         // Handle error - show toast
-                        ToastManager.shared.showError("Error adding card to deck: \(error.localizedDescription)")
+                        ToastManager.shared.showError("Errore aggiunta carta al mazzo: \(error.localizedDescription)")
                     }
                 }
             }

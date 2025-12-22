@@ -44,13 +44,28 @@ struct SetDetailView: View {
     @State private var cards: [CardTemplate] = []
     @State private var isLoading = true
     @State private var searchText = ""
+    @State private var selectedRarity: Rarity? = nil
+    
+    // Available rarities from current card set
+    private var availableRarities: [Rarity] {
+        let rarities = Set(cards.compactMap { $0.rarity })
+        return Array(rarities).sorted { $0.sortOrder < $1.sortOrder }
+    }
     
     private var filteredCards: [CardTemplate] {
-        if searchText.isEmpty {
-            return cards
-        } else {
-            return cards.filter { $0.name.localizedCaseInsensitiveContains(searchText) }
+        var result = cards
+        
+        // Filter by rarity
+        if let rarity = selectedRarity {
+            result = result.filter { $0.rarity == rarity }
         }
+        
+        // Filter by search text
+        if !searchText.isEmpty {
+            result = result.filter { $0.name.localizedCaseInsensitiveContains(searchText) }
+        }
+        
+        return result
     }
     
     private var cardColor: Color {
@@ -68,6 +83,11 @@ struct SetDetailView: View {
                 // Search Bar
                 searchBarView
                 
+                // Rarity Filter
+                if !availableRarities.isEmpty {
+                    rarityFilterView
+                }
+                
                 // Cards Section
                 cardsSection
             }
@@ -77,6 +97,45 @@ struct SetDetailView: View {
         .background(Color(.systemBackground))
         .task {
             await loadCards()
+        }
+    }
+    
+    // MARK: - Rarity Filter
+    private var rarityFilterView: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 8) {
+                // "All" button
+                Button(action: { selectedRarity = nil }) {
+                    Text("Tutte")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundColor(selectedRarity == nil ? .white : .primary)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+                        .background(
+                            Capsule()
+                                .fill(selectedRarity == nil ? Color.primary : Color(.secondarySystemBackground))
+                        )
+                }
+                
+                ForEach(availableRarities, id: \.self) { rarity in
+                    Button(action: { selectedRarity = rarity }) {
+                        HStack(spacing: 4) {
+                            Circle()
+                                .fill(rarity.color)
+                                .frame(width: 8, height: 8)
+                            Text(rarity.displayName)
+                                .font(.system(size: 12, weight: .semibold))
+                        }
+                        .foregroundColor(selectedRarity == rarity ? .white : .primary)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+                        .background(
+                            Capsule()
+                                .fill(selectedRarity == rarity ? rarity.color : Color(.secondarySystemBackground))
+                        )
+                    }
+                }
+            }
         }
     }
     
@@ -107,7 +166,7 @@ struct SetDetailView: View {
                     .multilineTextAlignment(.center)
                 
                 HStack(spacing: 8) {
-                    Text(set.setCode)
+                    Text(set.displaySetCode)
                         .font(.system(size: 14, weight: .bold))
                         .foregroundColor(.secondary)
                         .padding(.horizontal, 8)
@@ -171,7 +230,7 @@ struct SetDetailView: View {
             }
             
             if isLoading {
-                ProgressView("Loading cards...")
+                ProgressView("Caricamento carte...")
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 40)
             } else if filteredCards.isEmpty {

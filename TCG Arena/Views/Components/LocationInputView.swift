@@ -33,7 +33,7 @@ struct LocationInputView: View {
                         .foregroundColor(.secondary)
                         .font(.system(size: 16))
                     
-                    TextField("Search location...", text: $searchText)
+                    TextField("Cerca posizione...", text: $searchText)
                         .font(.system(size: 16))
                         .submitLabel(.search)
                         .onSubmit {
@@ -127,7 +127,7 @@ struct LocationInputView: View {
                         if selectedLocation == nil {
                             VStack {
                                 Spacer()
-                                Text("Search or use GPS to select a location")
+                                Text("Cerca o usa il GPS per selezionare una posizione")
                                     .font(.system(size: 14))
                                     .foregroundColor(.secondary)
                                     .padding(.horizontal, 20)
@@ -171,7 +171,7 @@ struct LocationInputView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Cancel") {
+                    Button("Annulla") {
                         dismiss()
                     }
                 }

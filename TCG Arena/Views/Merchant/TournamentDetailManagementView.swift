@@ -361,7 +361,7 @@ struct TournamentParticipantsTab: View {
                         CheckInStatBox(
                             icon: "clock.fill",
                             value: "\(participants.count - checkedInCount)",
-                            label: "Pending",
+                            label: "In Attesa",
                             color: AdaptiveColors.warning
                         )
                     }
@@ -860,7 +860,7 @@ struct ManualRegistrationView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Cancel") {
+                    Button("Annulla") {
                         dismiss()
                     }
                 }

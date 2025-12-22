@@ -85,7 +85,7 @@ struct ReservationListView: View {
             if filteredReservations.isEmpty {
                 EmptyStateView(
                     icon: "qrcode.viewfinder",
-                    title: selectedStatus == nil ? "No Reservations" : "No \(selectedStatus!.displayName) Reservations",
+                    title: selectedStatus == nil ? "Nessuna Prenotazione" : "Nessuna prenotazione \(selectedStatus!.displayName)",
                     message: "Customer reservations will appear here"
                 )
                 .frame(maxHeight: .infinity)

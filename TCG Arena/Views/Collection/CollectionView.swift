@@ -224,6 +224,7 @@ struct CollectionView: View {
     @State private var showingCreateDeck = false
     @State private var showingAddCard = false
     @State private var selectedTCGType: TCGType? = nil
+    @State private var selectedCardRarity: Rarity? = nil
     @State private var searchText = ""
     @State private var isInitialLoading = true
     @State private var viewMode: ViewMode = .lists
@@ -245,6 +246,7 @@ struct CollectionView: View {
     @State private var animatedCardIds: Set<String> = [] // Track cards that have animated in
     @State private var showAddMenu = false // For custom Flutter-style menu
     @State private var showingSearch = false // NEW: Toggle search/filter bar
+    @State private var showCardFilters = false // For bottom sheet filter
 
     enum ViewMode {
         case lists, allCards, rules
@@ -264,6 +266,11 @@ struct CollectionView: View {
         // Filter by TCG type
         if let tcgType = selectedTCGType {
             cards = cards.filter { $0.tcgType == tcgType }
+        }
+        
+        // Filter by rarity
+        if let rarity = selectedCardRarity {
+            cards = cards.filter { $0.rarity == rarity }
         }
         
         // Filter by search text
@@ -492,6 +499,9 @@ struct CollectionView: View {
             .sheet(item: $selectedRulesTCG) { tcgType in
                 TCGRulesView(tcgType: tcgType)
             }
+            .sheet(isPresented: $showCardFilters) {
+                cardFiltersSheet
+            }
             .onAppear {
                 onAppearAction()
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
@@ -655,33 +665,59 @@ struct CollectionView: View {
 
     private var searchBarView: some View {
         HStack(spacing: 12) {
-            SwiftUI.Image(systemName: "magnifyingglass")
-                .foregroundColor(.secondary)
-                .font(.system(size: 16, weight: .medium))
+            // Search field
+            HStack(spacing: 12) {
+                SwiftUI.Image(systemName: "magnifyingglass")
+                    .foregroundColor(.secondary)
+                    .font(.system(size: 16, weight: .medium))
 
-            TextField("Cerca nel tuo caveau...", text: $searchText)
-                .textFieldStyle(PlainTextFieldStyle())
-                .font(.system(size: 16, weight: .medium))
+                TextField("Cerca nel tuo caveau...", text: $searchText)
+                    .textFieldStyle(PlainTextFieldStyle())
+                    .font(.system(size: 16, weight: .medium))
 
-            if !searchText.isEmpty {
-                Button(action: {
-                    withAnimation(.easeInOut(duration: 0.2)) {
-                        searchText = ""
+                if !searchText.isEmpty {
+                    Button(action: {
+                        withAnimation(.easeInOut(duration: 0.2)) {
+                            searchText = ""
+                        }
+                    }) {
+                        SwiftUI.Image(systemName: "xmark.circle.fill")
+                            .foregroundColor(.secondary)
+                            .font(.system(size: 16, weight: .medium))
                     }
-                }) {
-                    SwiftUI.Image(systemName: "xmark.circle.fill")
-                        .foregroundColor(.secondary)
-                        .font(.system(size: 16, weight: .medium))
+                }
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 12)
+            .background(
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(Color(.secondarySystemBackground))
+            )
+            
+            // Filter button (only show in cards mode)
+            if viewMode == .allCards {
+                Button(action: { showCardFilters = true }) {
+                    ZStack(alignment: .topTrailing) {
+                        SwiftUI.Image(systemName: "line.3.horizontal.decrease.circle.fill")
+                            .font(.system(size: 28, weight: .medium))
+                            .foregroundColor(hasActiveFilters ? Color.primary : Color(.tertiaryLabel))
+                        
+                        // Badge indicator if filters active
+                        if hasActiveFilters {
+                            Circle()
+                                .fill(Color.red)
+                                .frame(width: 10, height: 10)
+                                .offset(x: 2, y: -2)
+                        }
+                    }
                 }
             }
         }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 12)
-        .background(
-            RoundedRectangle(cornerRadius: 12)
-                .fill(Color(.secondarySystemBackground))
-        )
         .padding(.horizontal, 20)
+    }
+    
+    private var hasActiveFilters: Bool {
+        selectedTCGType != nil || selectedCardRarity != nil
     }
 
     private var portfolioCardView: some View {
@@ -844,10 +880,8 @@ struct CollectionView: View {
                         }
                         .padding(.horizontal, 20)
                     }
-                } else if filteredCards.isEmpty {
-                    emptyCardsView
-                        .transition(.opacity.combined(with: .scale(scale: 0.95)))
                 } else {
+                    // Always show cardsListView - it handles filters and empty state internally
                     cardsListView
                         .transition(.asymmetric(
                             insertion: .opacity.combined(with: .move(edge: .trailing)),
@@ -1038,16 +1072,184 @@ struct CollectionView: View {
                 .environmentObject(deckService)
         }
     }
-
-
+    
+    // MARK: - Active Filters Indicator (compact bar when filters active)
+    private var activeFiltersIndicator: some View {
+        HStack(spacing: 8) {
+            SwiftUI.Image(systemName: "line.3.horizontal.decrease.circle.fill")
+                .font(.system(size: 14))
+                .foregroundColor(.secondary)
+            
+            if let tcg = selectedTCGType {
+                HStack(spacing: 4) {
+                    TCGIconView(tcgType: tcg, size: 12, color: tcg.themeColor)
+                    Text(tcg.shortName)
+                        .font(.system(size: 12, weight: .semibold))
+                }
+                .foregroundColor(.primary)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 4)
+                .background(Color(.tertiarySystemBackground))
+                .clipShape(Capsule())
+            }
+            
+            if let rarity = selectedCardRarity {
+                HStack(spacing: 4) {
+                    Circle()
+                        .fill(rarity.color)
+                        .frame(width: 6, height: 6)
+                    Text(rarity.shortName)
+                        .font(.system(size: 12, weight: .semibold))
+                }
+                .foregroundColor(.primary)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 4)
+                .background(Color(.tertiarySystemBackground))
+                .clipShape(Capsule())
+            }
+            
+            Spacer()
+            
+            Text("\(filteredCards.count) carte")
+                .font(.system(size: 12, weight: .medium))
+                .foregroundColor(.secondary)
+            
+            Button(action: {
+                withAnimation(.easeInOut(duration: 0.2)) {
+                    selectedTCGType = nil
+                    selectedCardRarity = nil
+                }
+            }) {
+                SwiftUI.Image(systemName: "xmark.circle.fill")
+                    .font(.system(size: 16))
+                    .foregroundColor(.secondary)
+            }
+        }
+        .padding(.horizontal, 20)
+        .padding(.vertical, 8)
+    }
+    
+    // MARK: - Card Filters Sheet Content
+    private var cardFiltersSheet: some View {
+        NavigationView {
+            VStack(alignment: .leading, spacing: 24) {
+                // TCG Type Section
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("GIOCO")
+                        .font(.system(size: 12, weight: .bold))
+                        .foregroundColor(.secondary)
+                        .tracking(1.5)
+                    
+                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 100), spacing: 10)], spacing: 10) {
+                        // All option
+                        FilterChipButton(
+                            title: "Tutti",
+                            icon: "square.grid.2x2",
+                            isSelected: selectedTCGType == nil,
+                            color: .primary
+                        ) {
+                            selectedTCGType = nil
+                        }
+                        
+                        ForEach(TCGType.allCases, id: \.self) { tcg in
+                            FilterChipButton(
+                                title: tcg.shortName,
+                                tcgType: tcg,
+                                isSelected: selectedTCGType == tcg,
+                                color: tcg.themeColor
+                            ) {
+                                selectedTCGType = tcg
+                            }
+                        }
+                    }
+                }
+                
+                // Rarity Section
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("RARITÀ")
+                        .font(.system(size: 12, weight: .bold))
+                        .foregroundColor(.secondary)
+                        .tracking(1.5)
+                    
+                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 80), spacing: 10)], spacing: 10) {
+                        // All option
+                        FilterChipButton(
+                            title: "Tutte",
+                            icon: "sparkles",
+                            isSelected: selectedCardRarity == nil,
+                            color: .primary
+                        ) {
+                            selectedCardRarity = nil
+                        }
+                        
+                        ForEach(Rarity.allCases, id: \.self) { rarity in
+                            FilterChipButton(
+                                title: rarity.shortName,
+                                rarityColor: rarity.color,
+                                isSelected: selectedCardRarity == rarity,
+                                color: rarity.color
+                            ) {
+                                selectedCardRarity = rarity
+                            }
+                        }
+                    }
+                }
+                
+                Spacer()
+                
+                // Results and Reset
+                HStack {
+                    Text("\(filteredCards.count) carte trovate")
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundColor(.secondary)
+                    
+                    Spacer()
+                    
+                    if hasActiveFilters {
+                        Button(action: {
+                            withAnimation(.easeInOut(duration: 0.2)) {
+                                selectedTCGType = nil
+                                selectedCardRarity = nil
+                            }
+                        }) {
+                            Text("Resetta")
+                                .font(.system(size: 14, weight: .semibold))
+                                .foregroundColor(.red)
+                        }
+                    }
+                }
+            }
+            .padding(24)
+            .navigationTitle("Filtri")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Fatto") {
+                        showCardFilters = false
+                    }
+                    .font(.system(size: 16, weight: .semibold))
+                }
+            }
+        }
+        .presentationDetents([.medium])
+        .presentationDragIndicator(.visible)
+    }
 
     private var cardsListView: some View {
         ScrollView {
-            // Discover Banner (placed before grid)
-            if !isLoadingCards && !filteredCards.isEmpty {
-                DiscoverInfoBox()
-                    .padding(.horizontal, 20)
-                    .padding(.bottom, 8)
+            VStack(spacing: 0) {
+                // Active filter indicator (compact)
+                if hasActiveFilters {
+                    activeFiltersIndicator
+                        .padding(.bottom, 8)
+                }
+                
+                // Discover Banner (placed before grid)
+                if !isLoadingCards && !filteredCards.isEmpty {
+                    DiscoverInfoBox()
+                        .padding(.horizontal, 20)
+                        .padding(.bottom, 8)
+                }
             }
 
             LazyVStack(spacing: 12) {
@@ -1056,6 +1258,60 @@ struct CollectionView: View {
                         CardRowSkeletonView()
                             .frame(height: 80)
                     }
+                } else if filteredCards.isEmpty {
+                    // MARK: - Home-style Empty State
+                    VStack(spacing: 20) {
+                        Spacer()
+                            .frame(height: 40)
+                        
+                        // Icon with subtle background
+                        ZStack {
+                            Circle()
+                                .fill(Color(.tertiarySystemBackground))
+                                .frame(width: 80, height: 80)
+                            
+                            SwiftUI.Image(systemName: selectedTCGType != nil || selectedCardRarity != nil ? "line.3.horizontal.decrease.circle" : "rectangle.stack")
+                                .font(.system(size: 32, weight: .medium))
+                                .foregroundColor(.secondary)
+                        }
+                        
+                        VStack(spacing: 8) {
+                            Text(selectedTCGType != nil || selectedCardRarity != nil ? "Nessun risultato" : "Nessuna carta")
+                                .font(.system(size: 18, weight: .bold))
+                                .foregroundColor(.primary)
+                            
+                            Text(selectedTCGType != nil || selectedCardRarity != nil ?
+                                 "Prova a modificare i filtri selezionati" :
+                                 "Aggiungi carte ai tuoi mazzi per vederle qui")
+                                .font(.system(size: 14, weight: .medium))
+                                .foregroundColor(.secondary)
+                                .multilineTextAlignment(.center)
+                        }
+                        
+                        // Reset filters button (only if filters are active)
+                        if selectedTCGType != nil || selectedCardRarity != nil {
+                            Button(action: {
+                                withAnimation(.easeInOut(duration: 0.2)) {
+                                    selectedTCGType = nil
+                                    selectedCardRarity = nil
+                                }
+                            }) {
+                                Text("Resetta filtri")
+                                    .font(.system(size: 14, weight: .semibold))
+                                    .foregroundColor(.white)
+                                    .padding(.horizontal, 20)
+                                    .padding(.vertical, 10)
+                                    .background(Color.primary)
+                                    .clipShape(Capsule())
+                            }
+                            .padding(.top, 8)
+                        }
+                        
+                        Spacer()
+                            .frame(height: 40)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.horizontal, 20)
                 } else {
                     ForEach(Array(filteredCards.enumerated()), id: \.element.id) { index, card in
                         let cardId = card.id.map { String($0) } ?? ""
@@ -1574,7 +1830,7 @@ struct DiscoverInfoBox: View {
                         .font(.system(size: 17, weight: .bold))
                         .foregroundColor(.white)
                     
-                    Text("Esplora le ultime espansioni")
+                    Text("Esplora le ultime serie")
                         .font(.system(size: 14, weight: .medium))
                         .foregroundColor(.white.opacity(0.8))
                         .lineLimit(1)
@@ -1626,6 +1882,21 @@ struct CardDiscoverView: View {
     @State private var searchResults: [CardTemplate] = []
     @State private var isSearching = false
     @State private var searchTask: Task<Void, Never>?
+    @State private var selectedSearchRarity: Rarity? = nil
+    
+    // Available rarities from search results
+    private var searchAvailableRarities: [Rarity] {
+        let rarities = Set(searchResults.compactMap { $0.rarity })
+        return Array(rarities).sorted { $0.sortOrder < $1.sortOrder }
+    }
+    
+    // Filtered search results by rarity
+    private var filteredSearchResults: [CardTemplate] {
+        if let rarity = selectedSearchRarity {
+            return searchResults.filter { $0.rarity == rarity }
+        }
+        return searchResults
+    }
     
     // Computed property to convert stored TCG type
     private var selectedTCGType: TCGType? {
@@ -1712,7 +1983,7 @@ struct CardDiscoverView: View {
                 .font(.system(size: 34, weight: .bold))
                 .foregroundColor(.primary)
             
-            Text("Esplora nuove carte ed espansioni")
+            Text("Esplora nuove carte ed serie")
                 .font(.system(size: 16, weight: .medium))
                 .foregroundColor(.secondary)
         }
@@ -1856,7 +2127,7 @@ struct CardDiscoverView: View {
                 .padding(.vertical, 8)
                 .background(
                     Capsule()
-                        .fill(!selectedYears.isEmpty ? Color.blue : Color(.secondarySystemBackground))
+                        .fill(!selectedYears.isEmpty ? Color.primary : Color(.secondarySystemBackground))
                 )
                 .overlay(
                     Capsule()
@@ -2008,18 +2279,58 @@ struct CardDiscoverView: View {
                 
                 Spacer()
                 
-                Text("\(searchResults.count) results")
+                Text("\(filteredSearchResults.count) di \(searchResults.count)")
                     .font(.system(size: 14, weight: .medium))
                     .foregroundColor(.secondary)
             }
             .padding(.horizontal, 20)
+            
+            // Rarity filter for search results
+            if !searchAvailableRarities.isEmpty {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 8) {
+                        // "All" button
+                        Button(action: { selectedSearchRarity = nil }) {
+                            Text("Tutte")
+                                .font(.system(size: 12, weight: .semibold))
+                                .foregroundColor(selectedSearchRarity == nil ? .white : .primary)
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 6)
+                                .background(
+                                    Capsule()
+                                        .fill(selectedSearchRarity == nil ? Color.primary : Color(.secondarySystemBackground))
+                                )
+                        }
+                        
+                        ForEach(searchAvailableRarities, id: \.self) { rarity in
+                            Button(action: { selectedSearchRarity = rarity }) {
+                                HStack(spacing: 4) {
+                                    Circle()
+                                        .fill(rarity.color)
+                                        .frame(width: 8, height: 8)
+                                    Text(rarity.displayName)
+                                        .font(.system(size: 12, weight: .semibold))
+                                }
+                                .foregroundColor(selectedSearchRarity == rarity ? .white : .primary)
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 6)
+                                .background(
+                                    Capsule()
+                                        .fill(selectedSearchRarity == rarity ? rarity.color : Color(.secondarySystemBackground))
+                                )
+                            }
+                        }
+                    }
+                    .padding(.horizontal, 20)
+                }
+            }
             
             if searchResults.isEmpty && !isSearching {
                 EmptyStateRow(message: "Nessuna carta trovata")
                     .padding(.horizontal, 20)
             } else {
                 LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
-                    ForEach(searchResults) { cardTemplate in
+                    ForEach(filteredSearchResults) { cardTemplate in
                         NavigationLink(destination: CardDetailView(card: cardTemplate.toCard(), isFromDiscover: true)) {
                             SearchCardResultView(cardTemplate: cardTemplate)
                         }
@@ -2308,3 +2619,43 @@ struct SetCard: View {
             .buttonStyle(PlainButtonStyle())
         }
     }
+
+// MARK: - Filter Chip Button Component
+struct FilterChipButton: View {
+    let title: String
+    var icon: String? = nil
+    var tcgType: TCGType? = nil
+    var rarityColor: Color? = nil
+    let isSelected: Bool
+    let color: Color
+    let action: () -> Void
+    
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 6) {
+                if let icon = icon {
+                    SwiftUI.Image(systemName: icon)
+                        .font(.system(size: 12, weight: .semibold))
+                } else if let tcg = tcgType {
+                    TCGIconView(tcgType: tcg, size: 14, color: isSelected ? .white : tcg.themeColor)
+                } else if let rarityColor = rarityColor {
+                    Circle()
+                        .fill(rarityColor)
+                        .frame(width: 8, height: 8)
+                }
+                
+                Text(title)
+                    .font(.system(size: 13, weight: .semibold))
+            }
+            .foregroundColor(isSelected ? .white : .primary)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 10)
+            .frame(maxWidth: .infinity)
+            .background(
+                RoundedRectangle(cornerRadius: 10)
+                    .fill(isSelected ? color : Color(.tertiarySystemBackground))
+            )
+        }
+        .buttonStyle(PlainButtonStyle())
+    }
+}

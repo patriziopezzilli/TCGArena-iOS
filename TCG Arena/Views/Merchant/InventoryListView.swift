@@ -39,7 +39,7 @@ struct InventoryListView: View {
                     Image(systemName: "magnifyingglass")
                         .foregroundColor(.secondary)
                     
-                    TextField("Search cards...", text: $searchText)
+                    TextField("Cerca carte...", text: $searchText)
                         .textFieldStyle(PlainTextFieldStyle())
                 }
                 .padding(12)
@@ -110,7 +110,7 @@ struct InventoryListView: View {
             if filteredInventory.isEmpty {
                 EmptyStateView(
                     icon: "square.stack.3d.up.slash",
-                    title: searchText.isEmpty ? "No Inventory" : "No Results",
+                    title: searchText.isEmpty ? "Nessun Inventario" : "Nessun Risultato",
                     message: searchText.isEmpty ? 
                         "Add cards to your inventory to get started" :
                         "Try adjusting your search or filters"

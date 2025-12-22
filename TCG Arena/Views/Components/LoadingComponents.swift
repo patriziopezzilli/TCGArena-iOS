@@ -95,7 +95,7 @@ struct LoadingButton: View {
     
     init(
         title: String,
-        loadingTitle: String = "Loading...",
+        loadingTitle: String = "Caricamento...",
         isLoading: Bool,
         isDisabled: Bool = false,
         color: Color = .purple,

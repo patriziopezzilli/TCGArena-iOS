@@ -292,6 +292,23 @@ enum Rarity: String, Codable, CaseIterable {
         case .legendary: return "L"
         }
     }
+    
+    /// Sort order for displaying rarities (common first, rarest last)
+    var sortOrder: Int {
+        switch self {
+        case .common: return 0
+        case .uncommon: return 1
+        case .rare: return 2
+        case .holographic: return 3
+        case .promo: return 4
+        case .superRare: return 5
+        case .ultraRare: return 6
+        case .secretRare: return 7
+        case .hyperRare: return 8
+        case .mythic: return 9
+        case .legendary: return 10
+        }
+    }
 }
 
 // Enum per CardCondition

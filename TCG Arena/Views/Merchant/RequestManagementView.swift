@@ -15,7 +15,7 @@ struct RequestManagementView: View {
     @State private var selectedRequest: CustomerRequest?
     
     enum RequestStatusFilter: String, CaseIterable {
-        case pending = "Pending"
+        case pending = "In Attesa"
         case accepted = "Accepted"
         case completed = "Completed"
         case rejected = "Rejected"

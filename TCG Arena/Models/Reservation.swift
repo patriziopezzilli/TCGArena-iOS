@@ -37,6 +37,12 @@ struct Reservation: Identifiable, Codable {
     // Computed property per ottenere l'URL completo dell'immagine della carta
     var fullImageURL: String? {
         guard let baseUrl = cardImageUrl else { return nil }
+        
+        // Se l'URL contiene "tcgplayer", usalo direttamente (logica JustTCG)
+        if baseUrl.lowercased().contains("tcgplayer") {
+            return baseUrl
+        }
+        
         // Se l'URL è già completo (contiene "/high.webp"), restituiscilo così com'è
         if baseUrl.contains("/high.webp") {
             return baseUrl
@@ -54,11 +60,11 @@ struct Reservation: Identifiable, Codable {
         
         var displayName: String {
             switch self {
-            case .pending: return "Pending"
-            case .validated: return "Validated"
-            case .pickedUp: return "Picked Up"
-            case .expired: return "Expired"
-            case .cancelled: return "Cancelled"
+            case .pending: return "In Attesa"
+            case .validated: return "Validata"
+            case .pickedUp: return "Ritirata"
+            case .expired: return "Scaduta"
+            case .cancelled: return "Annullata"
             }
         }
         

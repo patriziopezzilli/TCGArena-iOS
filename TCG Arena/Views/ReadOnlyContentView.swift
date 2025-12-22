@@ -202,7 +202,7 @@ struct ReadOnlyCollectionView: View {
 
                     // MARK: - Expansions List
                     VStack(alignment: .leading, spacing: 16) {
-                        Text("Esplora Espansioni")
+                        Text("Esplora Serie")
                             .font(.system(size: 20, weight: .bold))
                             .padding(.horizontal, 24)
                         

@@ -96,7 +96,7 @@ struct CreateRequestView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Cancel") {
+                    Button("Annulla") {
                         dismiss()
                     }
                     .disabled(isSubmitting)
@@ -203,7 +203,7 @@ struct CreateRequestView: View {
                     shopId: String(shopId),
                     type: CustomerRequest.RequestType(rawValue: selectedType.rawValue) ?? .general,
                     title: title,
-                    description: description.isEmpty ? "No additional details" : description,
+                    description: description.isEmpty ? "Nessun dettaglio aggiuntivo" : description,
                     attachmentUrl: nil
                 )
                 _ = try await requestService.createRequest(request)
@@ -268,12 +268,12 @@ struct ShopPickerView: View {
                     }
                 }
             }
-            .searchable(text: $searchText, prompt: "Search shops")
-            .navigationTitle("Select Shop")
+            .searchable(text: $searchText, prompt: "Cerca negozi")
+            .navigationTitle("Seleziona Negozio")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Cancel") {
+                    Button("Annulla") {
                         dismiss()
                     }
                 }

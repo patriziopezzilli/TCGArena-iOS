@@ -35,6 +35,16 @@ struct TournamentDetailView: View {
         tournament.status == .inProgress || tournament.status == .completed || tournament.status == .cancelled || tournament.status == .pendingApproval
     }
     
+    private var isUserParticipant: Bool {
+        // Check userRegistrationStatus first
+        if userRegistrationStatus != nil {
+            return true
+        }
+        // Fallback: check if user is in the loaded participants list
+        guard let currentUserId = authService.currentUser?.id else { return false }
+        return participants.contains { $0.userId == currentUserId }
+    }
+    
     private var canCheckIn: Bool {
         guard !isTournamentLocked else { return false }
         guard let userStatus = userRegistrationStatus,
@@ -69,11 +79,6 @@ struct TournamentDetailView: View {
                             // MARK: - Status Banner (if locked)
                             if isTournamentLocked {
                                 statusBanner
-                            }
-                            
-                            // MARK: - Live Updates Button
-                            if tournament.status == .inProgress && userRegistrationStatus != nil {
-                                liveUpdatesButton
                             }
                             
                             // MARK: - Winners Section
@@ -243,8 +248,26 @@ struct TournamentDetailView: View {
     // MARK: - Status Banner
     private var statusBanner: some View {
         let config = getBannerConfig(for: tournament.status)
+        let canShowUpdates = tournament.status == .inProgress && isUserParticipant
         
-        return HStack(spacing: 12) {
+        return Group {
+            if canShowUpdates {
+                // Tappable banner with integrated live updates for participants
+                Button(action: { showLiveUpdates = true }) {
+                    statusBannerContent(config: config, showChevron: true)
+                }
+                .buttonStyle(PlainButtonStyle())
+            } else {
+                // Non-tappable banner for other statuses
+                statusBannerContent(config: config, showChevron: false)
+            }
+        }
+        .padding(.horizontal, 24)
+    }
+    
+    @ViewBuilder
+    private func statusBannerContent(config: (icon: String, title: String, subtitle: String, color: Color), showChevron: Bool) -> some View {
+        HStack(spacing: 12) {
             SwiftUI.Image(systemName: config.icon)
                 .font(.system(size: 20, weight: .semibold))
                 .foregroundColor(config.color)
@@ -254,7 +277,7 @@ struct TournamentDetailView: View {
                     .font(.system(size: 15, weight: .bold))
                     .foregroundColor(.primary)
                 
-                Text(config.subtitle)
+                Text(showChevron ? "Tocca per vedere aggiornamenti" : config.subtitle)
                     .font(.system(size: 12))
                     .foregroundColor(.secondary)
             }
@@ -262,50 +285,25 @@ struct TournamentDetailView: View {
             Spacer()
             
             if tournament.status == .inProgress {
-                Text("LIVE")
-                    .font(.system(size: 10, weight: .black))
-                    .foregroundColor(.white)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
-                    .background(Capsule().fill(config.color))
+                HStack(spacing: 8) {
+                    Text("LIVE")
+                        .font(.system(size: 10, weight: .black))
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(Capsule().fill(config.color))
+                    
+                    if showChevron {
+                        SwiftUI.Image(systemName: "chevron.right")
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundColor(.gray.opacity(0.5))
+                    }
+                }
             }
         }
         .padding(16)
         .background(config.color.opacity(0.1))
         .cornerRadius(16)
-        .padding(.horizontal, 24)
-    }
-    
-    // MARK: - Live Updates Button
-    private var liveUpdatesButton: some View {
-        Button(action: { showLiveUpdates = true }) {
-            HStack(spacing: 16) {
-                SwiftUI.Image(systemName: "megaphone.fill")
-                    .font(.system(size: 20))
-                    .foregroundColor(.primary)
-                
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Aggiornamenti Live")
-                        .font(.system(size: 16, weight: .bold))
-                        .foregroundColor(.primary)
-                    
-                    Text("Tabellone, accoppiamenti e messaggi")
-                        .font(.system(size: 12))
-                        .foregroundColor(.secondary)
-                }
-                
-                Spacer()
-                
-                SwiftUI.Image(systemName: "chevron.right")
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundColor(.gray.opacity(0.5))
-            }
-            .padding(16)
-            .background(Color.gray.opacity(0.05))
-            .cornerRadius(16)
-        }
-        .buttonStyle(PlainButtonStyle())
-        .padding(.horizontal, 24)
     }
     
     // MARK: - Winners Section

@@ -73,10 +73,12 @@ class APIClient: NSObject {
         get {
             if _jwtToken == nil {
                 _jwtToken = UserDefaults.standard.string(forKey: "jwtToken")
+                print("🔐 APIClient: Loaded token from UserDefaults: \(_jwtToken != nil ? "✅ Found" : "❌ Not found")")
             }
             return _jwtToken
         }
         set {
+            print("🔐 APIClient: Setting new JWT token: \(newValue != nil ? "✅ Token provided" : "❌ Clearing token")")
             _jwtToken = newValue
             if let token = newValue {
                 UserDefaults.standard.set(token, forKey: "jwtToken")
@@ -178,6 +180,7 @@ class APIClient: NSObject {
         if let token = jwtToken, !publicEndpoints.contains(where: { endpoint.hasPrefix($0) }) {
             request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
             let tokenPrefix = String(token.prefix(20))
+            print("🔑 APIClient: Using token for \(endpoint): \(tokenPrefix)... (retry=\(retryCount))")
         } else {
             print("⚠️ APIClient: No JWT token available for endpoint: \(endpoint)")
             if jwtToken == nil {

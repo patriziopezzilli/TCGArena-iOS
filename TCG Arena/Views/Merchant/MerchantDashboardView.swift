@@ -227,8 +227,8 @@ struct MerchantOverviewView: View {
                         requestService.activeRequests.isEmpty {
                         EmptyStateView(
                             icon: "tray",
-                            title: "No Recent Activity",
-                            message: "Your recent reservations and requests will appear here"
+                            title: "Nessuna Attività Recente",
+                            message: "Le tue prenotazioni e richieste recenti appariranno qui"
                         )
                     } else {
                         VStack(spacing: 12) {

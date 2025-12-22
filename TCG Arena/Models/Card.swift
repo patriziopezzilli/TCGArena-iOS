@@ -234,7 +234,7 @@ enum TCGType: String, CaseIterable, Codable, Identifiable {
         case .lorcana:
             return "lorcana_icon"
         case .riftbound:
-            return "riftbound_icon"
+            return nil // Temporarily use SF Symbol until custom icon is provided
         }
     }
     

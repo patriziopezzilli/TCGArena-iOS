@@ -31,14 +31,9 @@ struct InventoryCard: Identifiable, Codable {
     var marketPrice: Double? { cardTemplate?.marketPrice }
     
     // Computed property per ottenere l'URL completo dell'immagine
+    // Usa fullImageUrl di CardTemplate che include già la logica corretta
     var fullImageURL: String? {
-        guard let baseUrl = imageUrl else { return nil }
-        // Se l'URL è già completo (contiene "/high.webp"), restituiscilo così com'è
-        if baseUrl.contains("/high.webp") {
-            return baseUrl
-        }
-        // Altrimenti, aggiungi qualità "high" e formato "webp"
-        return "\(baseUrl)/high.webp"
+        return cardTemplate?.fullImageUrl
     }
     
     var formattedPrice: String {

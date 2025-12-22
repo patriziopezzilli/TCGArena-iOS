@@ -186,9 +186,26 @@ struct CommunityView: View {
                     let entries = filteredEntries(discoverService.leaderboards[type] ?? [])
                     
                     if entries.isEmpty {
-                        Text("Nessun dato disponibile")
-                            .foregroundColor(.secondary)
+                        if locationFilter == .nearby {
+                            VStack(spacing: 12) {
+                                SwiftUI.Image(systemName: "location.slash")
+                                    .font(.system(size: 28))
+                                    .foregroundColor(.secondary)
+                                Text("Nessun giocatore nelle vicinanze")
+                                    .font(.system(size: 15, weight: .medium))
+                                    .foregroundColor(.secondary)
+                                Text("Imposta la tua città nel profilo per vedere i giocatori vicino a te")
+                                    .font(.system(size: 13))
+                                    .foregroundColor(.secondary.opacity(0.8))
+                                    .multilineTextAlignment(.center)
+                            }
                             .padding(.horizontal, 24)
+                            .padding(.vertical, 16)
+                        } else {
+                            Text("Nessun dato disponibile")
+                                .foregroundColor(.secondary)
+                                .padding(.horizontal, 24)
+                        }
                     } else {
                         // Top 3 Podium
                         if entries.count >= 3 {

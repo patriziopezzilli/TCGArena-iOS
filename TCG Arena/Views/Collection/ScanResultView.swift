@@ -168,7 +168,7 @@ struct ScanResultView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Close") { dismiss() }
+                    Button("Chiudi") { dismiss() }
                 }
             }
         }

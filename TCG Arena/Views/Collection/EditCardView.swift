@@ -46,7 +46,7 @@ struct EditCardView: View {
                 
                 Section(header: Text("Grading")) {
                     Picker("Grading Company", selection: $gradingCompany) {
-                        Text("None").tag(GradeService?.none)
+                        Text("Nessuna").tag(GradeService?.none)
                         ForEach(GradeService.allCases, id: \.self) { service in
                             Text(service.displayName).tag(service as GradeService?)
                         }
@@ -66,13 +66,13 @@ struct EditCardView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Cancel") {
+                    Button("Annulla") {
                         dismiss()
                     }
                 }
                 
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Save") {
+                    Button("Salva") {
                         saveChanges()
                     }
                     .disabled(name.isEmpty)

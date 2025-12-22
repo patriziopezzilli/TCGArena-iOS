@@ -39,7 +39,7 @@ struct DeckSelectionModal: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Cancel") {
+                    Button("Annulla") {
                         dismiss()
                     }
                     .foregroundColor(.secondary)
@@ -100,7 +100,7 @@ struct DeckSelectionModal: View {
                 .font(.system(size: 60))
                 .foregroundColor(.secondary.opacity(0.5))
             
-            Text("No Decks Available")
+            Text("Nessun Mazzo Disponibile")
                 .font(.title2)
                 .fontWeight(.semibold)
             

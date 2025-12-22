@@ -18,7 +18,7 @@ struct PlayerRequestListView: View {
     
     enum RequestStatusFilter: String, CaseIterable {
         case all = "All"
-        case pending = "Pending"
+        case pending = "In Attesa"
         case accepted = "Accepted"
         case completed = "Completed"
         case rejected = "Rejected"
@@ -127,7 +127,7 @@ struct PlayerRequestListView: View {
                 .font(.system(size: 60))
                 .foregroundColor(.gray)
             
-            Text("No Requests")
+            Text("Nessuna Richiesta")
                 .font(.headline)
             
             Text("Create a request to ask shops for specific cards or services")

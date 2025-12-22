@@ -104,7 +104,7 @@ struct UserRequestsView: View {
             ProgressView()
                 .scaleEffect(1.2)
             
-            Text("Loading requests...")
+            Text("Caricamento richieste...")
                 .font(.system(size: 15))
                 .foregroundColor(.secondary)
         }
@@ -382,7 +382,7 @@ private struct RequestDetailView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Close") { dismiss() }
+                    Button("Chiudi") { dismiss() }
                         .foregroundColor(.indigo)
                 }
                 
@@ -390,7 +390,7 @@ private struct RequestDetailView: View {
                     ToolbarItem(placement: .navigationBarTrailing) {
                         Menu {
                             Button(role: .destructive, action: { showCancelAlert = true }) {
-                                Label("Cancel Request", systemImage: "xmark.circle")
+                                Label("Annulla Richiesta", systemImage: "xmark.circle")
                             }
                         } label: {
                             SwiftUI.Image(systemName: "ellipsis.circle")
@@ -402,13 +402,13 @@ private struct RequestDetailView: View {
             .task {
                 await loadDetails()
             }
-            .confirmationDialog("Cancel Request?", isPresented: $showCancelAlert) {
-                Button("Cancel Request", role: .destructive) {
+            .confirmationDialog("Annulla Richiesta?", isPresented: $showCancelAlert) {
+                Button("Annulla Richiesta", role: .destructive) {
                     cancelRequest()
                 }
-                Button("Keep", role: .cancel) { }
+                Button("Mantieni", role: .cancel) { }
             } message: {
-                Text("Are you sure you want to cancel this request?")
+                Text("Sei sicuro di voler annullare questa richiesta?")
             }
         }
     }
@@ -485,7 +485,7 @@ private struct RequestDetailView: View {
                             .font(.system(size: 36))
                             .foregroundColor(.secondary)
                         
-                        Text("No messages yet")
+                        Text("Nessun messaggio")
                             .font(.system(size: 17, weight: .semibold))
                             .foregroundColor(.secondary)
                         

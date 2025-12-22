@@ -13,6 +13,9 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
         // Configure notifications
         UNUserNotificationCenter.current().delegate = self
         
+        // Register background tasks
+        BackgroundTaskManager.shared.registerTasks()
+        
         return true
     }
     
@@ -52,6 +55,8 @@ struct TCGArenaApp: App {
     @StateObject private var reservationService = ReservationService()
     @StateObject private var requestService = RequestService()
     
+    @Environment(\.scenePhase) private var scenePhase
+    
     init() {
         // Hide scroll indicators globally throughout the app
         UIScrollView.appearance().showsVerticalScrollIndicator = false
@@ -90,6 +95,13 @@ struct TCGArenaApp: App {
                 }
             }
             .animation(.easeInOut(duration: 0.3), value: networkMonitor.isConnected)
+            .onChange(of: scenePhase) { newPhase in
+                if newPhase == .background {
+                    // Schedule background refresh tasks when app enters background
+                    BackgroundTaskManager.shared.scheduleShopNewsRefresh()
+                    BackgroundTaskManager.shared.scheduleCollectionSync()
+                }
+            }
         }
     }
     

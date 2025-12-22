@@ -80,7 +80,7 @@ struct ReservationDetailView: View {
                         Button(action: { showCancelConfirmation = true }) {
                             HStack {
                                 Image(systemName: "xmark.circle.fill")
-                                Text("Cancel Reservation")
+                                Text("Annulla Prenotazione")
                             }
                             .font(.system(size: 17, weight: .semibold))
                             .foregroundColor(.white)
@@ -115,13 +115,13 @@ struct ReservationDetailView: View {
             } message: {
                 Text("Has the customer picked up this card?")
             }
-            .confirmationDialog("Cancel Reservation", isPresented: $showCancelConfirmation, titleVisibility: .visible) {
-                Button("Cancel Reservation", role: .destructive) {
+            .confirmationDialog("Annulla Prenotazione", isPresented: $showCancelConfirmation, titleVisibility: .visible) {
+                Button("Annulla Prenotazione", role: .destructive) {
                     cancelReservation()
                 }
-                Button("Keep Reservation", role: .cancel) {}
+                Button("Mantieni", role: .cancel) {}
             } message: {
-                Text("Are you sure you want to cancel this reservation?")
+                Text("Sei sicuro di voler annullare questa prenotazione?")
             }
         }
     }
@@ -242,9 +242,9 @@ struct ReservationDetailView: View {
                 .foregroundColor(.primary)
             
             VStack(spacing: 12) {
-                InfoRow(icon: "person.fill", title: "Name", value: reservation.user?.displayName ?? "Unknown")
-                InfoRow(icon: "envelope.fill", title: "Email", value: reservation.user?.email ?? "Unknown")
-                InfoRow(icon: "phone.fill", title: "Phone", value: reservation.user?.phone ?? "Not provided")
+                InfoRow(icon: "person.fill", title: "Nome", value: reservation.user?.displayName ?? "Sconosciuto")
+                InfoRow(icon: "envelope.fill", title: "Email", value: reservation.user?.email ?? "Sconosciuto")
+                InfoRow(icon: "phone.fill", title: "Telefono", value: reservation.user?.phone ?? "Non fornito")
             }
         }
         .padding(16)

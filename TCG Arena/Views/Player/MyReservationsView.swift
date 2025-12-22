@@ -3,6 +3,7 @@
 //  TCG Arena
 //
 //  Created by TCG Arena Team on 12/1/25.
+//  Redesigned with Home-style minimal aesthetic
 //
 
 import SwiftUI
@@ -24,16 +25,9 @@ struct MyReservationsView: View {
         var statuses: [Reservation.ReservationStatus] {
             switch self {
             case .active:
-                return [.pending]  // Only pending is "active" - validated means ready for pickup (past)
+                return [.pending]
             case .history:
-                return [.validated, .pickedUp, .expired, .cancelled]  // Validated goes to history
-            }
-        }
-        
-        var icon: String {
-            switch self {
-            case .active: return "clock.badge.checkmark"
-            case .history: return "clock.arrow.circlepath"
+                return [.validated, .pickedUp, .expired, .cancelled]
             }
         }
     }
@@ -49,8 +43,7 @@ struct MyReservationsView: View {
             // Header
             headerView
             
-            // Filter Tabs
-            filterTabsView
+            Divider()
             
             // Content
             if isLoading {
@@ -61,19 +54,9 @@ struct MyReservationsView: View {
                 reservationsListView
             }
         }
-        .background(Color(.systemGroupedBackground))
-        .navigationTitle("Le mie Prenotazioni")
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .navigationBarTrailing) {
-                Button("Chiudi") {
-                    dismiss()
-                }
-                .fontWeight(.semibold)
-            }
-        }
+        .background(Color(.systemBackground))
         .sheet(item: $selectedReservation) { reservation in
-            ReservationQRView(reservation: reservation)
+            MinimalReservationDetailView(reservation: reservation)
                 .environmentObject(reservationService)
         }
         .onAppear {
@@ -81,17 +64,18 @@ struct MyReservationsView: View {
         }
     }
     
-    // MARK: - Header View
+    // MARK: - Header View (Minimal Style)
     private var headerView: some View {
-        VStack(spacing: 12) {
-            HStack {
+        VStack(spacing: 20) {
+            // Title row with close button
+            HStack(alignment: .center) {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Prenotazioni")
-                        .font(.system(size: 28, weight: .bold))
+                        .font(.system(size: 32, weight: .heavy))
                         .foregroundColor(.primary)
                     
-                    Text("\(reservationService.reservations.count) totali • \(reservationService.activeReservations.count) attive")
-                        .font(.system(size: 14, weight: .medium))
+                    Text("\(reservationService.reservations.count) totali")
+                        .font(.system(size: 15))
                         .foregroundColor(.secondary)
                 }
                 
@@ -100,90 +84,93 @@ struct MyReservationsView: View {
                 // Refresh button
                 Button(action: { loadReservations() }) {
                     SwiftUI.Image(systemName: "arrow.clockwise")
-                        .font(.system(size: 18, weight: .semibold))
-                        .foregroundColor(.white)
-                        .frame(width: 40, height: 40)
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundColor(.secondary)
+                        .frame(width: 36, height: 36)
                         .background(
                             Circle()
-                                .fill(Color.orange)
+                                .fill(Color(.secondarySystemBackground))
                         )
-                        .shadow(color: Color.orange.opacity(0.3), radius: 4, x: 0, y: 2)
+                }
+                
+                // Close button
+                Button(action: { dismiss() }) {
+                    SwiftUI.Image(systemName: "xmark")
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundColor(.secondary)
+                        .frame(width: 36, height: 36)
+                        .background(
+                            Circle()
+                                .fill(Color(.secondarySystemBackground))
+                        )
+                }
+            }
+            
+            // Filter tabs (minimal style)
+            HStack(spacing: 0) {
+                ForEach(ReservationFilter.allCases, id: \.self) { filter in
+                    Button(action: {
+                        withAnimation(.easeInOut(duration: 0.2)) {
+                            selectedFilter = filter
+                        }
+                    }) {
+                        VStack(spacing: 8) {
+                            Text(filter.rawValue)
+                                .font(.system(size: 15, weight: selectedFilter == filter ? .semibold : .regular))
+                                .foregroundColor(selectedFilter == filter ? .primary : .secondary)
+                            
+                            Rectangle()
+                                .fill(selectedFilter == filter ? Color.primary : Color.clear)
+                                .frame(height: 2)
+                        }
+                    }
+                    .frame(maxWidth: .infinity)
                 }
             }
         }
         .padding(.horizontal, 20)
-        .padding(.vertical, 16)
-        .background(Color(.systemBackground))
-    }
-    
-    // MARK: - Filter Tabs
-    private var filterTabsView: some View {
-        HStack(spacing: 12) {
-            ForEach(ReservationFilter.allCases, id: \.self) { filter in
-                Button(action: {
-                    withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                        selectedFilter = filter
-                    }
-                }) {
-                    HStack(spacing: 8) {
-                        SwiftUI.Image(systemName: filter.icon)
-                            .font(.system(size: 14, weight: .semibold))
-                        Text(filter.rawValue)
-                            .font(.system(size: 15, weight: .semibold))
-                    }
-                    .foregroundColor(selectedFilter == filter ? .white : .primary)
-                    .padding(.horizontal, 20)
-                    .padding(.vertical, 12)
-                    .background(
-                        Capsule()
-                            .fill(selectedFilter == filter ? Color.orange : Color(.systemGray5))
-                    )
-                }
-                .buttonStyle(PlainButtonStyle())
-            }
-            Spacer()
-        }
-        .padding(.horizontal, 20)
-        .padding(.vertical, 12)
+        .padding(.top, 16)
         .background(Color(.systemBackground))
     }
     
     // MARK: - Loading View
     private var loadingView: some View {
-        VStack(spacing: 20) {
+        VStack(spacing: 16) {
             Spacer()
             ProgressView()
-                .scaleEffect(1.5)
+                .scaleEffect(1.2)
             Text("Caricamento...")
-                .font(.system(size: 16, weight: .medium))
+                .font(.system(size: 15))
                 .foregroundColor(.secondary)
             Spacer()
         }
+        .frame(maxWidth: .infinity)
     }
     
-    // MARK: - Empty State
+    // MARK: - Empty State (Centered Style)
     private var emptyStateView: some View {
         VStack(spacing: 24) {
             Spacer()
             
+            // Icon with subtle background
             ZStack {
                 Circle()
-                    .fill(Color.orange.opacity(0.1))
-                    .frame(width: 120, height: 120)
+                    .fill(Color(.secondarySystemBackground))
+                    .frame(width: 100, height: 100)
                 
                 SwiftUI.Image(systemName: selectedFilter == .active ? "qrcode.viewfinder" : "clock.arrow.circlepath")
-                    .font(.system(size: 48, weight: .medium))
-                    .foregroundColor(.orange)
+                    .font(.system(size: 40, weight: .light))
+                    .foregroundColor(.secondary)
             }
             
             VStack(spacing: 8) {
-                Text(selectedFilter == .active ? "Nessuna Prenotazione Attiva" : "Nessuno Storico")
+                Text(selectedFilter == .active ? "Nessuna prenotazione attiva" : "Nessuno storico")
                     .font(.system(size: 22, weight: .bold))
                     .foregroundColor(.primary)
                 
                 Text(selectedFilter == .active ?
-                    "Prenota carte dai negozi per vederle qui" :
-                    "Le prenotazioni completate appariranno qui")
+                    "Prenota carte dai negozi per vederle qui." :
+                    "Le prenotazioni completate appariranno qui.")
                     .font(.system(size: 15))
                     .foregroundColor(.secondary)
                     .multilineTextAlignment(.center)
@@ -191,20 +178,26 @@ struct MyReservationsView: View {
             }
             
             Spacer()
+            Spacer()
         }
+        .frame(maxWidth: .infinity)
     }
     
-    // MARK: - Reservations List
+    // MARK: - Reservations List (Minimal Style)
     private var reservationsListView: some View {
         ScrollView {
-            LazyVStack(spacing: 16) {
+            LazyVStack(spacing: 0) {
                 ForEach(filteredReservations) { reservation in
-                    ReservationCardView(reservation: reservation) {
+                    MinimalReservationRow(reservation: reservation) {
                         selectedReservation = reservation
+                    }
+                    
+                    if reservation.id != filteredReservations.last?.id {
+                        Divider()
+                            .padding(.leading, 20)
                     }
                 }
             }
-            .padding(20)
         }
         .refreshable {
             await refreshReservations()
@@ -227,8 +220,8 @@ struct MyReservationsView: View {
     }
 }
 
-// MARK: - Reservation Card View (Redesigned)
-struct ReservationCardView: View {
+// MARK: - Minimal Reservation Row
+struct MinimalReservationRow: View {
     let reservation: Reservation
     let onTap: () -> Void
     
@@ -244,118 +237,81 @@ struct ReservationCardView: View {
     
     var body: some View {
         Button(action: onTap) {
-            VStack(spacing: 0) {
-                // Main content
-                HStack(spacing: 16) {
-                    // Status indicator
-                    ZStack {
-                        RoundedRectangle(cornerRadius: 12)
-                            .fill(statusColor.opacity(0.15))
-                            .frame(width: 56, height: 72)
-                        
-                        VStack(spacing: 6) {
-                            SwiftUI.Image(systemName: reservation.status.icon)
-                                .font(.system(size: 22, weight: .semibold))
-                                .foregroundColor(statusColor)
-                            
-                            Text(reservation.status == .pending ? "QR" : "")
-                                .font(.system(size: 10, weight: .bold))
-                                .foregroundColor(statusColor)
+            HStack(spacing: 16) {
+                // Card image or placeholder
+                if let imageURL = reservation.fullImageURL, let url = URL(string: imageURL) {
+                    CachedAsyncImage(url: url) { phase in
+                        switch phase {
+                        case .success(let image):
+                            image
+                                .resizable()
+                                .aspectRatio(contentMode: .fill)
+                                .frame(width: 56, height: 78)
+                                .clipShape(RoundedRectangle(cornerRadius: 8))
+                        default:
+                            cardPlaceholder
                         }
                     }
-                    
-                    // Card info
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text(reservation.displayCardName)
-                            .font(.system(size: 17, weight: .bold))
-                            .foregroundColor(.primary)
-                            .lineLimit(1)
-                        
-                        if let cardSet = reservation.displayCardSet {
-                            Text(cardSet)
-                                .font(.system(size: 13))
-                                .foregroundColor(.secondary)
-                                .lineLimit(1)
-                        }
-                        
-                        HStack(spacing: 8) {
-                            // Shop name
-                            HStack(spacing: 4) {
-                                SwiftUI.Image(systemName: "storefront")
-                                    .font(.system(size: 11))
-                                Text(reservation.displayShopName)
-                                    .font(.system(size: 12, weight: .medium))
-                            }
-                            .foregroundColor(.secondary)
-                            .lineLimit(1)
-                        }
-                        
-                        // Status badge
-                        HStack(spacing: 8) {
-                            Text(reservation.status.displayName)
-                                .font(.system(size: 11, weight: .bold))
-                                .foregroundColor(.white)
-                                .padding(.horizontal, 10)
-                                .padding(.vertical, 4)
-                                .background(
-                                    Capsule()
-                                        .fill(statusColor)
-                                )
-                            
-                            if reservation.status == .pending {
-                                let timeRemaining = reservation.timeRemaining
-                                HStack(spacing: 4) {
-                                    SwiftUI.Image(systemName: "clock.fill")
-                                        .font(.system(size: 10))
-                                    Text(reservation.formattedTimeRemaining)
-                                        .font(.system(size: 11, weight: .semibold))
-                                }
-                                .foregroundColor(timeRemaining < 600 ? .red : .orange)
-                            }
-                            
-                            Spacer()
-                            
-                            // Created date
-                            Text(formattedDate(reservation.createdAt))
-                                .font(.system(size: 11))
-                                .foregroundColor(.secondary)
-                        }
-                    }
-                    
-                    Spacer()
-                    
-                    // Chevron
-                    SwiftUI.Image(systemName: "chevron.right")
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundColor(.secondary)
+                } else {
+                    cardPlaceholder
                 }
-                .padding(16)
                 
-                // Action hint for active reservations
-                if reservation.status == .pending || reservation.status == .validated {
-                    Divider()
-                        .padding(.horizontal, 16)
+                // Content
+                VStack(alignment: .leading, spacing: 6) {
+                    // Card name
+                    Text(reservation.displayCardName)
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundColor(.primary)
+                        .lineLimit(1)
                     
-                    HStack {
-                        SwiftUI.Image(systemName: "qrcode.viewfinder")
-                            .font(.system(size: 14))
-                        Text("Tocca per mostrare il QR Code")
-                            .font(.system(size: 13, weight: .medium))
+                    // Shop name
+                    Text(reservation.displayShopName)
+                        .font(.system(size: 14))
+                        .foregroundColor(.secondary)
+                        .lineLimit(1)
+                    
+                    // Status and time
+                    HStack(spacing: 8) {
+                        Text(reservation.status.displayName)
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundColor(statusColor)
+                        
+                        if reservation.status == .pending {
+                            Text("•")
+                                .foregroundColor(.secondary)
+                            Text(reservation.formattedTimeRemaining)
+                                .font(.system(size: 12))
+                                .foregroundColor(reservation.timeRemaining < 600 ? .red : .secondary)
+                        }
+                        
                         Spacer()
+                        
+                        Text(formattedDate(reservation.createdAt))
+                            .font(.system(size: 12))
+                            .foregroundColor(.secondary)
                     }
-                    .foregroundColor(statusColor)
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 12)
-                    .background(statusColor.opacity(0.05))
                 }
+                
+                // Chevron
+                SwiftUI.Image(systemName: "chevron.right")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundColor(Color(.tertiaryLabel))
             }
-            .background(
-                RoundedRectangle(cornerRadius: 16)
-                    .fill(Color(.systemBackground))
-                    .shadow(color: Color.black.opacity(0.06), radius: 8, x: 0, y: 2)
-            )
+            .padding(.horizontal, 20)
+            .padding(.vertical, 16)
         }
         .buttonStyle(PlainButtonStyle())
+    }
+    
+    private var cardPlaceholder: some View {
+        RoundedRectangle(cornerRadius: 8)
+            .fill(Color(.secondarySystemBackground))
+            .frame(width: 56, height: 78)
+            .overlay(
+                SwiftUI.Image(systemName: "rectangle.stack")
+                    .font(.system(size: 18))
+                    .foregroundColor(.secondary)
+            )
     }
     
     private func formattedDate(_ date: Date) -> String {
@@ -366,8 +322,8 @@ struct ReservationCardView: View {
     }
 }
 
-// MARK: - Reservation QR View (Redesigned)
-struct ReservationQRView: View {
+// MARK: - Minimal Reservation Detail View
+struct MinimalReservationDetailView: View {
     @EnvironmentObject var reservationService: ReservationService
     @Environment(\.dismiss) var dismiss
     
@@ -387,176 +343,201 @@ struct ReservationQRView: View {
     }
     
     var body: some View {
-        NavigationView {
+        VStack(spacing: 0) {
+            // Header
+            headerView
+            
+            Divider()
+            
+            // Content
             ScrollView {
-                VStack(spacing: 24) {
-                    // Status Header
-                    statusHeaderView
-                    
-                    // QR Code Section
+                VStack(spacing: 0) {
+                    // QR Code Section (for active reservations)
                     if reservation.status == .pending || reservation.status == .validated {
-                        qrCodeSectionView
+                        qrCodeSection
+                        
+                        Divider()
+                            .padding(.horizontal, 20)
                     }
                     
                     // Card Details
-                    cardDetailsSectionView
+                    cardDetailsSection
+                    
+                    Divider()
+                        .padding(.horizontal, 20)
                     
                     // Shop Info
-                    shopInfoSectionView
+                    shopInfoSection
                     
                     // Cancel button
                     if reservation.canBeCancelled {
-                        cancelButtonView
+                        Divider()
+                            .padding(.horizontal, 20)
+                        
+                        cancelSection
                     }
                 }
-                .padding(20)
+                .padding(.bottom, 32)
             }
-            .background(Color(.systemGroupedBackground))
-            .navigationTitle("")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Chiudi") {
-                        dismiss()
-                    }
-                    .fontWeight(.semibold)
-                }
+        }
+        .background(Color(.systemBackground))
+        .confirmationDialog("Annulla Prenotazione", isPresented: $showCancelConfirmation, titleVisibility: .visible) {
+            Button("Annulla Prenotazione", role: .destructive) {
+                cancelReservation()
             }
-            .confirmationDialog("Annulla Prenotazione", isPresented: $showCancelConfirmation, titleVisibility: .visible) {
-                Button("Annulla Prenotazione", role: .destructive) {
-                    cancelReservation()
-                }
-                Button("Mantieni", role: .cancel) {}
-            } message: {
-                Text("Sei sicuro di voler annullare questa prenotazione?")
-            }
+            Button("Mantieni", role: .cancel) {}
+        } message: {
+            Text("Sei sicuro di voler annullare questa prenotazione?")
         }
     }
     
-    // MARK: - Status Header
-    private var statusHeaderView: some View {
-        VStack(spacing: 16) {
-            VStack(spacing: 8) {
-                Text(reservation.status.displayName)
-                    .font(.system(size: 24, weight: .bold))
+    // MARK: - Header
+    private var headerView: some View {
+        HStack(alignment: .center) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Dettaglio")
+                    .font(.system(size: 32, weight: .heavy))
                     .foregroundColor(.primary)
                 
-                if reservation.status == .pending {
-                    let timeRemaining = reservation.timeRemaining
-                    VStack(spacing: 4) {
-                        Text("Tempo Rimanente")
-                            .font(.system(size: 13))
-                            .foregroundColor(.secondary)
-                        
-                        Text(reservation.formattedTimeRemaining)
-                            .font(.system(size: 32, weight: .bold))
-                            .foregroundColor(timeRemaining < 600 ? .red : statusColor)
-                    }
+                HStack(spacing: 6) {
+                    Circle()
+                        .fill(statusColor)
+                        .frame(width: 8, height: 8)
+                    Text(reservation.status.displayName)
+                        .font(.system(size: 15))
+                        .foregroundColor(.secondary)
                 }
             }
+            
+            Spacer()
+            
+            // Close button
+            Button(action: { dismiss() }) {
+                SwiftUI.Image(systemName: "xmark")
+                    .font(.system(size: 14, weight: .bold))
+                    .foregroundColor(.secondary)
+                    .frame(width: 36, height: 36)
+                    .background(
+                        Circle()
+                            .fill(Color(.secondarySystemBackground))
+                    )
+            }
         }
-        .padding(24)
-        .frame(maxWidth: .infinity)
-        .background(
-            RoundedRectangle(cornerRadius: 20)
-                .fill(Color(.systemBackground))
-                .shadow(color: Color.black.opacity(0.06), radius: 8, x: 0, y: 2)
-        )
+        .padding(.horizontal, 20)
+        .padding(.vertical, 16)
     }
     
     // MARK: - QR Code Section
-    private var qrCodeSectionView: some View {
-        VStack(spacing: 16) {
-            HStack {
-                SwiftUI.Image(systemName: "qrcode")
-                    .font(.system(size: 18, weight: .semibold))
-                    .foregroundColor(statusColor)
-                Text("Mostra questo QR al negozio")
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundColor(.primary)
-                Spacer()
+    private var qrCodeSection: some View {
+        VStack(spacing: 20) {
+            // Time remaining (for pending)
+            if reservation.status == .pending {
+                VStack(spacing: 4) {
+                    Text("Tempo rimanente")
+                        .font(.system(size: 13))
+                        .foregroundColor(.secondary)
+                    
+                    Text(reservation.formattedTimeRemaining)
+                        .font(.system(size: 28, weight: .bold))
+                        .foregroundColor(reservation.timeRemaining < 600 ? .red : .primary)
+                }
             }
             
+            // QR Code
             if let qrImage = generateQRCode(from: reservation.qrCode) {
-                SwiftUI.Image(uiImage: qrImage)
-                    .interpolation(.none)
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 200, height: 200)
-                    .padding(24)
-                    .background(
-                        RoundedRectangle(cornerRadius: 16)
-                            .fill(Color.white)
-                    )
-                    .shadow(color: Color.black.opacity(0.1), radius: 8, x: 0, y: 4)
+                VStack(spacing: 12) {
+                    SwiftUI.Image(uiImage: qrImage)
+                        .interpolation(.none)
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 180, height: 180)
+                        .padding(16)
+                        .background(
+                            RoundedRectangle(cornerRadius: 12)
+                                .stroke(Color(.separator), lineWidth: 1)
+                        )
+                    
+                    Text("Mostra al negozio")
+                        .font(.system(size: 13))
+                        .foregroundColor(.secondary)
+                    
+                    Text(reservation.qrCode)
+                        .font(.system(size: 11, design: .monospaced))
+                        .foregroundColor(.secondary)
+                }
             }
-            
-            Text(reservation.qrCode)
-                .font(.system(size: 12, design: .monospaced))
-                .foregroundColor(.secondary)
         }
-        .padding(20)
-        .background(
-            RoundedRectangle(cornerRadius: 20)
-                .fill(Color(.systemBackground))
-                .shadow(color: Color.black.opacity(0.06), radius: 8, x: 0, y: 2)
-        )
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 24)
     }
     
     // MARK: - Card Details Section
-    private var cardDetailsSectionView: some View {
+    private var cardDetailsSection: some View {
         VStack(alignment: .leading, spacing: 16) {
-            HStack {
-                SwiftUI.Image(systemName: "rectangle.stack.fill")
-                    .font(.system(size: 18, weight: .semibold))
-                    .foregroundColor(.purple)
-                Text("Dettagli Carta")
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundColor(.primary)
-                Spacer()
-            }
+            Text("Carta")
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundColor(.secondary)
+                .textCase(.uppercase)
             
-            VStack(alignment: .leading, spacing: 12) {
-                detailRow(label: "Nome", value: reservation.displayCardName)
-                
-                if let cardSet = reservation.displayCardSet {
-                    detailRow(label: "Set", value: cardSet)
+            HStack(spacing: 16) {
+                // Card image
+                if let imageURL = reservation.fullImageURL, let url = URL(string: imageURL) {
+                    CachedAsyncImage(url: url) { phase in
+                        switch phase {
+                        case .success(let image):
+                            image
+                                .resizable()
+                                .aspectRatio(contentMode: .fill)
+                                .frame(width: 70, height: 98)
+                                .clipShape(RoundedRectangle(cornerRadius: 8))
+                        default:
+                            RoundedRectangle(cornerRadius: 8)
+                                .fill(Color(.secondarySystemBackground))
+                                .frame(width: 70, height: 98)
+                        }
+                    }
                 }
                 
-                if let rarity = reservation.cardRarity {
-                    detailRow(label: "Rarità", value: rarity.capitalized)
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(reservation.displayCardName)
+                        .font(.system(size: 17, weight: .semibold))
+                        .foregroundColor(.primary)
+                    
+                    if let cardSet = reservation.displayCardSet {
+                        Text(cardSet)
+                            .font(.system(size: 14))
+                            .foregroundColor(.secondary)
+                    }
+                    
+                    if let rarity = reservation.cardRarity {
+                        Text(rarity.capitalized)
+                            .font(.system(size: 13))
+                            .foregroundColor(.secondary)
+                    }
                 }
+                
+                Spacer()
             }
         }
         .padding(20)
-        .background(
-            RoundedRectangle(cornerRadius: 20)
-                .fill(Color(.systemBackground))
-                .shadow(color: Color.black.opacity(0.06), radius: 8, x: 0, y: 2)
-        )
     }
     
     // MARK: - Shop Info Section
-    private var shopInfoSectionView: some View {
+    private var shopInfoSection: some View {
         VStack(alignment: .leading, spacing: 16) {
-            HStack {
-                SwiftUI.Image(systemName: "storefront.fill")
-                    .font(.system(size: 18, weight: .semibold))
-                    .foregroundColor(.blue)
-                Text("Negozio")
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundColor(.primary)
-                Spacer()
-            }
+            Text("Negozio")
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundColor(.secondary)
+                .textCase(.uppercase)
             
-            VStack(alignment: .leading, spacing: 8) {
+            VStack(alignment: .leading, spacing: 6) {
                 Text(reservation.displayShopName)
-                    .font(.system(size: 17, weight: .bold))
+                    .font(.system(size: 17, weight: .semibold))
                     .foregroundColor(.primary)
                 
                 if !reservation.displayShopLocation.isEmpty {
                     HStack(spacing: 6) {
-                        SwiftUI.Image(systemName: "mappin.and.ellipse")
+                        SwiftUI.Image(systemName: "mappin")
                             .font(.system(size: 12))
                         Text(reservation.displayShopLocation)
                             .font(.system(size: 14))
@@ -565,51 +546,32 @@ struct ReservationQRView: View {
                 }
             }
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
         .padding(20)
-        .background(
-            RoundedRectangle(cornerRadius: 20)
-                .fill(Color(.systemBackground))
-                .shadow(color: Color.black.opacity(0.06), radius: 8, x: 0, y: 2)
-        )
     }
     
-    // MARK: - Cancel Button
-    private var cancelButtonView: some View {
+    // MARK: - Cancel Section
+    private var cancelSection: some View {
         Button(action: { showCancelConfirmation = true }) {
             HStack {
                 if isCancelling {
                     ProgressView()
-                        .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                        .tint(.white)
                 } else {
-                    SwiftUI.Image(systemName: "xmark.circle.fill")
-                    Text("Annulla Prenotazione")
+                    Text("Annulla prenotazione")
                 }
             }
-            .font(.system(size: 17, weight: .semibold))
-            .foregroundColor(.white)
+            .font(.system(size: 16, weight: .semibold))
+            .foregroundColor(.red)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 16)
-            .background(
-                RoundedRectangle(cornerRadius: 14)
-                    .fill(Color.red)
-            )
         }
         .disabled(isCancelling)
+        .padding(.horizontal, 20)
+        .padding(.top, 8)
     }
     
     // MARK: - Helpers
-    private func detailRow(label: String, value: String) -> some View {
-        HStack {
-            Text(label)
-                .font(.system(size: 14))
-                .foregroundColor(.secondary)
-            Spacer()
-            Text(value)
-                .font(.system(size: 15, weight: .medium))
-                .foregroundColor(.primary)
-        }
-    }
-    
     private func generateQRCode(from string: String) -> UIImage? {
         let context = CIContext()
         let filter = CIFilter.qrCodeGenerator()
@@ -649,9 +611,7 @@ struct ReservationQRView: View {
 }
 
 #Preview {
-    NavigationView {
-        MyReservationsView()
-            .environmentObject(ReservationService())
-            .environmentObject(AuthService())
-    }
+    MyReservationsView()
+        .environmentObject(ReservationService())
+        .environmentObject(AuthService())
 }

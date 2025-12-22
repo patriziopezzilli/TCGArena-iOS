@@ -40,12 +40,12 @@ struct CustomerRequest: Identifiable, Codable {
         
         var displayName: String {
             switch self {
-            case .availability: return "Card Availability"
-            case .evaluation: return "Card Evaluation"
-            case .sell: return "Sell Cards"
-            case .buy: return "Buy Request"
-            case .trade: return "Trade Proposal"
-            case .general: return "General Inquiry"
+            case .availability: return "Disponibilità"
+            case .evaluation: return "Valutazione Carta"
+            case .sell: return "Vendita"
+            case .buy: return "Acquisto"
+            case .trade: return "Scambio"
+            case .general: return "Richiesta Generica"
             }
         }
         
@@ -81,11 +81,11 @@ struct CustomerRequest: Identifiable, Codable {
         
         var displayName: String {
             switch self {
-            case .pending: return "Pending"
-            case .accepted: return "In Progress"
-            case .rejected: return "Rejected"
-            case .completed: return "Completed"
-            case .cancelled: return "Cancelled"
+            case .pending: return "In Attesa"
+            case .accepted: return "In Lavorazione"
+            case .rejected: return "Rifiutata"
+            case .completed: return "Completata"
+            case .cancelled: return "Annullata"
             }
         }
         

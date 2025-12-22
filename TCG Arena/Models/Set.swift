@@ -32,6 +32,11 @@ struct TCGSet: Identifiable, Codable {
         case cards
     }
     
+    /// Set code formatted as uppercase for display
+    var displaySetCode: String {
+        setCode.uppercased()
+    }
+    
     // Computed property per ottenere la data di rilascio come Date
     var releaseDate: Date {
         let formatter = ISO8601DateFormatter()

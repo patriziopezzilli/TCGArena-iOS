@@ -285,6 +285,7 @@ struct MinimalSecureField: View {
     let title: String
     let icon: String
     @Binding var text: String
+    @State private var showPassword = false
     
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
@@ -298,9 +299,23 @@ struct MinimalSecureField: View {
                     .foregroundColor(.primary)
                     .frame(width: 24)
                 
-                SecureField("", text: $text)
-                    .font(.system(size: 18))
-                    .foregroundColor(.primary)
+                if showPassword {
+                    TextField("", text: $text)
+                        .font(.system(size: 18))
+                        .foregroundColor(.primary)
+                        .autocapitalization(.none)
+                        .disableAutocorrection(true)
+                } else {
+                    SecureField("", text: $text)
+                        .font(.system(size: 18))
+                        .foregroundColor(.primary)
+                }
+                
+                Button(action: { showPassword.toggle() }) {
+                    SwiftUI.Image(systemName: showPassword ? "eye.slash.fill" : "eye.fill")
+                        .font(.system(size: 16))
+                        .foregroundColor(.secondary)
+                }
             }
             .padding(.vertical, 12)
             .padding(.horizontal, 16)

@@ -55,7 +55,7 @@ struct RequestDetailView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Close") {
+                    Button("Chiudi") {
                         dismiss()
                     }
                 }
@@ -90,10 +90,10 @@ struct RequestDetailView: View {
                 Text("Accept this request and start working on it?")
             }
             .confirmationDialog("Reject Request", isPresented: $showRejectConfirmation, titleVisibility: .visible) {
-                Button("Reject", role: .destructive) { rejectRequest() }
+                Button("Rifiuta", role: .destructive) { rejectRequest() }
                 Button("Cancel", role: .cancel) {}
             } message: {
-                Text("Are you sure you want to reject this request?")
+                Text("Sei sicuro di voler rifiutare questa richiesta?")
             }
             .confirmationDialog("Complete Request", isPresented: $showCompleteConfirmation, titleVisibility: .visible) {
                 Button("Complete") { completeRequest() }

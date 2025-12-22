@@ -300,7 +300,7 @@ private struct ActivityReservationCard: View {
         }
         .buttonStyle(PlainButtonStyle())
         .sheet(isPresented: $showingQR) {
-            ReservationQRView(reservation: reservation)
+            MinimalReservationDetailView(reservation: reservation)
         }
     }
     
