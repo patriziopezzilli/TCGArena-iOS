@@ -126,6 +126,7 @@ struct CommunityView: View {
                             CommunityTabPill(title: "Classifiche", isSelected: selectedSection == 0) { withAnimation { selectedSection = 0 } }
                             CommunityTabPill(title: "Live Feed", isSelected: selectedSection == 1) { withAnimation { selectedSection = 1 } }
                             CommunityTabPill(title: "Giocatori", isSelected: selectedSection == 2) { withAnimation { selectedSection = 2 } }
+                            CommunityTabPill(title: "Messaggi", isSelected: selectedSection == 3) { withAnimation { selectedSection = 3 } }
                         }
                         .padding(4)
                         .background(Color(.secondarySystemBackground))
@@ -133,14 +134,18 @@ struct CommunityView: View {
                         .padding(.horizontal, 24)
                         
                         // MARK: - Content
-                        if selectedSection == 0 {
+						if selectedSection == 0 {
                             leaderboardContent
                                 .transition(.opacity)
                         } else if selectedSection == 1 {
                             exploreContent
                                 .transition(.opacity)
-                        } else {
+                        } else if selectedSection == 2 {
                             discoverContent
+                                .transition(.opacity)
+                        } else {
+                            ChatListView()
+                                .environmentObject(authService)
                                 .transition(.opacity)
                         }
                         
@@ -210,9 +215,15 @@ struct CommunityView: View {
                         // Top 3 Podium
                         if entries.count >= 3 {
                             HStack(alignment: .bottom, spacing: 12) {
-                                MinimalPodiumView(entry: entries[1], rank: 2, color: .gray)
-                                MinimalPodiumView(entry: entries[0], rank: 1, color: .yellow)
-                                MinimalPodiumView(entry: entries[2], rank: 3, color: .orange)
+                                MinimalPodiumView(entry: entries[1], rank: 2, color: .gray) {
+                                    showingUserProfile = entries[1].userProfile
+                                }
+                                MinimalPodiumView(entry: entries[0], rank: 1, color: .yellow) {
+                                    showingUserProfile = entries[0].userProfile
+                                }
+                                MinimalPodiumView(entry: entries[2], rank: 3, color: .orange) {
+                                    showingUserProfile = entries[2].userProfile
+                                }
                             }
                             .padding(.horizontal, 24)
                             .padding(.bottom, 10)
@@ -323,7 +334,7 @@ struct CommunityView: View {
             bio: nil,
             joinDate: Date(), lastActiveDate: Date(), isVerified: false, level: 1, experience: 0,
             stats: DiscoverUserStats(totalCards: 0, totalDecks: 0, tournamentsWon: 0, tournamentsPlayed: 0, tradesToday: 0, totalTrades: 0, communityPoints: 0, achievementsUnlocked: 0),
-            badges: [], favoriteCard: nil, preferredTCG: nil, location: nil, followersCount: 0, followingCount: 0, isFollowedByCurrentUser: false
+            badges: [], favoriteCard: nil, preferredTCG: nil, location: nil, tradeRating: nil, followersCount: 0, followingCount: 0, isFollowedByCurrentUser: false
         )
         showingUserProfile = profile
     }
@@ -496,39 +507,43 @@ struct MinimalPodiumView: View {
     let entry: LeaderboardEntry
     let rank: Int
     let color: Color
+    let action: () -> Void
     
     var body: some View {
-        VStack(spacing: 0) {
-            // Rank Number (Big & Bold)
-            Text("\(rank)")
-                .font(.system(size: rank == 1 ? 64 : 48, weight: .black, design: .rounded))
-                .foregroundColor(color.opacity(0.8))
-                .shadow(color: color.opacity(0.3), radius: 10, x: 0, y: 5)
-                .offset(y: 10) // Overlap slightly
-                .zIndex(1)
-            
-            // Card
-            VStack(spacing: 8) {
-                Text(entry.userProfile.displayName)
-                    .font(.system(size: 14, weight: .bold))
-                    .foregroundColor(.primary)
-                    .lineLimit(1)
-                    .padding(.top, 20)
+        Button(action: action) {
+            VStack(spacing: 0) {
+                // Rank Number (Big & Bold)
+                Text("\(rank)")
+                    .font(.system(size: rank == 1 ? 64 : 48, weight: .black, design: .rounded))
+                    .foregroundColor(color.opacity(0.8))
+                    .shadow(color: color.opacity(0.3), radius: 10, x: 0, y: 5)
+                    .offset(y: 10) // Overlap slightly
+                    .zIndex(1)
                 
-                Text("\(entry.score)")
-                    .font(.system(size: 16, weight: .heavy, design: .monospaced))
-                    .foregroundColor(color)
-                
-                // Optional: Tiny avatar or minimal indicator
-                Circle()
-                    .fill(color.opacity(0.2))
-                    .frame(width: 8, height: 8)
+                // Card
+                VStack(spacing: 8) {
+                    Text(entry.userProfile.displayName)
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundColor(.primary)
+                        .lineLimit(1)
+                        .padding(.top, 20)
+                    
+                    Text("\(entry.score)")
+                        .font(.system(size: 16, weight: .heavy, design: .monospaced))
+                        .foregroundColor(color)
+                    
+                    // Optional: Tiny avatar or minimal indicator
+                    Circle()
+                        .fill(color.opacity(0.2))
+                        .frame(width: 8, height: 8)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.horizontal, 8)
+                .padding(.bottom, 16)
+                .background(Color.gray.opacity(0.1))
+                .cornerRadius(12)
             }
-            .frame(maxWidth: .infinity)
-            .padding(.horizontal, 8)
-            .padding(.bottom, 16)
-            .background(Color.gray.opacity(0.1))
-            .cornerRadius(12)
         }
+        .buttonStyle(PlainButtonStyle())
     }
 }

@@ -23,7 +23,7 @@ struct Deck: Identifiable, Codable {
     struct DeckCard: Codable, Identifiable {
         let id: Int64?
         let cardId: Int64
-        let quantity: Int
+        var quantity: Int
         let cardName: String
         let cardImageUrl: String?
         let condition: CardCondition?

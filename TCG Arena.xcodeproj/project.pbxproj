@@ -13,6 +13,11 @@
 		78158E062EF9856600787DC6 /* BackgroundTaskManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78158E052EF9856600787DC6 /* BackgroundTaskManager.swift */; };
 		78158E122EF9A86900787DC6 /* VisualSearchService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78158E112EF9A86900787DC6 /* VisualSearchService.swift */; };
 		78158E142EF9A87500787DC6 /* AIScannerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78158E132EF9A87500787DC6 /* AIScannerView.swift */; };
+		78158E2A2F002AC300787DC6 /* RadarModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78158E292F002AC300787DC6 /* RadarModels.swift */; };
+		78158E2E2F00337100787DC6 /* ChatModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78158E2D2F00337100787DC6 /* ChatModels.swift */; };
+		78158E302F00337B00787DC6 /* ChatService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78158E2F2F00337B00787DC6 /* ChatService.swift */; };
+		78158E342F00338600787DC6 /* ChatListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78158E322F00338600787DC6 /* ChatListView.swift */; };
+		78158E352F00338600787DC6 /* ChatDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78158E312F00338600787DC6 /* ChatDetailView.swift */; };
 		78229A532EF5BD5700E2F700 /* HomeDashboardService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78229A522EF5BD5700E2F700 /* HomeDashboardService.swift */; };
 		78229A562EF5BD6000E2F700 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78229A542EF5BD6000E2F700 /* HomeView.swift */; };
 		78229A582EF5C5E000E2F700 /* MinimalTabButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78229A572EF5C5E000E2F700 /* MinimalTabButton.swift */; };
@@ -205,6 +210,11 @@
 		78158E052EF9856600787DC6 /* BackgroundTaskManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundTaskManager.swift; sourceTree = "<group>"; };
 		78158E112EF9A86900787DC6 /* VisualSearchService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VisualSearchService.swift; sourceTree = "<group>"; };
 		78158E132EF9A87500787DC6 /* AIScannerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIScannerView.swift; sourceTree = "<group>"; };
+		78158E292F002AC300787DC6 /* RadarModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RadarModels.swift; sourceTree = "<group>"; };
+		78158E2D2F00337100787DC6 /* ChatModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatModels.swift; sourceTree = "<group>"; };
+		78158E2F2F00337B00787DC6 /* ChatService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatService.swift; sourceTree = "<group>"; };
+		78158E312F00338600787DC6 /* ChatDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatDetailView.swift; sourceTree = "<group>"; };
+		78158E322F00338600787DC6 /* ChatListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatListView.swift; sourceTree = "<group>"; };
 		78229A522EF5BD5700E2F700 /* HomeDashboardService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeDashboardService.swift; sourceTree = "<group>"; };
 		78229A542EF5BD6000E2F700 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
 		78229A572EF5C5E000E2F700 /* MinimalTabButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MinimalTabButton.swift; sourceTree = "<group>"; };
@@ -402,6 +412,15 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		78158E332F00338600787DC6 /* Chat */ = {
+			isa = PBXGroup;
+			children = (
+				78158E312F00338600787DC6 /* ChatDetailView.swift */,
+				78158E322F00338600787DC6 /* ChatListView.swift */,
+			);
+			path = Chat;
+			sourceTree = "<group>";
+		};
 		78229A552EF5BD6000E2F700 /* Home */ = {
 			isa = PBXGroup;
 			children = (
@@ -593,6 +612,8 @@
 		A5000004 /* Models */ = {
 			isa = PBXGroup;
 			children = (
+				78158E2D2F00337100787DC6 /* ChatModels.swift */,
+				78158E292F002AC300787DC6 /* RadarModels.swift */,
 				78229A862EF738DE00E2F700 /* TradeModels.swift */,
 				786778FB2EF2E643000928C4 /* OpeningHours.swift */,
 				786778D92EF210FD000928C4 /* TournamentActivityAttributes.swift */,
@@ -632,6 +653,7 @@
 		A5000005 /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				78158E332F00338600787DC6 /* Chat */,
 				78229A802EF72CA500E2F700 /* Trade */,
 				78229A6B2EF6E64A00E2F700 /* HelpView.swift */,
 				78229A672EF6E44F00E2F700 /* MoreView.swift */,
@@ -667,6 +689,7 @@
 		A5000006 /* Services */ = {
 			isa = PBXGroup;
 			children = (
+				78158E2F2F00337B00787DC6 /* ChatService.swift */,
 				78158E112EF9A86900787DC6 /* VisualSearchService.swift */,
 				78158DE12EF800BD00787DC6 /* RadarService.swift */,
 				78229A842EF738CD00E2F700 /* TradeService.swift */,
@@ -909,9 +932,13 @@
 				7AE3FF942EC8FFE6004EE982 /* RewardsMainView.swift in Sources */,
 				78BBCF312EEED18D00FCEA14 /* TournamentUpdate.swift in Sources */,
 				7AE3FF952EC8FFE6004EE982 /* RewardsView.swift in Sources */,
+				78158E302F00337B00787DC6 /* ChatService.swift in Sources */,
 				7AE3FF912EC89098004EE982 /* DeckRowView.swift in Sources */,
+				78158E2E2F00337100787DC6 /* ChatModels.swift in Sources */,
 				7AA785852EBC8A4A00A11D94 /* TournamentView.swift in Sources */,
 				7A8B2E9A2EC22ED8004F6826 /* ExpansionComponents.swift in Sources */,
+				78158E342F00338600787DC6 /* ChatListView.swift in Sources */,
+				78158E352F00338600787DC6 /* ChatDetailView.swift in Sources */,
 				7840904C2EDB98F000CC6B9A /* DeckSelectionModal.swift in Sources */,
 				786AC8602EE2CD68001A6714 /* PastTournamentCard.swift in Sources */,
 				7A8B2E882EC1F2FA004F6826 /* SharedComponents.swift in Sources */,
@@ -975,6 +1002,7 @@
 				786778FE2EF2EB5C000928C4 /* TournamentRequestView.swift in Sources */,
 				7A1CC9452ED2392C00A61395 /* ImageService.swift in Sources */,
 				78229A7E2EF71A6F00E2F700 /* ExploreMapView.swift in Sources */,
+				78158E2A2F002AC300787DC6 /* RadarModels.swift in Sources */,
 				786AC8782EE461D5001A6714 /* ShopRequestsView.swift in Sources */,
 				7A1CC9462ED2392C00A61395 /* APIClient.swift in Sources */,
 				7A1CC94B2ED2756B00A61395 /* TournamentMapDetailView.swift in Sources */,

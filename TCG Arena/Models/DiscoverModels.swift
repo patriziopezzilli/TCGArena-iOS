@@ -34,6 +34,9 @@ struct UserProfile: Identifiable, Codable {
     let preferredTCG: TCGType?
     let location: UserLocation?
     
+    // Trade rating (1-5 stars average)
+    let tradeRating: Double?
+    
     // Social stats
     let followersCount: Int
     let followingCount: Int

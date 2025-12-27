@@ -16,7 +16,7 @@ struct Card: Identifiable, Codable {
     var condition: CardCondition
     let imageURL: String?
     let isFoil: Bool
-    let quantity: Int
+    var quantity: Int
     let ownerId: Int64
     let createdAt: Date
     let updatedAt: Date

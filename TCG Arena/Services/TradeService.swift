@@ -52,6 +52,11 @@ class TradeService: ObservableObject {
         }
     }
     
+    // Fetch trade list for a specific user (for viewing other users' profiles)
+    func fetchUserList(userId: Int64, type: TradeListType) async throws -> [TradeListEntry] {
+        return try await apiClient.request("/api/trade/list/\(userId)?type=\(type.rawValue)")
+    }
+    
     func addCardToList(cardId: Int, type: TradeListType, completion: @escaping (Bool) -> Void) {
         let payload = TradeListRequest(cardTemplateId: cardId, type: type.rawValue)
         Task {

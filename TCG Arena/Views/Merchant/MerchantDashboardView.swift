@@ -44,7 +44,7 @@ struct MerchantDashboardView: View {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 12) {
                         ForEach(MerchantTab.allCases, id: \.self) { tab in
-                            TabButton(
+                            MerchantTabButton(
                                 title: tab.rawValue,
                                 icon: tab.icon,
                                 isSelected: selectedTab == tab
@@ -128,8 +128,8 @@ struct MerchantDashboardView: View {
     }
 }
 
-// MARK: - Tab Button
-struct TabButton: View {
+// MARK: - Merchant Tab Button
+struct MerchantTabButton: View {
     let title: String
     let icon: String
     let isSelected: Bool

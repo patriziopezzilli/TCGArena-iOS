@@ -71,7 +71,7 @@ struct ExploreMapView: View {
         
         // Group Radar Users
         for user in radarService.nearbyUsers {
-            let key = "\(String(format: "%.4f", user.latitude)),\(String(format: "%.4f", user.longitude))"
+            let key = "\(String(format: "%.4f", user.latitude ?? 0)),\(String(format: "%.4f", user.longitude ?? 0))"
             if locations[key] == nil { locations[key] = [] }
             locations[key]?.append(.user(user))
         }
@@ -141,10 +141,10 @@ struct ExploreMapView: View {
                                                 Circle()
                                                     .fill(Color.purple)
                                                     .frame(width: 32, height: 32)
-                                                SwiftUI.Image(systemName: "person.fill.questionmark")
+                                                SwiftUI.Image(systemName: "face.smiling.fill")
                                                     .resizable()
                                                     .scaledToFit()
-                                                    .frame(width: 16, height: 16)
+                                                    .frame(width: 20, height: 20)
                                                     .foregroundColor(.white)
                                             }
                                         }
@@ -207,17 +207,18 @@ struct ExploreMapView: View {
                             syncRadar()
                         }
                     }) {
-                        HStack {
-                            SwiftUI.Image(systemName: isRadarActive ? "antenna.radiowaves.left.and.right" : "location.slash")
-                                .foregroundColor(isRadarActive ? .green : .primary)
-                            if isRadarActive {
-                                Text("Radar Attivo")
-                                    .font(.caption).bold()
-                                    .foregroundColor(.green)
-                            }
+                        HStack(spacing: 8) {
+                            SwiftUI.Image(systemName: isRadarActive ? "person.2.fill" : "person.slash.fill")
+                                .font(.system(size: 16, weight: .bold))
+                                .foregroundColor(isRadarActive ? .green : .gray)
+                            
+                            Text(isRadarActive ? "Online" : "Offline")
+                                .font(.caption).bold()
+                                .foregroundColor(isRadarActive ? .green : .gray)
                         }
-                        .padding(12)
-                        .background(isRadarActive ? Color.black : Color(.systemBackground).opacity(0.9))
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 8)
+                        .background(Color(.systemBackground).opacity(0.9))
                         .clipShape(Capsule())
                         .shadow(radius: 4)
                     }
@@ -232,20 +233,26 @@ struct ExploreMapView: View {
             if let content = selectedContent {
                 VStack {
                     Spacer()
-                    MapSummaryCard(content: content, radarService: radarService) {
-                        switch content {
-                        case .shop:
-                            showingShopDetail = true
-                        case .tournament:
-                            showingTournamentDetail = true
-                        case .user(let user):
+                    if case .user(let user) = content {
+                        RadarUserProfileCard(user: user) {
                             radarService.pingUser(userId: user.id)
-                            // Show toast via ToastManager ideally
                         }
+                        .padding(.bottom, 30)
+                        .padding(.horizontal, 16)
+                    } else {
+                        MapSummaryCard(content: content, radarService: radarService) {
+                            switch content {
+                            case .shop:
+                                showingShopDetail = true
+                            case .tournament:
+                                showingTournamentDetail = true
+                            case .user: break // Handled above
+                            }
+                        }
+                        .transition(.move(edge: .bottom))
+                        .padding(.bottom, 30)
+                        .padding(.horizontal, 16)
                     }
-                    .transition(.move(edge: .bottom))
-                    .padding(.bottom, 30)
-                    .padding(.horizontal, 16)
                 }
                 .zIndex(1)
             }
@@ -382,7 +389,7 @@ struct MapSummaryCard: View {
                 }
             case .user:
                 HStack {
-                    Label("Live Ping", systemImage: "bolt.fill")
+                    Label("Live Ping", systemImage: "dot.radiowaves.left.and.right")
                         .font(.caption).padding(6)
                         .background(Color.purple.opacity(0.1)).foregroundColor(.purple).cornerRadius(8)
                 }
@@ -392,5 +399,326 @@ struct MapSummaryCard: View {
         .background(Color(.systemBackground))
         .cornerRadius(16)
         .shadow(color: Color.black.opacity(0.1), radius: 10, x: 0, y: 5)
+    }
+}
+
+struct RadarUserProfileCard: View {
+    let user: RadarUser
+    let onPing: () -> Void
+    
+    @EnvironmentObject var authService: AuthService
+    @StateObject private var chatService = ChatService()
+    @State private var isChatActive = false
+    @State private var activeConversation: ChatConversation?
+    
+    @State private var selectedTab = 0 // 0: Cerco, 1: Offro, 2: Carte
+    @State private var selectedTCGType: TCGType?
+    @State private var searchText = ""
+    @State private var isExpanded = false
+    // hasPinged removed
+    
+    // Filtered lists based on TCG type and search
+    var filteredWantList: [RadarTradeEntry] {
+        let list = user.wantList ?? []
+        return list.filter { entry in
+            let matchesTCG = selectedTCGType == nil || entry.tcgType == selectedTCGType
+            let matchesSearch = searchText.isEmpty || entry.cardName.localizedCaseInsensitiveContains(searchText)
+            return matchesTCG && matchesSearch
+        }
+    }
+    
+    var filteredHaveList: [RadarTradeEntry] {
+        let list = user.haveList ?? []
+        return list.filter { entry in
+            let matchesTCG = selectedTCGType == nil || entry.tcgType == selectedTCGType
+            let matchesSearch = searchText.isEmpty || entry.cardName.localizedCaseInsensitiveContains(searchText)
+            return matchesTCG && matchesSearch
+        }
+    }
+    
+    var filteredCards: [RadarUserCard] {
+        let list = user.cards ?? []
+        return list.filter { entry in
+            let matchesTCG = selectedTCGType == nil || entry.tcgType == selectedTCGType
+            let matchesSearch = searchText.isEmpty || entry.cardName.localizedCaseInsensitiveContains(searchText)
+            return matchesTCG && matchesSearch
+        }
+    }
+    
+    var body: some View {
+        VStack(spacing: 0) {
+            // Hidden Link
+            chatNavigationLink
+            
+            // Header (Always visible)
+            headerView
+            
+            if isExpanded {
+                VStack(spacing: 12) {
+                    // Search & Filters
+                    searchAndFilters
+                    
+                    // Tab Picker
+                    tabPicker
+                    
+                    // Content
+                    contentView
+                        .frame(maxHeight: 300)
+                }
+                .padding(.top, 8)
+                .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
+        }
+        .padding(16)
+        .background(Color(.systemBackground))
+        .cornerRadius(20)
+        .shadow(color: Color.black.opacity(0.1), radius: 10, x: 0, y: 5)
+        .animation(.spring(), value: isExpanded)
+    }
+    
+    private var headerView: some View {
+        HStack {
+            if let urlString = user.profileImageUrl, let url = URL(string: urlString) {
+                AsyncImage(url: url) { image in
+                    image.resizable().scaledToFill()
+                } placeholder: {
+                    SwiftUI.Image(systemName: "person.circle.fill")
+                        .foregroundColor(.gray)
+                }
+                .frame(width: 50, height: 50)
+                .clipShape(Circle())
+            } else {
+                Circle()
+                    .fill(Color.purple.opacity(0.2))
+                    .frame(width: 50, height: 50)
+                    .overlay(
+                        SwiftUI.Image(systemName: "person.fill")
+                            .foregroundColor(.purple)
+                    )
+            }
+            
+            VStack(alignment: .leading, spacing: 2) {
+                Text(user.displayName)
+                    .font(.headline)
+                    .blur(radius: 4) // Obfuscate for privacy as requested
+                Text(user.favoriteTCG?.displayName ?? "Allenatore")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+            }
+            
+            Spacer()
+            
+            HStack(spacing: 12) {
+                Button(action: {
+                    withAnimation { isExpanded.toggle() }
+                }) {
+                    SwiftUI.Image(systemName: isExpanded ? "chevron.up.circle.fill" : "chevron.down.circle.fill")
+                        .font(.system(size: 28))
+                        .foregroundColor(.gray.opacity(0.3))
+                }
+            }
+        }
+    }
+    
+    // Hidden Navigation Link
+    private var chatNavigationLink: some View {
+        NavigationLink(isActive: $isChatActive) {
+            if let conv = activeConversation {
+                ChatDetailView(conversation: conv, currentUserId: Int64(authService.currentUserId ?? 0))
+                    .environmentObject(authService)
+            }
+        } label: { EmptyView() }
+    }
+    
+    private var searchAndFilters: some View {
+        VStack(spacing: 12) {
+            // Search Bar
+            HStack {
+                SwiftUI.Image(systemName: "magnifyingglass")
+                    .foregroundColor(.gray)
+                TextField("Cerca carta...", text: $searchText)
+                    .textFieldStyle(PlainTextFieldStyle())
+            }
+            .padding(8)
+            .background(Color(.systemGray6))
+            .cornerRadius(10)
+            
+            // TCG Filters
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 8) {
+                    FilterBadge(title: "Tutti", isSelected: selectedTCGType == nil) {
+                        selectedTCGType = nil
+                    }
+                    
+                    ForEach(TCGType.allCases) { type in
+                        FilterBadge(title: type.displayName, isSelected: selectedTCGType == type) {
+                            selectedTCGType = type
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    private var tabPicker: some View {
+        HStack(spacing: 0) {
+            MapTabButton(title: "CERCO", isSelected: selectedTab == 0) { selectedTab = 0 }
+            MapTabButton(title: "OFFRO", isSelected: selectedTab == 1) { selectedTab = 1 }
+            MapTabButton(title: "CARTE", isSelected: selectedTab == 2) { selectedTab = 2 }
+        }
+        .background(Color(.systemGray6))
+        .cornerRadius(10)
+        .padding(.horizontal, 4)
+    }
+    
+    private var contentView: some View {
+        ScrollView {
+            VStack(spacing: 8) {
+                if selectedTab == 0 {
+                    if filteredWantList.isEmpty {
+                        emptyState(text: "Nessuna carta trovata")
+                    } else {
+                        ForEach(filteredWantList) { entry in
+                            cardRow(name: entry.cardName, sub: entry.rarity ?? "", imageUrl: entry.imageUrl, tcg: entry.tcgType)
+                        }
+                    }
+                } else if selectedTab == 1 {
+                    if filteredHaveList.isEmpty {
+                        emptyState(text: "Nessuna carta trovata")
+                    } else {
+                        ForEach(filteredHaveList) { entry in
+                            cardRow(name: entry.cardName, sub: entry.rarity ?? "", imageUrl: entry.imageUrl, tcg: entry.tcgType)
+                        }
+                    }
+                } else {
+                    if filteredCards.isEmpty {
+                        emptyState(text: "Nessuna carta trovata")
+                    } else {
+                        ForEach(filteredCards) { card in
+                            cardRow(name: card.cardName, sub: "\(card.setName ?? "") • Qty: \(card.quantity)", imageUrl: card.imageUrl, tcg: card.tcgType)
+                        }
+                    }
+                }
+            }
+            .padding(.vertical, 4)
+        }
+    }
+    
+    private func cardRow(name: String, sub: String, imageUrl: String?, tcg: TCGType?) -> some View {
+        HStack(spacing: 12) {
+            if let urlString = imageUrl, let url = URL(string: urlString) {
+                AsyncImage(url: url) { image in
+                    image.resizable().scaledToFit()
+                } placeholder: {
+                    Color.gray.opacity(0.1)
+                }
+                .frame(width: 40, height: 56)
+                .cornerRadius(4)
+            } else {
+                RoundedRectangle(cornerRadius: 4)
+                    .fill(Color.gray.opacity(0.1))
+                    .frame(width: 40, height: 56)
+            }
+            
+            VStack(alignment: .leading, spacing: 2) {
+                Text(name)
+                    .font(.system(size: 14, weight: .bold))
+                    .lineLimit(1)
+                
+                HStack(spacing: 6) {
+                    if let tcg = tcg {
+                        Text(tcg.displayName)
+                            .font(.system(size: 10))
+                            .padding(.horizontal, 4)
+                            .padding(.vertical, 2)
+                            .background(tcg.themeColor.opacity(0.1))
+                            .foregroundColor(tcg.themeColor)
+                            .cornerRadius(4)
+                    }
+                    
+                    Text(sub)
+                        .font(.system(size: 10))
+                        .foregroundColor(.secondary)
+                        .lineLimit(1)
+                }
+            }
+            
+            Spacer()
+            
+            // Chat Button
+            Button(action: {
+                startChat(cardName: name)
+            }) {
+                SwiftUI.Image(systemName: "bubble.left.and.bubble.right.fill")
+                    .font(.system(size: 16))
+                    .foregroundColor(.blue)
+                    .padding(8)
+                    .background(Color.blue.opacity(0.1))
+                    .clipShape(Circle())
+            }
+        }
+        .padding(8)
+        .background(Color(.systemGray6).opacity(0.5))
+        .cornerRadius(10)
+    }
+    
+    private func startChat(cardName: String) {
+        let typeString = selectedTab == 0 ? "Cerco" : (selectedTab == 1 ? "Offro" : "Collezione")
+        let context = "\(typeString): \(cardName)"
+        
+        chatService.startChat(targetUserId: user.id, type: .trade, context: context) { conversation in
+             DispatchQueue.main.async {
+                 if let conv = conversation {
+                     self.activeConversation = conv
+                     self.isChatActive = true
+                 }
+             }
+        }
+    }
+    
+    private func emptyState(text: String) -> some View {
+        Text(text)
+            .font(.caption)
+            .foregroundColor(.secondary)
+            .padding(.vertical, 20)
+            .frame(maxWidth: .infinity)
+    }
+}
+
+struct FilterBadge: View {
+    let title: String
+    let isSelected: Bool
+    let action: () -> Void
+    
+    var body: some View {
+        Button(action: action) {
+            Text(title)
+                .font(.system(size: 12, weight: .medium))
+                .padding(.horizontal, 12)
+                .padding(.vertical, 6)
+                .background(isSelected ? Color.blue : Color(.systemGray6))
+                .foregroundColor(isSelected ? .white : .primary)
+                .clipShape(Capsule())
+        }
+    }
+}
+
+struct MapTabButton: View {
+    let title: String
+    let isSelected: Bool
+    let action: () -> Void
+    
+    var body: some View {
+        Button(action: action) {
+            Text(title)
+                .font(.system(size: 11, weight: .bold))
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 8)
+                .background(isSelected ? Color.white : Color.clear)
+                .foregroundColor(isSelected ? .primary : .secondary)
+                .cornerRadius(8)
+                .shadow(color: isSelected ? Color.black.opacity(0.1) : Color.clear, radius: 2)
+        }
+        .padding(2)
     }
 }

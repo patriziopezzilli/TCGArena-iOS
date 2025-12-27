@@ -364,9 +364,15 @@ struct CollectionView: View {
         let serialQueue = DispatchQueue(label: "com.tcgarena.cardEnrichment")
         var cardsByTemplateId: [Int64: (card: Card, totalQuantity: Int, deckNames: [String])] = [:]
 
+        print("🔍 CollectionView loadEnrichedAllCards: Starting with \(deckService.userDecks.count) decks")
+        var totalCardsProcessed = 0
+        var skippedDueToNoDeckId = 0
+        
         for deck in deckService.userDecks {
+            print("🔍 CollectionView: Processing deck '\(deck.name)' with \(deck.cards.count) cards, deckId=\(deck.id ?? -1)")
             for deckCard in deck.cards {
                 let templateId = deckCard.cardId
+                totalCardsProcessed += 1
                 
                 // Controlla se la carta esiste già in modo thread-safe
                 serialQueue.sync {
@@ -402,6 +408,8 @@ struct CollectionView: View {
                         group.enter()
                         // Create basic card from deck card
                         guard let deckId = deck.id else {
+                            skippedDueToNoDeckId += 1
+                            print("⚠️ CollectionView: Skipping card '\(deckCard.cardName)' - deck has no ID")
                             group.leave()
                             return
                         }
@@ -428,6 +436,8 @@ struct CollectionView: View {
             }
         }
 
+        print("🔍 CollectionView: Processed \(totalCardsProcessed) cards total, skipped \(skippedDueToNoDeckId) due to no deck ID, unique templates: \(cardsByTemplateId.count)")
+
         group.notify(queue: .main) {
             // Converti il dizionario in array di carte
             var finalCards: [Card] = []
@@ -435,6 +445,7 @@ struct CollectionView: View {
                 for (_, value) in cardsByTemplateId {
                     var card = value.card
                     card.deckNames = value.deckNames
+                    card.quantity = value.totalQuantity
                     finalCards.append(card)
                 }
             }
@@ -1171,7 +1182,12 @@ struct CollectionView: View {
                         .foregroundColor(.secondary)
                         .tracking(1.5)
                     
-                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 80), spacing: 10)], spacing: 10) {
+                    // Use fixed 3-column grid for consistent sizing
+                    LazyVGrid(columns: [
+                        GridItem(.flexible(), spacing: 8),
+                        GridItem(.flexible(), spacing: 8),
+                        GridItem(.flexible(), spacing: 8)
+                    ], spacing: 8) {
                         // All option
                         FilterChipButton(
                             title: "Tutte",
@@ -1184,7 +1200,7 @@ struct CollectionView: View {
                         
                         ForEach(Rarity.allCases, id: \.self) { rarity in
                             FilterChipButton(
-                                title: rarity.shortName,
+                                title: rarity.displayName,
                                 rarityColor: rarity.color,
                                 isSelected: selectedCardRarity == rarity,
                                 color: rarity.color
@@ -1921,14 +1937,11 @@ struct CardDiscoverView: View {
         }
     }
     
-    // Helper to toggle year selection
+    // Helper to set year selection (single select)
     private func toggleYear(_ year: Int) {
-        var years = selectedYears
-        if years.contains(year) {
-            years.remove(year)
-        } else {
-            years.insert(year)
-        }
+        // Just set the year, making it single-select as requested
+        let years = Set([year])
+        
         // Update storage
         if let data = try? JSONEncoder().encode(Array(years)),
            let json = String(data: data, encoding: .utf8) {
@@ -2043,11 +2056,8 @@ struct CardDiscoverView: View {
                 HStack(spacing: 8) {
                     let availableTCGs: [TCGType?] = {
                         let favorites = authService.favoriteTCGTypes
-                        if favorites.isEmpty {
-                            return [nil] + TCGType.allCases
-                        } else {
-                            return [nil] + favorites
-                        }
+                        let others = TCGType.allCases.filter { !favorites.contains($0) }
+                        return [nil] + favorites + others
                     }()
                     
                     ForEach(availableTCGs, id: \.self) { tcgType in
@@ -2230,11 +2240,8 @@ struct CardDiscoverView: View {
     private var filteredExpansions: [Expansion] {
         var expansions = expansionService.expansions
         
-        // Filter by user's favorite TCGs (fallback to all if none set)
-        let favorites = authService.favoriteTCGTypes
-        if !favorites.isEmpty {
-            expansions = expansions.filter { favorites.contains($0.tcgType) }
-        }
+        // Show all expansions, not filtered by favorites as requested by user
+        // Filter by the selected TCG type pill if one is active
         
         if let selectedType = selectedTCGType {
             expansions = expansions.filter { $0.tcgType == selectedType }
@@ -2476,6 +2483,12 @@ struct CompactCardView: View {
                 }
             }
             
+            if card.quantity > 1 {
+                Text("x\(card.quantity)")
+                    .font(.system(size: 16, weight: .bold))
+                    .foregroundColor(.secondary)
+            }
+            
             Spacer()
         }
         .padding(.horizontal, 14)
@@ -2632,30 +2645,41 @@ struct FilterChipButton: View {
     
     var body: some View {
         Button(action: action) {
-            HStack(spacing: 6) {
+            HStack(spacing: 4) {
                 if let icon = icon {
                     SwiftUI.Image(systemName: icon)
-                        .font(.system(size: 12, weight: .semibold))
+                        .font(.system(size: 10, weight: .semibold))
                 } else if let tcg = tcgType {
-                    TCGIconView(tcgType: tcg, size: 14, color: isSelected ? .white : tcg.themeColor)
+                    TCGIconView(tcgType: tcg, size: 12, color: isSelected ? .white : tcg.themeColor)
                 } else if let rarityColor = rarityColor {
                     Circle()
                         .fill(rarityColor)
-                        .frame(width: 8, height: 8)
+                        .frame(width: 6, height: 6)
+                        .flexibleFrame(minWidth: 6)
                 }
                 
                 Text(title)
-                    .font(.system(size: 13, weight: .semibold))
+                    .font(.system(size: 11, weight: .semibold))
+                    .lineLimit(1)
+                    .truncationMode(.tail)
+                    .minimumScaleFactor(0.7)
             }
             .foregroundColor(isSelected ? .white : .primary)
-            .padding(.horizontal, 14)
-            .padding(.vertical, 10)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 8)
             .frame(maxWidth: .infinity)
+            .frame(minHeight: 36)
             .background(
-                RoundedRectangle(cornerRadius: 10)
+                RoundedRectangle(cornerRadius: 8)
                     .fill(isSelected ? color : Color(.tertiarySystemBackground))
             )
         }
         .buttonStyle(PlainButtonStyle())
+    }
+}
+
+extension View {
+    func flexibleFrame(minWidth: CGFloat) -> some View {
+        self.frame(minWidth: minWidth)
     }
 }

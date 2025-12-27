@@ -170,11 +170,18 @@ class CardService: ObservableObject {
                     let decoder = JSONDecoder()
                     let decks = try decoder.decode([Deck].self, from: data)
 
-                    // Find the collection deck (LISTA type with name "My Collection")
-                    if let collectionDeck = decks.first(where: { $0.name == "My Collection" }) {
-                        completion(.success(collectionDeck))
+                    // Try to find a collection deck:
+                    // 1. Matches "My Collection" exactly
+                    // 2. Contains "Collection" or "Collezione" and is type .lista
+                    // 3. Fallback to the first .lista deck
+                    let collectionDeck = decks.first(where: { $0.name == "My Collection" }) ??
+                                         decks.first(where: { ($0.name.localizedCaseInsensitiveContains("Collection") || $0.name.localizedCaseInsensitiveContains("Collezione")) && $0.deckType == .lista }) ??
+                                         decks.first(where: { $0.deckType == .lista })
+
+                    if let foundDeck = collectionDeck {
+                        completion(.success(foundDeck))
                     } else {
-                        completion(.failure(NSError(domain: "CardService", code: -1, userInfo: [NSLocalizedDescriptionKey: "Collection deck not found"])))
+                        completion(.failure(NSError(domain: "CardService", code: -1, userInfo: [NSLocalizedDescriptionKey: "Nessuna collezione trovata. Crea una lista per iniziare!"])))
                     }
                 } catch {
                     completion(.failure(error))

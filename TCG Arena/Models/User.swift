@@ -186,6 +186,7 @@ struct User: Identifiable, Codable {
             favoriteCard: nil,
             preferredTCG: favoriteGames?.first ?? favoriteGame,
             location: location,
+            tradeRating: nil,
             followersCount: 0,
             followingCount: 0,
             isFollowedByCurrentUser: false

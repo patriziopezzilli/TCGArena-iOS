@@ -6,14 +6,21 @@ struct RadarUser: Identifiable, Codable {
     let id: Int64
     let username: String
     let displayName: String
-    let latitude: Double
-    let longitude: Double
+    let latitude: Double?
+    let longitude: Double?
     let favoriteTCG: TCGType?
     let profileImageUrl: String?
     let isOnline: Bool
     
+    // Trade Lists
+    let wantList: [RadarTradeEntry]?
+    let haveList: [RadarTradeEntry]?
+    
+    // User Cards
+    let cards: [RadarUserCard]?
+    
     var coordinate: CLLocationCoordinate2D {
-        CLLocationCoordinate2D(latitude: latitude, longitude: longitude)
+        CLLocationCoordinate2D(latitude: latitude ?? 0, longitude: longitude ?? 0)
     }
 }
 
